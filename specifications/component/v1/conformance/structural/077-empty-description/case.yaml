@@ -1,0 +1,24 @@
+# Written and left empty is a different mistake from omitted, and reads
+# differently to an author: the field is there, and says nothing.
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+spec:
+  workload:
+    type: SERVICE
+    source:
+      type: IMAGE
+      ref: nginx:1.29.4-alpine
+    endpoints:
+      web:
+        containerPort: 8080
+        protocol: HTTP
+        visibility: PRIVATE
+  contract:
+    inputs:
+      siteTitle:
+        description: ''
+        schema:
+          type: STRING
+    outputs: {}

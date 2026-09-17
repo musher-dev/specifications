@@ -48,8 +48,7 @@ authoritative list is the "Normative dependencies" table in
 | `COMP-SRC` | Image source | [§5.1](v1/spec.md#source) |
 | `COMP-EP` | Endpoints, and what refers to them | [§5.2](v1/spec.md#endpoints) |
 | `COMP-ENVVAR` | Environment variables | [§5.3](v1/spec.md#env-vars) |
-| `COMP-UI` | Install-form presentation | [§6.1](v1/spec.md#inputs), [§6.4](v1/spec.md#install-form) |
-| `COMP-GEN` | Generated inputs | [§6.1](v1/spec.md#inputs) |
+| `COMP-DESC` | Input and output descriptions | [§6](v1/spec.md#contract) |
 | `COMP-OUT` | Outputs | [§6.2](v1/spec.md#outputs) |
 | `COMP-VAL` | Value schemas | [§6.3](v1/spec.md#value-schema) |
 

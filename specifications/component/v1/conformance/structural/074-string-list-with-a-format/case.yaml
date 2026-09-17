@@ -21,12 +21,11 @@ spec:
   contract:
     inputs:
       endpoints:
+        description: Endpoints the service publishes.
         schema:
           type: STRING_LIST
           enum:
             - primary
             - replica
           format: ENDPOINT_URL
-        ui:
-          label: Endpoints to publish
     outputs: {}

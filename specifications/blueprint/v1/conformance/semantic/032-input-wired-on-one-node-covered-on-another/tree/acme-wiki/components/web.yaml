@@ -1,0 +1,21 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+spec:
+  workload:
+    type: WORKER
+    source:
+      type: IMAGE
+      ref: ghcr.io/example/app:1.4.2
+  contract:
+    inputs:
+      apiKey:
+        schema:
+          type: STRING
+          sensitive: true
+          resourceType: dev.musher.llm.api-key
+        target:
+          envVarKey: OPENAI_API_KEY
+        description: Credential the application presents to the chat-completions service.
+    outputs: {}

@@ -1,10 +1,8 @@
-# Both components declare `adminPassword`, and they disagree about what it is:
-# a STRING for `api`, a NUMBER for `db`. Silent first-wins would hand `db` a
-# value validated against `api`'s rules and fail at deploy time, a long way from
-# either document.
-#
-# `api` sorts before `db`, so `api`'s declaration is the one that stands and
-# `db`'s is the one reported.
+# One parameter covers `adminPassword` on both nodes, and the two components
+# disagree about what it is: a STRING for `api`, a NUMBER for `db`. The form has
+# one field to render and one value to hand to both, so there is no shape it
+# could honestly take. The author's remedy is two differently keyed inputs, or
+# components that agree.
 specVersion: v1
 kind: BLUEPRINT
 metadata:
@@ -20,4 +18,7 @@ spec:
       componentRef: ./components/postgres.yaml
       size: general.standard.small
       connections: {}
-  parameters: {}
+  parameters:
+    adminPassword:
+      ui:
+        label: Administrator password

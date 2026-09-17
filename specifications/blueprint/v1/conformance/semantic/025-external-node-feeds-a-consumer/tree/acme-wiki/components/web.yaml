@@ -24,15 +24,15 @@ spec:
           type: STRING
           format: ENDPOINT_URL
           resourceType: dev.musher.llm.base-url
-        suppliedBy: CONNECTION
         target:
           envVarKey: OPENAI_API_BASE_URL
+        description: Base URL of the chat-completions service the application calls.
       llmApiKey:
         schema:
           type: STRING
           sensitive: true
           resourceType: dev.musher.llm.api-key
-        suppliedBy: CONNECTION
         target:
           envVarKey: OPENAI_API_KEY
+        description: Credential the application presents to the chat-completions service.
     outputs: {}

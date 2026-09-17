@@ -2,7 +2,8 @@
   "id": "semantic-008-conflicting-input-schema",
   "phase": "semantic",
   "expected": "fail",
-  "clause": "specifications/blueprint/v1/spec.md#merge",
-  "summary": "Two nodes declaring one input key with differing schemas are rejected.",
+  "clause": "specifications/blueprint/v1/spec.md#coverage",
+  "requirements": ["BP-PARAM-002"],
+  "summary": "A parameter covering inputs whose schemas differ is rejected.",
   "document": "acme-wiki/blueprint.yaml"
 }

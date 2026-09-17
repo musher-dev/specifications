@@ -24,6 +24,7 @@ spec:
     inputs: {}
     outputs:
       baseUrl:
+        description: Base URL of the addressed service, for a consumer to call.
         schema:
           type: STRING
         valueFrom: DECLARED

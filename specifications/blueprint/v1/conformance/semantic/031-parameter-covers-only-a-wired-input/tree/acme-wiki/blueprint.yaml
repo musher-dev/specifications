@@ -1,0 +1,30 @@
+# `web`'s `databaseUrl` is wired from `db`, and the blueprint also writes a
+# parameter keyed `databaseUrl`. A parameter covers only inputs no connection
+# fills, so this one covers nothing: the wire already supplies the value, and
+# the field would collect an answer no workload reads. It is unbound, not a
+# second claim on the input, so there is no precedence to decide.
+specVersion: v1
+kind: BLUEPRINT
+metadata:
+  slug: acme-wiki
+  revision: 1
+spec:
+  components:
+    db:
+      componentRef: ./components/postgres.yaml
+      size: general.standard.small
+      connections: {}
+    web:
+      componentRef: ./components/web.yaml
+      size: general.standard.small
+      connections:
+        databaseUrl:
+          fromRole: db
+          fromOutput: connectionString
+  parameters:
+    adminPassword:
+      ui:
+        label: Administrator password
+    databaseUrl:
+      ui:
+        label: Database URL

@@ -21,3 +21,4 @@ spec:
           type: NUMBER
         valueFrom: DECLARED
         value: '5432'
+        description: Port the database listens on.

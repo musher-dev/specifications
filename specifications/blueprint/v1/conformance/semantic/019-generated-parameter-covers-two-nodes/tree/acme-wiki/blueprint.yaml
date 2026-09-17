@@ -1,0 +1,27 @@
+# One parameter, two nodes, one minted secret. Both components declare
+# `adminPassword` with equal schemas, both marked sensitive, so the parameter
+# covers the two of them, the platform generates a single value, and both
+# workloads receive it. The form shows the field so a deploying user can see
+# that a secret will be generated for them.
+specVersion: v1
+kind: BLUEPRINT
+metadata:
+  slug: acme-wiki
+  revision: 1
+spec:
+  components:
+    api:
+      componentRef: ./components/api.yaml
+      size: general.standard.small
+      connections: {}
+    db:
+      componentRef: ./components/postgres.yaml
+      size: general.standard.small
+      connections: {}
+  parameters:
+    adminPassword:
+      generator:
+        byteLength: 32
+        encoding: BASE64URL
+      ui:
+        label: Administrator password

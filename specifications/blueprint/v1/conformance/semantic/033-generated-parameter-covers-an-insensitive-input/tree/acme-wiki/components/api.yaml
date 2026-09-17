@@ -1,0 +1,19 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+spec:
+  workload:
+    type: WORKER
+    source:
+      type: IMAGE
+      ref: ghcr.io/example/api:1.2.0
+  contract:
+    inputs:
+      signingKey:
+        schema:
+          type: STRING
+        target:
+          envVarKey: SIGNING_KEY
+        description: Key the API signs session cookies with.
+    outputs: {}

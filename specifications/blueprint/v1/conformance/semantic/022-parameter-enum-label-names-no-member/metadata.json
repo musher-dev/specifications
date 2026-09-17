@@ -2,7 +2,8 @@
   "id": "semantic-022-parameter-enum-label-names-no-member",
   "phase": "semantic",
   "expected": "fail",
-  "clause": "specifications/blueprint/v1/spec.md#authored-parameters",
-  "requirements": ["COMP-UI-005"],
-  "summary": "A parameter enumLabels key naming no member of the sibling enum is rejected."
+  "clause": "specifications/blueprint/v1/spec.md#install-form",
+  "requirements": ["BP-UI-003"],
+  "summary": "A parameter enumLabels key naming no member of the covered input's enum is rejected.",
+  "document": "acme-wiki/blueprint.yaml"
 }

@@ -1,8 +1,0 @@
-{
-  "id": "structural-018-generated-input-not-sensitive",
-  "phase": "structural",
-  "expected": "fail",
-  "clause": "specifications/component/v1/spec.md#inputs",
-  "requirements": ["COMP-GEN-001"],
-  "summary": "An input carrying a generator must declare schema.sensitive true."
-}

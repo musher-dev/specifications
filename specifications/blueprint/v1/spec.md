@@ -182,8 +182,8 @@ phase, before the graph is looked at.
 
 The name is graph-local, which is to say it means nothing outside this
 document. Two blueprints MAY each declare a node called `db` and neither is
-the other's. Its one job is to be what [§4.2](#connections) `fromRole` names,
-and what [§5.2](#merge) orders the graph by.
+the other's. Its jobs are to be what [§4.2](#connections) `fromRole` names, and what
+[§5.1](#coverage) orders the graph by where one parameter covers two nodes.
 
 A node carries three things: the component it deploys ([§4.1](#component-reference)),
 the wires feeding it ([§4.2](#connections)), and the compute it runs on
@@ -321,40 +321,31 @@ is what names it — a second wire to the same input is a repeated mapping key
 and therefore `ERR_DUPLICATE_KEY` in the `parser` phase. That is a property of
 how a connection is spelled, not an omission from this section.
 
-**A required `CONNECTION` input MUST be wired.** An input declaring
-`suppliedBy: CONNECTION` is satisfied by a wire and by nothing else
-([component §6.1](../../component/v1/spec.md#inputs)) — it never reaches the
-install form, so a graph that leaves one unwired has no later chance to supply
-it. Where such an input is also `required` — which is its default — and no
-connection on that node names it, the blueprint is rejected with
-`ERR_UNWIRED_REQUIRED_INPUT`, anchored at the node's `connections`. An optional
-`CONNECTION` input MAY be left unwired.
+**Any input may be wired.** A component does not say who supplies its inputs
+([component §6.1](../../component/v1/spec.md#inputs)), so a connection may fill
+any input the consuming component declares. An input a connection fills is
+supplied, and [§5.1](#coverage) takes it out of every parameter's coverage, so a
+wire and the install form never both claim one value. A required input that is
+neither wired nor covered is [`BP-PARAM-003`](#BP-PARAM-003).
 
-<a id="BP-CONN-001"></a>**`BP-CONN-001` — a connection may fill only a
-`CONNECTION` input.** A connection's map key MUST name an input whose
-`suppliedBy` is `CONNECTION`, and one naming any other is rejected in the
-`semantic` phase with `ERR_INPUT_NOT_CONNECTABLE`, anchored at the connection.
-`suppliedBy` defaults to `USER`, so an input saying nothing about who satisfies
-it is bound by this too.
+<a id="BP-CONN-002"></a>**`BP-CONN-002` — a connection MUST NOT fill an input
+the component republishes.** Where the consuming component declares an output
+whose `valueFrom` is `INPUT` and whose `input` names the connection's key, the
+connection is rejected in the `semantic` phase with `ERR_INPUT_NOT_CONNECTABLE`,
+anchored at the connection.
 
-A wire and the install form would otherwise both claim one value, with nothing
-saying which arrives. That is the failure [§5.2](#merge) rejects for merging and
-[§5.3](#authored-parameters) rejects for coverage, and admitting it here would
-make this the one door in the contract that tolerates it.
-
-**An earlier draft recorded this as a gap rather than a rule** — "nothing stops
-a connection filling an input whose `suppliedBy` is `USER` … that silence is a
-gap rather than a considered permission". It is a rule now, and the timing was
-forced: [component §6.2](../../component/v1/spec.md#outputs) admits an output
-that reads one of its own inputs, and that is sound only because a `USER` input
-cannot itself arrive over an edge. Left open, an output could have depended on
-an inbound connection by way of a wired `USER` input, and the cycles this
-section permits would have stopped being resolvable.
+[Component §6.2](../../component/v1/spec.md#outputs) makes every output
+resolvable before any edge is bound, and that invariant is what lets the cycles
+this section permits resolve. An output reading a wired input would depend on
+an inbound edge. The component cannot enforce the invariant for such an output,
+because it does not know which of its inputs a composition wires; this document
+does, so the rule is decided here.
 
 **The two ends MUST fit.** Resolving both ends establishes only that they
 exist. A `STRING` output wired into a `NUMBER` input satisfies every rule
-above, and fails at deploy time inside the consuming workload — the failure
-shape [§5.2](#merge) rejected for input merging, on the grounds that it lands
+above, and fails at deploy time inside the consuming workload, the failure
+shape [§5.1](#coverage) rejects for a parameter covering two unequal inputs, on
+the grounds that it lands
 "a long way from the two documents that disagreed and with nothing pointing
 back at them". The argument is the same here, so the answer is.
 
@@ -487,7 +478,7 @@ whether its node's component is external. `componentRef` is a path or a UUID,
 and reading the referenced document is `semantic` for the repo-local form and
 `capability` for the published one, so no structural rule could condition `size`
 on it. This rule therefore goes silent where the reference does not resolve
-offline, on the terms [§5.3](#authored-parameters) sets for every rule that
+offline, on the terms [§5.1](#coverage) sets for every rule that
 reads a referenced component.
 
 ```yaml
@@ -614,252 +605,100 @@ which point they take the same shape `size` has above.
 
 ## <a id="parameters"></a>5. Parameters
 
-`spec.parameters` is the install form: what a deploying user is asked for once,
-for the whole composition, rather than once per node.
+`spec.parameters` is the install form: every field a deploying user is shown,
+once, for the whole composition. It is always authored. Nothing derives a field
+from a component, because a component declares what it needs and nothing about
+how a person is asked for it
+([component §6](../../component/v1/spec.md#contract)).
+
+**A parameter says how a value is supplied, and the input says what the value
+is.** A parameter carries `ui`, and at most one of `generator` and
+`platformDefault`. It carries no `schema`, no `required` and no `description`:
+the input it covers declares all three, and a form field reads them from there.
+Writing them twice would give a composition two statements of one value's shape
+with nothing to decide which is right. That is the failure
+[§4.2](#connections) rejects for a wire, and [§5.1](#coverage) for coverage.
+
+| Property | Presence | Says |
+|---|---|---|
+| `ui` | REQUIRED | How the field is presented ([§5.3](#install-form)). |
+| `generator` | OPTIONAL | The platform mints the value at deploy time ([§5.2](#value-sources)). |
+| `platformDefault` | OPTIONAL | The platform derives the value from the node's own addressing ([§5.2](#value-sources)). |
+
+A parameter carrying neither is a value the deploying user types. Any other
+property is `ERR_UNKNOWN_FIELD`.
 
 **A parameter name is an input name.** A key of `spec.parameters` MUST match
 `^[a-z][a-zA-Z0-9]{0,63}$` and is rejected in the `structural` phase with
-`ERR_INVALID_VALUE` otherwise. [§5.3](#authored-parameters) makes the key the
-whole of the correspondence between a parameter and the inputs it covers, so a
-parameter spelled outside the input grammar could cover nothing.
+`ERR_INVALID_VALUE` otherwise. [§5.1](#coverage) makes the key the whole of the
+correspondence between a parameter and the inputs it covers, so a parameter
+spelled outside the input grammar could cover nothing.
 
-**Absent and empty mean the same thing.** Both say "derive the form from the
-graph". An earlier draft of this section asserted a difference between them;
-nothing in the document distinguishes a missing key from an empty mapping, and
-a distinction no author can express is one that survives in a specification
-and in no implementation.
+**Absent and empty mean the same thing**: a form with no fields. That is the
+right form for a composition whose every required input is wired or has a
+default, and [§5.1](#coverage) rejects it for any other.
 
-A non-empty mapping is an authored override, used in place of derivation
-rather than merged with it.
+### <a id="coverage"></a><a id="derivation"></a><a id="merge"></a><a id="authored-parameters"></a>5.1 Coverage
 
-**The form has an order, and `parameters` is a mapping.** A mapping carries no
-sequence, so the order fields are presented in is decided by
-[component §6.4](../../component/v1/spec.md#install-form) rather than by the
-document's shape: ascending `ui.order`, a parameter declaring none sorting after
-every parameter that declares one, and ties broken by parameter key compared as
-UTF-8 bytes. That holds on both paths. On the derived path it replaces what was
-previously the only available order — lexicographic node name, then whatever
-order a node's inputs happened to be read in — which was an artefact of
-[§5.2](#merge)'s merge rather than anything an author chose.
+**Binding is by key.** A parameter **covers** every input whose key equals its
+own, on every node where no connection fills that input. Nothing else is
+available to make the correspondence, since a parameter names no node and no
+`target`, so the key is not one signal among several but the whole of it. That
+is what lets one parameter serve two components.
 
-### <a id="derivation"></a>5.1 Derivation
+**A wired input is not a candidate.** A connection on a node takes that node's
+input out of coverage, so a node whose `apiKey` arrives over a wire and a second
+node whose `apiKey` is typed into the form are both expressible. A component
+cannot rename its inputs, and a rule that made the two collide would leave that
+composition with no spelling at all. There is no precedence here either: a wired
+input is never covered, so a wire and a parameter never claim one value.
 
-When `parameters` is empty, the effective parameter set is derived from the
-`USER`-supplied inputs of the components the graph references, merged by
-[§5.2](#merge).
+Three rules follow. All are `semantic`, and all need the component documents
+the graph references, which a repo-local reference makes readable without a
+network.
 
-**Derivation reads a component's inputs, not its workload.** A node deploying an
-[external component](../../component/v1/spec.md#external) contributes
-install-form parameters exactly as any other node does, which is what makes the
-set of values such a node is configured with one form rather than several — the
-deploying user is asked for an address, a credential and whatever selects what
-answers, once, together.
+| ID | Rule | Diagnostic |
+|---|---|---|
+| <a id="BP-PARAM-001"></a>`BP-PARAM-001` | A parameter MUST cover at least one input. | `ERR_UNBOUND_PARAMETER` |
+| <a id="BP-PARAM-002"></a>`BP-PARAM-002` | The inputs one parameter covers MUST declare equal `schema` blocks. | `ERR_CONFLICTING_INPUT_SCHEMA` |
+| <a id="BP-PARAM-003"></a>`BP-PARAM-003` | A required input with no default MUST be wired or covered. | `ERR_UNSATISFIED_REQUIRED_INPUT` |
 
-A `CONNECTION` input is never derived — it is satisfied by a wire, not by a
-person. An input carrying a `generator` **is** derived, even though the user
-never types a value for it: a client rendering the install form still has to
-know it exists, and "three secrets will be generated for you" is a thing worth
-being able to say.
-
-A derived parameter takes the declaring input's `schema`, `ui`, `required`,
-`generator` and `platformDefault` unchanged.
-[Component `COMP-UI-001`](../../component/v1/spec.md#inputs) requires a `USER`
-input to carry `ui`, so every derived parameter arrives with the label a form
-needs; there is no such thing as a derived parameter that cannot be rendered.
-`ui` is the block [component §6.4](../../component/v1/spec.md#install-form)
-defines, and a client renders a derived parameter from it by the derivation that
-section fixes.
-
-**`generator` and `platformDefault` are carried for the reason the paragraph
-above gives.** An earlier draft of this section derived only the first three,
-which left the sentence above it false: a generated input was declared derived so
-that a client could say "three secrets will be generated for you", and then
-arrived as an ordinary field with nothing to say it with. A platform-derived
-input had the same problem and no counterpart on a parameter at all. Both are
-carried, and both are what a client switches on to tell a field the deploying
-user must fill from one the platform fills for them.
-
-### <a id="merge"></a>5.2 Merge
-
-Two components MAY declare an input under the same key. The merge is
-**first-wins in lexicographic node-name order**:
-
-1. Sort the entries of `spec.components` by node name.
-2. Walk them in that order, taking each `USER` input key not already taken.
-
-Node name because it is the only total order the document itself supplies. A
-mapping has no sequence, and a rule that depended on file order, on parse
-order, or on an identifier internal to a control plane would not be
-reproducible by someone reading the document.
-
-The comparison is unambiguous across implementations: [§4](#components)
-confines a node name to lowercase ASCII letters, digits and hyphens, so byte
-order and lexicographic order coincide and no collation or locale can change
-the result.
-
-**A conflicting redeclaration is an error.** Where a later node declares a key
-already taken and its declaration differs, the blueprint is rejected in the
-`semantic` phase with `ERR_CONFLICTING_INPUT_SCHEMA`. An identical
-redeclaration is absorbed in silence — two components that agree on what
-`adminPassword` is are not in conflict, and making them say so twice in
-different words would be the only way to trip this.
-
-Two declarations are identical when their `schema` blocks are equal once
-defaults are applied. `ui` and `required` are not compared: they describe how
-a value is asked for, not what it is, and the first node's presentation winning
-is a presentation decision rather than a contract one.
-
-**Why this is not silent first-wins.** Taking the first schema and discarding a
-different second one settles the ambiguity without telling anyone there was
-one. The second component then receives a value validated against the first
-component's rules — a bare `STRING` where it required an enum member, a
-64-byte secret where its pattern allowed 32. Nothing fails at validation time.
-It fails at deploy time, inside the consuming workload, a long way from the two
-documents that disagreed and with nothing pointing back at them.
-
-An author who wants one shared value across two components says so by writing
-`spec.parameters` outright, which is what an authored override is for.
-
-**This rule belongs to the derivation path.** [§5](#parameters) makes an
-authored override something used in place of derivation rather than merged with
-it, so where `parameters` is non-empty the merge above does not run and there is
-nothing left to conflict. That is what makes the remedy in the previous
-paragraph a remedy: two components that disagree are reconciled by the author
-naming the value once, rather than left in conflict beside the reconciliation.
-What an authored parameter has to satisfy instead is
-[§5.3](#authored-parameters).
-
-### <a id="authored-parameters"></a>5.3 Authored parameters
-
-An authored override replaces the derived parameter set outright. It is the
-path [§5.2](#merge) sends an author to, and it carries obligations derivation
-met for free.
-
-**Binding is by key.** A parameter key is an input key: the parameter called
-`adminPassword` supplies every `USER` input called `adminPassword`, in every
-node that declares one. Nothing else is available to make the correspondence — a
-parameter carries no `suppliedBy`, no node name and no `target` — so the key is
-not one signal among several but the whole of it. That is also what lets one
-parameter serve two components, which is the whole of why [§5.2](#merge) sends
-an author here.
-
-A parameter **covers** an input when their keys are equal. Three rules follow.
-All are `semantic`, and all need the component documents the graph references,
-which a repo-local reference makes readable without a network.
-
-**A parameter MUST cover something.** A key matching no `USER` input of any node
-is rejected with `ERR_UNBOUND_PARAMETER`, anchored at `/spec/parameters/<key>`.
-The install form asks a deploying user for a value and nothing in the
-composition ever reads it. Permitted, these accumulate exactly as
-[§3](#identity) says an unreferenced component document does — last release's
+**A parameter MUST cover something.** One covering no input is reported at
+`/spec/parameters/<key>`. The install form asks a deploying user for a value and
+nothing in the composition ever reads it. Permitted, these accumulate exactly as
+[§3](#identity) says an unreferenced component document does: last release's
 `legacyMode` still on the form beside the parameters that do something, with
 nothing in the document saying which is which.
 
-**An input the deploying user must supply MUST be covered**, and covered by a
-parameter that will actually ask for it. Otherwise the component requires a
-value, the install form never offers one, and the workload starts without it.
-The blueprint is rejected with `ERR_UNCOVERED_REQUIRED_INPUT`, anchored at
-`/spec/parameters` — the mapping that should have named it, since a JSON Pointer
-addresses this document and the input it is complaining about is not in it.
+**The inputs a parameter covers MUST agree on what the value is.** Two
+declarations are equal when their `schema` blocks are equal once defaults are
+applied. `description`, `required` and `target` are not compared: they say what
+each component does with the value, not what the value is. A mismatch is
+reported at `/spec/parameters/<key>`, the field that joined them.
 
-An input must be covered when every one of these holds:
+One field produces one value, and each component then receives it against its
+own `schema`. Taking the first schema and ignoring a different second one would
+settle the ambiguity without telling anyone there was one: the second component
+receives a value validated against the first one's rules, a bare `STRING` where
+it required an enum member, a 64-byte secret where its pattern allowed 32.
+Nothing fails at validation time. It fails at deploy time, inside the consuming
+workload, a long way from the two documents that disagreed and with nothing
+pointing back at them. Two components that disagree about a value need two
+values, and nothing forces them into one field; the conflict is between two
+declarations a single key has joined.
 
-| Property | Value | Because |
-|---|---|---|
-| `suppliedBy` | `USER` | A `CONNECTION` input is satisfied by a wire ([§4.2](#connections)). |
-| `required` | true, its default | Nothing has to supply an optional input. |
-| `generator` | absent | The platform mints the value. |
-| `platformDefault` | absent | The platform derives it from the node's own addressing. |
-| `schema.default` | absent | The component document already supplies it. |
+**A required input MUST be supplied.** An input is required when its `required`
+is not `false`, which is its default. A required input whose `schema` declares a
+`default` has a value already. Every other required input on a node MUST be
+filled by a connection on that node or covered by a parameter, and one that is
+neither is reported at `/spec/components/<node>`, the node that would start
+without it. The message names the input, since a JSON Pointer addresses this
+document and the input is not in it.
 
-A parameter covers such an input only if it **guarantees a value**: it declares
-`required: true`, or it carries a `generator`, or it carries a
-`platformDefault`, or its `schema` declares a `default`. A parameter that names
-the key and leaves the value optional has moved the omission rather than closed
-it.
-
-The `platformDefault` branch is there for the same reason the `generator` branch
-is: the value arrives without the deploying user supplying it. Without it, an
-override that does supply the value would fail to cover the input it satisfies,
-and the blueprint would be rejected for an omission that is not one. A
-`SELF_ADDRESS` default on an authored parameter resolves against each node the
-parameter covers.
-
-**`required` reads in opposite directions on the two documents**, and this is
-the rule where that bites. It defaults to `true` on a component input and to
-`false` on a blueprint parameter, so an override that copies a required input's
-key and says nothing else has quietly made it optional. The defaults are
-defensible on each side alone — an input declares a need, a parameter declares a
-question — but the asymmetry is a trap, and it is why the rule above tests what
-a parameter guarantees rather than only which keys it names.
-
-**`type` MUST agree.** Where a parameter covers an input, its `schema.type` MUST
-equal that input's, and a mismatch is `ERR_INCOMPATIBLE_PARAMETER_TYPE`,
-anchored at `/spec/parameters/<key>/schema/type`. The deploying user is
-validated against the parameter's schema and the component then receives the
-result against its own: a `STRING` accepted at the form where the workload
-expects a `NUMBER` is the failure [§4.2](#connections) rejected for
-connections and [§5.2](#merge) rejected for merging, arriving through a third
-door. A form collecting one value where the input reads a list of them is the
-same failure, which is why
-[component §6.3](../../component/v1/spec.md#value-schema) puts the multiplicity
-in `type` and not beside it — `STRING` and `STRING_LIST` are two members and
-this rule already separates them.
-
-**`resourceType` MUST agree where the parameter names one.** A parameter
-declaring none covers an input that declares one: the identifier says what a
-value addresses, and an install form is not where a value acquires one. A
-parameter declaring one requires every input it covers to declare the **same**
-one, and a mismatch is `ERR_INCOMPATIBLE_PARAMETER_RESOURCE_TYPE`, anchored at
-`/spec/parameters/<key>/schema/resourceType`.
-
-The asymmetry is the point, and it is the opposite of
-[§4.2](#connections)'s. A wire has a producer that could be unconstrained where
-its consumer is not, so there the unconstrained end is rejected. A parameter is
-not a producer — it is how a value is *asked for* — so a parameter that names no
-identifier has declined to say anything rather than said the value addresses
-nothing. What it may not do is name a **different** one: a parameter that
-answers for a resource its input does not address is a form collecting the
-wrong value.
-
-An earlier draft of this section excluded `resourceType` from a parameter
-outright, on the ground that a parameter has none to compare. That was true of
-the schema and wrong about the contract: [§5.1](#derivation) carries the
-identifier through unchanged on the derived path, so excluding it here made an
-authored override the one path on which the tag disappeared — and [§5.2](#merge)
-is what pushes an author onto that path.
-
-**A generated parameter is secret material.** A parameter carrying a `generator`
-MUST declare `schema.sensitive: true`, and MUST declare it rather than leave
-it to a default. That is a shape rather than a relationship, so both halves are
-`structural`: an absent `sensitive` is `ERR_MISSING_FIELD` and one written
-`false` is `ERR_INVALID_VALUE`.
-[Component §6.1](../../component/v1/spec.md#inputs) requires exactly this of a
-generated input, and a derived parameter takes the input's `schema` unchanged
-([§5.1](#derivation)), so the marking is guaranteed on the derivation path
-already. Without the same rule here, moving a generated secret onto the override
-path is enough to lose it — and `sensitive` defaults to `false`, so losing it
-takes no more than not mentioning it.
-
-**A parameter's `schema` is the block
-[component §6.3](../../component/v1/spec.md#value-schema) defines.** The `type`
-vocabulary, the `JSON` restrictions on `pattern`
-and `enum`, the `STRING_LIST` requirement of a non-empty `enum`, and the
-`STRING` restriction on `format` are that section's and
-are not restated here; this family's schema enforces them on the same terms and
-in the same phase. Naming where a vocabulary is published rather than mirroring
-it is the rule
-[ADR 0003](../../../docs/adr/0003-controlled-vocabulary-placement.md) §2 sets
-out, and a sibling `spec.md` is no more exempt from it than an external
-surface.
-
-**What v1 does not compare.** `format`, `enum`, `pattern`, `default`,
-`sensitive` and `ui` take no part in whether a parameter covers an input. A
-parameter whose `pattern` admits more than the input's does is accepted, and so
-is one that asks for a value the input would reject. Those silences are gaps
-rather than considered permissions,
-recorded here so a reader can tell the two apart; closing any of them rejects
-compositions that validate today.
+A covering parameter needs no further guarantee. A typed field for a required
+input is a required field, a generated one is minted, and a platform default is
+derived: each supplies the value, and the form a client draws makes a typed field
+mandatory exactly where some input it covers is required and has no default.
 
 **None of this reaches a published reference.** All three rules read the
 referenced component's inputs, so a node naming its component by UUID
@@ -867,17 +706,247 @@ contributes none of them ([§4.1](#component-reference)). A blueprint mixing the
 two forms is checked against the repo-local half and no further, and an
 implementation MUST NOT report an input it was never given the means to read.
 
-**And one of the three stops being decidable.** The coverage and type rules read
-only the inputs in front of them, so an unreadable node subtracts from what they
-check and does nothing else. `ERR_UNBOUND_PARAMETER` is the mirror image: it
-asserts that *no* node declares the key, which is a claim about every node's
-inputs. Where any node's component is unreadable — a published reference, or a
-repo-local one already rejected as naming no document or as escaping the item
-root — an implementation MUST NOT report `ERR_UNBOUND_PARAMETER` for any
-parameter. The claim becomes decidable again only when every node's inputs were
-readable, and a diagnostic an implementation cannot substantiate is worse than a
-silence, which is the trade [§3](#identity) already makes for a document handed
-over without a directory.
+**And one of the three stops being decidable.** The equality and satisfaction
+rules read only the inputs in front of them, so an unreadable node subtracts
+from what they check and does nothing else. `ERR_UNBOUND_PARAMETER` is the
+mirror image: it asserts that *no* node has a covered input, which is a claim
+about every node's inputs. Where any node's component is unreadable, whether a
+published reference or a repo-local one already rejected as naming no document
+or as escaping the item root, an implementation MUST NOT report
+`ERR_UNBOUND_PARAMETER` for any parameter. The claim becomes decidable again
+only when every node's inputs were readable, and a diagnostic an implementation
+cannot substantiate is worse than a silence, which is the trade [§3](#identity)
+already makes for a document handed over without a directory.
+
+**What v1 does not compare.** A parameter covering inputs whose `description`s
+differ is accepted, and the form shows the description of the covered input on
+the first of those nodes in node-name order. Wording is presentation, and two
+components phrasing one value differently are not in conflict. That silence is a
+decision rather than a gap.
+
+### <a id="value-sources"></a>5.2 Value sources
+
+A parameter with no source is typed by the deploying user. Two sources let the
+platform supply the value instead, and a parameter carrying one still reaches
+the form: "three secrets will be generated for you" and "this is filled in for
+you, override it only for a custom domain" are both things worth being able to
+say.
+
+**Minting a value and deriving one are two answers to one question.** A
+parameter MUST NOT carry both `generator` and `platformDefault`, and one that
+does is rejected in the `structural` phase with `ERR_INVALID_VALUE`, anchored at
+`platformDefault`.
+
+| ID | Rule | Diagnostic |
+|---|---|---|
+| <a id="BP-PARAM-004"></a>`BP-PARAM-004` | A parameter carrying `generator` MUST cover only inputs whose `schema.sensitive` is `true`. | `ERR_GENERATED_INPUT_NOT_SENSITIVE` |
+| <a id="BP-PARAM-005"></a>`BP-PARAM-005` | A platform default MUST resolve, on every node the parameter covers, to a `PUBLIC` endpoint publishing the address form its `source` reads. | See below |
+
+Both are `semantic`, and both go silent for a node whose component was not read,
+on the terms [§5.1](#coverage) sets.
+
+**A generated value is secret material.** A generator mints a credential, and a
+value not marked sensitive is echoed back into logs and interfaces. Whether a
+value is sensitive is what the covered input declares
+([component §6.3](../../component/v1/spec.md#value-schema)), so the rule reads it
+there, and a parameter covering any input not marked `sensitive: true` is
+reported once, at `/spec/parameters/<key>/generator`. `sensitive` defaults to
+`false`, so an input that says nothing about it is bound by this.
+
+**A platform default derives the value from the node's own addressing.**
+`platformDefault` carries three properties. `type` is REQUIRED and names the kind
+of default, `source` is REQUIRED and selects what is derived, and `endpoint`
+names which endpoint it is derived from.
+
+`type` has one member, `SELF_ADDRESS`. It is REQUIRED and carries no default,
+because a discriminator a document may leave out is one two implementations may
+read differently. A second kind is admitted beside this one without invalidating
+a document written against it, which is why the tag is written now rather than
+when a second kind arrives.
+
+There are four sources, and they come in two pairs because
+[component §5.2](../../component/v1/spec.md#endpoints) gives a `PUBLIC` endpoint
+two address forms:
+
+| `source` | Derives | From an endpoint publishing |
+|---|---|---|
+| `PUBLIC_URL` | The full URL. | a **URL**: `HTTP`, `HTTPS`, `WS`, `GRPC` |
+| `PUBLIC_HOSTNAME` | The host part of that URL. | a **URL** |
+| `PUBLIC_ADDRESS` | The full `host:port`. | a **`host:port`**: `TCP`, `UDP` |
+| `PUBLIC_PORT` | The allocated edge port alone. | a **`host:port`** |
+
+Each pair reads one address form. `PUBLIC_PORT` and `PUBLIC_HOSTNAME` exist
+beside the whole they are part of because a consumer that takes host and port
+as separate settings should not have to split a string this contract had
+already composed.
+
+**The endpoint resolves on each covered node.** A `SELF_ADDRESS` default is the
+address of the node whose input it fills, so a parameter covering two nodes
+derives two values, one from each. `endpoint` is OPTIONAL, and omitting it
+selects the primary endpoint
+[component §5.2](../../component/v1/spec.md#endpoints) elects on that node. Every
+diagnostic below is reported at `/spec/parameters/<key>/platformDefault/endpoint`,
+once however many covered nodes produce it.
+
+- An omitted `endpoint` on a node that elects no primary is
+  `ERR_AMBIGUOUS_ENDPOINT`. A node deploying an
+  [external component](../../component/v1/spec.md#external) declares no endpoint
+  and elects none, so a default covering one lands here: it has no addressing to
+  read.
+- An `endpoint` the node's workload does not declare is `ERR_UNKNOWN_ENDPOINT`,
+  the code a probe naming one carries.
+- An endpoint that is declared but `PRIVATE` is `ERR_ENDPOINT_NOT_PUBLIC`: every
+  source derives an externally reachable address, and a `PRIVATE` endpoint has
+  none to give.
+- A URL source resolving to a `TCP` or `UDP` endpoint is
+  `ERR_ENDPOINT_NOT_HTTP`, the code a probe on such an endpoint carries. A
+  `host:port` source resolving to an HTTP-family endpoint is
+  `ERR_ENDPOINT_NOT_L4`. Two codes rather than one so a diagnostic names the axis
+  that failed, which is the same reason [§4.2](#connections) splits its two
+  compatibility codes.
+
+**Why an HTTP-family endpoint does not answer `PUBLIC_ADDRESS`.** It is
+reachable at a host and a port like anything else, so admitting it would be
+easy and is refused deliberately. Such an endpoint is published through the
+shared ingress rather than on a port allocated to it, so what the derivation
+would yield is the ingress address on the ingress port: true, and not the thing
+an author asking for an edge address is asking for. They want the port their
+broker was given. A source that returns a defensible value nobody wanted is
+worse than one that rejects the document, because the first failure is silent
+and arrives at runtime.
+
+**A platform default is not a connection.** The value comes from the covered
+node's own workload, never from an upstream node, which is the line
+[component §6.2](../../component/v1/spec.md#outputs) draws around an output. A
+wired input is never covered ([§5.1](#coverage)), so a wire and a platform
+default never answer for one input.
+
+### <a id="install-form"></a>5.3 Install-form presentation
+
+`ui` is the presentation metadata every parameter carries, and this section
+defines it.
+
+| ID | Rule | Diagnostic |
+|---|---|---|
+| <a id="BP-UI-001"></a>`BP-UI-001` | A parameter MUST carry `ui`, `ui` MUST carry `label`, and `ui` admits no member this section does not name. | `ERR_MISSING_FIELD`, `ERR_UNKNOWN_FIELD` |
+| <a id="BP-UI-002"></a>`BP-UI-002` | `prominence` MUST be `PRIMARY` or `SECONDARY`. | `ERR_INVALID_VALUE` |
+| <a id="BP-UI-003"></a>`BP-UI-003` | Every `enumLabels` key MUST be a member of the covered inputs' `schema.enum`. | `ERR_UNKNOWN_ENUM_MEMBER` |
+
+`BP-UI-001` and `BP-UI-002` are `structural`. `BP-UI-003` is `semantic`.
+
+| Member | Presence | Means |
+|---|---|---|
+| `label` | REQUIRED | What the field is called. |
+| `order` | OPTIONAL | Where the field sits. Lower sorts first. |
+| `prominence` | OPTIONAL | How prominently it is offered. Default `PRIMARY`. |
+| `examples` | OPTIONAL | Values illustrating the form the value takes. |
+| `enumLabels` | OPTIONAL | What each `enum` member is called. |
+
+The field's help text is not a member. It is the covered input's `description`
+([component §6](../../component/v1/spec.md#COMP-DESC-001)), so a value is
+described once, by the document that needs it.
+
+**`ui` says how a value is asked for, never what it is.** Nothing here changes
+what a value means or what would validate, which is what keeps the data contract
+and the rendered control from being two declarations that can disagree. That is
+also why the control itself is not declared; see the derivation below.
+
+**`prominence`.** `PRIMARY` is offered directly; `SECONDARY` is offered behind a
+disclosure the deploying user opens. It is distinct from whether the value is
+required: an optional field may be either, and a form of eleven fields where
+three are optional is not the same form as one where three are advanced.
+
+**`examples` is never submitted.** It illustrates the form a value takes. A
+value that is actually submitted when the user supplies none is the covered
+input's [`schema.default`](../../component/v1/spec.md#value-schema), and the two
+are different claims: an example may be one nobody should deploy. Where a value
+carries an `enum`, `examples` says nothing a chooser does not already show, and a
+client SHOULD ignore it.
+
+**`enumLabels` names the members of an `enum` this document does not hold.**
+The members are declared by the inputs the parameter covers, which
+[§5.1](#coverage) requires to agree, so a key naming no member of that `enum` is
+reported at `/spec/parameters/<key>/ui/enumLabels/<member>`. Where the parameter
+covers nothing that was read, or covers inputs that disagree, there is no one
+`enum` to compare against and the rule is silent.
+
+`enumLabels` is keyed by the member rather than held in a list beside `enum`, so
+the labels cannot fall out of step with the members by length or by order, and
+so a member labelled twice is `ERR_DUPLICATE_KEY` in the `parser` phase
+([core v1 §6.1](../../core/v1/spec.md#yaml-profile)) rather than a rule this
+section would have to invent. A member with no label is offered as it is
+spelled. A label naming no member is the other direction and is the error: it is
+a typo that changes nothing a validator would otherwise see, and it would stay
+invisible for the life of the document.
+
+**Why the labels live here and not in the component.** A label is wording for a
+form, and the form is this document's. Two blueprints deploying one component
+may word one enumeration differently, and neither is wrong.
+
+#### The derivation
+
+**The control is derived from the covered input's `schema`, and this is that
+derivation.** A client rendering the install form MUST derive each field's
+control from the `schema` of the inputs the parameter covers and from the
+parameter's `ui` as follows, and MUST NOT require any further declaration in
+order to do it. Where more than one row applies, the first that applies decides.
+
+| Where the covered input's `schema` says | The control |
+|---|---|
+| `sensitive: true` | MUST conceal the value as it is entered, and MUST NOT display a stored one. |
+| `type: STRING_LIST` | MUST offer several of the `enum` members at once, under their `enumLabels` wording where one is given, and MUST NOT offer a value outside them. |
+| a non-empty `enum` | MUST offer those members, under their `enumLabels` wording where one is given, and MUST NOT offer a value outside them. |
+| `type: BOOLEAN` | MUST offer exactly `true` and `false`. |
+| `type: JSON` | SHOULD accept text spanning more than one line. |
+| `format: EMAIL` | SHOULD offer a control specialised for a mailbox address. |
+| `format: TIMEZONE` | SHOULD offer the identifiers [component §6.3](../../component/v1/spec.md#value-schema) names. |
+| anything else | accepts text. |
+
+The order matters in two places and is stated rather than left to chance. A
+secret drawn from an enumeration is concealed rather than listed, because
+`sensitive` is read first. And a `STRING_LIST` always carries a non-empty `enum`
+([`COMP-VAL-006`](../../component/v1/spec.md#value-schema)), so it is read before
+the `enum` row that would otherwise catch it and offer exactly one member.
+
+A field is mandatory when some input it covers is required and has no
+`schema.default`, and the parameter carries neither source. A client MUST NOT
+submit the form without a value for a mandatory field.
+
+**This clause binds an implementation's output rather than a document**, which
+[listing §4.1](../../listing/v1/spec.md#description-markdown) is the only other
+place in these specifications to do. There the grounds were security; here they
+are that this contract has already spent the alternative. `ui` carries a label
+and no control *because* the control is derived, and a `widget` member is
+withheld on the same reasoning: a control declared beside the schema it renders
+is one fact stated twice, with nothing to decide which is wrong when they
+disagree. A derivation that is not written down makes `ui` not a minimal
+contract but an incomplete one, and leaves two conforming implementations free
+to render one document differently with neither of them defective.
+
+**It carries no requirement identifier.** No document can violate it, and
+[docs/conformance.md](../../../docs/conformance.md#requirements) reserves an
+identifier for a rule one can. What the corpus holds down instead is the rules
+that make the derivation total: [`BP-UI-001`](#BP-UI-001) through
+[`BP-UI-003`](#BP-UI-003), [`BP-PARAM-002`](#BP-PARAM-002) and
+[`COMP-VAL-004`](../../component/v1/spec.md#value-schema), each of which is a
+statement about a document.
+
+**Field order.** A client SHOULD present fields in ascending `ui.order`. A
+parameter declaring none sorts after every parameter that declares one, and
+parameters that tie, including all of them in a document that declares no order
+at all, sort by parameter key compared as UTF-8 bytes. A mapping has no
+sequence, and an order left implicit is whichever order an implementation
+happens to iterate in.
+
+**What this does not constrain.** No widget, no medium, no library, and no
+appearance. Nothing here obliges a control to *reject* a value the `schema`
+would reject:
+[component §6.3](../../component/v1/spec.md#value-schema) records that no phase
+tests a value against its schema, and this section opens no such phase. The
+`enum` and `BOOLEAN` rows say what a control offers, not what the platform will
+accept. A client that renders every field as a text box and every enumeration as
+a list of its members is defective; one that chooses a different-looking chooser
+than another client is not.
 
 ## <a id="validation-layers"></a>6. Validation layers
 
@@ -885,8 +954,8 @@ As defined in [core v1 §6](../../core/v1/spec.md#validation-layers), and
 written in the YAML profile
 [core v1 §6.1](../../core/v1/spec.md#yaml-profile) states.
 Blueprint documents exercise the `semantic` phase more heavily than any other
-family — repo-local reference resolution, connection compatibility, and the
-parameter merge all live there.
+family — repo-local reference resolution, connection compatibility, and parameter
+coverage all live there.
 
 Published reference resolution is the exception: it needs the catalog, so it
 belongs to `capability`. A blueprint composed entirely of repo-local references
@@ -903,21 +972,28 @@ document in this family. This family adds:
 | `ERR_REFERENCE_ESCAPE` | `semantic` | A repo-local `componentRef` reference resolves outside the item root. |
 | `ERR_UNKNOWN_COMPONENT` | `capability` | A published `componentRef` reference names no component, or no such `revision`. |
 | `ERR_CONFLICTING_NODE_COMPUTE` | `semantic` | A node's `size` disagrees with whether the component it deploys is run. |
-| `ERR_INPUT_NOT_CONNECTABLE` | `semantic` | A connection's key names an input whose `suppliedBy` is not `CONNECTION`. |
+| `ERR_INPUT_NOT_CONNECTABLE` | `semantic` | A connection fills an input that an `INPUT` output of the same component reads. |
 | `ERR_UNKNOWN_ROLE` | `semantic` | A connection's `fromRole` names no node in this blueprint. |
 | `ERR_UNKNOWN_OUTPUT` | `semantic` | A connection's `fromOutput` names no output of the referenced component. |
 | `ERR_UNKNOWN_INPUT` | `semantic` | A connection's map key names no input of the consuming node's component. |
-| `ERR_UNWIRED_REQUIRED_INPUT` | `semantic` | A node's required `CONNECTION` input is satisfied by no connection. |
 | `ERR_COMPONENT_NOT_PUBLISHED` | `capability` | A published `componentRef` reference resolves to a component that is not in a published state. |
 | `ERR_UNKNOWN_COMPUTE_PROFILE` | `capability` | A node's `size` names a Compute Profile the catalog does not offer. |
 | `ERR_INCOMPATIBLE_TYPE` | `semantic` | A connection joins an output and an input whose `schema.type`s differ. |
 | `ERR_INCOMPATIBLE_RESOURCE_TYPE` | `semantic` | A connection joins an output and an input whose `schema.resourceType`s disagree. |
 | `ERR_UNREFERENCED_COMPONENT` | `semantic` | A component document in the item is referenced by no node. |
-| `ERR_CONFLICTING_INPUT_SCHEMA` | `semantic` | Two nodes declare the same input key with different schemas. |
-| `ERR_UNBOUND_PARAMETER` | `semantic` | An authored parameter's key names no `USER` input of any node. |
-| `ERR_UNCOVERED_REQUIRED_INPUT` | `semantic` | An input the deploying user must supply is guaranteed a value by no authored parameter. |
-| `ERR_INCOMPATIBLE_PARAMETER_TYPE` | `semantic` | An authored parameter and an input it covers declare different `schema.type`s. |
-| `ERR_INCOMPATIBLE_PARAMETER_RESOURCE_TYPE` | `semantic` | An authored parameter names a `schema.resourceType` an input it covers does not. |
+| `ERR_CONFLICTING_INPUT_SCHEMA` | `semantic` | The inputs one parameter covers declare different schemas. |
+| `ERR_UNBOUND_PARAMETER` | `semantic` | A parameter covers no input of any node. |
+| `ERR_UNSATISFIED_REQUIRED_INPUT` | `semantic` | A required input with no default is neither wired nor covered by a parameter. |
+| `ERR_GENERATED_INPUT_NOT_SENSITIVE` | `semantic` | A parameter carrying a `generator` covers an input not marked `sensitive`. |
+| `ERR_ENDPOINT_NOT_PUBLIC` | `semantic` | A platform default resolves to a `PRIVATE` endpoint. |
+| `ERR_ENDPOINT_NOT_L4` | `semantic` | A platform default deriving an edge address resolves to an endpoint whose protocol is in the HTTP family. |
+| `ERR_UNKNOWN_ENUM_MEMBER` | `semantic` | An `enumLabels` key names no member of the covered inputs' `enum`. |
+
+A platform default also reports three codes
+[component §8](../../component/v1/spec.md#diagnostics) declares:
+`ERR_UNKNOWN_ENDPOINT`, `ERR_AMBIGUOUS_ENDPOINT` and `ERR_ENDPOINT_NOT_HTTP`
+([§5.2](#value-sources)). They are declared there, where the endpoint names and
+the primary election they are measured against are defined.
 
 ## <a id="conformance"></a>8. Conformance
 
@@ -946,14 +1022,29 @@ the other end.
 **A node set that depends on an install-form answer is foreclosed, and the
 reason is architectural.** "Deploy an engine for me, or let me point at one I
 have" reads like a parameter and is not one: it would make `spec.components` a
-function of the answers to the form, which makes [§5.1](#derivation)'s
-derivation a function of its own output and turns
-[§5.3](#authored-parameters)'s coverage rules into claims quantified over a
-value space rather than over the document in front of them. The `semantic` phase
+function of the answers to the form, which makes the form a function of its own
+output and turns [§5.1](#coverage)'s coverage rules into claims quantified over
+a value space rather than over the document in front of them. The `semantic` phase
 would stop being a static analysis of the bytes it was handed. Whoever proposes
 it should know that before starting rather than afterwards, which is why it is
 recorded here in the shape [§4.2](#connections) already uses for the acyclicity
 foreclosure.
+
+**What the install form still cannot say.** [§5.3](#install-form) gives a field a
+name, a position, a standing and a wording for its choices. It gives it no
+**grouping**: an eleven-field form is presented as one list, and a blueprint
+cannot say that three of its fields belong together under a heading. When `ui`
+lived on a component input this was an objection of principle, because a group
+name was a claim about a form holding other components' inputs. The form is now
+this document's, so the objection is gone and what remains is an unmade
+decision. Admitting a grouping later is additive.
+
+**The platform default has one kind.** `SELF_ADDRESS` reads the covered node's
+own addressing, which a node deploying an external component does not have, so
+a default covering one is rejected ([§5.2](#value-sources)). A second kind that
+resolved a value from a resource the organisation already holds would be
+meaningful there. Recorded so the rejection is not later read as a decision
+about platform defaults as a class.
 
 What remains is not a gap in the prose but a vocabulary nothing publishes yet:
 [§4.4](#placement-constraints)'s compute-constraint pins, recorded there as a gap

@@ -15,12 +15,10 @@ spec:
         visibility: PRIVATE
   contract:
     inputs:
-        siteTitle:
-          schema:
-            type: STRING
-            default: Acme Wiki
-          required: false
-          suppliedBy: USER
-          ui:
-            label: Site title
+      siteTitle:
+        schema:
+          type: STRING
+          default: Acme Wiki
+        required: false
+        description: Title the application shows in its header.
     outputs: {}

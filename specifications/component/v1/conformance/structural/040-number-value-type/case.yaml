@@ -21,13 +21,13 @@ spec:
   contract:
     inputs:
       port:
+        description: Port the service listens on.
         schema:
           type: NUMBER
           pattern: '^-?[0-9]+$'
-        ui:
-          label: Listen port
     outputs:
       port:
+        description: Port the service listens on, for a consumer to connect to.
         schema:
           type: NUMBER
         valueFrom: DECLARED

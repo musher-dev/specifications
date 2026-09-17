@@ -1,7 +1,6 @@
 # The identifier is what the node *is*, so a block without one describes
-# nothing. It is REQUIRED rather than defaulted for the reason COMP-GEN-001
-# gives for `sensitive`: an identifier a document may leave out is one two
-# implementations may read differently.
+# nothing. It is REQUIRED rather than defaulted: an identifier a document may
+# leave out is one two implementations may read differently.
 specVersion: v1
 kind: COMPONENT
 metadata:
@@ -12,6 +11,7 @@ spec:
     inputs: {}
     outputs:
       baseUrl:
+        description: Base URL of the addressed service, for a consumer to call.
         schema:
           type: STRING
         valueFrom: DECLARED

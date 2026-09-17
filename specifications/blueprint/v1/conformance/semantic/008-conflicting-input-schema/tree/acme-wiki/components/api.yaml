@@ -19,7 +19,5 @@ spec:
         schema:
           type: STRING
           sensitive: true
-        suppliedBy: USER
-        ui:
-          label: Administrator password
+        description: Password of the administrator account the component creates on first start.
     outputs: {}

@@ -1,4 +1,4 @@
-# §5.3 makes the parameter key the whole of the correspondence between a
+# §5.1 makes the parameter key the whole of the correspondence between a
 # parameter and the inputs it covers, so a key outside the input grammar could
 # cover nothing — there is no input it could ever equal. Rejecting it
 # structurally is cheaper than the `ERR_UNBOUND_PARAMETER` it would otherwise
@@ -16,9 +16,5 @@ spec:
       connections: {}
   parameters:
     Site_Title:
-      schema:
-        type: STRING
-        default: My Application
-      required: false
       ui:
         label: Site title

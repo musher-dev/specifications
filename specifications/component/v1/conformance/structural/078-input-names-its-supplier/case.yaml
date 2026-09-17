@@ -1,0 +1,47 @@
+# An input declares what the component needs, never who supplies it or how a
+# person is asked for it. Each of the four fields that once said so is now an
+# unknown field: a blueprint wires the input, or covers it with a parameter that
+# carries the generator, the platform default and the presentation.
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+spec:
+  workload:
+    type: SERVICE
+    source:
+      type: IMAGE
+      ref: nginx:1.29.4-alpine
+    endpoints:
+      web:
+        containerPort: 8080
+        protocol: HTTP
+        visibility: PRIVATE
+  contract:
+    inputs:
+      databaseUrl:
+        description: Connection URL of the database the service reads and writes.
+        schema:
+          type: STRING
+        suppliedBy: CONNECTION
+      siteTitle:
+        description: Title shown in the site header.
+        schema:
+          type: STRING
+        ui:
+          label: Site title
+      sessionSecret:
+        description: Secret the service signs session cookies with.
+        schema:
+          type: STRING
+          sensitive: true
+        generator:
+          byteLength: 32
+      publicUrl:
+        description: Public URL the service is reached at.
+        schema:
+          type: STRING
+        platformDefault:
+          type: SELF_ADDRESS
+          source: PUBLIC_URL
+    outputs: {}

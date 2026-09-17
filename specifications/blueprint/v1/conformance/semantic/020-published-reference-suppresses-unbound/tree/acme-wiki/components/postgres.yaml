@@ -20,7 +20,5 @@ spec:
           type: STRING
           default: Acme Wiki
         required: false
-        suppliedBy: USER
-        ui:
-          label: Site title
+        description: Title the application shows in its header.
     outputs: {}

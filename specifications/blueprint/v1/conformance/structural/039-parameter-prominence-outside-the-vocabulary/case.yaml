@@ -1,0 +1,19 @@
+# prominence has two members. HIDDEN is not one of them: a field the deploying
+# user cannot see is a value the form does not collect, and whether a value
+# needs collecting is the covered input's to say, not the presentation's.
+specVersion: v1
+kind: BLUEPRINT
+metadata:
+  slug: acme-wiki
+  revision: 1
+spec:
+  components:
+    web:
+      componentRef: ./components/web.yaml
+      size: general.standard.small
+      connections: {}
+  parameters:
+    siteTitle:
+      ui:
+        label: Site title
+        prominence: HIDDEN

@@ -1,0 +1,6 @@
+[
+  {
+    "code": "ERR_AMBIGUOUS_ENDPOINT",
+    "path": "/spec/parameters/baseUrl/platformDefault/endpoint"
+  }
+]

@@ -21,6 +21,7 @@ spec:
     inputs: {}
     outputs:
       connectionString:
+        description: Connection string a client uses to reach this database.
         schema:
           type: STRING
           resourceType: POSTGRES

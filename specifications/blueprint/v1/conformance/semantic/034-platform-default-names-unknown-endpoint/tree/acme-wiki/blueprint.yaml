@@ -1,0 +1,22 @@
+# The platform default derives from `console`, and the only endpoint `app`
+# declares is `api`. The endpoint names live in the component, so only reading
+# the node the parameter covers can settle it.
+specVersion: v1
+kind: BLUEPRINT
+metadata:
+  slug: acme-wiki
+  revision: 1
+spec:
+  components:
+    app:
+      componentRef: ./components/app.yaml
+      size: general.standard.small
+      connections: {}
+  parameters:
+    consoleUrl:
+      platformDefault:
+        type: SELF_ADDRESS
+        source: PUBLIC_URL
+        endpoint: console
+      ui:
+        label: Console URL

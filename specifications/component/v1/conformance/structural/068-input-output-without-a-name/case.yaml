@@ -12,13 +12,13 @@ spec:
   contract:
     inputs:
       baseUrl:
+        description: Base URL of the service this node addresses.
         schema:
           type: STRING
           format: ENDPOINT_URL
-        ui:
-          label: API base URL
     outputs:
       baseUrl:
+        description: Base URL of the addressed service, for a consumer to call.
         schema:
           type: STRING
           format: ENDPOINT_URL

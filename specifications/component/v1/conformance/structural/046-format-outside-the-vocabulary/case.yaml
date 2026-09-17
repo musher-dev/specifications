@@ -21,9 +21,8 @@ spec:
   contract:
     inputs:
       systemPrompt:
+        description: System prompt prepended to every conversation.
         schema:
           type: STRING
           format: MULTILINE
-        ui:
-          label: System prompt
     outputs: {}

@@ -1,0 +1,21 @@
+# PUBLIC_URL derives an externally reachable address, and a PRIVATE endpoint
+# has none to give.
+specVersion: v1
+kind: BLUEPRINT
+metadata:
+  slug: acme-wiki
+  revision: 1
+spec:
+  components:
+    app:
+      componentRef: ./components/app.yaml
+      size: general.standard.small
+      connections: {}
+  parameters:
+    selfUrl:
+      platformDefault:
+        type: SELF_ADDRESS
+        source: PUBLIC_URL
+        endpoint: internal
+      ui:
+        label: Own URL

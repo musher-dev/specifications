@@ -1,9 +1,8 @@
-# The counterpart this family never had. §5.1 derives a platform default onto a
-# parameter, so an authored override has to be able to carry one too — §5.3
-# already reasons that way about a generated secret: without the same field
-# here, moving a platform-filled value onto the override path is enough to lose
-# the fact that it is filled at all, and the form asks for something the
-# platform was going to supply.
+# A platform default rides on the parameter, because deriving a value from a
+# node's own addressing is a way of supplying it and supply is the blueprint's
+# to decide. The field still reaches the form: the platform fills it and the
+# deploying user may type over it. Which endpoint it resolves against, on each
+# node the parameter covers, is §5.2's semantic question and not this case's.
 specVersion: v1
 kind: BLUEPRINT
 metadata:
@@ -17,10 +16,6 @@ spec:
       connections: {}
   parameters:
     publicUrl:
-      schema:
-        type: STRING
-        format: URI
-      required: false
       platformDefault:
         type: SELF_ADDRESS
         source: PUBLIC_URL

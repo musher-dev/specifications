@@ -1,0 +1,8 @@
+{
+  "id": "structural-038-parameter-ui-without-a-label",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#install-form",
+  "requirements": ["BP-UI-001"],
+  "summary": "A parameter ui block declaring no label is rejected."
+}

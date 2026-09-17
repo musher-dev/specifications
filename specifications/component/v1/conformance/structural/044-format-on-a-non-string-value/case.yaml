@@ -20,9 +20,8 @@ spec:
   contract:
     inputs:
       retries:
+        description: Number of times a failed request is retried.
         schema:
           type: NUMBER
           format: URI
-        ui:
-          label: Retry count
     outputs: {}

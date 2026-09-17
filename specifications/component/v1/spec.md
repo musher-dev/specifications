@@ -276,8 +276,10 @@ declare one; [§5](#workload) carries the rest of that rule.
 `^[a-z][a-z0-9]{0,19}$` — lowercase alphanumeric, one to twenty characters —
 and one that does not is rejected in the `structural` phase with
 `ERR_INVALID_VALUE`. The name is not decoration: [§5.4](#health) points a probe
-at one and [§6.1](#inputs) derives an address from one, so a dot or a space in
-a name is a hazard rather than a matter of taste.
+at one and a blueprint's
+[platform default](../../blueprint/v1/spec.md#value-sources) derives an address
+from one, so a dot or a space in a name is a hazard rather than a matter of
+taste.
 
 **The grammar is narrower than a slug, and deliberately.** A name does not
 become a DNS label; it is composed *into* one, beside the other names that
@@ -328,8 +330,9 @@ Nothing here is `structural`: a `PUBLIC` `TCP` endpoint is a database, a game
 server, an MQTT broker or an SMTP relay exposed to the internet, and rejecting
 it would make a working capability inexpressible. What the split does decide is
 which references may name such an endpoint. [§5.4](#health)'s probe reads a URL
-and may name only the first row. [§6.1](#inputs)'s platform default reads
-either, and each of its four sources is tied to the row it takes its value
+and may name only the first row.
+[Blueprint §5.2](../../blueprint/v1/spec.md#value-sources)'s platform default
+reads either, and each of its four sources is tied to the row it takes its value
 from.
 
 **A component MAY declare more than one `PUBLIC` endpoint**, and each one
@@ -339,12 +342,13 @@ second is harder than routing the first.
 
 The consequence is a rule and not a caveat: **anything naming a public address
 MUST name the endpoint it means.** Where two exist there is no such thing as
-"the component's URL". [§6.1](#inputs) is where that bites, and where the
-selector lives.
+"the component's URL".
+[Blueprint §5.2](../../blueprint/v1/spec.md#value-sources) is where that bites,
+and where the selector lives.
 
-**The primary endpoint.** A reference MAY omit the endpoint it targets — a
-probe's `endpoint` and a platform default's are both OPTIONAL — and the primary
-endpoint is what an omitted one selects. It is:
+**The primary endpoint.** A reference MAY omit the endpoint it targets. A
+probe's `endpoint` and a blueprint platform default's are both OPTIONAL, and the
+primary endpoint is what an omitted one selects. It is:
 
 1. the workload's sole endpoint, where it declares exactly one; failing that
 2. its sole `PUBLIC` endpoint, where it declares exactly one; failing that
@@ -376,9 +380,10 @@ is recorded here so a reader can tell the two apart. Closing it rejects
 documents that validate today.
 
 The edge address of a `PUBLIC` `TCP` or `UDP` endpoint **is** readable from the
-contract. [§6.1](#inputs)'s `PUBLIC_ADDRESS` derives the whole `host:port` and
-`PUBLIC_PORT` the allocated port alone, so a component whose sibling needs a
-broker's or a database's edge address at install time can say so.
+contract. [Blueprint §5.2](../../blueprint/v1/spec.md#value-sources)'s
+`PUBLIC_ADDRESS` derives the whole `host:port` and `PUBLIC_PORT` the allocated
+port alone, so a blueprint whose node needs a broker's or a database's edge
+address at install time can say so.
 
 ### <a id="env-vars"></a>5.3 Environment variables
 
@@ -429,12 +434,12 @@ collision is an error, so no key is ever claimed twice. Ranking the two instead
 — letting a contract-supplied value quietly outrank a literal, or the reverse —
 would settle the ambiguity without telling anyone there was one, and the
 consequence would surface as a wrong value inside a running workload rather than
-as a diagnostic. [Blueprint §5.2](../../blueprint/v1/spec.md#merge) refused that
-same trade for input merging, and refused it on the same ground.
+as a diagnostic. [Blueprint §5.1](../../blueprint/v1/spec.md#coverage) refuses
+the same trade for two inputs one parameter covers, on the same ground.
 
 **Sensitivity.** `sensitive` on a `LITERAL` marks the value as secret
-material. An implementation MUST treat a marked value as
-[§6.1](#inputs) requires of a generated input: masked in read surfaces, and
+material. An implementation MUST treat a marked value as it treats a value
+whose [`schema.sensitive`](#value-schema) is `true`: masked in read surfaces, and
 never echoed back into logs, diagnostics, or interfaces. It defaults to `false`,
 so an unmarked literal is handled as ordinary configuration.
 
@@ -442,8 +447,9 @@ A `CONFIG_REF` carries no marking and needs none. It names a value resolved
 elsewhere and the document holds only the name, so there is nothing in this file
 to mask.
 
-A component SHOULD carry secret material as a `CONFIG_REF`, or as an input with
-a `generator` ([§6.1](#inputs)), rather than as a marked literal. `sensitive`
+A component SHOULD carry secret material as a `CONFIG_REF`, or as an input
+whose `schema.sensitive` is `true` ([§6.1](#inputs)), rather than as a marked
+literal. `sensitive`
 governs how a value is *handled*; it does not stop the value being bytes in a
 file that is read, reviewed, and committed. It is a SHOULD because a marked
 literal is still better than an unmarked one, and this document cannot see where
@@ -546,10 +552,9 @@ the rest of the graph leaves through [`contract.outputs`](#outputs).
 <a id="COMP-EXT-002"></a>**`COMP-EXT-002`** — `external.resourceType` is
 REQUIRED and takes the grammar [§6.3](#value-schema) fixes. `structural`; an
 absent identifier is `ERR_MISSING_FIELD` and an ungrammatical one
-`ERR_INVALID_VALUE`. It is REQUIRED rather than defaulted for the reason
-[`COMP-GEN-001`](#COMP-GEN-001) gives for `sensitive`: an identifier a document
-may leave out is one two implementations may read differently, and introducing
-it later is introducing a required field later.
+`ERR_INVALID_VALUE`. It is REQUIRED rather than defaulted because an identifier
+a document may leave out is one two implementations may read differently, and
+introducing it later is introducing a required field later.
 
 **It is the same grammar and the same registry as a value's, read of a
 different thing.** A value's `resourceType` says what that value addresses,
@@ -577,21 +582,15 @@ MUST NOT declare `valueFrom: DERIVED`. `structural`, `ERR_INVALID_VALUE`.
 [§6.2](#outputs) makes a `DERIVED` value come from the running workload, and
 there is no running workload. `DECLARED` and `INPUT` both stay available, and
 `INPUT` is the member this shape exists alongside: an external node's values are
-what the deploying user supplies it.
+what its blueprint supplies it.
 
-<a id="COMP-EXT-005"></a>**`COMP-EXT-005`** — An external component's inputs
-MUST NOT carry a `platformDefault` or a `generator`. `structural`,
-`ERR_INVALID_VALUE`. It is the pair [§6.1](#inputs) already excludes beside
-`suppliedBy: CONNECTION`, for reasons that survive the change of setting: a
-platform default derives from the component's own public addressing, which an
-external node does not have, and a generator mints a secret this platform would
-then not be sharing with the service that has to accept it.
-
-**The exclusion is about what `SELF_ADDRESS` means.** `platformDefault.type`
-has one member and it reads the component's own addressing. A second kind that
-resolved a value from a resource the organisation already holds would be
-meaningful on exactly this shape; [§10](#known-debt) records the exclusion as
-reviewable when one arrives rather than as a considered permission.
+**How those inputs are supplied is not this document's concern.** An external
+component declares what it needs exactly as a workload does ([§6.1](#inputs)).
+Whether a value is typed by the deploying user or arrives over a wire is decided
+by the [blueprint](../../blueprint/v1/spec.md#parameters) that deploys the node.
+A platform default has no addressing to read on a node with no endpoints, and
+[blueprint §5.2](../../blueprint/v1/spec.md#value-sources) rejects one there with
+the codes it already uses for an endpoint that does not exist.
 
 **What v1 does not constrain.** Nothing here reaches the service the node
 addresses. No phase resolves the address, tests that anything answers at it, or
@@ -606,141 +605,79 @@ consume. A [Blueprint](../../blueprint/v1/spec.md) connection joins one node's
 output to another node's input, and this section defines both ends of that
 join.
 
+**The contract states requirements, never method.** An input says what value
+the component needs, what shape it takes, whether the component can run without
+it, and where it lands in the workload. It does not say who supplies it, how it
+is generated, or how a person is asked for it. Those depend on the composition,
+which this document cannot see, so they belong to the
+[blueprint](../../blueprint/v1/spec.md#parameters) that can: a connection, or a
+parameter on its install form.
+
 `contract` is OPTIONAL. A component that neither consumes nor publishes
 configuration omits it.
+
+<a id="COMP-DESC-001"></a>**`COMP-DESC-001`** — Every input and every output
+MUST declare a non-empty `description`. `structural`; an absent `description`
+is `ERR_MISSING_FIELD` and an empty one `ERR_INVALID_VALUE`.
+
+The description is the one place a value is explained. A blueprint parameter
+carries none of its own and shows the description of the input it covers, so a
+value is described once, by the document that needs it, and every blueprint
+deploying the component shows the same words. Optional, it would be missing
+exactly where a reader has nothing else to go on: an output wired from a
+component they did not write.
 
 **An input or output name is `lowerCamelCase`.** A name MUST match
 `^[a-z][a-zA-Z0-9]{0,63}$`, and one that does not is rejected in the
 `structural` phase with `ERR_INVALID_VALUE`. The grammar is load-bearing
 rather than cosmetic: the name is bound by key across three documents — the
 input, the [connection](../../blueprint/v1/spec.md#connections) key that fills
-it, and the [parameter](../../blueprint/v1/spec.md#authored-parameters) that
+it, and the [parameter](../../blueprint/v1/spec.md#coverage) that
 covers it — so two spellings of one name are two names. It is not the
 environment-variable key either; that is what [`target`](#inputs) carries, on
 the POSIX grammar [§5.3](#env-vars) fixes.
 
 ### <a id="inputs"></a>6.1 Inputs
 
-`schema` is the only REQUIRED property of an input. `suppliedBy` decides who
-satisfies it and defaults to `USER`.
+An input carries four properties, and each states part of the requirement.
 
-| `suppliedBy` | Satisfied by | `ui` |
+| Property | Presence | Says |
 |---|---|---|
-| `USER` | The deploying user, through the install form. | REQUIRED |
-| `CONNECTION` | A blueprint connection, from an upstream output. | MUST NOT be present |
+| `description` | REQUIRED | What the value is ([`COMP-DESC-001`](#COMP-DESC-001)). |
+| `schema` | REQUIRED | The shape its string form takes ([§6.3](#value-schema)). |
+| `required` | OPTIONAL, default `true` | Whether the component can be deployed without a value. |
+| `target` | OPTIONAL | Where the resolved value is bound in the workload. |
 
-<a id="COMP-UI-001"></a>**`COMP-UI-001`** — A `USER` input MUST declare `ui`.
-`structural`, `ERR_MISSING_FIELD`. A form cannot render a field it has no label
-for, and `suppliedBy` defaults to `USER`, so an input saying nothing about who
-satisfies it is bound by this.
+Nothing else is admitted, and any other property is `ERR_UNKNOWN_FIELD` as
+[core v1 §2](../../core/v1/spec.md#envelope) requires at every level.
 
-<a id="COMP-UI-002"></a>**`COMP-UI-002`** — A `CONNECTION` input's `ui` MUST NOT
-be present. `structural`, `ERR_INVALID_VALUE`. Such an input never reaches the install
-form, so presentation metadata on one is a statement about a form it will never
-appear on.
+**An input does not say where its value comes from.** A blueprint satisfies it
+by wiring an upstream output to it
+([blueprint §4.2](../../blueprint/v1/spec.md#connections)) or by covering it with
+a parameter the deploying user fills in, the platform generates, or the platform
+derives from the node's own addressing
+([blueprint §5](../../blueprint/v1/spec.md#parameters)). One component can be
+deployed each of those ways by different blueprints without changing, which is
+what a reusable definition is for. A property here naming the source would be a
+claim about every composition the component will ever join, made by the one
+document that sees none of them.
 
-What `ui` contains, and what a client draws from it, is
-[§6.4](#install-form).
+**A required input is satisfied or the blueprint is rejected.** `required`
+defaults to `true`, so an input that says nothing about it is required. A
+required input whose `schema` declares a `default` already has a value, and needs
+nothing supplied. Every other required input MUST be wired or covered, and
+[blueprint §5.1](../../blueprint/v1/spec.md#coverage) carries the rule and its
+diagnostic, because the blueprint is the document that can tell.
 
-<a id="COMP-GEN-001"></a>**`COMP-GEN-001` — a generated input is secret
-material.** An input carrying `generator` — one whose value the platform mints at
-deploy time — MUST declare `suppliedBy: USER` and `schema.sensitive: true`, and
-MUST NOT carry a `platformDefault`. Both markings MUST be written explicitly
-rather than left to a default: `sensitive` defaults to `false`, and a generated
-value not marked sensitive is echoed back into logs and interfaces. All three are
-`structural`.
-
-The value rides on a `USER` input because that is the slot the install form
-already reserves for it — the user simply does not have to type it. A
-`platformDefault` is excluded because minting a value and deriving one are two
-answers to the same question, and nothing would say which arrives.
-
-**A platform default supplies the value the deploying user does not.**
-`platformDefault` is OPTIONAL. Where it is present, `type`
-is REQUIRED and names the kind of default, `source` is REQUIRED and selects what
-is derived, and `endpoint` names which endpoint it is derived from.
-
-`type` has one member, `SELF_ADDRESS`, which derives the value from the
-component's own public addressing. It is REQUIRED and carries no default, for the
-reason [`COMP-GEN-001`](#COMP-GEN-001) gives for `sensitive`: a discriminator a
-document may leave out is one two implementations may read differently. A second
-kind is admitted beside this one without invalidating a document written against
-it, which is the whole reason the tag is written now rather than when a second
-kind arrives — adding it later would be adding a required field.
-
-**A platform default does not make a field disappear.** An input carrying one
-still reaches the install form, and still carries `ui`. "This is filled in for
-you, override it only for a custom domain" is a thing worth being able to say,
-and it is the same argument
-[blueprint §5.1](../../blueprint/v1/spec.md#derivation) already makes for a
-generated input. That is why `suppliedBy: USER` beside a `platformDefault` is
-not a contradiction but the ordinary case: the platform fills it, and the user
-may type over it.
-
-There are four sources, and they come in two pairs because
-[§5.2](#endpoints) gives a `PUBLIC` endpoint two address forms:
-
-| `source` | Derives | From an endpoint publishing |
-|---|---|---|
-| `PUBLIC_URL` | The full URL. | a **URL** — `HTTP`, `HTTPS`, `WS`, `GRPC` |
-| `PUBLIC_HOSTNAME` | The host part of that URL. | " |
-| `PUBLIC_ADDRESS` | The full `host:port`. | a **`host:port`** — `TCP`, `UDP` |
-| `PUBLIC_PORT` | The allocated edge port alone. | " |
-
-Each pair reads one address form. `PUBLIC_PORT` and `PUBLIC_HOSTNAME` exist
-beside the whole they are part of because a consumer that takes host and port
-as separate settings should not have to split a string this contract had
-already composed.
-
-`endpoint` is OPTIONAL, and omitting it selects the primary endpoint
-[§5.2](#endpoints) elects. Since a component MAY expose several `PUBLIC`
-endpoints, one that does MUST name the endpoint here: an omitted `endpoint`
-elects nothing there and is rejected with `ERR_AMBIGUOUS_ENDPOINT`.
-
-<a id="COMP-EP-004"></a>Three further rules follow the name, all `semantic`. An endpoint the workload
-does not declare is `ERR_UNKNOWN_ENDPOINT` — the same code and the same reason
-as a probe's. An endpoint that is declared but `PRIVATE` is
-`ERR_ENDPOINT_NOT_PUBLIC`: every source derives an externally reachable
-address, and a `PRIVATE` endpoint has none to give.
-
-The third is the pairing above, enforced. **A source MUST name an endpoint
-publishing the address form it reads.** A `URL` source naming a `TCP` or `UDP`
-endpoint is `ERR_ENDPOINT_NOT_HTTP`, the same code a probe on such an endpoint
-carries. A `host:port` source naming an `HTTP`-family endpoint is
-`ERR_ENDPOINT_NOT_L4`. Two codes rather than one so a diagnostic names the axis
-that failed, which is the same reason [blueprint §4.2](../../blueprint/v1/spec.md#connections)
-splits its two compatibility codes.
-
-**Why an HTTP-family endpoint does not answer `PUBLIC_ADDRESS`.** It is
-reachable at a host and a port like anything else, so admitting it would be
-easy and is refused deliberately. Such an endpoint is published through the
-shared ingress rather than on a port allocated to it, so what the derivation
-would yield is the ingress address on the ingress port — true, and not the
-thing an author asking for an edge address is asking for. They want the port
-their broker was given. A source that returns a defensible value nobody wanted
-is worse than one that rejects the document, because the first failure is
-silent and arrives at runtime.
-
-Both rules apply to the endpoint a reference *resolves to*, elected or named,
-for the reason [§5.2](#endpoints) gives: the primary is what an omitted
-selector means, so a
-rule about the endpoint a reference means reaches it equally.
-
-**A platform default is not a `CONNECTION`.** The value comes from the
-component's own workload, never from an upstream node, which is the same line
-[§6.2](#outputs) draws around an output. An input declaring
-`suppliedBy: CONNECTION` therefore MUST NOT carry a `platformDefault`, and MUST
-NOT carry a `generator` either: a wire already answers the question both of them
-answer. `structural`, `ERR_INVALID_TYPE` in both cases, anchored at the field
-that should not have been there.
-
-An earlier draft of this section recorded the first of those as a gap —
-"`suppliedBy` is unconstrained by `platformDefault` in v1". It is a gap the
-shape can close, and a gap the shape can close is not one to describe.
+**Secret material is declared, not arranged.** An input whose value is a secret
+declares `schema.sensitive: true`. Whether that secret is typed by a person or
+minted at deploy time is a question about the deployment, and a blueprint that
+generates one is held to covering only inputs marked this way
+([blueprint §5.2](../../blueprint/v1/spec.md#value-sources)).
 
 ### <a id="outputs"></a>6.2 Outputs
 
-`schema` and `valueFrom` are REQUIRED.
+`schema`, `description` ([`COMP-DESC-001`](#COMP-DESC-001)) and `valueFrom` are REQUIRED.
 
 | `valueFrom` | Carries | Where the value comes from |
 |---|---|---|
@@ -761,14 +698,12 @@ connection graph, and this rule is why it can: every output in a composition is
 resolvable before any connection is bound, so a cycle among the connections
 leaves nothing unresolved.
 
-**The invariant is resolvability before any edge is bound, and that is what the
-rules below enforce.** A `USER` input resolves when the install form is
-submitted, which is *earlier* than a `DERIVED` output resolves — that one needs
-a running, addressed workload. An input carrying a `generator` is minted at
-deploy time out of nothing. An input carrying a `platformDefault` reads the
-component's own addressing, which [§6.1](#inputs) already calls the same line
-this section draws. Only a `CONNECTION` input resolves after an edge is bound,
-and it is the only one an output may not read.
+**The invariant is resolvability before any edge is bound.** A value typed into
+the install form resolves when the form is submitted, which is *earlier* than a
+`DERIVED` output resolves, since that one needs a running, addressed workload. A
+generated value is minted at deploy time out of nothing, and a platform default
+reads the node's own addressing. Only a wired input resolves after an edge is
+bound, and it is the only input an `INPUT` output may not read.
 
 <a id="COMP-OUT-001"></a>**`COMP-OUT-001`** — `input` is REQUIRED where
 `valueFrom` is `INPUT`, and MUST NOT be present on any other member.
@@ -782,19 +717,14 @@ which is the class of reference
 [core v1 §6](../../core/v1/spec.md#validation-layers) puts in the `semantic`
 phase.
 
-<a id="COMP-OUT-003"></a>**`COMP-OUT-003`** — The named input's `suppliedBy`
-MUST NOT be `CONNECTION`. `semantic`, `ERR_INPUT_NOT_REFERENCEABLE`. An output
-reading a wired input would depend on an inbound edge, which is the dependency
-this section's invariant exists to exclude — and it is what would make
-[blueprint §4.2](../../blueprint/v1/spec.md#connections)'s legal cycles
-unresolvable rather than merely cyclic.
-
-**An earlier draft of this section stated the invariant as "an output MUST NOT
-depend on a value the component received over an inbound connection".** That is
-a sufficient condition rather than the necessary one, and the necessary one is a
-step weaker: what an output may not read is a value that resolves after an edge
-is bound. `INPUT` is admitted on that reading, and nothing about `DECLARED` or
-`DERIVED` changes.
+**Which inputs are wired is the blueprint's to know, so the blueprint enforces
+the rest.** A component cannot tell whether an input it republishes will arrive
+over a connection, because [§6.1](#inputs) leaves the source to the composition.
+[Blueprint §4.2](../../blueprint/v1/spec.md#connections) therefore rejects a
+connection that fills an input one of the component's `INPUT` outputs reads. The
+rule is the same one, decided by the document that can see both ends of it: an
+output reading a wired input would depend on an inbound edge, and blueprint
+§4.2's legal cycles would stop being resolvable.
 
 **Where an output must fit the input it feeds.** An output's `schema` and the
 `schema` of the input it is wired to must agree on `type`, and on
@@ -881,9 +811,10 @@ which is informative. That is the defect
 [ADR 0013](../../../docs/adr/0013-value-shape-vocabulary.md) closed for `type`,
 and `format` was one sentence away from it.
 
-**`HOSTNAME` is the host alone.** [§6.1](#inputs) already separates the two —
-`PUBLIC_HOSTNAME` derives the host part and `PUBLIC_ADDRESS` the whole
-`host:port` — for the reason given there: a consumer that takes host and port as
+**`HOSTNAME` is the host alone.**
+[Blueprint §5.2](../../blueprint/v1/spec.md#value-sources) already separates the
+two, since `PUBLIC_HOSTNAME` derives the host part and `PUBLIC_ADDRESS` the whole
+`host:port`, for the reason given there: a consumer that takes host and port as
 separate settings should not have to split a string this contract had already
 composed. An input receiving one of them can now say which it received.
 
@@ -950,7 +881,8 @@ is `ERR_INVALID_VALUE`, and a `pattern` is `ERR_INVALID_VALUE`.
 
 **`enum` is required rather than optional.** A `STRING_LIST` with no members
 named would be an unconstrained list of strings, which is what `JSON` already
-is, and [§6.4](#install-form)'s derivation would have nothing to offer: a
+is, and [blueprint §5.3](../../blueprint/v1/spec.md#install-form)'s derivation
+would have nothing to offer: a
 chooser with no choices is a text box that has been made harder to type into.
 The member is for the shape an install form can honestly ask for — several of a
 named set — and a document that has not named the set has not reached it.
@@ -976,13 +908,13 @@ question for data rather than for a control puts it in the type — JSON Schema'
 CloudFormation's `Type: CommaDelimitedList` with its per-member
 `AllowedValues`, Terraform's `set(string)`, Protocol Buffers' `repeated`. Only
 HTML spells it `multiple`, and there it is an attribute of `<select>`: a
-statement about a control, which is the one thing [§6.4](#install-form) says
-this block never makes. The practical half matters more than the provenance.
+statement about a control, which is the one thing
+[blueprint §5.3](../../blueprint/v1/spec.md#install-form) says this block never
+makes. The practical half matters more than the provenance.
 [Blueprint §4.2](../../blueprint/v1/spec.md#connections) compares `type` for
-equality, [blueprint §5.3](../../blueprint/v1/spec.md#authored-parameters)
-requires a parameter's to agree with the input it covers, and
-[blueprint §5.2](../../blueprint/v1/spec.md#merge) compares whole `schema`
-blocks — so a member is compared at all three doors the day it is added, while a
+equality, and [blueprint §5.1](../../blueprint/v1/spec.md#coverage) compares
+whole `schema` blocks for the inputs one parameter covers, so a member is
+compared at both doors the day it is added, while a
 field beside `type` would have had to be remembered at each of them, and would
 have been a silent gap at any one that was missed.
 
@@ -999,133 +931,6 @@ members of `enum`, or that it repeats none of them. None of this is new with
 it is recorded here rather than described aspirationally, because the table
 above is the first place a reader could reasonably expect the check to be.
 Closing any of them rejects documents that validate today.
-
-### <a id="install-form"></a>6.4 Install-form presentation
-
-`ui` is the presentation metadata a `USER` input carries, and this section
-defines it. [`COMP-UI-001`](#inputs) requires one; [`COMP-UI-002`](#inputs)
-forbids one where there is no form to appear on.
-
-<a id="COMP-UI-003"></a>**`COMP-UI-003`** — `label` is `ui`'s only REQUIRED
-member, and `ui` admits no member this section does not name. A missing `label`
-is `ERR_MISSING_FIELD` and an unknown member is `ERR_UNKNOWN_FIELD`, both
-`structural`.
-
-| Member | Presence | Means |
-|---|---|---|
-| `label` | REQUIRED | What the field is called. |
-| `order` | OPTIONAL | Where the field sits. Lower sorts first. |
-| `prominence` | OPTIONAL | How prominently it is offered. Default `PRIMARY`. |
-| `examples` | OPTIONAL | Values illustrating the form the value takes. |
-| `enumLabels` | OPTIONAL | What each `enum` member is called. |
-
-**`ui` says how a value is asked for, never what it is.** Nothing here changes
-what a value means or what would validate, which is what keeps the data contract
-and the rendered control from being two declarations that can disagree. That is
-also why the control itself is not declared — see the derivation below.
-
-<a id="COMP-UI-004"></a>**`COMP-UI-004`** — `prominence` MUST be `PRIMARY` or
-`SECONDARY`. `structural`, `ERR_INVALID_VALUE`. `PRIMARY` is offered directly;
-`SECONDARY` is offered behind a disclosure the deploying user opens. It is
-distinct from `required`: an optional field may be either, and a form of
-eleven fields where three are optional is not the same form as one where three
-are advanced.
-
-**`examples` is never submitted.** It illustrates the form a value takes. A
-value that is actually submitted when the user supplies none is
-[`schema.default`](#value-schema), and the two are different claims — an example
-may be one nobody should deploy. Where a value carries an `enum`, `examples`
-says nothing a chooser does not already show, and a client SHOULD ignore it.
-
-<a id="COMP-UI-005"></a>**`COMP-UI-005`** — Every `enumLabels` key MUST be a
-member of the sibling `schema.enum`. A key naming no member is rejected in the
-`semantic` phase with `ERR_UNKNOWN_ENUM_MEMBER`, anchored at that key.
-
-`enumLabels` is keyed by the member rather than held in a list beside `enum`,
-so the labels cannot fall out of step with the members by length or by order,
-and so a member labelled twice is `ERR_DUPLICATE_KEY` in the `parser` phase
-([core v1 §6.1](../../core/v1/spec.md#yaml-profile)) rather than a rule this
-section would have to invent. A
-member with no label is offered as it is spelled, which is what a document
-written before this section existed already does. A label naming no member is
-the other direction and is the error: it is a typo that changes nothing a
-validator would otherwise see, and it would stay invisible for the life of the
-document.
-
-The rule is `semantic` rather than `structural` because it relates a mapping's
-keys to a sibling array's items, and JSON Schema has no keyword that does that.
-That is the same line
-[core v1 §6](../../core/v1/spec.md#validation-layers) draws everywhere else.
-
-**Where the labels live, and why not in `schema`.** `enumLabels` is presentation
-and sits in `ui` with the rest of it.
-[Blueprint §5.2](../../blueprint/v1/spec.md#merge) decides whether two components
-declaring one input agree by comparing their `schema` blocks and deliberately not
-their `ui` blocks. Labels in `schema` would therefore make two components that
-word one enumeration differently a rejected composition —
-`ERR_CONFLICTING_INPUT_SCHEMA` over a difference of phrasing. In `ui` the first
-node's wording wins, which is a presentation decision and is what that section
-already says it is making.
-
-#### The derivation
-
-**The control is derived from the value's `schema`, and this is that
-derivation.** A client rendering the install form MUST derive each field's
-control from the value's `schema` and `ui` as follows, and MUST NOT require any
-further declaration in order to do it. Where more than one row applies, the
-first that applies decides.
-
-| Where the value's `schema` says | The control |
-|---|---|
-| `sensitive: true` | MUST conceal the value as it is entered, and MUST NOT display a stored one. |
-| `type: STRING_LIST` | MUST offer several of the `enum` members at once, under their `enumLabels` wording where one is given, and MUST NOT offer a value outside them. |
-| a non-empty `enum` | MUST offer those members, under their `enumLabels` wording where one is given, and MUST NOT offer a value outside them. |
-| `type: BOOLEAN` | MUST offer exactly `true` and `false`. |
-| `type: JSON` | SHOULD accept text spanning more than one line. |
-| `format: EMAIL` | SHOULD offer a control specialised for a mailbox address. |
-| `format: TIMEZONE` | SHOULD offer the identifiers [§6.3](#value-schema) names. |
-| anything else | accepts text. |
-
-The order matters in two places and is stated rather than left to chance. A
-secret drawn from an enumeration is concealed rather than listed, because
-`sensitive` is read first. And a `STRING_LIST` always carries a non-empty
-`enum` ([`COMP-VAL-006`](#value-schema)), so it is read before the `enum` row
-that would otherwise catch it and offer exactly one member.
-
-**This clause binds an implementation's output rather than a document**, which
-[listing §4.1](../../listing/v1/spec.md#description-markdown) is the only other
-place in these specifications to do. There the grounds were security; here they
-are that this contract has already spent the alternative. `ui` carries a label
-and no control *because* the control is derived, and a `widget` member is
-withheld on the same reasoning — a control declared beside the schema it renders
-is one fact stated twice, with nothing to decide which is wrong when they
-disagree. A derivation that is not written down makes `ui` not a minimal
-contract but an incomplete one, and leaves two conforming implementations free
-to render one document differently with neither of them defective.
-
-**It carries no requirement identifier.** No document can violate it, and
-[docs/conformance.md](../../../docs/conformance.md#requirements) reserves an
-identifier for a rule one can. What the corpus holds down instead is the rules
-that make the derivation total —
-[`COMP-UI-001`](#inputs) through [`COMP-UI-005`](#install-form) and
-[`COMP-VAL-004`](#value-schema) — each of which is a statement about a document.
-
-**Field order.** A client SHOULD present fields in ascending `ui.order`. An input
-declaring none sorts after every input that declares one, and inputs that tie —
-including all of them, in a document that declares no order at all — sort by
-input name, compared as UTF-8 bytes. The tiebreak is written down for the reason
-[`COMP-ENVVAR-002`](#env-vars) writes down its own: a mapping has no sequence,
-and an order left implicit is whichever order an implementation happens to
-iterate in.
-
-**What this does not constrain.** No widget, no medium, no library, and no
-appearance. Nothing here obliges a control to *reject* a value the `schema`
-would reject: [§6.3](#value-schema) records that no phase tests a value against
-its schema, and this section opens no such phase — the `enum` and `BOOLEAN` rows
-say what a control offers, not what the platform will accept. A client that
-renders every field as a text box and every enumeration as a list of its members
-is defective; one that chooses a different-looking chooser than another client
-is not.
 
 ## <a id="validation-layers"></a>7. Validation layers
 
@@ -1145,24 +950,21 @@ document in this family. This family adds:
 | `ERR_UNPINNED_IMAGE` | `semantic` | An image reference carries a floating tag. |
 | `ERR_DUPLICATE_ENV_KEY` | `semantic` | Two `envVars` entries declare the same key. |
 | `ERR_CONFLICTING_ENV_KEY` | `semantic` | An environment-variable key is claimed by more than one declaration. |
-| `ERR_UNKNOWN_ENDPOINT` | `semantic` | A probe or a platform default names an endpoint the workload does not declare. |
+| `ERR_UNKNOWN_ENDPOINT` | `semantic` | A reference names an endpoint the workload does not declare. |
 | `ERR_AMBIGUOUS_ENDPOINT` | `semantic` | A reference omits the endpoint, and the workload elects no primary. |
-| `ERR_ENDPOINT_NOT_PUBLIC` | `semantic` | A platform default deriving a public address names a `PRIVATE` endpoint. |
-| `ERR_ENDPOINT_NOT_HTTP` | `semantic` | A probe, or a platform default deriving from a URL, resolves to an endpoint whose protocol is not in the HTTP family. |
-| `ERR_ENDPOINT_NOT_L4` | `semantic` | A platform default deriving an edge address resolves to an endpoint whose protocol is in the HTTP family. |
-| `ERR_INPUT_NOT_REFERENCEABLE` | `semantic` | An `INPUT` output names an input whose `suppliedBy` is `CONNECTION`. |
+| `ERR_ENDPOINT_NOT_HTTP` | `semantic` | A reference reading a URL resolves to an endpoint whose protocol is not in the HTTP family. |
 | `ERR_UNKNOWN_INPUT_REFERENCE` | `semantic` | An `INPUT` output names no input this component declares. |
-| `ERR_UNKNOWN_ENUM_MEMBER` | `semantic` | An `enumLabels` key names no member of the sibling `enum`. |
 | `ERR_UNKNOWN_RESOURCE_TYPE` | `capability` | A `resourceType` is grammatical but the registry names no such identifier. |
 | `ERR_VERSION_NOT_MONOTONIC` | `capability` | A published component version is not greater than the lineage's current version. |
 
-Every row above is this family's own, with one named exception:
-`ERR_UNKNOWN_ENUM_MEMBER` belongs to the `ui` block
-[§6.4](#install-form) defines, and a blueprint parameter carries that block
-unchanged ([blueprint §5.3](../../blueprint/v1/spec.md#authored-parameters)), so
-that family reports it too. The row is declared once here rather than restated
-there — blueprint names this specification among its normative dependencies —
-which is the rule
+Every row above is this family's own, and three of them are reported by a
+second family. `ERR_UNKNOWN_ENDPOINT`, `ERR_AMBIGUOUS_ENDPOINT` and
+`ERR_ENDPOINT_NOT_HTTP` are decided by [§5.2](#endpoints)'s endpoint names and
+primary election, and a blueprint platform default resolves against those too
+([blueprint §5.2](../../blueprint/v1/spec.md#value-sources)), so that family
+reports them against its own parameters. The rows are declared once here rather
+than restated there, since blueprint names this specification among its
+normative dependencies, which is the rule
 [ADR 0003](../../../docs/adr/0003-controlled-vocabulary-placement.md) §2 applies
 to a vocabulary and this table is no different.
 
@@ -1180,21 +982,6 @@ skipped case is never a passed one.
 Each entry below is a gap this version leaves open, with the section that
 records it.
 
-**What the install form still cannot say.** [§6.4](#install-form) gives a field
-a name, a position, a standing and a wording for its choices. It gives it no
-**grouping**: an eleven-field form is presented as one list, and a component
-cannot say that three of its fields belong together under a heading.
-
-That is a gap and not an oversight. A group name declared on an input is a claim
-about a form that will also hold *other components'* inputs, which the declaring
-document cannot see — the line [§6.2](#outputs) draws around an output, for the
-same reason. Two components that name one section "Network" and "Networking" are
-both right, [blueprint §5.2](../../blueprint/v1/spec.md#merge) has no basis to
-reconcile them, and no author is in a position to fix it. `order` survives that
-objection because a total order can always be produced from what a merged form
-already has; a grouping cannot. Admitting one later is additive and stays free;
-admitting a bad one is not, so it is recorded here rather than shipped.
-
 **What an external component still cannot say.** [§5.6](#external) gives a node
 this platform does not run an identity, a set of inputs and a set of outputs.
 What it does not give is a *configured instance* two blueprints share: one saved
@@ -1210,14 +997,6 @@ definition: many blueprints may reference one component document, and
 [listing §3.1](../../listing/v1/spec.md#item-directory) already admits a catalog
 item that is a single standalone building block, so a general-purpose external
 component ships as its own item with nothing added to the listing family.
-
-**The `platformDefault` exclusion on an external input is reviewable.**
-[`COMP-EXT-005`](#COMP-EXT-005) rejects the field because its one member reads
-the component's own addressing and an external node has none. A second kind that
-resolved a value from a resource the organisation already holds would be
-meaningful there, and admitting it would be a relaxation rather than a
-narrowing. Recorded so the exclusion is not later read as a decision about
-platform defaults as a class.
 
 **An `input` reference has no grammar of its own.** [§6.2](#outputs)'s `input`
 names a mapping key, and [§6](#contract) fixes the grammar those keys take, so

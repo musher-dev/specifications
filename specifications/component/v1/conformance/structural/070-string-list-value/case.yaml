@@ -1,8 +1,7 @@
-# The member that exists so an install form can ask for several of a named set.
+# The member for a value that is several of a named set.
 # `enum` is required and non-empty, and it constrains each member of the array
 # rather than the array — which is why `default` is `'["logs"]'` and not `logs`:
-# the string form is the array, so a default is that array's text. `enumLabels`
-# needs no new rule, because it was already keyed by the member.
+# the string form is the array, so a default is that array's text.
 #
 # The output is here because §6.3 defines one block for an input and an output
 # alike, and a member proved only on the input half is a member proved halfway.
@@ -24,6 +23,7 @@ spec:
   contract:
     inputs:
       telemetry:
+        description: Telemetry signals the service exports.
         schema:
           type: STRING_LIST
           enum:
@@ -32,13 +32,9 @@ spec:
             - traces
           default: '["logs"]'
         required: false
-        ui:
-          label: Telemetry to export
-          enumLabels:
-            logs: Logs
-            metrics: Metrics
     outputs:
       exported:
+        description: Telemetry signals the service exports, for a collector to expect.
         schema:
           type: STRING_LIST
           enum:

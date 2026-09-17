@@ -84,8 +84,8 @@ const FLOATING_TAGS = new Set([
 /**
  * Component §5.2 — the protocols whose `PUBLIC` form publishes a URL. A `TCP` or
  * `UDP` endpoint publishes a `host:port` address instead, and every reference
- * reads one form or the other: §5.4's probes and §6.1's PUBLIC_URL and
- * PUBLIC_HOSTNAME need this set, PUBLIC_ADDRESS and PUBLIC_PORT need its
+ * reads one form or the other: §5.4's probes and blueprint §5.2's PUBLIC_URL
+ * and PUBLIC_HOSTNAME need this set, PUBLIC_ADDRESS and PUBLIC_PORT need its
  * complement.
  */
 const HTTP_FAMILY = new Set(['HTTP', 'HTTPS', 'WS', 'GRPC'])
@@ -101,45 +101,6 @@ function imageTag(ref: string): string | undefined {
   const afterSlash = ref.slice(ref.lastIndexOf('/') + 1)
   const colon = afterSlash.indexOf(':')
   return colon === -1 ? undefined : afterSlash.slice(colon + 1)
-}
-
-/**
- * Component `COMP-UI-005` — every `ui.enumLabels` key MUST be a member of the
- * sibling `schema.enum`.
- *
- * Shared, because a blueprint parameter carries the `ui` block component §6.4
- * defines and answers to the same rule. `fields` is the mapping holding them —
- * `spec.contract.inputs` on a component, `spec.parameters` on a blueprint — and
- * `base` is the pointer that mapping sits at.
- *
- * `semantic` rather than `structural` because it relates a mapping's keys to a
- * sibling array's items, which no JSON Schema keyword expresses. The reverse
- * direction is deliberately not an error: a member with no label is offered as
- * it is spelled, which is what every document written before the field existed
- * already does.
- */
-function checkEnumLabels(fields: Json | undefined, base: string, out: Diagnostic[]): void {
-  for (const field of keysOf(fields).sort()) {
-    const declaration = child(fields, field)
-    const labels = child(child(declaration, 'ui'), 'enumLabels')
-    if (labels === undefined || labels === null) continue
-
-    const members = child(child(declaration, 'schema'), 'enum')
-    const known = new Set(
-      Array.isArray(members) ? members.filter((m) => typeof m === 'string') : [],
-    )
-
-    // Sorted so two implementations anchor the same diagnostic first when a
-    // document mislabels more than one member; a mapping supplies no order.
-    for (const member of keysOf(labels).sort()) {
-      if (known.has(member)) continue
-      out.push({
-        code: 'ERR_UNKNOWN_ENUM_MEMBER',
-        path: `${base}/${token(field)}/ui/enumLabels/${token(member)}`,
-        message: `"${member}" is not a member of the enum declared beside it`,
-      })
-    }
-  }
 }
 
 /** Component §5.1 — a reference MUST NOT carry a floating tag. */
@@ -186,7 +147,7 @@ function primaryEndpoint(endpoints: Json | undefined): string | undefined {
  */
 type AddressForm = 'http' | 'l4'
 
-/** §6.1 — the address form each platform-default source reads. */
+/** Blueprint §5.2 — the address form each platform-default source reads. */
 const SOURCE_ADDRESS_FORM: Record<string, AddressForm> = {
   PUBLIC_URL: 'http',
   PUBLIC_HOSTNAME: 'http',
@@ -195,9 +156,10 @@ const SOURCE_ADDRESS_FORM: Record<string, AddressForm> = {
 }
 
 /**
- * One place a document names an endpoint: a probe's `endpoint` (§5.4) or a
- * platform default's (§6.1). `mustBePublic` is what separates them — every
- * platform-default source derives an externally reachable address.
+ * One place a document names an endpoint: a probe's `endpoint` (component §5.4)
+ * or a blueprint parameter's platform default (blueprint §5.2). `mustBePublic`
+ * is what separates them — every platform-default source derives an externally
+ * reachable address.
  */
 interface EndpointReference {
   /** The raw value, so an explicit null and an absent key are one case. */
@@ -215,9 +177,9 @@ interface EndpointReference {
 }
 
 /**
- * Component §5.2, §5.4 and §6.1. JSON Schema can express none of this: the
- * endpoint names are mapping keys elsewhere in the document, and no keyword
- * constrains a value against a sibling's keys.
+ * Component §5.2 and §5.4, and blueprint §5.2. JSON Schema can express none of
+ * this: the endpoint names are mapping keys in the component document, and no
+ * keyword constrains a value against keys it cannot see.
  */
 function checkEndpointReference(
   reference: EndpointReference,
@@ -250,7 +212,7 @@ function checkEndpointReference(
     return
   }
 
-  // §5.4 and §6.1 — a reference reads one of §5.2's two address forms, and the
+  // A reference reads one of component §5.2's two address forms, and the
   // endpoint has to publish that one. A probe polls an HTTP path; PUBLIC_URL
   // and PUBLIC_HOSTNAME take a URL; PUBLIC_ADDRESS and PUBLIC_PORT take the
   // edge address only a TCP or UDP endpoint is allocated.
@@ -284,11 +246,10 @@ function checkEndpointReference(
   }
 }
 
-/** Every endpoint a component document names, in document order. */
+/** Every endpoint a component document's probes name, in document order. */
 function endpointReferences(document: Json): EndpointReference[] {
   const spec = child(document, 'spec')
   const health = child(child(spec, 'workload'), 'health')
-  const inputs = child(child(spec, 'contract'), 'inputs')
   const references: EndpointReference[] = []
 
   for (const probe of keysOf(health)) {
@@ -298,19 +259,6 @@ function endpointReferences(document: Json): EndpointReference[] {
       subject: `${probe} probe`,
       mustBePublic: false,
       addressForm: 'http',
-    })
-  }
-
-  for (const input of keysOf(inputs)) {
-    const platformDefault = child(child(inputs, input), 'platformDefault')
-    if (!isObject(platformDefault)) continue
-    const source = asString(child(platformDefault, 'source'))
-    references.push({
-      value: child(platformDefault, 'endpoint'),
-      path: `/spec/contract/inputs/${token(input)}/platformDefault/endpoint`,
-      subject: `platform default on input "${input}"`,
-      mustBePublic: true,
-      addressForm: source === undefined ? undefined : SOURCE_ADDRESS_FORM[source],
     })
   }
 
@@ -325,15 +273,11 @@ function checkEndpointReferences(document: Json, out: Diagnostic[]): void {
 }
 
 /**
- * Component §6.2 — an `INPUT` output reads one of its own component's inputs,
- * and may not read one a wire fills.
+ * Component §6.2 — an `INPUT` output reads one of its own component's inputs.
  *
- * The invariant §6.2 states is resolvability before any edge is bound. A `USER`
- * input resolves at form submission, which is earlier than a `DERIVED` output
- * resolves; only a `CONNECTION` input resolves after an edge, so only that one
- * is excluded. Two codes rather than one, on §6.1's precedent for an endpoint
- * reference: naming nothing and naming the wrong kind read differently to an
- * author.
+ * Whether that input is wired is not this document's to know; blueprint §4.2's
+ * `BP-CONN-002` keeps a wire off it, which is what keeps every output
+ * resolvable before any edge is bound.
  */
 function checkOutputInputReferences(document: Json, out: Diagnostic[]): void {
   const contract = child(child(document, 'spec'), 'contract')
@@ -348,23 +292,12 @@ function checkOutputInputReferences(document: Json, out: Diagnostic[]): void {
     if (reference === undefined) continue // COMP-OUT-001, structural
     const pointer = `/spec/contract/outputs/${token(name)}/input`
 
-    const input = child(inputs, reference)
-    if (input === undefined) {
-      out.push({
-        code: 'ERR_UNKNOWN_INPUT_REFERENCE',
-        path: pointer,
-        message: `output "${name}" reads input "${reference}", which this component does not declare`,
-      })
-      continue
-    }
-
-    if (child(input, 'suppliedBy') === 'CONNECTION') {
-      out.push({
-        code: 'ERR_INPUT_NOT_REFERENCEABLE',
-        path: pointer,
-        message: `output "${name}" reads input "${reference}", which a connection fills`,
-      })
-    }
+    if (child(inputs, reference) !== undefined) continue
+    out.push({
+      code: 'ERR_UNKNOWN_INPUT_REFERENCE',
+      path: pointer,
+      message: `output "${name}" reads input "${reference}", which this component does not declare`,
+    })
   }
 }
 
@@ -745,8 +678,8 @@ function checkItemType(document: Json, itemRoot: string, out: Diagnostic[]): voi
 }
 
 /**
- * Blueprint §4.1 and §4.2, plus §3's unreferenced-document rule and §5's two
- * parameter paths. All of them need the component documents the graph names,
+ * Blueprint §4.1 and §4.2, plus §3's unreferenced-document rule and §5's
+ * parameter rules. All of them need the component documents the graph names,
  * which is what makes them item-scoped.
  */
 function checkGraphAgainstItem(
@@ -794,20 +727,9 @@ function checkGraphAgainstItem(
   checkConnectionOutputs(components, resolved, out)
   checkConnectionInputs(components, resolved, out)
   checkConnectableInputs(components, resolved, out)
-  checkRequiredConnections(components, resolved, out)
   checkConnectionCompatibility(components, resolved, out)
   checkNodeCompute(components, resolved, out)
-
-  // §5's two paths are exclusive. An authored override is used in place of
-  // derivation rather than merged with it (§5), so where one is written the
-  // merge does not run and §5.2's conflict has nothing to conflict — which is
-  // what makes §5.2's own remedy a remedy. §5.3 is what the override answers to
-  // instead.
-  if (keysOf(parameters).length === 0) {
-    checkInputMerge(components, resolved, out)
-  } else {
-    checkParameterBinding(parameters, components, resolved, out)
-  }
+  checkParameters(parameters, components, resolved, out)
 }
 
 /** Blueprint §3 — every component document in the item MUST be referenced. */
@@ -833,16 +755,13 @@ function checkUnreferencedComponents(
 }
 
 /**
- * Blueprint §4.2 — a connection may fill only a `CONNECTION` input.
+ * Blueprint §4.2, `BP-CONN-002` — a connection MUST NOT fill an input that one
+ * of the consuming component's own `INPUT` outputs reads.
  *
- * The gap this closes was recorded rather than decided: a wire and the install
- * form would both claim the value, with nothing saying which arrives. It is the
- * failure §5.2 rejects for merging and §5.3 for coverage, and admitting it at
- * the third door would be the only place this contract tolerated it.
- *
- * It is also what component §6.2's `INPUT` output depends on. If a `USER` input
- * could be wired, an output reading one could depend on an inbound edge, and
- * §4.2's legal cycles would stop being resolvable.
+ * Component §6.2 makes every output a function of its own node, which is what
+ * lets §4.2 permit a cycle: every output resolves before any edge is bound. An
+ * output republishing a wired input would depend on an inbound edge, and the
+ * component cannot see which of its inputs are wired. This document can.
  */
 function checkConnectableInputs(
   components: Json | undefined,
@@ -852,21 +771,22 @@ function checkConnectableInputs(
   for (const node of keysOf(components)) {
     const component = resolved.get(node)
     if (component === undefined) continue
-    const inputs = child(child(child(component, 'spec'), 'contract'), 'inputs')
-    const connections = child(child(components, node), 'connections')
+    const outputs = child(child(child(component, 'spec'), 'contract'), 'outputs')
+    const republished = new Map<string, string>()
+    for (const name of keysOf(outputs)) {
+      const output = child(outputs, name)
+      if (child(output, 'valueFrom') !== 'INPUT') continue
+      const input = asString(child(output, 'input'))
+      if (input !== undefined && !republished.has(input)) republished.set(input, name)
+    }
 
-    for (const key of keysOf(connections)) {
-      const input = child(inputs, key)
-      // Naming no input at all is ERR_UNKNOWN_INPUT, reported elsewhere; one
-      // mistake is not reported twice.
-      if (input === undefined) continue
-      // `suppliedBy` defaults to USER, and a default is invisible here, so an
-      // input saying nothing about who satisfies it is bound by this too.
-      if (child(input, 'suppliedBy') === 'CONNECTION') continue
+    for (const key of keysOf(child(child(components, node), 'connections'))) {
+      const output = republished.get(key)
+      if (output === undefined) continue
       out.push({
         code: 'ERR_INPUT_NOT_CONNECTABLE',
         path: `/spec/components/${token(node)}/connections/${token(key)}`,
-        message: `input "${key}" is not supplied by a connection`,
+        message: `input "${key}" is republished by output "${output}", so no connection may fill it`,
       })
     }
   }
@@ -974,38 +894,6 @@ function checkConnectionInputs(
 }
 
 /**
- * Blueprint §4.2 — a required `CONNECTION` input MUST be wired.
- *
- * `required` defaults to true, so an absent key is a required input. A
- * `CONNECTION` input never reaches the install form, so a graph that leaves one
- * unwired has no later chance to supply it.
- */
-function checkRequiredConnections(
-  components: Json | undefined,
-  resolved: Map<string, Json>,
-  out: Diagnostic[],
-): void {
-  for (const node of keysOf(components)) {
-    const consumer = resolved.get(node)
-    if (consumer === undefined) continue
-
-    const wired = new Set(keysOf(child(child(components, node), 'connections')))
-    const inputs = inputsOf(consumer)
-    for (const key of keysOf(inputs)) {
-      const input = child(inputs, key)
-      if (child(input, 'suppliedBy') !== 'CONNECTION') continue
-      if (child(input, 'required') === false) continue
-      if (wired.has(key)) continue
-      out.push({
-        code: 'ERR_UNWIRED_REQUIRED_INPUT',
-        path: `/spec/components/${token(node)}/connections`,
-        message: `required input "${key}" of node "${node}" is satisfied by no connection`,
-      })
-    }
-  }
-}
-
-/**
  * Blueprint §4.2 — the two ends of a connection MUST fit.
  *
  * `type` is compared for equality with no widening in either direction; a
@@ -1069,56 +957,7 @@ function checkConnectionCompatibility(
 }
 
 /**
- * Blueprint §5.2 — first-wins in lexicographic node-name order, and a *differing*
- * redeclaration is an error rather than a silent discard. An identical one is
- * absorbed: two components that agree on what `adminPassword` is are not in
- * conflict.
- *
- * `ui` and `required` are deliberately not compared. They describe how a value
- * is asked for, not what it is.
- *
- * The comparison is over the *canonical* form of each schema block, because
- * §5.2's test is equality "once defaults are applied". Serialising the block as
- * written would make two identical declarations differ over the order their keys
- * happen to appear in and over whether a default was spelled out or left
- * implicit — neither of which is a disagreement about the value.
- */
-function checkInputMerge(
-  components: Json | undefined,
-  resolved: Map<string, Json>,
-  out: Diagnostic[],
-): void {
-  const taken = new Map<string, { node: string; schema: string }>()
-
-  for (const node of keysOf(components).sort()) {
-    const component = resolved.get(node)
-    if (component === undefined) continue
-    const inputs = child(child(child(component, 'spec'), 'contract'), 'inputs')
-
-    for (const key of keysOf(inputs)) {
-      const input = child(inputs, key)
-      // A CONNECTION input is satisfied by a wire, never by the install form,
-      // so it never reaches the merge (§5.1).
-      if (child(input, 'suppliedBy') === 'CONNECTION') continue
-
-      const schema = canonicalValueSchema(child(input, 'schema'))
-      const earlier = taken.get(key)
-      if (earlier === undefined) {
-        taken.set(key, { node, schema })
-        continue
-      }
-      if (earlier.schema === schema) continue
-      out.push({
-        code: 'ERR_CONFLICTING_INPUT_SCHEMA',
-        path: `/spec/components/${token(node)}/componentRef`,
-        message: `input "${key}" is declared with a different schema by node "${earlier.node}"`,
-      })
-    }
-  }
-}
-
-/**
- * The defaults component §6.1's `schema` block carries. A property left out
+ * The defaults component §6.3's `schema` block carries. A property left out
  * declares the same thing as one written at its default, so both have to reach
  * the same canonical form before two blocks are compared.
  */
@@ -1159,130 +998,209 @@ function isSet(value: Json | undefined): boolean {
 }
 
 /**
- * Blueprint §5.3 — the input side of the coverage test. An input has to be
- * covered only when nothing else can supply it: a wire, a minted secret, a
- * platform-derived address and a declared default each take it out of scope.
+ * One input a parameter covers: the node declaring it, and the declaration.
+ * Nodes are walked in sorted order, so the first entry is the one blueprint
+ * §5.3 takes a covered input's wording from.
  */
-function mustBeSupplied(input: Json | undefined): boolean {
-  if (child(input, 'suppliedBy') === 'CONNECTION') return false
-  // `required` defaults to true on a component input, so an absent key is a
-  // required one — hence `=== false` rather than `!== true`.
-  if (child(input, 'required') === false) return false
-  if (isSet(child(input, 'generator'))) return false
-  if (isSet(child(input, 'platformDefault'))) return false
-  return !isSet(child(child(input, 'schema'), 'default'))
+interface CoveredInput {
+  readonly node: string
+  readonly input: Json
 }
 
 /**
- * Blueprint §5.3 — the parameter side. Naming the key is not enough; the
- * parameter has to actually ask for a value.
- *
- * `required` defaults to **false** here, the opposite of a component input,
- * which is why this tests `=== true` where `mustBeSupplied` tests `=== false`.
- * An override that copies a required input's key and says nothing else has made
- * it optional, and that is the case this catches.
+ * Blueprint §5.1 — the inputs a parameter key covers: every resolved node's
+ * input of that key which no connection on the node fills. A wired input is not
+ * a candidate, so a wire and a parameter never claim one value.
  */
-function guaranteesValue(parameter: Json | undefined): boolean {
-  if (child(parameter, 'required') === true) return true
-  if (isSet(child(parameter, 'generator'))) return true
-  return isSet(child(child(parameter, 'schema'), 'default'))
+function coveredInputs(
+  key: string,
+  components: Json | undefined,
+  resolved: Map<string, Json>,
+): CoveredInput[] {
+  const covered: CoveredInput[] = []
+  for (const node of keysOf(components).sort()) {
+    const input = child(inputsOf(resolved.get(node)), key)
+    if (input === undefined) continue
+    if (keysOf(child(child(components, node), 'connections')).includes(key)) continue
+    covered.push({ node, input })
+  }
+  return covered
 }
 
 /**
- * Blueprint §5.3 — an authored override binds to inputs by key, and the key is
- * the whole of the correspondence: a parameter carries no `suppliedBy`, no node
- * name and no `target`.
- *
- * Only reached when `parameters` is non-empty. The derived set is built from
- * the inputs themselves, so none of these three rules can fail on that path.
+ * Blueprint §5 — the install form is always authored, and every rule here reads
+ * the component documents the graph references. A node whose component was not
+ * read — a published reference, or a local one already rejected — contributes
+ * nothing, and an implementation MUST NOT report an input it could not read.
  */
-function checkParameterBinding(
+function checkParameters(
   parameters: Json | undefined,
   components: Json | undefined,
   resolved: Map<string, Json>,
   out: Diagnostic[],
 ): void {
-  // Input key → every USER declaration of it, in canonical node order. One key
-  // may be declared by several nodes; a parameter covers all of them.
-  const declared = new Map<string, Json[]>()
-
-  // §5.3 — the unbound test asserts that *no* node declares the key, so it needs
-  // every node's inputs. Where one was not read — a published reference, or a
-  // local one already rejected as missing or escaping — the claim is not
-  // decidable and MUST NOT be reported. The coverage and type rules below are
-  // positive claims over what was read, so they degrade on their own.
+  // `BP-PARAM-001` asserts that *no* node declares the key, which is a claim
+  // about every node's inputs. It is decidable only when every node was read.
   const allReadable = keysOf(components).every((node) => resolved.has(node))
-
-  for (const node of keysOf(components).sort()) {
-    const component = resolved.get(node)
-    // A published reference resolves in the capability phase, so its inputs are
-    // unreadable here. §5.3: an implementation MUST NOT report an input it was
-    // never given the means to read.
-    if (component === undefined) continue
-
-    const inputs = inputsOf(component)
-    for (const key of keysOf(inputs)) {
-      const input = child(inputs, key)
-      if (input === undefined) continue
-      if (child(input, 'suppliedBy') === 'CONNECTION') continue
-      const seen = declared.get(key)
-      if (seen === undefined) declared.set(key, [input])
-      else seen.push(input)
-    }
-  }
+  const coveredKeys = new Set<string>()
 
   for (const key of keysOf(parameters)) {
+    const parameter = child(parameters, key)
     const pointer = `/spec/parameters/${token(key)}`
-    const covered = declared.get(key)
-    if (covered === undefined) {
+    const covered = coveredInputs(key, components, resolved)
+    if (covered.length === 0) {
       if (!allReadable) continue
       out.push({
         code: 'ERR_UNBOUND_PARAMETER',
         path: pointer,
-        message: `parameter "${key}" names no USER input of any node`,
+        message: `parameter "${key}" covers no unwired input of any node`,
       })
       continue
     }
+    coveredKeys.add(key)
 
-    // `type` and `resourceType` are compared. §5.3 records the rest as silences,
-    // and `type` is REQUIRED on both sides, so it needs no defaulting pass.
-    const schema = child(child(parameters, key), 'schema')
-    const type = child(schema, 'type')
-    const mismatch = covered.find((input) => child(child(input, 'schema'), 'type') !== type)
-    if (mismatch !== undefined) {
-      out.push({
-        code: 'ERR_INCOMPATIBLE_PARAMETER_TYPE',
-        path: `${pointer}/schema/type`,
-        message: `parameter "${key}" declares ${String(type)} where an input it covers declares ${String(child(child(mismatch, 'schema'), 'type'))}`,
-      })
-      continue
-    }
-
-    // A parameter declaring no resourceType covers an input that declares one:
-    // the tag says what a value addresses, and an install form is not where a
-    // value acquires one. Declaring a different one is the error — the parameter
-    // would be answering for a resource the input does not address.
-    const resourceType = asString(child(schema, 'resourceType'))
-    if (resourceType === undefined) continue
-    const tagMismatch = covered.find(
-      (input) => asString(child(child(input, 'schema'), 'resourceType')) !== resourceType,
+    // `BP-PARAM-002` — one field asks for one value, so the inputs it feeds have
+    // to agree on what that value is. Compared "once defaults are applied".
+    const first = covered[0] as CoveredInput
+    const shape = canonicalValueSchema(child(first.input, 'schema'))
+    const conflict = covered.find(
+      ({ input }) => canonicalValueSchema(child(input, 'schema')) !== shape,
     )
-    if (tagMismatch === undefined) continue
-    out.push({
-      code: 'ERR_INCOMPATIBLE_PARAMETER_RESOURCE_TYPE',
-      path: `${pointer}/schema/resourceType`,
-      message: `parameter "${key}" declares ${resourceType} where an input it covers declares ${asString(child(child(tagMismatch, 'schema'), 'resourceType')) ?? 'none'}`,
-    })
+    if (conflict !== undefined) {
+      out.push({
+        code: 'ERR_CONFLICTING_INPUT_SCHEMA',
+        path: pointer,
+        message: `parameter "${key}" covers inputs on nodes "${first.node}" and "${conflict.node}" whose schemas differ`,
+      })
+    }
+
+    checkGeneratedParameter(key, parameter, covered, out)
+    checkPlatformDefault(key, parameter, covered, resolved, out)
+    if (conflict === undefined) checkEnumLabels(key, parameter, first.input, out)
   }
 
-  for (const key of declared.keys()) {
-    const inputs = declared.get(key) ?? []
-    if (!inputs.some(mustBeSupplied)) continue
-    if (guaranteesValue(child(parameters, key))) continue
+  checkSatisfiedInputs(components, resolved, coveredKeys, out)
+}
+
+/**
+ * Blueprint §5.1, `BP-PARAM-003` — an input the component requires and gives no
+ * default MUST be wired or covered. `required` defaults to true, so an absent
+ * key is a required input.
+ */
+function checkSatisfiedInputs(
+  components: Json | undefined,
+  resolved: Map<string, Json>,
+  coveredKeys: Set<string>,
+  out: Diagnostic[],
+): void {
+  for (const node of keysOf(components)) {
+    const inputs = inputsOf(resolved.get(node))
+    const wired = new Set(keysOf(child(child(components, node), 'connections')))
+    for (const key of keysOf(inputs)) {
+      const input = child(inputs, key)
+      if (child(input, 'required') === false) continue
+      if (isSet(child(child(input, 'schema'), 'default'))) continue
+      if (wired.has(key) || coveredKeys.has(key)) continue
+      out.push({
+        code: 'ERR_UNSATISFIED_REQUIRED_INPUT',
+        path: `/spec/components/${token(node)}`,
+        message: `required input "${key}" of node "${node}" is neither wired nor covered by a parameter`,
+      })
+    }
+  }
+}
+
+/**
+ * Blueprint §5.2, `BP-PARAM-004` — a generated value is secret material, and
+ * whether a value is secret is the component's to say. Every input a generated
+ * parameter covers MUST declare `schema.sensitive: true`; `sensitive` defaults
+ * to false, which is the wrong answer here.
+ */
+function checkGeneratedParameter(
+  key: string,
+  parameter: Json | undefined,
+  covered: readonly CoveredInput[],
+  out: Diagnostic[],
+): void {
+  if (!isSet(child(parameter, 'generator'))) return
+  const exposed = covered.find(({ input }) => child(child(input, 'schema'), 'sensitive') !== true)
+  if (exposed === undefined) return
+  out.push({
+    code: 'ERR_GENERATED_INPUT_NOT_SENSITIVE',
+    path: `/spec/parameters/${token(key)}/generator`,
+    message: `parameter "${key}" generates a value for input "${key}" of node "${exposed.node}", which is not marked sensitive`,
+  })
+}
+
+/**
+ * Blueprint §5.2, `BP-PARAM-005` — a `SELF_ADDRESS` default derives from the
+ * addressing of each node it covers, so its endpoint has to resolve on every
+ * one of them by component §5.2's rules. An external node declares no
+ * endpoints, which leaves it ambiguous where the endpoint is omitted and
+ * unknown where it is named — no rule of its own is needed.
+ */
+function checkPlatformDefault(
+  key: string,
+  parameter: Json | undefined,
+  covered: readonly CoveredInput[],
+  resolved: Map<string, Json>,
+  out: Diagnostic[],
+): void {
+  const platformDefault = child(parameter, 'platformDefault')
+  if (!isObject(platformDefault)) return
+  const source = asString(child(platformDefault, 'source'))
+  const reference: EndpointReference = {
+    value: child(platformDefault, 'endpoint'),
+    path: `/spec/parameters/${token(key)}/platformDefault/endpoint`,
+    subject: `platform default on parameter "${key}"`,
+    mustBePublic: true,
+    addressForm: source === undefined ? undefined : SOURCE_ADDRESS_FORM[source],
+  }
+
+  // One pointer serves every covered node, so the same verdict on two nodes is
+  // one diagnostic rather than two.
+  const reported = new Set<string>()
+  for (const { node } of covered) {
+    const endpoints = child(child(child(resolved.get(node), 'spec'), 'workload'), 'endpoints')
+    const found: Diagnostic[] = []
+    checkEndpointReference(reference, endpoints, found)
+    for (const diagnostic of found) {
+      if (reported.has(diagnostic.code)) continue
+      reported.add(diagnostic.code)
+      out.push(diagnostic)
+    }
+  }
+}
+
+/**
+ * Blueprint §5.3, `BP-UI-003` — every `ui.enumLabels` key MUST be a member of
+ * the covered inputs' `schema.enum`. Read from the first covered input, which
+ * `BP-PARAM-002` has already made equal to the rest.
+ *
+ * `semantic` because the members live in another document. The reverse
+ * direction is deliberately not an error: a member with no label is offered as
+ * it is spelled.
+ */
+function checkEnumLabels(
+  key: string,
+  parameter: Json | undefined,
+  input: Json,
+  out: Diagnostic[],
+): void {
+  const labels = child(child(parameter, 'ui'), 'enumLabels')
+  if (!isObject(labels)) return
+
+  const members = child(child(input, 'schema'), 'enum')
+  const known = new Set(Array.isArray(members) ? members.filter((m) => typeof m === 'string') : [])
+
+  // Sorted so two implementations anchor the same diagnostic first when a
+  // document mislabels more than one member; a mapping supplies no order.
+  for (const member of keysOf(labels).sort()) {
+    if (known.has(member)) continue
     out.push({
-      code: 'ERR_UNCOVERED_REQUIRED_INPUT',
-      path: '/spec/parameters',
-      message: `input "${key}" must be supplied by the deploying user, and no parameter guarantees it a value`,
+      code: 'ERR_UNKNOWN_ENUM_MEMBER',
+      path: `/spec/parameters/${token(key)}/ui/enumLabels/${token(member)}`,
+      message: `"${member}" is not a member of the enum the covered input declares`,
     })
   }
 }
@@ -1308,15 +1226,9 @@ export function semanticDiagnostics(
     checkEndpointReferences(document, out)
     checkOutputInputReferences(document, out)
     checkEnvVarKeys(document, out)
-    checkEnumLabels(
-      child(child(child(document, 'spec'), 'contract'), 'inputs'),
-      '/spec/contract/inputs',
-      out,
-    )
   }
   if (family.name === 'blueprint') {
     checkConnectionRoles(document, out)
-    checkEnumLabels(child(child(document, 'spec'), 'parameters'), '/spec/parameters', out)
   }
   if (family.name === 'listing') {
     checkScreenshotBasenames(document, out)

@@ -1,0 +1,8 @@
+{
+  "id": "structural-037-parameter-without-ui",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#install-form",
+  "requirements": ["BP-UI-001"],
+  "summary": "A parameter declaring no ui block is rejected."
+}

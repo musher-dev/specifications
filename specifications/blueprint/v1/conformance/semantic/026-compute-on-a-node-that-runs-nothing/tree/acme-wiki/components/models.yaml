@@ -12,17 +12,13 @@ spec:
           type: STRING
           format: ENDPOINT_URL
           resourceType: dev.musher.llm.base-url
-        ui:
-          label: API base URL
-          order: 1
+        description: Base URL of the service this node addresses.
       apiKey:
         schema:
           type: STRING
           sensitive: true
           resourceType: dev.musher.llm.api-key
-        ui:
-          label: API key
-          order: 2
+        description: Bearer credential presented to the service.
     outputs:
       baseUrl:
         schema:
@@ -31,6 +27,7 @@ spec:
           resourceType: dev.musher.llm.base-url
         valueFrom: INPUT
         input: baseUrl
+        description: Base URL of the service this node addresses.
       apiKey:
         schema:
           type: STRING
@@ -38,3 +35,4 @@ spec:
           resourceType: dev.musher.llm.api-key
         valueFrom: INPUT
         input: apiKey
+        description: Bearer credential presented to the service.

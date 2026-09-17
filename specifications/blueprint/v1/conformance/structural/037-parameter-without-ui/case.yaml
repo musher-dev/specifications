@@ -1,0 +1,17 @@
+# A parameter is a field on the install form, and a field with no presentation
+# has nothing for a form to show. The shape, the description and whether a value
+# is needed all come from the covered inputs; the label is the one thing only
+# the blueprint can say, so ui is the one property a parameter cannot leave out.
+specVersion: v1
+kind: BLUEPRINT
+metadata:
+  slug: acme-wiki
+  revision: 1
+spec:
+  components:
+    web:
+      componentRef: ./components/web.yaml
+      size: general.standard.small
+      connections: {}
+  parameters:
+    siteTitle: {}

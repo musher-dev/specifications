@@ -1,0 +1,9 @@
+{
+  "id": "semantic-035-platform-default-names-private-endpoint",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#value-sources",
+  "requirements": ["BP-PARAM-005"],
+  "summary": "A platform default deriving a public address from a PRIVATE endpoint is rejected.",
+  "document": "acme-wiki/blueprint.yaml"
+}

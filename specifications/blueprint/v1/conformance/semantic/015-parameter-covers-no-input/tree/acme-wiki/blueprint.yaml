@@ -18,8 +18,5 @@ spec:
       connections: {}
   parameters:
     legacyMode:
-      schema:
-        type: BOOLEAN
-      required: true
       ui:
         label: Legacy mode

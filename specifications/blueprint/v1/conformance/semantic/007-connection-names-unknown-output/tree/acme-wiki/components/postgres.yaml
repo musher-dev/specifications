@@ -21,3 +21,4 @@ spec:
           type: STRING
           sensitive: true
         valueFrom: DERIVED
+        description: Connection string a client uses to reach this database.

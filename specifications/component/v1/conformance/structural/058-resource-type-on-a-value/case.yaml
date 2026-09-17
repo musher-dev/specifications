@@ -21,14 +21,14 @@ spec:
   contract:
     inputs:
       tenantKey:
+        description: Tenant key identifying this installation to the Acme billing API.
         schema:
           type: STRING
           sensitive: true
           resourceType: com.acme.billing.tenant-key
-        ui:
-          label: Acme tenant key
     outputs:
       connectionString:
+        description: Connection string a client uses to reach this database.
         schema:
           type: STRING
           sensitive: true

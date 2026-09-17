@@ -18,5 +18,5 @@ spec:
       databasePort:
         schema:
           type: STRING
-        suppliedBy: CONNECTION
+        description: Port the database listens on.
     outputs: {}

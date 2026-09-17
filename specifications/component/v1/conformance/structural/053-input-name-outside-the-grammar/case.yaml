@@ -22,8 +22,7 @@ spec:
   contract:
     inputs:
       DATABASE_URL:
+        description: Connection URL of the database the service reads and writes.
         schema:
           type: STRING
-        ui:
-          label: Database URL
     outputs: {}

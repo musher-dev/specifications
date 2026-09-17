@@ -23,4 +23,12 @@ spec:
         llmApiKey:
           fromRole: models
           fromOutput: apiKey
-  parameters: {}
+  parameters:
+    baseUrl:
+      ui:
+        label: API base URL
+        order: 1
+    apiKey:
+      ui:
+        label: API key
+        order: 2

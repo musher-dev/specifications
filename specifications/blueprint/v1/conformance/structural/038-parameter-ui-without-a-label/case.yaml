@@ -1,0 +1,18 @@
+# A ui block is written and names no label. Every other member is optional
+# because a form can do without it; a field a deploying user cannot name is not
+# one.
+specVersion: v1
+kind: BLUEPRINT
+metadata:
+  slug: acme-wiki
+  revision: 1
+spec:
+  components:
+    web:
+      componentRef: ./components/web.yaml
+      size: general.standard.small
+      connections: {}
+  parameters:
+    siteTitle:
+      ui:
+        order: 1

@@ -250,9 +250,9 @@
       "x-additionalPropertiesName": "nodeName"
     },
     "BlueprintParameter": {
-      "$comment": "spec.md §5.3: a generated value is secret material, and sensitive is required explicitly because its default is false — the wrong answer here. The derived path inherits the marking from the input, which component §6.1 already obliges; this keeps the authored path from being the way to lose it. A platformDefault is forbidden beside a generator for the same reason it is on an input: minting a value and deriving one are two answers to one question. Mirrors ComponentInput's generator branch.",
+      "$comment": "spec.md §5.2. Minting a value and deriving one are two answers to one question, so a generator and a platformDefault are never written together. The parameter carries no schema, no required and no description: the inputs it covers declare all three (component §6), and whether a generated value is secret is read from them in the semantic phase (BP-PARAM-004).",
       "additionalProperties": false,
-      "description": "An install-form parameter composed at the graph layer (map value; keyed by key).",
+      "description": "One install-form field, keyed by the input key it covers on every node whose input of that key is not wired.",
       "if": {
         "properties": {
           "generator": {
@@ -265,48 +265,24 @@
       },
       "then": {
         "properties": {
-          "platformDefault": false,
-          "schema": {
-            "properties": {
-              "sensitive": {
-                "const": true
-              }
-            },
-            "required": [
-              "sensitive"
-            ]
-          }
+          "platformDefault": false
         }
       },
       "properties": {
-        "description": {
-          "description": "Help text shown beneath the field. Omitted when none is set.",
-          "type": "string"
-        },
         "generator": {
-          "description": "Auto-generation spec when the platform mints the value at deploy time. Omitted when the deploying user supplies it.",
+          "description": "Auto-generation spec when the platform mints the value at deploy time. Omitted when the deploying user supplies it. Every input the parameter covers MUST declare schema.sensitive: true.",
           "$ref": "#/$defs/BlueprintParameterGenerator"
         },
         "platformDefault": {
-          "description": "Default the platform supplies when the deploying user does not. Omitted when it does not supply one. A SELF_ADDRESS default resolves against each node this parameter covers.",
+          "description": "Default the platform supplies when the deploying user does not. A SELF_ADDRESS default resolves against each node this parameter covers.",
           "$ref": "#/$defs/BlueprintPlatformDefault"
-        },
-        "required": {
-          "default": false,
-          "description": "True when the deploying user must provide a value before deploying.",
-          "type": "boolean"
-        },
-        "schema": {
-          "$ref": "#/$defs/BlueprintParameterValueSchema",
-          "description": "Data contract of the value: type, format, pattern, enum, default, sensitivity."
         },
         "ui": {
           "$ref": "#/$defs/BlueprintParameterUi",
-          "description": "Presentation metadata for the install form."
+          "description": "How the field is presented. The control itself is derived from the covered inputs' schema (spec.md §5.3)."
         }
       },
       "required": [
-        "schema",
         "ui"
       ],
       "type": "object",
@@ -339,7 +315,7 @@
       "type": "object"
     },
     "BlueprintParameterUi": {
-      "$comment": "spec.md §5.3, the block component §6.4 defines. The control is derived from the value's schema rather than declared, so this carries only what a derivation cannot supply.",
+      "$comment": "spec.md §5.3. The control is derived from the covered inputs' schema rather than declared, so this carries only what a derivation cannot supply.",
       "additionalProperties": false,
       "description": "Presentation metadata for an install-form parameter.",
       "properties": {
@@ -381,135 +357,8 @@
       ],
       "type": "object"
     },
-    "BlueprintParameterValueSchema": {
-      "additionalProperties": false,
-      "allOf": [
-        {
-          "$comment": "spec.md §5.3, the block component §6.3 defines. A JSON value's string form is a JSON document, and one value has many spellings — insignificant whitespace, member order, number formatting. `pattern` and `enum` both decide membership on the spelling, so neither can state a rule about the value.",
-          "if": {
-            "properties": {
-              "type": {
-                "const": "JSON"
-              }
-            },
-            "required": [
-              "type"
-            ]
-          },
-          "then": {
-            "properties": {
-              "enum": {
-                "maxItems": 0
-              },
-              "pattern": false
-            }
-          }
-        },
-        {
-          "$comment": "spec.md §5.3, the block component §6.3 defines. A STRING_LIST's string form is a JSON array, so a `pattern` would decide membership on the array's spelling — the argument the JSON branch above makes, arriving through the member that is a list rather than the member that is a document. `enum` is required rather than merely non-empty when written, because an unconstrained list of strings is what JSON already is and component §6.4's derivation would have no members to offer. `format` needs no branch: the one below forbids it wherever `type` is not STRING, and STRING_LIST is not STRING.",
-          "if": {
-            "properties": {
-              "type": {
-                "const": "STRING_LIST"
-              }
-            },
-            "required": [
-              "type"
-            ]
-          },
-          "then": {
-            "properties": {
-              "enum": {
-                "minItems": 1
-              },
-              "pattern": false
-            },
-            "required": [
-              "enum"
-            ]
-          }
-        },
-        {
-          "$comment": "spec.md §5.3, the block component §6.3 defines. Every `format` member names a lexical convention for text, so the field only refines a STRING. `type` is REQUIRED, so this is a `not` inside the `if` rather than an `else`: a document omitting `type` already reports ERR_MISSING_FIELD and should not also collect a format diagnostic.",
-          "if": {
-            "properties": {
-              "type": {
-                "not": {
-                  "const": "STRING"
-                }
-              }
-            },
-            "required": [
-              "type"
-            ]
-          },
-          "then": {
-            "properties": {
-              "format": false
-            }
-          }
-        }
-      ],
-      "description": "Data contract of an install-form parameter value (JSON-Schema subset).",
-      "properties": {
-        "default": {
-          "description": "Pre-filled value. Omitted when the deploying user must supply one.",
-          "type": "string"
-        },
-        "enum": {
-          "description": "Allowed values when the value is a closed enumeration; empty when unconstrained. MUST be empty where the type is JSON, and MUST be non-empty where the type is STRING_LIST, where it constrains each member of the array rather than the array.",
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        },
-        "format": {
-          "description": "Semantic refinement of a STRING value: EMAIL, URI, ENDPOINT_URL, CONNECTION_STRING, HOSTNAME, or TIMEZONE. Omitted when unrefined, and MUST NOT be present where the type is not STRING. Component spec.md §6.3 names where each convention is published.",
-          "enum": [
-            "EMAIL",
-            "URI",
-            "ENDPOINT_URL",
-            "CONNECTION_STRING",
-            "HOSTNAME",
-            "TIMEZONE"
-          ],
-          "type": "string"
-        },
-        "pattern": {
-          "description": "Regular expression the supplied value must match. Omitted when unconstrained, and MUST NOT be present where the type is JSON or STRING_LIST.",
-          "type": "string"
-        },
-        "resourceType": {
-          "$comment": "spec.md §5.3. The same block component §6.3 defines. It is carried here because §5.1 carries it through on the derived path, and a parameter that could not express it would silently drop the tag on the authored path — the path §5.2 pushes an author onto.",
-          "description": "Namespaced identifier of the backing resource this value addresses, matched by the blueprint connection gate when wiring the value into a consumer input. Omitted when the value addresses no particular resource. spec.md §6.3 names where the identifiers are published.",
-          "maxLength": 255,
-          "pattern": "^[a-z][a-z0-9]*(\\.[a-z0-9][a-z0-9-]*)+$",
-          "type": "string"
-        },
-        "sensitive": {
-          "default": false,
-          "description": "True when the value is secret material: masked in UIs, never echoed back.",
-          "type": "boolean"
-        },
-        "type": {
-          "description": "Shape of the value's string form: STRING is any text, NUMBER a JSON number, BOOLEAN true or false, JSON a JSON document of any kind, STRING_LIST a JSON array of strings each drawn from enum.",
-          "enum": [
-            "STRING",
-            "NUMBER",
-            "BOOLEAN",
-            "JSON",
-            "STRING_LIST"
-          ],
-          "type": "string"
-        }
-      },
-      "required": [
-        "type"
-      ],
-      "type": "object"
-    },
     "BlueprintPlatformDefault": {
-      "$comment": "spec.md §5.3, the block component §6.1 defines. `type` names the kind of default and is REQUIRED rather than defaulted, so a discriminator a document may omit is not one two implementations may read differently.",
+      "$comment": "spec.md §5.2.  names the kind of default and is REQUIRED rather than defaulted, so a discriminator a document may omit is not one two implementations may read differently.",
       "additionalProperties": false,
       "description": "Default the platform supplies when the deploying user does not. Which endpoint a SELF_ADDRESS default derives from is named rather than assumed, because component spec.md §5.2 permits more than one PUBLIC endpoint.",
       "properties": {
@@ -544,13 +393,13 @@
     },
     "BlueprintSpec": {
       "additionalProperties": false,
-      "description": "The `spec` block of a blueprint document.\n\nAn empty `parameters` map means the install-form parameters are derived from\nthe graph's merged USER-supplied inputs — the standard path. A non-empty map\nis an authored override, used verbatim.",
+      "description": "The `spec` block of a blueprint document.\n\n`components` names the nodes and wires them together. `parameters` is the install form: every field a deploying user is shown, always authored. Absent and empty both mean a form with no fields.",
       "properties": {
         "components": {
           "additionalProperties": {
             "$ref": "#/$defs/BlueprintNode"
           },
-          "description": "Component references composing the graph, keyed by graph-local node name. The name is what a connection's fromRole refers to and what the parameter merge orders the graph by; it means nothing outside this document. At least one node is required — spec.md §1 makes a blueprint a composition of one or more components, and an empty graph deploys nothing.",
+          "description": "Component references composing the graph, keyed by graph-local node name. The name is what a connection's fromRole refers to; it means nothing outside this document. At least one node is required — spec.md §1 makes a blueprint a composition of one or more components, and an empty graph deploys nothing.",
           "minProperties": 1,
           "propertyNames": {
             "pattern": "^[a-z][a-z0-9-]{0,61}[a-z0-9]$"
@@ -561,7 +410,7 @@
           "additionalProperties": {
             "$ref": "#/$defs/BlueprintParameter"
           },
-          "description": "Authored install-form parameter overrides, keyed by parameter key. Empty means the parameters are derived from the graph's merged USER-supplied inputs.",
+          "description": "Install-form fields, keyed by the input key each covers. A parameter covers every input of that key that no connection on its node fills.",
           "type": "object",
           "propertyNames": {
             "$comment": "spec.md §4 / ADR 0007 §4. An input, output and parameter name is lowerCamelCase: it is bound by key across three documents — the input, the connection key that fills it, and the parameter that covers it — and it is read by a person in an install form. Kebab-case survives neither the binding nor a generated SDK type without a translation nobody has to write today.",

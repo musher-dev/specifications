@@ -1,6 +1,6 @@
 # A STRING_LIST with no members named is an unconstrained list of strings, which
-# is what JSON already is — and §6.4's derivation would have nothing to offer,
-# so the form would fall back to the text box the member exists to replace.
+# is what JSON already is, and an install form would have no members to offer
+# (blueprint §5.3).
 # `enum` is REQUIRED here rather than merely non-empty when written, so an
 # absent one is the field an author has to add: ERR_MISSING_FIELD, anchored at
 # the object that should have carried it.
@@ -22,8 +22,7 @@ spec:
   contract:
     inputs:
       telemetry:
+        description: Telemetry signals the service exports.
         schema:
           type: STRING_LIST
-        ui:
-          label: Telemetry to export
     outputs: {}
