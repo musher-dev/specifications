@@ -17,13 +17,13 @@ spec:
       size: general.standard.small
       connections:
         webUrl:
-          fromRole: web
+          fromNode: web
           fromOutput: publicUrl
     web:
       componentRef: ./components/web.yaml
       size: general.standard.small
       connections:
         apiUrl:
-          fromRole: api
+          fromNode: api
           fromOutput: privateAddress
   parameters: {}

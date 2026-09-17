@@ -93,21 +93,6 @@
       "path": "structural/017-relative-mount-path"
     },
     {
-      "id": "structural-018-generated-input-not-sensitive",
-      "phase": "structural",
-      "path": "structural/018-generated-input-not-sensitive"
-    },
-    {
-      "id": "structural-019-connection-input-with-ui",
-      "phase": "structural",
-      "path": "structural/019-connection-input-with-ui"
-    },
-    {
-      "id": "structural-020-user-input-without-ui",
-      "phase": "structural",
-      "path": "structural/020-user-input-without-ui"
-    },
-    {
       "id": "structural-021-derived-output-with-value",
       "phase": "structural",
       "path": "structural/021-derived-output-with-value"
@@ -178,21 +163,6 @@
       "path": "structural/034-service-with-empty-endpoints"
     },
     {
-      "id": "structural-035-public-address-default",
-      "phase": "structural",
-      "path": "structural/035-public-address-default"
-    },
-    {
-      "id": "structural-036-public-port-on-udp-endpoint",
-      "phase": "structural",
-      "path": "structural/036-public-port-on-udp-endpoint"
-    },
-    {
-      "id": "structural-037-public-hostname-default",
-      "phase": "structural",
-      "path": "structural/037-public-hostname-default"
-    },
-    {
       "id": "structural-038-probe-defaults-are-effective",
       "phase": "structural",
       "path": "structural/038-probe-defaults-are-effective"
@@ -236,36 +206,6 @@
       "id": "structural-046-format-outside-the-vocabulary",
       "phase": "structural",
       "path": "structural/046-format-outside-the-vocabulary"
-    },
-    {
-      "id": "structural-047-install-form-presentation",
-      "phase": "structural",
-      "path": "structural/047-install-form-presentation"
-    },
-    {
-      "id": "structural-048-ui-declares-a-control",
-      "phase": "structural",
-      "path": "structural/048-ui-declares-a-control"
-    },
-    {
-      "id": "structural-049-prominence-outside-the-vocabulary",
-      "phase": "structural",
-      "path": "structural/049-prominence-outside-the-vocabulary"
-    },
-    {
-      "id": "structural-050-platform-default-without-a-kind",
-      "phase": "structural",
-      "path": "structural/050-platform-default-without-a-kind"
-    },
-    {
-      "id": "structural-051-connection-input-with-platform-default",
-      "phase": "structural",
-      "path": "structural/051-connection-input-with-platform-default"
-    },
-    {
-      "id": "structural-052-generated-input-with-platform-default",
-      "phase": "structural",
-      "path": "structural/052-generated-input-with-platform-default"
     },
     {
       "id": "structural-053-input-name-outside-the-grammar",
@@ -333,11 +273,6 @@
       "path": "structural/065-external-output-derived"
     },
     {
-      "id": "structural-066-external-input-with-a-platform-default",
-      "phase": "structural",
-      "path": "structural/066-external-input-with-a-platform-default"
-    },
-    {
       "id": "structural-067-input-output-on-a-workload",
       "phase": "structural",
       "path": "structural/067-input-output-on-a-workload"
@@ -378,6 +313,26 @@
       "path": "structural/074-string-list-with-a-format"
     },
     {
+      "id": "structural-075-input-without-a-description",
+      "phase": "structural",
+      "path": "structural/075-input-without-a-description"
+    },
+    {
+      "id": "structural-076-output-without-a-description",
+      "phase": "structural",
+      "path": "structural/076-output-without-a-description"
+    },
+    {
+      "id": "structural-077-empty-description",
+      "phase": "structural",
+      "path": "structural/077-empty-description"
+    },
+    {
+      "id": "structural-078-input-names-its-supplier",
+      "phase": "structural",
+      "path": "structural/078-input-names-its-supplier"
+    },
+    {
       "id": "semantic-001-floating-tag-image-reference",
       "phase": "semantic",
       "path": "semantic/001-floating-tag-image-reference"
@@ -386,16 +341,6 @@
       "id": "semantic-002-probe-names-unknown-endpoint",
       "phase": "semantic",
       "path": "semantic/002-probe-names-unknown-endpoint"
-    },
-    {
-      "id": "semantic-003-platform-default-names-unknown-endpoint",
-      "phase": "semantic",
-      "path": "semantic/003-platform-default-names-unknown-endpoint"
-    },
-    {
-      "id": "semantic-004-platform-default-names-private-endpoint",
-      "phase": "semantic",
-      "path": "semantic/004-platform-default-names-private-endpoint"
     },
     {
       "id": "semantic-005-no-primary-endpoint-elected",
@@ -418,11 +363,6 @@
       "path": "semantic/008-probe-on-tcp-endpoint"
     },
     {
-      "id": "semantic-009-platform-default-on-tcp-endpoint",
-      "phase": "semantic",
-      "path": "semantic/009-platform-default-on-tcp-endpoint"
-    },
-    {
       "id": "semantic-010-duplicate-env-var-key",
       "phase": "semantic",
       "path": "semantic/010-duplicate-env-var-key"
@@ -431,26 +371,6 @@
       "id": "semantic-011-env-key-claimed-twice",
       "phase": "semantic",
       "path": "semantic/011-env-key-claimed-twice"
-    },
-    {
-      "id": "semantic-012-public-address-on-http-endpoint",
-      "phase": "semantic",
-      "path": "semantic/012-public-address-on-http-endpoint"
-    },
-    {
-      "id": "semantic-013-platform-default-elects-primary",
-      "phase": "semantic",
-      "path": "semantic/013-platform-default-elects-primary"
-    },
-    {
-      "id": "semantic-014-enum-label-names-no-member",
-      "phase": "semantic",
-      "path": "semantic/014-enum-label-names-no-member"
-    },
-    {
-      "id": "semantic-015-enum-labels-cover-some-members",
-      "phase": "semantic",
-      "path": "semantic/015-enum-labels-cover-some-members"
     },
     {
       "id": "semantic-016-output-reads-a-user-input",
@@ -463,9 +383,14 @@
       "path": "semantic/017-output-input-names-no-input"
     },
     {
-      "id": "semantic-018-output-reads-a-connection-input",
+      "id": "semantic-018-output-value-names-self",
       "phase": "semantic",
-      "path": "semantic/018-output-reads-a-connection-input"
+      "path": "semantic/018-output-value-names-self"
+    },
+    {
+      "id": "semantic-019-output-value-names-a-foreign-namespace",
+      "phase": "semantic",
+      "path": "semantic/019-output-value-names-a-foreign-namespace"
     }
   ]
 }

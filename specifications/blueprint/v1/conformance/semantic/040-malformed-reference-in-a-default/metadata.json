@@ -1,0 +1,11 @@
+{
+  "id": "semantic-040-malformed-reference-in-a-default",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#value-sources",
+  "requirements": [
+    "CORE-REF-001"
+  ],
+  "summary": "An unescaped ${{ that does not open a well-formed reference is rejected.",
+  "document": "acme-wiki/blueprint.yaml"
+}

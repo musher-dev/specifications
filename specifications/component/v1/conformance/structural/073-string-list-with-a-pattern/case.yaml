@@ -22,12 +22,11 @@ spec:
   contract:
     inputs:
       telemetry:
+        description: Telemetry signals the service exports.
         schema:
           type: STRING_LIST
           enum:
             - logs
             - metrics
           pattern: '^\[.*\]$'
-        ui:
-          label: Telemetry to export
     outputs: {}

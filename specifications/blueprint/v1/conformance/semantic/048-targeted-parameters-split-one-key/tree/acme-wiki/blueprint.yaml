@@ -1,0 +1,31 @@
+# Two components each declare an `apiKey` of the same shape. Binding by key
+# alone would cover both with one field and hand two unrelated services one
+# secret: nothing in either document is wrong, BP-PARAM-002 is satisfied, and
+# the composition is silently mis-wired. `toNode` and `toInput` are what let the
+# two be two fields, each asked for under its own name.
+specVersion: v1
+kind: BLUEPRINT
+metadata:
+  slug: acme-wiki
+  revision: 1
+spec:
+  components:
+    payments:
+      componentRef: ./components/payments.yaml
+      size: general.standard.small
+      connections: {}
+    mailer:
+      componentRef: ./components/mailer.yaml
+      size: general.standard.small
+      connections: {}
+  parameters:
+    stripeKey:
+      toNode: payments
+      toInput: apiKey
+      ui:
+        label: Stripe API key
+    sendgridKey:
+      toNode: mailer
+      toInput: apiKey
+      ui:
+        label: SendGrid API key

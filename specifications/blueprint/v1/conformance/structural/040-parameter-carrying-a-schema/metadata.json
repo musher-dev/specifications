@@ -1,0 +1,7 @@
+{
+  "id": "structural-040-parameter-carrying-a-schema",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#parameters",
+  "summary": "A parameter declaring its own value schema is rejected."
+}

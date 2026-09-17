@@ -1,0 +1,7 @@
+{
+  "id": "structural-078-input-names-its-supplier",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#inputs",
+  "summary": "suppliedBy, ui, generator and platformDefault on an input are each an unknown field."
+}

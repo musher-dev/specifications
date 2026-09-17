@@ -1,0 +1,8 @@
+{
+  "id": "structural-075-input-without-a-description",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#contract",
+  "requirements": ["COMP-DESC-001"],
+  "summary": "An input declaring no description is rejected."
+}

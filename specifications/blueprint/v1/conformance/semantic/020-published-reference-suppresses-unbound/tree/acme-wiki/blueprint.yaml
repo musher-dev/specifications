@@ -1,14 +1,14 @@
-# The regression pin for §5.3's third rule degrading.
+# The regression pin for BP-PARAM-001 degrading.
 #
 # `api` names its component by UUID, so its inputs belong to the capability
 # phase and this phase never sees them. `apiKey` is the input it declares and
-# the parameter that binds it — but a validator reading only the repo-local
+# the parameter that covers it, but a validator reading only the repo-local
 # half has no way to know that, and the key matches nothing in `db`.
 #
 # Reporting ERR_UNBOUND_PARAMETER here would be a claim about inputs the
-# implementation was never given the means to read. The other two rules already
-# degrade on their own: `db`'s one input is optional and defaulted, so nothing
-# has to be covered, and there is no readable input to compare a type against.
+# implementation was never given the means to read. The other rules degrade on
+# their own: `db`'s one input is optional and defaulted, so nothing has to be
+# supplied, and there is no readable input to compare a schema against.
 specVersion: v1
 kind: BLUEPRINT
 metadata:
@@ -27,9 +27,5 @@ spec:
       connections: {}
   parameters:
     apiKey:
-      schema:
-        type: STRING
-        sensitive: true
-      required: true
       ui:
         label: API key

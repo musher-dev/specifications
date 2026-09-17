@@ -1,0 +1,34 @@
+# Three nodes declare an input keyed `apiKey`. `web`'s is wired from `models`;
+# `models`' and `batch`'s are not. The parameter keyed `apiKey` therefore covers
+# exactly those two, and the one field supplies both. A component cannot rename
+# its inputs, so coverage has to skip a wired input rather than collide with it,
+# or this ordinary composition could not be written.
+specVersion: v1
+kind: BLUEPRINT
+metadata:
+  slug: acme-wiki
+  revision: 1
+spec:
+  components:
+    batch:
+      componentRef: ./components/batch.yaml
+      size: general.standard.small
+      connections: {}
+    models:
+      componentRef: ./components/models.yaml
+      size: null
+      connections: {}
+    web:
+      componentRef: ./components/web.yaml
+      size: general.standard.small
+      connections:
+        apiKey:
+          fromNode: models
+          fromOutput: apiKey
+  parameters:
+    apiKey:
+      ui:
+        label: API key
+    baseUrl:
+      ui:
+        label: API base URL

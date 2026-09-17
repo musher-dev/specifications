@@ -15,11 +15,9 @@ spec:
         visibility: PRIVATE
   contract:
     inputs:
-        adminPassword:
-          schema:
-            type: STRING
-            sensitive: true
-          suppliedBy: USER
-          ui:
-            label: Administrator password
+      adminPassword:
+        schema:
+          type: STRING
+          sensitive: true
+        description: Password of the administrator account the component creates on first start.
     outputs: {}

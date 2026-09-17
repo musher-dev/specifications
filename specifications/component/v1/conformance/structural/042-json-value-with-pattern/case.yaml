@@ -20,9 +20,8 @@ spec:
   contract:
     inputs:
       settings:
+        description: Advanced settings, as a JSON document merged over the defaults.
         schema:
           type: JSON
           pattern: '^\{.*\}$'
-        ui:
-          label: Advanced settings
     outputs: {}

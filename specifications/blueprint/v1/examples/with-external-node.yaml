@@ -5,15 +5,16 @@
 # and writes `size: null` — a declaration rather than an omission, which is why
 # the field stays REQUIRED.
 #
-# Both wires take their value from the same `fromRole`. That is the whole reason
+# Both wires take their value from the same `fromNode`. That is the whole reason
 # the external shape is a node: an address and a credential are only meaningful
 # together, and drawing them from one node makes that structural rather than
 # something an author has to get right twice.
 #
-# `parameters` is empty, so §5.1 derives the install form from the graph's USER
-# inputs — which here are exactly the external node's, since the consumer's two
-# arrive over the wires. The deploying user is asked for an address and a
-# credential once, together, and for nothing else.
+# The parameters are the external node's three inputs, since the consumer's two
+# arrive over the wires. None carries `toNode` or `toInput`: binding by key is
+# unambiguous here, and the narrowing fields exist for when it is not. The deploying user is asked for an address, a
+# credential and a model name once, together, in the order given here, and for
+# nothing else. The key is concealed because the input it covers is sensitive.
 specVersion: v1
 kind: BLUEPRINT
 metadata:
@@ -30,9 +31,24 @@ spec:
       size: general.standard.small
       connections:
         llmBaseUrl:
-          fromRole: models
+          fromNode: models
           fromOutput: baseUrl
         llmApiKey:
-          fromRole: models
+          fromNode: models
           fromOutput: apiKey
-  parameters: {}
+  parameters:
+    baseUrl:
+      ui:
+        label: API base URL
+        order: 1
+        examples:
+          - https://api.example.com/v1
+    apiKey:
+      ui:
+        label: API key
+        order: 2
+    model:
+      ui:
+        label: Model name
+        order: 3
+        prominence: SECONDARY

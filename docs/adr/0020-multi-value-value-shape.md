@@ -17,7 +17,7 @@ see:
 - a `STRING` carrying a comma convention the contract cannot describe, so
   nothing validates the members and `enum` — which would have named them —
   cannot be used, because the submitted value is not one member;
-- a `JSON` value, which [§6.4](../../specifications/component/v1/spec.md#install-form)'s
+- a `JSON` value, which [§6.4](../../specifications/blueprint/v1/spec.md#install-form)'s
   derivation sends to a control accepting text over more than one line. The
   deploying user is handed a document editor and asked to get JSON right by
   hand, for a question whose whole content is a list of three words the document
@@ -94,7 +94,7 @@ parameter as a string, and its `AllowedValues` constrains each member of the lis
 rather than the joined text, which is what `enum` does here. HTML is the one
 precedent for the word `multiple`, and there it is an attribute of `<select>` —
 a statement about a control, which
-[§6.4](../../specifications/component/v1/spec.md#install-form) says this block
+[§6.4](../../specifications/blueprint/v1/spec.md#install-form) says this block
 never makes. `ui` says how a value is asked for, never what it is, and a control
 word inside `schema` would be the first exception to it.
 

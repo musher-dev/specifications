@@ -1,0 +1,6 @@
+[
+  {
+    "code": "ERR_AMBIGUOUS_SELF_REFERENCE",
+    "path": "/spec/parameters/brokerAddress/default"
+  }
+]

@@ -22,9 +22,8 @@ spec:
   contract:
     inputs:
       siteTitle:
+        description: Title shown in the site header.
         schema:
           type: STRING
         target: null
-        ui:
-          label: Site title
     outputs: {}

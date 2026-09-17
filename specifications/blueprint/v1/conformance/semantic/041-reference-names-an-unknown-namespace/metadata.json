@@ -1,0 +1,11 @@
+{
+  "id": "semantic-041-reference-names-an-unknown-namespace",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#value-sources",
+  "requirements": [
+    "CORE-REF-002"
+  ],
+  "summary": "A reference naming a namespace core does not reserve is rejected.",
+  "document": "acme-wiki/blueprint.yaml"
+}

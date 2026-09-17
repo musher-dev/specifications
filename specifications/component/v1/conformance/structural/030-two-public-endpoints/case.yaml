@@ -26,12 +26,7 @@ spec:
   contract:
     inputs:
       consoleUrl:
+        description: Public URL the admin console is served at.
         schema:
           type: STRING
-        platformDefault:
-          type: SELF_ADDRESS
-          source: PUBLIC_URL
-          endpoint: console
-        ui:
-          label: Console URL
     outputs: {}

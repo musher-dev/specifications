@@ -4,14 +4,14 @@
 # port. Because more than one endpoint is PUBLIC, nothing here may say "the
 # component's URL" — every reference names the endpoint it means.
 #
-# Both of §5.2's address forms are read. `console` publishes a URL, so
-# PUBLIC_URL takes it. `wire` is a PUBLIC TCP endpoint published at a host:port
-# edge address, which compels no readiness probe and which PUBLIC_ADDRESS —
-# never PUBLIC_URL — is the source for.
+# Both of §5.2's address forms are published. `console` publishes a URL.
+# `wire` is a PUBLIC TCP endpoint published at a host:port edge address, which
+# compels no readiness probe. The component only declares that it needs both
+# addresses; a blueprint decides where they come from, and may derive them from
+# these endpoints with a `self` reference (blueprint §5.2).
 #
 # `telemetry` is a STRING_LIST: its string form is a JSON array of members of
-# `enum`, so its default is that array's text, and §6.4's derivation offers the
-# three members at once rather than one of them.
+# `enum`, so its default is that array's text.
 specVersion: v1
 kind: COMPONENT
 metadata:
@@ -46,28 +46,19 @@ spec:
   contract:
     inputs:
       consoleUrl:
+        description: Public URL the admin console is served at.
         schema:
           type: STRING
-        platformDefault:
-          type: SELF_ADDRESS
-          source: PUBLIC_URL
-          endpoint: console
-        ui:
-          label: Console URL
         target:
           envVarKey: CONSOLE_URL
       wireAddress:
+        description: Edge address clients use to reach the wire protocol.
         schema:
           type: STRING
-        platformDefault:
-          type: SELF_ADDRESS
-          source: PUBLIC_ADDRESS
-          endpoint: wire
-        ui:
-          label: Wire protocol address
         target:
           envVarKey: WIRE_ADDRESS
       telemetry:
+        description: Telemetry signals the service exports.
         schema:
           type: STRING_LIST
           enum:
@@ -76,12 +67,18 @@ spec:
             - traces
           default: '["logs","metrics"]'
         required: false
-        ui:
-          label: Telemetry to export
-          enumLabels:
-            logs: Logs
-            metrics: Metrics
-            traces: Traces
         target:
           envVarKey: TELEMETRY_EXPORTERS
-    outputs: {}
+    # A DECLARED value is written in this document, and `${{ self.… }}` is how
+    # it names something this document cannot hold: the console's address is
+    # assigned after the file is sealed. The endpoint segment is required here
+    # for the reason the header gives — more than one endpoint is PUBLIC, so
+    # nothing may say "the component's URL".
+    outputs:
+      consoleEndpoint:
+        description: Address the admin console answers on.
+        valueFrom: DECLARED
+        value: "https://${{ self.publicHostname.console }}/admin"
+        schema:
+          type: STRING
+          format: ENDPOINT_URL

@@ -25,9 +25,8 @@ spec:
   contract:
     inputs:
       databaseUrl:
+        description: Connection URL of the database the service reads and writes.
         schema:
           type: STRING
-        ui:
-          label: Database URL
         target:
           envVarKey: DATABASE_URL

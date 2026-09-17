@@ -1,0 +1,24 @@
+# An input is described once, by the component that needs it. A blueprint
+# parameter covering it carries no description of its own and shows this one,
+# so an input without one leaves every install form that asks for it silent.
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+spec:
+  workload:
+    type: SERVICE
+    source:
+      type: IMAGE
+      ref: nginx:1.29.4-alpine
+    endpoints:
+      web:
+        containerPort: 8080
+        protocol: HTTP
+        visibility: PRIVATE
+  contract:
+    inputs:
+      siteTitle:
+        schema:
+          type: STRING
+    outputs: {}

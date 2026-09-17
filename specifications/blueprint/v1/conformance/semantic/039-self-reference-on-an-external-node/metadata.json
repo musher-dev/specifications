@@ -1,0 +1,9 @@
+{
+  "id": "semantic-039-self-reference-on-an-external-node",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#value-sources",
+  "requirements": ["BP-PARAM-005"],
+  "summary": "A `self` reference covering an external node's input elects no endpoint and is rejected.",
+  "document": "acme-wiki/blueprint.yaml"
+}

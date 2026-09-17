@@ -1,0 +1,21 @@
+# The property is gone rather than ignored, so a document still carrying one is
+# told so. What it said is now said by `default`, which composes and which a
+# structural block could not.
+specVersion: v1
+kind: BLUEPRINT
+metadata:
+  slug: acme-wiki
+  revision: 1
+spec:
+  components:
+    web:
+      componentRef: ./components/web.yaml
+      size: general.standard.small
+      connections: {}
+  parameters:
+    publicUrl:
+      platformDefault:
+        type: SELF_ADDRESS
+        source: PUBLIC_URL
+      ui:
+        label: Public URL

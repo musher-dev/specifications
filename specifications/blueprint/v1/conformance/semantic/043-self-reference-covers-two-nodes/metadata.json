@@ -1,0 +1,11 @@
+{
+  "id": "semantic-043-self-reference-covers-two-nodes",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#value-sources",
+  "requirements": [
+    "BP-PARAM-008"
+  ],
+  "summary": "A default reading self addressing across two covered nodes is rejected.",
+  "document": "acme-wiki/blueprint.yaml"
+}

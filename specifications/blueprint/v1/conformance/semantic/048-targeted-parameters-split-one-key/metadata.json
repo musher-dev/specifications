@@ -1,0 +1,12 @@
+{
+  "id": "semantic-048-targeted-parameters-split-one-key",
+  "phase": "semantic",
+  "expected": "pass",
+  "clause": "specifications/blueprint/v1/spec.md#coverage",
+  "requirements": [
+    "BP-PARAM-006",
+    "BP-PARAM-007"
+  ],
+  "summary": "Two parameters may split one input key across two nodes.",
+  "document": "acme-wiki/blueprint.yaml"
+}

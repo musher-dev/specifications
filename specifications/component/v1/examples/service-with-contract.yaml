@@ -2,7 +2,8 @@
 #
 # A stateful service exercising the full surface: a private endpoint, literal
 # and generated environment variables, a persistent volume, health probes, and
-# a configuration contract with a user-supplied sensitive input.
+# a configuration contract with a sensitive input. The component declares that
+# it needs a password; the blueprint deploying it decides who supplies one.
 specVersion: v1
 kind: COMPONENT
 metadata:
@@ -34,13 +35,11 @@ spec:
   contract:
     inputs:
       postgresPassword:
+        description: Password the database superuser is created with.
         schema:
           type: STRING
           sensitive: true
         required: true
-        suppliedBy: USER
-        ui:
-          label: Database password
         target:
           envVarKey: POSTGRES_PASSWORD
     outputs: {}

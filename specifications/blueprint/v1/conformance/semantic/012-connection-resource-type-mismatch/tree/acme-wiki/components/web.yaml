@@ -21,5 +21,5 @@ spec:
           format: CONNECTION_STRING
           resourceType: dev.musher.mysql.connection-string
           sensitive: true
-        suppliedBy: CONNECTION
+        description: Connection string of the database the application stores its data in.
     outputs: {}

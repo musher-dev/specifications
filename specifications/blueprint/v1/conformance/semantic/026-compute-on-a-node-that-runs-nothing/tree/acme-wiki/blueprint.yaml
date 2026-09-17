@@ -18,9 +18,17 @@ spec:
       size: general.standard.small
       connections:
         llmBaseUrl:
-          fromRole: models
+          fromNode: models
           fromOutput: baseUrl
         llmApiKey:
-          fromRole: models
+          fromNode: models
           fromOutput: apiKey
-  parameters: {}
+  parameters:
+    baseUrl:
+      ui:
+        label: API base URL
+        order: 1
+    apiKey:
+      ui:
+        label: API key
+        order: 2

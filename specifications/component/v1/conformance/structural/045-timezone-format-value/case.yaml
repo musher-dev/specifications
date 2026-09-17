@@ -22,13 +22,12 @@ spec:
   contract:
     inputs:
       timezone:
+        description: Time zone the scheduler evaluates times in.
         schema:
           type: STRING
           format: TIMEZONE
           default: UTC
         required: false
-        ui:
-          label: Timezone
         target:
           envVarKey: GENERIC_TIMEZONE
     outputs: {}

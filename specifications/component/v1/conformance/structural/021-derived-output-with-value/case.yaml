@@ -18,6 +18,7 @@ spec:
   contract:
     outputs:
       connectionString:
+        description: Connection string a client uses to reach this database.
         schema:
           type: STRING
         valueFrom: DERIVED

@@ -1,0 +1,22 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+spec:
+  workload:
+    type: SERVICE
+    source:
+      type: IMAGE
+      ref: nginx:1.29.4-alpine
+    endpoints:
+      internal:
+        containerPort: 8080
+        protocol: HTTP
+        visibility: PRIVATE
+  contract:
+    inputs:
+      selfUrl:
+        schema:
+          type: STRING
+        description: URL the application advertises for itself.
+    outputs: {}

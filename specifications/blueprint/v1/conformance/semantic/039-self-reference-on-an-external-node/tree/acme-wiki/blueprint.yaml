@@ -1,0 +1,23 @@
+# An external node has no endpoints, so a SELF_ADDRESS default covering one of
+# its inputs has no address to derive and no primary to elect. It needs no rule
+# of its own: the endpoint rules already reach it, and naming no endpoint is
+# ambiguous exactly as it is on a workload that declares none.
+specVersion: v1
+kind: BLUEPRINT
+metadata:
+  slug: acme-wiki
+  revision: 1
+spec:
+  components:
+    models:
+      componentRef: ./components/models.yaml
+      size: null
+      connections: {}
+  parameters:
+    apiKey:
+      ui:
+        label: API key
+    baseUrl:
+      default: "${{ self.publicUrl }}"
+      ui:
+        label: API base URL

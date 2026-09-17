@@ -21,3 +21,4 @@ spec:
           type: STRING
         valueFrom: DECLARED
         value: primary
+        description: Which replica this database serves as.

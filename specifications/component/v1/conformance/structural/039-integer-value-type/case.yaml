@@ -19,8 +19,7 @@ spec:
   contract:
     inputs:
       replicaCount:
+        description: Number of replicas the service runs.
         schema:
           type: INTEGER
-        ui:
-          label: Replica count
     outputs: {}

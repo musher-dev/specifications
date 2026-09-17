@@ -1,0 +1,25 @@
+# The output half of COMP-DESC-001. A consumer wiring an output reads what it is
+# from the producer's own document, and nowhere else.
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+spec:
+  workload:
+    type: SERVICE
+    source:
+      type: IMAGE
+      ref: nginx:1.29.4-alpine
+    endpoints:
+      web:
+        containerPort: 8080
+        protocol: HTTP
+        visibility: PRIVATE
+  contract:
+    inputs: {}
+    outputs:
+      baseUrl:
+        schema:
+          type: STRING
+          format: ENDPOINT_URL
+        valueFrom: DERIVED

@@ -1,7 +1,8 @@
-# A parameter carries the ui block component §6.4 defines, unchanged. Fixtured
-# here rather than only in the component family because this family carries its
-# own copy of that block: a fixture over there proves nothing about a blueprint,
-# and the two would drift apart silently with CI green.
+# A parameter carries the ui block §5.3 defines, and nothing about the value it
+# collects: the shape, the enum the labels name and the description all belong
+# to the inputs the parameter covers. This case has no item root, so it pins the
+# block's structure alone; whether `S3` and `GCS` are members of a covered
+# input's enum is semantic/022's question.
 specVersion: v1
 kind: BLUEPRINT
 metadata:
@@ -15,13 +16,6 @@ spec:
       connections: {}
   parameters:
     backend:
-      schema:
-        type: STRING
-        enum:
-          - S3
-          - GCS
-        default: S3
-      required: false
       ui:
         label: Storage backend
         order: 1
@@ -29,10 +23,6 @@ spec:
           S3: Amazon S3
           GCS: Google Cloud Storage
     hostname:
-      schema:
-        type: STRING
-        format: HOSTNAME
-      required: false
       ui:
         label: Public hostname
         order: 2

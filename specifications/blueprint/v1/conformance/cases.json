@@ -113,31 +113,6 @@
       "path": "structural/021-unknown-cpu-dedication"
     },
     {
-      "id": "structural-022-generated-parameter-not-sensitive",
-      "phase": "structural",
-      "path": "structural/022-generated-parameter-not-sensitive"
-    },
-    {
-      "id": "structural-023-generated-parameter-marked-insensitive",
-      "phase": "structural",
-      "path": "structural/023-generated-parameter-marked-insensitive"
-    },
-    {
-      "id": "structural-024-integer-parameter-type",
-      "phase": "structural",
-      "path": "structural/024-integer-parameter-type"
-    },
-    {
-      "id": "structural-025-json-parameter-with-pattern",
-      "phase": "structural",
-      "path": "structural/025-json-parameter-with-pattern"
-    },
-    {
-      "id": "structural-026-json-parameter",
-      "phase": "structural",
-      "path": "structural/026-json-parameter"
-    },
-    {
       "id": "structural-027-parameter-install-form-presentation",
       "phase": "structural",
       "path": "structural/027-parameter-install-form-presentation"
@@ -148,14 +123,9 @@
       "path": "structural/028-parameter-ui-declares-a-control"
     },
     {
-      "id": "structural-029-parameter-format-outside-the-vocabulary",
+      "id": "structural-030-parameter-with-a-default",
       "phase": "structural",
-      "path": "structural/029-parameter-format-outside-the-vocabulary"
-    },
-    {
-      "id": "structural-030-parameter-with-a-platform-default",
-      "phase": "structural",
-      "path": "structural/030-parameter-with-a-platform-default"
+      "path": "structural/030-parameter-with-a-default"
     },
     {
       "id": "structural-031-connection-key-outside-the-grammar",
@@ -178,19 +148,34 @@
       "path": "structural/034-placement-on-a-node-without-compute"
     },
     {
-      "id": "structural-035-string-list-parameter",
+      "id": "structural-037-parameter-without-ui",
       "phase": "structural",
-      "path": "structural/035-string-list-parameter"
+      "path": "structural/037-parameter-without-ui"
     },
     {
-      "id": "structural-036-string-list-parameter-without-an-enum",
+      "id": "structural-038-parameter-ui-without-a-label",
       "phase": "structural",
-      "path": "structural/036-string-list-parameter-without-an-enum"
+      "path": "structural/038-parameter-ui-without-a-label"
     },
     {
-      "id": "semantic-001-connection-names-unknown-role",
+      "id": "structural-039-parameter-prominence-outside-the-vocabulary",
+      "phase": "structural",
+      "path": "structural/039-parameter-prominence-outside-the-vocabulary"
+    },
+    {
+      "id": "structural-040-parameter-carrying-a-schema",
+      "phase": "structural",
+      "path": "structural/040-parameter-carrying-a-schema"
+    },
+    {
+      "id": "structural-041-generated-parameter-with-a-default",
+      "phase": "structural",
+      "path": "structural/041-generated-parameter-with-a-default"
+    },
+    {
+      "id": "semantic-001-connection-names-unknown-node",
       "phase": "semantic",
-      "path": "semantic/001-connection-names-unknown-role"
+      "path": "semantic/001-connection-names-unknown-node"
     },
     {
       "id": "semantic-002-connection-cycle",
@@ -253,9 +238,9 @@
       "path": "semantic/013-connection-names-unknown-input"
     },
     {
-      "id": "semantic-014-required-connection-input-unwired",
+      "id": "semantic-014-required-input-unwired",
       "phase": "semantic",
-      "path": "semantic/014-required-connection-input-unwired"
+      "path": "semantic/014-required-input-unwired"
     },
     {
       "id": "semantic-015-parameter-covers-no-input",
@@ -268,19 +253,14 @@
       "path": "semantic/016-required-input-uncovered"
     },
     {
-      "id": "semantic-017-optional-parameter-does-not-cover",
+      "id": "semantic-017-defaulted-input-needs-no-supplier",
       "phase": "semantic",
-      "path": "semantic/017-optional-parameter-does-not-cover"
+      "path": "semantic/017-defaulted-input-needs-no-supplier"
     },
     {
-      "id": "semantic-018-parameter-type-disagrees",
+      "id": "semantic-019-generated-parameter-covers-two-nodes",
       "phase": "semantic",
-      "path": "semantic/018-parameter-type-disagrees"
-    },
-    {
-      "id": "semantic-019-authored-override-well-formed",
-      "phase": "semantic",
-      "path": "semantic/019-authored-override-well-formed"
+      "path": "semantic/019-generated-parameter-covers-two-nodes"
     },
     {
       "id": "semantic-020-published-reference-suppresses-unbound",
@@ -288,24 +268,14 @@
       "path": "semantic/020-published-reference-suppresses-unbound"
     },
     {
-      "id": "semantic-021-identical-input-redeclaration",
+      "id": "semantic-021-identical-schemas-under-one-parameter",
       "phase": "semantic",
-      "path": "semantic/021-identical-input-redeclaration"
+      "path": "semantic/021-identical-schemas-under-one-parameter"
     },
     {
       "id": "semantic-022-parameter-enum-label-names-no-member",
       "phase": "semantic",
       "path": "semantic/022-parameter-enum-label-names-no-member"
-    },
-    {
-      "id": "semantic-023-parameter-resource-type-disagrees",
-      "phase": "semantic",
-      "path": "semantic/023-parameter-resource-type-disagrees"
-    },
-    {
-      "id": "semantic-024-parameter-declares-no-resource-type",
-      "phase": "semantic",
-      "path": "semantic/024-parameter-declares-no-resource-type"
     },
     {
       "id": "semantic-025-external-node-feeds-a-consumer",
@@ -323,19 +293,119 @@
       "path": "semantic/027-no-compute-on-a-node-that-runs"
     },
     {
-      "id": "semantic-028-connection-fills-a-user-input",
+      "id": "semantic-028-connection-fills-a-republished-input",
       "phase": "semantic",
-      "path": "semantic/028-connection-fills-a-user-input"
-    },
-    {
-      "id": "semantic-029-parameter-type-disagrees-on-string-list",
-      "phase": "semantic",
-      "path": "semantic/029-parameter-type-disagrees-on-string-list"
+      "path": "semantic/028-connection-fills-a-republished-input"
     },
     {
       "id": "semantic-030-connection-type-disagrees-on-string-list",
       "phase": "semantic",
       "path": "semantic/030-connection-type-disagrees-on-string-list"
+    },
+    {
+      "id": "semantic-031-parameter-covers-only-a-wired-input",
+      "phase": "semantic",
+      "path": "semantic/031-parameter-covers-only-a-wired-input"
+    },
+    {
+      "id": "semantic-032-input-wired-on-one-node-covered-on-another",
+      "phase": "semantic",
+      "path": "semantic/032-input-wired-on-one-node-covered-on-another"
+    },
+    {
+      "id": "semantic-033-generated-parameter-covers-an-insensitive-input",
+      "phase": "semantic",
+      "path": "semantic/033-generated-parameter-covers-an-insensitive-input"
+    },
+    {
+      "id": "semantic-034-self-reference-names-unknown-endpoint",
+      "phase": "semantic",
+      "path": "semantic/034-self-reference-names-unknown-endpoint"
+    },
+    {
+      "id": "semantic-035-self-reference-names-private-endpoint",
+      "phase": "semantic",
+      "path": "semantic/035-self-reference-names-private-endpoint"
+    },
+    {
+      "id": "semantic-036-self-url-reference-on-tcp-endpoint",
+      "phase": "semantic",
+      "path": "semantic/036-self-url-reference-on-tcp-endpoint"
+    },
+    {
+      "id": "semantic-037-public-address-on-http-endpoint",
+      "phase": "semantic",
+      "path": "semantic/037-public-address-on-http-endpoint"
+    },
+    {
+      "id": "semantic-038-self-reference-elects-primary",
+      "phase": "semantic",
+      "path": "semantic/038-self-reference-elects-primary"
+    },
+    {
+      "id": "semantic-039-self-reference-on-an-external-node",
+      "phase": "semantic",
+      "path": "semantic/039-self-reference-on-an-external-node"
+    },
+    {
+      "id": "structural-042-parameter-with-a-platform-default",
+      "phase": "structural",
+      "path": "structural/042-parameter-with-a-platform-default"
+    },
+    {
+      "id": "structural-043-connection-with-a-from-role",
+      "phase": "structural",
+      "path": "structural/043-connection-with-a-from-role"
+    },
+    {
+      "id": "structural-044-parameter-naming-its-target",
+      "phase": "structural",
+      "path": "structural/044-parameter-naming-its-target"
+    },
+    {
+      "id": "semantic-040-malformed-reference-in-a-default",
+      "phase": "semantic",
+      "path": "semantic/040-malformed-reference-in-a-default"
+    },
+    {
+      "id": "semantic-041-reference-names-an-unknown-namespace",
+      "phase": "semantic",
+      "path": "semantic/041-reference-names-an-unknown-namespace"
+    },
+    {
+      "id": "semantic-042-reference-namespace-not-in-scope",
+      "phase": "semantic",
+      "path": "semantic/042-reference-namespace-not-in-scope"
+    },
+    {
+      "id": "semantic-043-self-reference-covers-two-nodes",
+      "phase": "semantic",
+      "path": "semantic/043-self-reference-covers-two-nodes"
+    },
+    {
+      "id": "semantic-044-default-composes-an-address",
+      "phase": "semantic",
+      "path": "semantic/044-default-composes-an-address"
+    },
+    {
+      "id": "semantic-045-escaped-reference-is-literal",
+      "phase": "semantic",
+      "path": "semantic/045-escaped-reference-is-literal"
+    },
+    {
+      "id": "semantic-046-parameter-target-names-unknown-node",
+      "phase": "semantic",
+      "path": "semantic/046-parameter-target-names-unknown-node"
+    },
+    {
+      "id": "semantic-047-parameter-target-names-unknown-input",
+      "phase": "semantic",
+      "path": "semantic/047-parameter-target-names-unknown-input"
+    },
+    {
+      "id": "semantic-048-targeted-parameters-split-one-key",
+      "phase": "semantic",
+      "path": "semantic/048-targeted-parameters-split-one-key"
     }
   ]
 }

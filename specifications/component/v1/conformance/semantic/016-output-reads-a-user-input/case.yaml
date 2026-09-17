@@ -1,7 +1,6 @@
-# The positive side of COMP-OUT-002 and COMP-OUT-003 together: the named input
-# exists and a wire does not fill it. A generated input is the interesting one
-# to include — its value is minted at deploy time out of nothing, so it resolves
-# before any edge is bound, which is the invariant §6.2 actually states.
+# The positive side of COMP-OUT-002: the named input exists. Whether a wire
+# fills it is not this document's to know; blueprint §4.2 rejects a connection
+# into an input an INPUT output reads, which is where §6.2's invariant is kept.
 specVersion: v1
 kind: COMPONENT
 metadata:
@@ -20,19 +19,15 @@ spec:
   contract:
     inputs:
       apiToken:
+        description: Bearer token the service accepts on its API.
         schema:
           type: STRING
           sensitive: true
-        suppliedBy: USER
-        generator:
-          byteLength: 32
-          encoding: HEX
-        ui:
-          label: API token
         target:
           envVarKey: API_TOKEN
     outputs:
       apiToken:
+        description: The bearer token this service accepts, for a client that calls it.
         schema:
           type: STRING
           sensitive: true

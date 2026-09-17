@@ -1,0 +1,26 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+spec:
+  workload:
+    type: SERVICE
+    source:
+      type: IMAGE
+      ref: nginx:1.29.4-alpine
+    endpoints:
+      api:
+        containerPort: 8080
+        protocol: HTTP
+        visibility: PUBLIC
+    health:
+      readiness:
+        path: /healthz
+        endpoint: api
+  contract:
+    inputs:
+      consoleUrl:
+        schema:
+          type: STRING
+        description: Public URL of the administration console.
+    outputs: {}

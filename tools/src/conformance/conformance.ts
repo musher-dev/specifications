@@ -246,7 +246,7 @@ function familyKey(family: { readonly name: string; readonly major: string }): s
  * Core's registry is core §7 alone: it depends on nothing. A kind family's is
  * its own table, core's, and the table of each family its §2 "Normative
  * dependencies" table names — blueprint lists component, which is why a
- * blueprint fixture may declare `ERR_UNKNOWN_ENUM_MEMBER` and a listing one may
+ * blueprint fixture may declare `ERR_UNKNOWN_ENDPOINT` and a listing one may
  * not. A family that names no dependencies has no route to core's codes, so it
  * fails here rather than failing every case one at a time.
  *

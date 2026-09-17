@@ -1,6 +1,6 @@
 [
   {
-    "code": "ERR_UNCOVERED_REQUIRED_INPUT",
-    "path": "/spec/parameters"
+    "code": "ERR_UNSATISFIED_REQUIRED_INPUT",
+    "path": "/spec/components/db"
   }
 ]

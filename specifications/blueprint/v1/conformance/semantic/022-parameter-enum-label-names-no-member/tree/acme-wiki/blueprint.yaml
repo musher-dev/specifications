@@ -1,0 +1,23 @@
+# The labels are the blueprint's and the members are the component's. `backend`
+# offers S3 and AZURE, and the parameter covering it labels AZUR, a member no
+# covered input declares. The typo changes nothing a deploying user would see
+# except that Azure appears under its raw spelling, which is why it has to be
+# caught here: nothing else ever would.
+specVersion: v1
+kind: BLUEPRINT
+metadata:
+  slug: acme-wiki
+  revision: 1
+spec:
+  components:
+    db:
+      componentRef: ./components/postgres.yaml
+      size: general.standard.small
+      connections: {}
+  parameters:
+    backend:
+      ui:
+        label: Storage backend
+        enumLabels:
+          S3: Amazon S3
+          AZUR: Azure Blob Storage

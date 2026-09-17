@@ -1,5 +1,4 @@
-# The whole contract surface in one document: a generated USER input marked
-# sensitive, an output the platform resolves, and an output this document
+# The whole contract surface in one document: an input marked sensitive, an output the platform resolves, and an output this document
 # states outright.
 specVersion: v1
 kind: COMPONENT
@@ -19,22 +18,19 @@ spec:
   contract:
     inputs:
       postgresPassword:
+        description: Password the database superuser is created with.
         schema:
           type: STRING
           sensitive: true
-        suppliedBy: USER
-        generator:
-          encoding: BASE64URL
-          byteLength: 32
-        ui:
-          label: Database password
     outputs:
       connectionString:
+        description: Connection string a client uses to reach this database.
         schema:
           type: STRING
           format: CONNECTION_STRING
         valueFrom: DERIVED
       databaseName:
+        description: Name of the database this component creates.
         schema:
           type: STRING
         valueFrom: DECLARED

@@ -1,6 +1,6 @@
-# The component half of this rule is component structural/048. This family
-# carries its own ui block, so the closedness has to be pinned on both sides or
-# an override becomes the way to declare a control the derivation forbids.
+# The control is derived from the covered inputs' schema (§5.3), so a ui block
+# that names one states the same fact twice with nothing to say which is right.
+# The block is closed, and a widget member is one it does not name.
 specVersion: v1
 kind: BLUEPRINT
 metadata:
@@ -14,8 +14,6 @@ spec:
       connections: {}
   parameters:
     backend:
-      schema:
-        type: STRING
       ui:
         label: Storage backend
         widget: SELECT

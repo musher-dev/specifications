@@ -1,4 +1,4 @@
-# An endpoint name is referenced by probes and by platform defaults, and is
+# An endpoint name is referenced by probes and by blueprint `self` references, and is
 # composed into a DNS label beside the names identifying the deployment. A dot
 # in one is a hazard rather than a matter of taste.
 specVersion: v1

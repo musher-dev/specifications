@@ -20,12 +20,12 @@ spec:
   contract:
     inputs:
       siteTitle:
+        description: Title shown in the site header.
         schema:
           type: STRING
-        ui:
-          label: Site title
     outputs:
       siteTitle:
+        description: Title shown in the site header, for a sibling that renders it.
         schema:
           type: STRING
         valueFrom: DECLARED

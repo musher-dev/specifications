@@ -1,7 +1,7 @@
-# `postgres` requires an `adminPassword` the deploying user has to type: no
-# generator mints it, no platform default derives it, and its schema carries no
-# default. The override covers `siteTitle` and stops there, so the form never
-# asks and the workload starts without it.
+# `db` requires an `adminPassword`, and its schema carries no default. The form
+# covers `siteTitle` and stops there, so no field asks for the password, no
+# generator mints it and no `self` reference reads it. The workload would
+# start without it.
 specVersion: v1
 kind: BLUEPRINT
 metadata:
@@ -19,8 +19,5 @@ spec:
       connections: {}
   parameters:
     siteTitle:
-      schema:
-        type: STRING
-        default: Acme Wiki
       ui:
         label: Site title

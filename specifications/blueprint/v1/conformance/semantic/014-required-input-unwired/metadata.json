@@ -1,0 +1,9 @@
+{
+  "id": "semantic-014-required-input-unwired",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#coverage",
+  "requirements": ["BP-PARAM-003"],
+  "summary": "A required input that no connection fills and no parameter covers is rejected.",
+  "document": "acme-wiki/blueprint.yaml"
+}

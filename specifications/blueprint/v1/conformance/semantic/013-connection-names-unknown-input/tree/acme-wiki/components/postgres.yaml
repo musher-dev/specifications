@@ -23,3 +23,4 @@ spec:
           resourceType: dev.musher.postgresql.connection-string
           sensitive: true
         valueFrom: DERIVED
+        description: Connection string a client uses to reach this database.

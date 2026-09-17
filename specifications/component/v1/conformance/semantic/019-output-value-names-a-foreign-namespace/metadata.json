@@ -1,0 +1,11 @@
+{
+  "id": "semantic-019-output-value-names-a-foreign-namespace",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#outputs",
+  "requirements": [
+    "COMP-REF-001",
+    "CORE-REF-003"
+  ],
+  "summary": "A reference in an output value naming a namespace other than self is rejected."
+}

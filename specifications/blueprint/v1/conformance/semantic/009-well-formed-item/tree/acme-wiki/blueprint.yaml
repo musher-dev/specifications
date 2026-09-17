@@ -6,9 +6,8 @@
 # component documents are referenced, both references resolve inside the item,
 # the connection names an output `db` really publishes and an input `web`
 # really declares, the two ends of that wire agree on type and resourceType,
-# `web` has no other required CONNECTION input left unwired, and the two
-# components declare `adminPassword` identically — which §5.2 absorbs rather
-# than reports.
+# and `adminPassword` is required on both nodes, declared identically, and
+# covered by one generated parameter whose inputs are both sensitive.
 specVersion: v1
 kind: BLUEPRINT
 metadata:
@@ -25,6 +24,12 @@ spec:
       size: general.standard.small
       connections:
         databaseUrl:
-          fromRole: db
+          fromNode: db
           fromOutput: connectionString
-  parameters: {}
+  parameters:
+    adminPassword:
+      generator:
+        byteLength: 32
+        encoding: HEX
+      ui:
+        label: Administrator password

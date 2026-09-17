@@ -14,9 +14,5 @@ spec:
       connections: {}
   parameters:
     siteTitle:
-      schema:
-        type: STRING
-        default: My Application
-      required: false
       ui:
         lable: Site title

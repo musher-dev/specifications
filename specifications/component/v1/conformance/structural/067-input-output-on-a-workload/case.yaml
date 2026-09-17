@@ -1,8 +1,8 @@
 # `valueFrom: INPUT` is not external-only, and this pins that. A workload that
-# republishes a value the deploying user gave it is useful and harmless: the
-# value resolves at form submission, which is earlier than this workload's own
-# DERIVED outputs resolve, so §6.2's invariant is satisfied by a wider margin
-# here than in the case the member was added for.
+# republishes a value it was given is useful and harmless: so long as no wire
+# fills the input, which blueprint §4.2 enforces, the value resolves before any
+# edge is bound, and §6.2's invariant holds here as it does for an external
+# component.
 specVersion: v1
 kind: COMPONENT
 metadata:
@@ -21,12 +21,12 @@ spec:
   contract:
     inputs:
       siteTitle:
+        description: Title shown in the site header.
         schema:
           type: STRING
-        ui:
-          label: Site title
     outputs:
       siteTitle:
+        description: Title shown in the site header, for a sibling that renders it.
         schema:
           type: STRING
         valueFrom: INPUT

@@ -2,7 +2,7 @@
   "id": "structural-028-parameter-ui-declares-a-control",
   "phase": "structural",
   "expected": "fail",
-  "clause": "specifications/blueprint/v1/spec.md#authored-parameters",
-  "requirements": ["COMP-UI-003"],
+  "clause": "specifications/blueprint/v1/spec.md#install-form",
+  "requirements": ["BP-UI-001"],
   "summary": "A parameter ui block naming its own control is rejected."
 }

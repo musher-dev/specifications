@@ -19,12 +19,11 @@ spec:
         schema:
           type: STRING
           sensitive: true
-        suppliedBy: USER
-        ui:
-          label: Administrator password
+        description: Password of the administrator account the component creates on first start.
     outputs:
       connectionString:
         schema:
           type: STRING
           sensitive: true
         valueFrom: DERIVED
+        description: Connection string a client uses to reach this database.

@@ -5,12 +5,13 @@
 # `resourceType` is what says which kind of service it addresses.
 #
 # The three values an application needs in order to reach that service arrive as
-# USER inputs and leave as INPUT outputs. Publishing them from one node is the
+# inputs and leave as INPUT outputs. Publishing them from one node is the
 # point: they are only meaningful as a set, and a consumer wiring two of them
 # from this node is wiring them from one source by construction.
 #
-# §6.2's invariant holds here by a wide margin — a USER input resolves when the
-# install form is submitted, which is earlier than a DERIVED output resolves.
+# §6.2's invariant holds as long as the blueprint does not wire these inputs:
+# an unwired input resolves before any edge is bound, and blueprint §4.2
+# rejects a connection into an input an INPUT output reads.
 specVersion: v1
 kind: COMPONENT
 metadata:
@@ -25,11 +26,6 @@ spec:
           type: STRING
           format: ENDPOINT_URL
           resourceType: dev.musher.llm.base-url
-        ui:
-          label: API base URL
-          order: 1
-          examples:
-            - https://api.example.com/v1
         description: >-
           Base URL of the service this node addresses. Anything speaking the
           same wire will do; nothing here resolves it or connects to it.
@@ -38,22 +34,16 @@ spec:
           type: STRING
           sensitive: true
           resourceType: dev.musher.llm.api-key
-        ui:
-          label: API key
-          order: 2
         description: Bearer credential presented to the service above.
       model:
         schema:
           type: STRING
           resourceType: dev.musher.llm.model-name
         required: false
-        ui:
-          label: Model name
-          order: 3
-          prominence: SECONDARY
         description: Name the service uses to select what answers.
     outputs:
       baseUrl:
+        description: Base URL of the addressed service, for a consumer to call.
         schema:
           type: STRING
           format: ENDPOINT_URL
@@ -61,6 +51,7 @@ spec:
         valueFrom: INPUT
         input: baseUrl
       apiKey:
+        description: Bearer credential for the addressed service.
         schema:
           type: STRING
           sensitive: true
@@ -68,6 +59,7 @@ spec:
         valueFrom: INPUT
         input: apiKey
       model:
+        description: Model name the addressed service answers with.
         schema:
           type: STRING
           resourceType: dev.musher.llm.model-name

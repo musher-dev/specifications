@@ -2,11 +2,12 @@
 # platform does not run — no image, no compute, `size: null` — and `web` is one
 # it does. The two wires carry an address and a credential from one node, which
 # is the point: they are only meaningful as a set, and taking both from one
-# `fromRole` is what makes that structural rather than hoped for.
+# `fromNode` is what makes that structural rather than hoped for.
 #
-# `parameters: {}`, so §5.1 derives the install form from the graph's USER
-# inputs. Those are exactly `models`' two, ordered 1 and 2, with the key
-# concealed by component §6.4's derivation on `sensitive`.
+# `models` declares two required inputs, and the parameters cover them: the
+# deploying user is asked for an address and a credential once, together, in
+# the order the blueprint gives. `web`'s two inputs are wired and never reach
+# the form. The key is concealed because the covered input is sensitive.
 specVersion: v1
 kind: BLUEPRINT
 metadata:
@@ -23,9 +24,17 @@ spec:
       size: general.standard.small
       connections:
         llmBaseUrl:
-          fromRole: models
+          fromNode: models
           fromOutput: baseUrl
         llmApiKey:
-          fromRole: models
+          fromNode: models
           fromOutput: apiKey
-  parameters: {}
+  parameters:
+    baseUrl:
+      ui:
+        label: API base URL
+        order: 1
+    apiKey:
+      ui:
+        label: API key
+        order: 2

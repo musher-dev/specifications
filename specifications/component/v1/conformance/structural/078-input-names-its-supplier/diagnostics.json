@@ -1,0 +1,18 @@
+[
+  {
+    "code": "ERR_UNKNOWN_FIELD",
+    "path": "/spec/contract/inputs/databaseUrl"
+  },
+  {
+    "code": "ERR_UNKNOWN_FIELD",
+    "path": "/spec/contract/inputs/siteTitle"
+  },
+  {
+    "code": "ERR_UNKNOWN_FIELD",
+    "path": "/spec/contract/inputs/sessionSecret"
+  },
+  {
+    "code": "ERR_UNKNOWN_FIELD",
+    "path": "/spec/contract/inputs/publicUrl"
+  }
+]

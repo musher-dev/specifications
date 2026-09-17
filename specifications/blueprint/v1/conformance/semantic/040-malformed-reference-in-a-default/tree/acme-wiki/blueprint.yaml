@@ -1,0 +1,19 @@
+# An unclosed `${{` is one keystroke from a reference the author meant to write.
+# Treating it as text carries the mistake into the deployed thing as literal
+# characters, so it is refused here instead.
+specVersion: v1
+kind: BLUEPRINT
+metadata:
+  slug: acme-wiki
+  revision: 1
+spec:
+  components:
+    app:
+      componentRef: ./components/app.yaml
+      size: general.standard.small
+      connections: {}
+  parameters:
+    brokerAddress:
+      default: "${{ self.publicAddress }"
+      ui:
+        label: Broker address
