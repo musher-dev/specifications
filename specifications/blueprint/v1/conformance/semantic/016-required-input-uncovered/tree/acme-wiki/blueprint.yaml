@@ -1,6 +1,6 @@
 # `db` requires an `adminPassword`, and its schema carries no default. The form
 # covers `siteTitle` and stops there, so no field asks for the password, no
-# generator mints it and no platform default derives it. The workload would
+# generator mints it and no `self` reference reads it. The workload would
 # start without it.
 specVersion: v1
 kind: BLUEPRINT

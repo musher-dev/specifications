@@ -1,0 +1,6 @@
+[
+  {
+    "code": "ERR_UNKNOWN_INPUT",
+    "path": "/spec/parameters/brokerAddress/toInput"
+  }
+]

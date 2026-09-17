@@ -1,0 +1,22 @@
+# The producer end is named by `fromNode`. `fromRole` named the same thing under
+# a word the specification uses nowhere else, and it is gone rather than
+# accepted alongside.
+specVersion: v1
+kind: BLUEPRINT
+metadata:
+  slug: acme-wiki
+  revision: 1
+spec:
+  components:
+    db:
+      componentRef: ./components/postgres.yaml
+      size: general.standard.small
+      connections: {}
+    web:
+      componentRef: ./components/web.yaml
+      size: general.standard.small
+      connections:
+        databaseUrl:
+          fromRole: db
+          fromOutput: connectionString
+  parameters: {}

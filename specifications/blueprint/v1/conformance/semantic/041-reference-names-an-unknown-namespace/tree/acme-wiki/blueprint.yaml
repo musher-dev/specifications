@@ -1,0 +1,19 @@
+# `slef` is not in core §5.2's reserved set. An unknown namespace is an error
+# rather than a pass-through: the set is closed precisely so a typo in it is
+# reportable.
+specVersion: v1
+kind: BLUEPRINT
+metadata:
+  slug: acme-wiki
+  revision: 1
+spec:
+  components:
+    app:
+      componentRef: ./components/app.yaml
+      size: general.standard.small
+      connections: {}
+  parameters:
+    brokerAddress:
+      default: "${{ slef.publicAddress }}"
+      ui:
+        label: Broker address

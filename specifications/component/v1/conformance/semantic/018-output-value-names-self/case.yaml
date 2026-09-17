@@ -1,0 +1,33 @@
+# A DECLARED value is written in this document, and this one names something the
+# document cannot hold: the address is assigned after the file is sealed. The
+# text around the reference composes a URL from it, which is the whole reason a
+# structural field could not answer this.
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+spec:
+  workload:
+    type: SERVICE
+    source:
+      type: IMAGE
+      ref: nginx:1.29.4-alpine
+    endpoints:
+      web:
+        containerPort: 8080
+        protocol: HTTP
+        visibility: PUBLIC
+    health:
+      readiness:
+        path: /healthz
+        endpoint: web
+  contract:
+    inputs: {}
+    outputs:
+      baseUrl:
+        description: Address this service answers on.
+        valueFrom: DECLARED
+        value: "https://${{ self.publicHostname }}/v1"
+        schema:
+          type: STRING
+          format: ENDPOINT_URL

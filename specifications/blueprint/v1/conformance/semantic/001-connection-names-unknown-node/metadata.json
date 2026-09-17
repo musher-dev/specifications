@@ -1,0 +1,7 @@
+{
+  "id": "semantic-001-connection-names-unknown-node",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#connections",
+  "summary": "A connection whose fromNode names no node in this blueprint is rejected."
+}

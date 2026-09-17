@@ -18,6 +18,6 @@ spec:
       size: general.standard.small
       connections:
         databasePort:
-          fromRole: db
+          fromNode: db
           fromOutput: port
   parameters: {}

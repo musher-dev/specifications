@@ -31,18 +31,25 @@ spec:
       size: general.standard.small
       connections:
         databaseUrl:
-          fromRole: db
+          fromNode: db
           fromOutput: connectionString
   # `parameters` is the install form, and it is always authored. Binding is by
-  # key and the key is the whole of the correspondence: a parameter names no node
-  # and no target, so `siteTitle` here supplies the `siteTitle` input of every
-  # component that declares one and no connection fills, which is what lets one
-  # parameter serve two components.
+  # key: a parameter carrying no `toNode` and no `toInput` names no node, so
+  # `siteTitle` here supplies the `siteTitle` input of every component that
+  # declares one and no connection fills, which is what lets one parameter serve
+  # two components.
   #
   # A parameter carries presentation and supply, never the value's shape. Type,
-  # enum, default, sensitivity and the help text all come from the inputs it
-  # covers. `databaseUrl` arrives over the wire above, so no field asks for it,
-  # and the database password is minted by the platform rather than typed.
+  # enum, sensitivity and the help text all come from the inputs it covers.
+  # `databaseUrl` arrives over the wire above, so no field asks for it, and the
+  # database password is minted by the platform rather than typed.
+  #
+  # `callbackUrl` is the case a structural field could not express. The address
+  # this deployment answers on is assigned after this document is sealed, so no
+  # author can write the URL down: `${{ self.publicHostname }}` names it, and the
+  # text around it composes the path. `toNode` says whose hostname — a `self`
+  # reference has to denote one node, and the key alone would bind on every node
+  # declaring it.
   parameters:
     postgresPassword:
       generator:
@@ -53,6 +60,11 @@ spec:
     siteTitle:
       ui:
         label: Site title
+    callbackUrl:
+      toNode: web
+      default: "https://${{ self.publicHostname }}/oauth/cb"
+      ui:
+        label: Callback URL
     telemetry:
       ui:
         label: Telemetry to export

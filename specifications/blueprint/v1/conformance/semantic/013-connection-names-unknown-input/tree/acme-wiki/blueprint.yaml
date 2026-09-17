@@ -18,6 +18,6 @@ spec:
       size: general.standard.small
       connections:
         databaseUri:
-          fromRole: db
+          fromNode: db
           fromOutput: connectionString
   parameters: {}

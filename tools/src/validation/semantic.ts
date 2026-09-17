@@ -23,6 +23,7 @@ import {
 import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path'
 import { type Node, Parser } from 'commonmark'
 import { type Family, isObject, type Json } from '../lib/layout.ts'
+import { scanReferences } from '../lib/references.ts'
 import { type Diagnostic, parseDocument } from './document.ts'
 
 export type { Diagnostic }
@@ -147,18 +148,10 @@ function primaryEndpoint(endpoints: Json | undefined): string | undefined {
  */
 type AddressForm = 'http' | 'l4'
 
-/** Blueprint §5.2 — the address form each platform-default source reads. */
-const SOURCE_ADDRESS_FORM: Record<string, AddressForm> = {
-  PUBLIC_URL: 'http',
-  PUBLIC_HOSTNAME: 'http',
-  PUBLIC_ADDRESS: 'l4',
-  PUBLIC_PORT: 'l4',
-}
-
 /**
  * One place a document names an endpoint: a probe's `endpoint` (component §5.4)
- * or a blueprint parameter's platform default (blueprint §5.2). `mustBePublic`
- * is what separates them — every platform-default source derives an externally
+ * or a `self` reference in a blueprint parameter's `default` (blueprint §5.2).
+ * `mustBePublic` is what separates them — every `self` path reads an externally
  * reachable address.
  */
 interface EndpointReference {
@@ -169,9 +162,8 @@ interface EndpointReference {
   readonly mustBePublic: boolean
   /**
    * The address form this reference reads, or undefined where the document
-   * named a source the schema does not define — the structural phase has
-   * already rejected that, and guessing a form here would report a second
-   * diagnostic about it.
+   * named a path this contract does not define — guessing a form here would
+   * report a second diagnostic about one cause.
    */
   readonly addressForm: AddressForm | undefined
 }
@@ -301,6 +293,52 @@ function checkOutputInputReferences(document: Json, out: Diagnostic[]): void {
   }
 }
 
+/** Core v1 §5.2, `CORE-REF-003` — the namespaces a `DECLARED` output's `value` admits. */
+const OUTPUT_NAMESPACES = ['self']
+
+/**
+ * Component §6.2, `COMP-REF-001` — a `DECLARED` output's `value` may name this
+ * node's own addressing, and nothing else.
+ *
+ * Only the grammar is decided here. Whether `self.publicUrl.web` resolves needs
+ * the endpoints of the node the component is deployed as, which is the
+ * blueprint's to know: the same reference on two nodes resolves twice.
+ */
+function checkOutputValueReferences(document: Json, out: Diagnostic[]): void {
+  const outputs = child(child(child(document, 'spec'), 'contract'), 'outputs')
+
+  for (const name of keysOf(outputs)) {
+    const output = child(outputs, name)
+    if (asString(child(output, 'valueFrom')) !== 'DECLARED') continue
+    const value = asString(child(output, 'value'))
+    if (value === undefined) continue // COMP-OUT-001, structural
+
+    const pointer = `/spec/contract/outputs/${token(name)}/value`
+    for (const failure of scanReferences(value, OUTPUT_NAMESPACES).failures) {
+      if (failure.kind === 'malformed') {
+        out.push({
+          code: 'ERR_MALFORMED_REFERENCE',
+          path: pointer,
+          message: `"${failure.raw}" does not open a well-formed reference: ${failure.why}`,
+        })
+        continue
+      }
+      const { namespace, raw } = failure.reference
+      out.push({
+        code:
+          failure.kind === 'unknown-namespace'
+            ? 'ERR_UNKNOWN_REFERENCE_NAMESPACE'
+            : 'ERR_REFERENCE_NOT_IN_SCOPE',
+        path: pointer,
+        message:
+          failure.kind === 'unknown-namespace'
+            ? `"${raw}" names no reserved namespace`
+            : `"${raw}" names the "${namespace}" namespace, which an output value does not admit`,
+      })
+    }
+  }
+}
+
 /**
  * Component §5.3 — every environment-variable key is declared exactly once,
  * across both the places that declare one.
@@ -359,19 +397,19 @@ function checkEnvVarKeys(document: Json, out: Diagnostic[]): void {
 
 const LOCAL_REFERENCE = /^\.\.?\//
 
-/** Blueprint §4.2 — `fromRole` MUST name a node in this blueprint. */
-function checkConnectionRoles(document: Json, out: Diagnostic[]): void {
+/** Blueprint §4.2 — `fromNode` MUST name a node in this blueprint. */
+function checkConnectionNodes(document: Json, out: Diagnostic[]): void {
   const components = child(child(document, 'spec'), 'components')
   const nodes = new Set(keysOf(components))
   for (const node of nodes) {
     const connections = child(child(components, node), 'connections')
     for (const key of keysOf(connections)) {
-      const from = asString(child(child(connections, key), 'fromRole'))
+      const from = asString(child(child(connections, key), 'fromNode'))
       if (from !== undefined && !nodes.has(from)) {
         out.push({
-          code: 'ERR_UNKNOWN_ROLE',
-          path: `/spec/components/${token(node)}/connections/${token(key)}/fromRole`,
-          message: `fromRole "${from}" names no node in this blueprint`,
+          code: 'ERR_UNKNOWN_NODE',
+          path: `/spec/components/${token(node)}/connections/${token(key)}/fromNode`,
+          message: `fromNode "${from}" names no node in this blueprint`,
         })
       }
     }
@@ -838,12 +876,12 @@ function checkConnectionOutputs(
     const connections = child(child(components, node), 'connections')
     for (const key of keysOf(connections)) {
       const connection = child(connections, key)
-      const role = asString(child(connection, 'fromRole'))
+      const producerNode = asString(child(connection, 'fromNode'))
       const output = asString(child(connection, 'fromOutput'))
-      if (role === undefined || output === undefined) continue
+      if (producerNode === undefined || output === undefined) continue
 
-      const producer = resolved.get(role)
-      // An unresolved producer is already ERR_UNKNOWN_ROLE or
+      const producer = resolved.get(producerNode)
+      // An unresolved producer is already ERR_UNKNOWN_NODE or
       // ERR_COMPONENT_NOT_FOUND; do not pile a second diagnostic on one cause.
       if (producer === undefined) continue
 
@@ -852,7 +890,7 @@ function checkConnectionOutputs(
         out.push({
           code: 'ERR_UNKNOWN_OUTPUT',
           path: `/spec/components/${token(node)}/connections/${token(key)}/fromOutput`,
-          message: `"${output}" is not an output of the component "${role}" deploys`,
+          message: `"${output}" is not an output of the component "${producerNode}" deploys`,
         })
       }
     }
@@ -913,11 +951,11 @@ function checkConnectionCompatibility(
 
     for (const key of keysOf(connections)) {
       const connection = child(connections, key)
-      const role = asString(child(connection, 'fromRole'))
+      const producerNode = asString(child(connection, 'fromNode'))
       const output = asString(child(connection, 'fromOutput'))
-      if (role === undefined || output === undefined) continue
+      if (producerNode === undefined || output === undefined) continue
 
-      const producer = resolved.get(role)
+      const producer = resolved.get(producerNode)
       if (producer === undefined) continue
 
       // A dangling end is already ERR_UNKNOWN_OUTPUT or ERR_UNKNOWN_INPUT; do
@@ -1008,23 +1046,80 @@ interface CoveredInput {
 }
 
 /**
- * Blueprint §5.1 — the inputs a parameter key covers: every resolved node's
- * input of that key which no connection on the node fills. A wired input is not
- * a candidate, so a wire and a parameter never claim one value.
+ * Blueprint §5.1 — the input key a parameter covers. `toInput` names it where
+ * it differs from the parameter's own key; absent, the key is the input key.
+ */
+function coveredKey(key: string, parameter: Json | undefined): string {
+  return asString(child(parameter, 'toInput')) ?? key
+}
+
+/**
+ * Blueprint §5.1 — the inputs a parameter covers: every resolved node's input
+ * of the covered key which no connection on the node fills. A wired input is
+ * not a candidate, so a wire and a parameter never claim one value.
+ *
+ * `toNode` restricts the walk to one node. It narrows the correspondence and
+ * does not replace it: a parameter carrying neither field covers exactly what
+ * binding by key covers.
  */
 function coveredInputs(
   key: string,
+  parameter: Json | undefined,
   components: Json | undefined,
   resolved: Map<string, Json>,
 ): CoveredInput[] {
+  const input_key = coveredKey(key, parameter)
+  const only = asString(child(parameter, 'toNode'))
   const covered: CoveredInput[] = []
   for (const node of keysOf(components).sort()) {
-    const input = child(inputsOf(resolved.get(node)), key)
+    if (only !== undefined && node !== only) continue
+    const input = child(inputsOf(resolved.get(node)), input_key)
     if (input === undefined) continue
-    if (keysOf(child(child(components, node), 'connections')).includes(key)) continue
+    if (keysOf(child(child(components, node), 'connections')).includes(input_key)) continue
     covered.push({ node, input })
   }
   return covered
+}
+
+/**
+ * Blueprint §5.1, `BP-PARAM-006` and `BP-PARAM-007` — a narrowing field MUST
+ * narrow onto something. Both are the coverage failure `BP-PARAM-001` reports,
+ * caught one step earlier and at the field that caused it.
+ *
+ * `BP-PARAM-007` is measured against the nodes the parameter covers, so like
+ * `BP-PARAM-001` it is decidable only when every node's component was read.
+ */
+function checkParameterTarget(
+  key: string,
+  parameter: Json | undefined,
+  components: Json | undefined,
+  resolved: Map<string, Json>,
+  allReadable: boolean,
+  out: Diagnostic[],
+): boolean {
+  const node = asString(child(parameter, 'toNode'))
+  if (node !== undefined && !keysOf(components).includes(node)) {
+    out.push({
+      code: 'ERR_UNKNOWN_NODE',
+      path: `/spec/parameters/${token(key)}/toNode`,
+      message: `toNode "${node}" names no node in this blueprint`,
+    })
+    return true
+  }
+
+  const input = asString(child(parameter, 'toInput'))
+  if (input === undefined || !allReadable) return false
+  const scope = node === undefined ? keysOf(components) : [node]
+  const declared = scope.some((each) => child(inputsOf(resolved.get(each)), input) !== undefined)
+  if (declared) return false
+  out.push({
+    code: 'ERR_UNKNOWN_INPUT',
+    path: `/spec/parameters/${token(key)}/toInput`,
+    message: `toInput "${input}" names no input of ${
+      node === undefined ? 'any node in this blueprint' : `node "${node}"`
+    }`,
+  })
+  return true
 }
 
 /**
@@ -1047,7 +1142,11 @@ function checkParameters(
   for (const key of keysOf(parameters)) {
     const parameter = child(parameters, key)
     const pointer = `/spec/parameters/${token(key)}`
-    const covered = coveredInputs(key, components, resolved)
+    // A narrowing field that names nothing has already been reported, and the
+    // empty coverage it causes is that one cause seen twice.
+    if (checkParameterTarget(key, parameter, components, resolved, allReadable, out)) continue
+
+    const covered = coveredInputs(key, parameter, components, resolved)
     if (covered.length === 0) {
       if (!allReadable) continue
       out.push({
@@ -1057,7 +1156,7 @@ function checkParameters(
       })
       continue
     }
-    coveredKeys.add(key)
+    for (const { node } of covered) coveredKeys.add(`${node}\u0000${coveredKey(key, parameter)}`)
 
     // `BP-PARAM-002` — one field asks for one value, so the inputs it feeds have
     // to agree on what that value is. Compared "once defaults are applied".
@@ -1075,7 +1174,7 @@ function checkParameters(
     }
 
     checkGeneratedParameter(key, parameter, covered, out)
-    checkPlatformDefault(key, parameter, covered, resolved, out)
+    checkParameterDefault(key, parameter, covered, resolved, out)
     if (conflict === undefined) checkEnumLabels(key, parameter, first.input, out)
   }
 
@@ -1100,7 +1199,7 @@ function checkSatisfiedInputs(
       const input = child(inputs, key)
       if (child(input, 'required') === false) continue
       if (isSet(child(child(input, 'schema'), 'default'))) continue
-      if (wired.has(key) || coveredKeys.has(key)) continue
+      if (wired.has(key) || coveredKeys.has(`${node}\u0000${key}`)) continue
       out.push({
         code: 'ERR_UNSATISFIED_REQUIRED_INPUT',
         path: `/spec/components/${token(node)}`,
@@ -1132,38 +1231,107 @@ function checkGeneratedParameter(
   })
 }
 
+/** Blueprint §5.2 — the address form each `self` path reads. */
+const SELF_ADDRESS_FORM: Record<string, AddressForm> = {
+  publicUrl: 'http',
+  publicHostname: 'http',
+  publicAddress: 'l4',
+  publicPort: 'l4',
+}
+
+/** Core v1 §5.2, `CORE-REF-003` — the namespaces a parameter's `default` admits. */
+const DEFAULT_NAMESPACES = ['self']
+
 /**
- * Blueprint §5.2, `BP-PARAM-005` — a `SELF_ADDRESS` default derives from the
- * addressing of each node it covers, so its endpoint has to resolve on every
- * one of them by component §5.2's rules. An external node declares no
- * endpoints, which leaves it ambiguous where the endpoint is omitted and
- * unknown where it is named — no rule of its own is needed.
+ * Blueprint §5.2 — a parameter's `default`.
+ *
+ * Three layers, in the order a reader meets them: the grammar
+ * (`CORE-REF-001..003`), then `BP-PARAM-008`, then `BP-PARAM-005`. Each later
+ * one presumes the earlier passed, so a malformed reference reports once rather
+ * than cascading into "this endpoint does not exist".
+ *
+ * A `default` with no reference in it is a literal the blueprint supplies, and
+ * none of this applies to it.
  */
-function checkPlatformDefault(
+function checkParameterDefault(
   key: string,
   parameter: Json | undefined,
   covered: readonly CoveredInput[],
   resolved: Map<string, Json>,
   out: Diagnostic[],
 ): void {
-  const platformDefault = child(parameter, 'platformDefault')
-  if (!isObject(platformDefault)) return
-  const source = asString(child(platformDefault, 'source'))
-  const reference: EndpointReference = {
-    value: child(platformDefault, 'endpoint'),
-    path: `/spec/parameters/${token(key)}/platformDefault/endpoint`,
-    subject: `platform default on parameter "${key}"`,
-    mustBePublic: true,
-    addressForm: source === undefined ? undefined : SOURCE_ADDRESS_FORM[source],
+  const value = asString(child(parameter, 'default'))
+  if (value === undefined) return
+  const pointer = `/spec/parameters/${token(key)}/default`
+
+  const { references, failures } = scanReferences(value, DEFAULT_NAMESPACES)
+
+  // A diagnostic quotes the reference as written and never a resolved value
+  // (core v1 §5.2, §11).
+  for (const failure of failures) {
+    if (failure.kind === 'malformed') {
+      out.push({
+        code: 'ERR_MALFORMED_REFERENCE',
+        path: pointer,
+        message: `"${failure.raw}" does not open a well-formed reference: ${failure.why}`,
+      })
+      continue
+    }
+    const { namespace, raw } = { ...failure.reference }
+    out.push({
+      code:
+        failure.kind === 'unknown-namespace'
+          ? 'ERR_UNKNOWN_REFERENCE_NAMESPACE'
+          : 'ERR_REFERENCE_NOT_IN_SCOPE',
+      path: pointer,
+      message:
+        failure.kind === 'unknown-namespace'
+          ? `"${raw}" names no reserved namespace`
+          : `"${raw}" names the "${namespace}" namespace, which a parameter's default does not admit`,
+    })
+  }
+  if (failures.length > 0 || references.length === 0) return
+
+  // `BP-PARAM-008` — one field shows one value, and two nodes have two
+  // addresses. Rejected rather than picked; `toNode` is how an author says
+  // which node they meant.
+  if (covered.length > 1) {
+    out.push({
+      code: 'ERR_AMBIGUOUS_SELF_REFERENCE',
+      path: pointer,
+      message: `parameter "${key}" reads self addressing and covers ${covered.length} nodes; name one with toNode`,
+    })
+    return
   }
 
-  // One pointer serves every covered node, so the same verdict on two nodes is
-  // one diagnostic rather than two.
+  const only = covered[0]
+  if (only === undefined) return
+  const endpoints = child(child(child(resolved.get(only.node), 'spec'), 'workload'), 'endpoints')
+
+  // `BP-PARAM-005` — the path has to resolve on that node by component §5.2's
+  // rules. One pointer serves the whole string, so two references failing the
+  // same way is one diagnostic rather than two.
   const reported = new Set<string>()
-  for (const { node } of covered) {
-    const endpoints = child(child(child(resolved.get(node), 'spec'), 'workload'), 'endpoints')
+  for (const reference of references) {
+    const [form, endpoint] = reference.path
+    if (form === undefined) continue
     const found: Diagnostic[] = []
-    checkEndpointReference(reference, endpoints, found)
+    checkEndpointReference(
+      {
+        // An absent endpoint segment selects the primary, exactly as an omitted
+        // `endpoint` did on the field this replaced.
+        value: endpoint ?? undefined,
+        path: pointer,
+        subject: `"${reference.raw}" on parameter "${key}"`,
+        mustBePublic: true,
+        // A path outside the four the prose names is already
+        // ERR_REFERENCE_NOT_IN_SCOPE's neighbour: the grammar admitted it, so
+        // report nothing rather than guess an address form.
+        addressForm: SELF_ADDRESS_FORM[form],
+      },
+      endpoints,
+      found,
+    )
     for (const diagnostic of found) {
       if (reported.has(diagnostic.code)) continue
       reported.add(diagnostic.code)
@@ -1225,10 +1393,11 @@ export function semanticDiagnostics(
     checkImageRef(document, out)
     checkEndpointReferences(document, out)
     checkOutputInputReferences(document, out)
+    checkOutputValueReferences(document, out)
     checkEnvVarKeys(document, out)
   }
   if (family.name === 'blueprint') {
-    checkConnectionRoles(document, out)
+    checkConnectionNodes(document, out)
   }
   if (family.name === 'listing') {
     checkScreenshotBasenames(document, out)

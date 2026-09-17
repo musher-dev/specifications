@@ -1,9 +1,0 @@
-{
-  "id": "semantic-036-platform-default-url-on-tcp-endpoint",
-  "phase": "semantic",
-  "expected": "fail",
-  "clause": "specifications/blueprint/v1/spec.md#value-sources",
-  "requirements": ["BP-PARAM-005"],
-  "summary": "A URL platform default naming an endpoint outside the HTTP family is rejected.",
-  "document": "acme-wiki/blueprint.yaml"
-}

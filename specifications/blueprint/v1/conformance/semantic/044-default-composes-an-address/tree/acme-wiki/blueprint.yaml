@@ -1,0 +1,20 @@
+# The case a structural field could not express. The address is assigned after
+# this document is sealed, and the text around the reference composes a URL from
+# it. `toNode` is what makes `self` denote one node.
+specVersion: v1
+kind: BLUEPRINT
+metadata:
+  slug: acme-wiki
+  revision: 1
+spec:
+  components:
+    app:
+      componentRef: ./components/app.yaml
+      size: general.standard.small
+      connections: {}
+  parameters:
+    brokerAddress:
+      toNode: app
+      default: "amqp://${{ self.publicAddress }}/vhost"
+      ui:
+        label: Broker address

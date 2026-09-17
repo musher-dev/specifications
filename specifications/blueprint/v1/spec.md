@@ -182,7 +182,7 @@ phase, before the graph is looked at.
 
 The name is graph-local, which is to say it means nothing outside this
 document. Two blueprints MAY each declare a node called `db` and neither is
-the other's. Its jobs are to be what [§4.2](#connections) `fromRole` names, and what
+the other's. Its jobs are to be what [§4.2](#connections) `fromNode` names, and what
 [§5.1](#coverage) orders the graph by where one parameter covers two nodes.
 
 A node carries three things: the component it deploys ([§4.1](#component-reference)),
@@ -286,14 +286,14 @@ where it comes from. A component never declares who consumes it.
 ```yaml
 connections:
   databaseUrl:
-    fromRole: db
+    fromNode: db
     fromOutput: connectionString
 ```
 
 The producer end MUST resolve.
 
-- `fromRole` MUST name a node in this blueprint. A connection cannot reach
-  outside the graph it is written in. `ERR_UNKNOWN_ROLE`.
+- `fromNode` MUST name a node in this blueprint. A connection cannot reach
+  outside the graph it is written in. `ERR_UNKNOWN_NODE`.
 - `fromOutput` MUST name an output declared by the component that node
   deploys. `ERR_UNKNOWN_OUTPUT`.
 
@@ -612,27 +612,30 @@ how a person is asked for it
 ([component §6](../../component/v1/spec.md#contract)).
 
 **A parameter says how a value is supplied, and the input says what the value
-is.** A parameter carries `ui`, and at most one of `generator` and
-`platformDefault`. It carries no `schema`, no `required` and no `description`:
-the input it covers declares all three, and a form field reads them from there.
-Writing them twice would give a composition two statements of one value's shape
-with nothing to decide which is right. That is the failure
-[§4.2](#connections) rejects for a wire, and [§5.1](#coverage) for coverage.
+is.** A parameter carries `ui`, and at most one of `generator` and `default`. It
+carries no `schema`, no `required` and no `description`: the input it covers
+declares all three, and a form field reads them from there. Writing them twice
+would give a composition two statements of one value's shape with nothing to
+decide which is right. That is the failure [§4.2](#connections) rejects for a
+wire, and [§5.1](#coverage) for coverage.
 
 | Property | Presence | Says |
 |---|---|---|
 | `ui` | REQUIRED | How the field is presented ([§5.3](#install-form)). |
+| `default` | OPTIONAL | The value the field is prefilled with ([§5.2](#value-sources)). |
 | `generator` | OPTIONAL | The platform mints the value at deploy time ([§5.2](#value-sources)). |
-| `platformDefault` | OPTIONAL | The platform derives the value from the node's own addressing ([§5.2](#value-sources)). |
+| `toNode` | OPTIONAL | Narrows coverage to one node ([§5.1](#coverage)). |
+| `toInput` | OPTIONAL | The input key covered, where it differs from this parameter's own ([§5.1](#coverage)). |
 
-A parameter carrying neither is a value the deploying user types. Any other
-property is `ERR_UNKNOWN_FIELD`.
+A parameter carrying neither `default` nor `generator` is a value the deploying
+user types. Any other property is `ERR_UNKNOWN_FIELD`.
 
 **A parameter name is an input name.** A key of `spec.parameters` MUST match
 `^[a-z][a-zA-Z0-9]{0,63}$` and is rejected in the `structural` phase with
-`ERR_INVALID_VALUE` otherwise. [§5.1](#coverage) makes the key the whole of the
-correspondence between a parameter and the inputs it covers, so a parameter
-spelled outside the input grammar could cover nothing.
+`ERR_INVALID_VALUE` otherwise. [§5.1](#coverage) makes the key the
+correspondence between a parameter and the inputs it covers wherever `toInput`
+does not name one instead, so a parameter spelled outside the input grammar
+could cover nothing.
 
 **Absent and empty mean the same thing**: a form with no fields. That is the
 right form for a composition whose every required input is wired or has a
@@ -641,10 +644,38 @@ default, and [§5.1](#coverage) rejects it for any other.
 ### <a id="coverage"></a><a id="derivation"></a><a id="merge"></a><a id="authored-parameters"></a>5.1 Coverage
 
 **Binding is by key.** A parameter **covers** every input whose key equals its
-own, on every node where no connection fills that input. Nothing else is
-available to make the correspondence, since a parameter names no node and no
-`target`, so the key is not one signal among several but the whole of it. That
-is what lets one parameter serve two components.
+own, on every node where no connection fills that input. That is what lets one
+parameter serve two components, and it is what a parameter carrying neither
+field below means.
+
+**Two fields narrow the correspondence, and neither replaces it.** `toInput`
+names the input key covered, where it differs from the parameter's own key.
+`toNode` restricts coverage to a single node. Both are OPTIONAL, and a parameter
+carrying neither covers exactly what the paragraph above says it covers.
+
+```yaml
+parameters:
+  # Covers every unwired `siteTitle`, on every node.
+  siteTitle:
+    ui:
+      label: Site title
+  # Covers one input on one node, and asks for it under its own name.
+  stripeKey:
+    toNode: payments
+    toInput: apiKey
+    ui:
+      label: Stripe API key
+```
+
+They exist because key equality is a claim about two components that neither of
+them made. Two components that each declare an `apiKey` of the same shape are
+covered by one parameter, agree under
+[`BP-PARAM-002`](#BP-PARAM-002), and are handed one secret meant for one of
+them. Nothing in either document is wrong, nothing fails validation, and the
+composition is silently mis-wired. `toInput` is what lets two same-named inputs
+be two fields; without it the only remedy is to edit a component someone else
+wrote. `toNode` additionally makes a `self` reference single-valued, which
+[§5.2](#value-sources) requires.
 
 **A wired input is not a candidate.** A connection on a node takes that node's
 input out of coverage, so a node whose `apiKey` arrives over a wire and a second
@@ -662,6 +693,8 @@ network.
 | <a id="BP-PARAM-001"></a>`BP-PARAM-001` | A parameter MUST cover at least one input. | `ERR_UNBOUND_PARAMETER` |
 | <a id="BP-PARAM-002"></a>`BP-PARAM-002` | The inputs one parameter covers MUST declare equal `schema` blocks. | `ERR_CONFLICTING_INPUT_SCHEMA` |
 | <a id="BP-PARAM-003"></a>`BP-PARAM-003` | A required input with no default MUST be wired or covered. | `ERR_UNSATISFIED_REQUIRED_INPUT` |
+| <a id="BP-PARAM-006"></a>`BP-PARAM-006` | `toNode` MUST name a node in this blueprint. | `ERR_UNKNOWN_NODE` |
+| <a id="BP-PARAM-007"></a>`BP-PARAM-007` | `toInput` MUST name an input declared by a node the parameter covers. | `ERR_UNKNOWN_INPUT` |
 
 **A parameter MUST cover something.** One covering no input is reported at
 `/spec/parameters/<key>`. The install form asks a deploying user for a value and
@@ -696,9 +729,19 @@ without it. The message names the input, since a JSON Pointer addresses this
 document and the input is not in it.
 
 A covering parameter needs no further guarantee. A typed field for a required
-input is a required field, a generated one is minted, and a platform default is
-derived: each supplies the value, and the form a client draws makes a typed field
-mandatory exactly where some input it covers is required and has no default.
+input is a required field, a generated one is minted, and a `default` is
+prefilled: each supplies the value, and the form a client draws makes a typed
+field mandatory exactly where some input it covers is required and neither the
+parameter nor that input declares a default.
+
+**A narrowing field MUST narrow onto something.** `toNode` naming no node in
+this blueprint is reported at `/spec/parameters/<key>/toNode`, with the code a
+connection reaching outside the graph carries ([§4.2](#connections)). `toInput`
+naming no input on any node the parameter covers is reported at
+`/spec/parameters/<key>/toInput`. Both are the coverage failure
+[`BP-PARAM-001`](#BP-PARAM-001) reports, caught one step earlier and at the
+field that caused it: a parameter whose `toNode` is a typo covers nothing, and
+"this names no node" is the diagnostic that says why.
 
 **None of this reaches a published reference.** All three rules read the
 referenced component's inputs, so a node naming its component by UUID
@@ -732,18 +775,19 @@ the form: "three secrets will be generated for you" and "this is filled in for
 you, override it only for a custom domain" are both things worth being able to
 say.
 
-**Minting a value and deriving one are two answers to one question.** A
-parameter MUST NOT carry both `generator` and `platformDefault`, and one that
-does is rejected in the `structural` phase with `ERR_INVALID_VALUE`, anchored at
-`platformDefault`.
+**Minting a value and prefilling one are two answers to one question.** A
+parameter MUST NOT carry both `generator` and `default`, and one that does is
+rejected in the `structural` phase with `ERR_INVALID_VALUE`, anchored at
+`default`.
 
 | ID | Rule | Diagnostic |
 |---|---|---|
 | <a id="BP-PARAM-004"></a>`BP-PARAM-004` | A parameter carrying `generator` MUST cover only inputs whose `schema.sensitive` is `true`. | `ERR_GENERATED_INPUT_NOT_SENSITIVE` |
-| <a id="BP-PARAM-005"></a>`BP-PARAM-005` | A platform default MUST resolve, on every node the parameter covers, to a `PUBLIC` endpoint publishing the address form its `source` reads. | See below |
+| <a id="BP-PARAM-005"></a>`BP-PARAM-005` | A `self` reference MUST resolve, on the node the parameter covers, to a `PUBLIC` endpoint publishing the address form its path reads. | See below |
+| <a id="BP-PARAM-008"></a>`BP-PARAM-008` | A `default` carrying a `self` reference MUST cover exactly one node. | `ERR_AMBIGUOUS_SELF_REFERENCE` |
 
-Both are `semantic`, and both go silent for a node whose component was not read,
-on the terms [§5.1](#coverage) sets.
+All three are `semantic`, and all three go silent for a node whose component was
+not read, on the terms [§5.1](#coverage) sets.
 
 **A generated value is secret material.** A generator mints a credential, and a
 value not marked sensitive is echoed back into logs and interfaces. Whether a
@@ -753,73 +797,98 @@ there, and a parameter covering any input not marked `sensitive: true` is
 reported once, at `/spec/parameters/<key>/generator`. `sensitive` defaults to
 `false`, so an input that says nothing about it is bound by this.
 
-**A platform default derives the value from the node's own addressing.**
-`platformDefault` carries three properties. `type` is REQUIRED and names the kind
-of default, `source` is REQUIRED and selects what is derived, and `endpoint`
-names which endpoint it is derived from.
+**A `default` is the value the form is prefilled with.** It is a string, the
+deploying user may type over it, and it is what a field shows before they do.
+Where a parameter declares one it replaces the `schema.default` of every input
+it covers, for this composition and no other: the component says what the value
+is and what it falls back to on its own, and the blueprint says what *this*
+arrangement of components starts from.
 
-`type` has one member, `SELF_ADDRESS`. It is REQUIRED and carries no default,
-because a discriminator a document may leave out is one two implementations may
-read differently. A second kind is admitted beside this one without invalidating
-a document written against it, which is why the tag is written now rather than
-when a second kind arrives.
+A `default` that is plain text is a literal the blueprint supplies, which is a
+thing no other field does.
 
-There are four sources, and they come in two pairs because
-[component §5.2](../../component/v1/spec.md#endpoints) gives a `PUBLIC` endpoint
-two address forms:
+**A `default` may name the node's own addressing.** A composition frequently
+needs a value that nobody can write down, because the platform assigns it after
+this document is sealed — the address the deployment answers on, and anything
+built from it. `default` therefore admits references
+([core v1 §5.2](../../core/v1/spec.md#reference-grammar)), and `self` is the one
+namespace admitted there:
 
-| `source` | Derives | From an endpoint publishing |
+```yaml
+parameters:
+  callbackUrl:
+    toNode: web
+    default: "https://${{ self.publicHostname }}/oauth/cb"
+    ui:
+      label: Callback URL
+```
+
+<a id="BP-REF-001"></a>**`BP-REF-001`** — A reference written in a parameter's
+`default` MUST name the `self` namespace. `semantic`,
+[`ERR_REFERENCE_NOT_IN_SCOPE`](../../core/v1/spec.md#diagnostics), anchored at
+the parameter's `default`. No other position in this document admits a
+reference, and an unescaped `${{` elsewhere is text.
+
+**`self` denotes the covered node.** There are four paths, and they come in two
+pairs because [component §5.2](../../component/v1/spec.md#endpoints) gives a
+`PUBLIC` endpoint two address forms:
+
+| Path | Names | From an endpoint publishing |
 |---|---|---|
-| `PUBLIC_URL` | The full URL. | a **URL**: `HTTP`, `HTTPS`, `WS`, `GRPC` |
-| `PUBLIC_HOSTNAME` | The host part of that URL. | a **URL** |
-| `PUBLIC_ADDRESS` | The full `host:port`. | a **`host:port`**: `TCP`, `UDP` |
-| `PUBLIC_PORT` | The allocated edge port alone. | a **`host:port`** |
+| `self.publicUrl` | The full URL. | a **URL**: `HTTP`, `HTTPS`, `WS`, `GRPC` |
+| `self.publicHostname` | The host part of that URL. | a **URL** |
+| `self.publicAddress` | The full `host:port`. | a **`host:port`**: `TCP`, `UDP` |
+| `self.publicPort` | The allocated edge port alone. | a **`host:port`** |
 
-Each pair reads one address form. `PUBLIC_PORT` and `PUBLIC_HOSTNAME` exist
-beside the whole they are part of because a consumer that takes host and port
-as separate settings should not have to split a string this contract had
-already composed.
+Each pair reads one address form. `self.publicPort` and `self.publicHostname`
+exist beside the whole they are part of because a consumer that takes host and
+port as separate settings should not have to split a string this contract had
+already composed — and now need not compose one this contract had already
+split, which is the case a structural field could not express.
 
-**The endpoint resolves on each covered node.** A `SELF_ADDRESS` default is the
-address of the node whose input it fills, so a parameter covering two nodes
-derives two values, one from each. `endpoint` is OPTIONAL, and omitting it
-selects the primary endpoint
-[component §5.2](../../component/v1/spec.md#endpoints) elects on that node. Every
-diagnostic below is reported at `/spec/parameters/<key>/platformDefault/endpoint`,
-once however many covered nodes produce it.
+**A third segment names the endpoint.** `${{ self.publicUrl.web }}` reads the
+endpoint called `web`; the two-segment form reads the primary endpoint
+[component §5.2](../../component/v1/spec.md#endpoints) elects on that node.
+Every diagnostic below is reported at `/spec/parameters/<key>/default`, once
+however the reference is written.
 
-- An omitted `endpoint` on a node that elects no primary is
-  `ERR_AMBIGUOUS_ENDPOINT`. A node deploying an
-  [external component](../../component/v1/spec.md#external) declares no endpoint
-  and elects none, so a default covering one lands here: it has no addressing to
-  read.
-- An `endpoint` the node's workload does not declare is `ERR_UNKNOWN_ENDPOINT`,
-  the code a probe naming one carries.
+- A bare path on a node that elects no primary is `ERR_AMBIGUOUS_ENDPOINT`. A
+  node deploying an [external component](../../component/v1/spec.md#external)
+  declares no endpoint and elects none, so a reference covering one lands here:
+  it has no addressing to read.
+- An endpoint segment the node's workload does not declare is
+  `ERR_UNKNOWN_ENDPOINT`, the code a probe naming one carries.
 - An endpoint that is declared but `PRIVATE` is `ERR_ENDPOINT_NOT_PUBLIC`: every
-  source derives an externally reachable address, and a `PRIVATE` endpoint has
+  path derives an externally reachable address, and a `PRIVATE` endpoint has
   none to give.
-- A URL source resolving to a `TCP` or `UDP` endpoint is
-  `ERR_ENDPOINT_NOT_HTTP`, the code a probe on such an endpoint carries. A
-  `host:port` source resolving to an HTTP-family endpoint is
-  `ERR_ENDPOINT_NOT_L4`. Two codes rather than one so a diagnostic names the axis
-  that failed, which is the same reason [§4.2](#connections) splits its two
-  compatibility codes.
+- A URL path resolving to a `TCP` or `UDP` endpoint is `ERR_ENDPOINT_NOT_HTTP`,
+  the code a probe on such an endpoint carries. A `host:port` path resolving to
+  an HTTP-family endpoint is `ERR_ENDPOINT_NOT_L4`. Two codes rather than one so
+  a diagnostic names the axis that failed, which is the same reason
+  [§4.2](#connections) splits its two compatibility codes.
 
-**Why an HTTP-family endpoint does not answer `PUBLIC_ADDRESS`.** It is
+**Why an HTTP-family endpoint does not answer `self.publicAddress`.** It is
 reachable at a host and a port like anything else, so admitting it would be
 easy and is refused deliberately. Such an endpoint is published through the
-shared ingress rather than on a port allocated to it, so what the derivation
+shared ingress rather than on a port allocated to it, so what the path
 would yield is the ingress address on the ingress port: true, and not the thing
 an author asking for an edge address is asking for. They want the port their
-broker was given. A source that returns a defensible value nobody wanted is
+broker was given. A path that returns a defensible value nobody wanted is
 worse than one that rejects the document, because the first failure is silent
 and arrives at runtime.
 
-**A platform default is not a connection.** The value comes from the covered
+**`self` must denote one node.** A parameter is one field on one form, showing
+one value. [§5.1](#coverage) lets a parameter cover two nodes, and two nodes
+have two addresses, so a `default` reading `self` across both would have to show
+one of them and say nothing about which. `BP-PARAM-008` rejects that rather than
+picking, and `toNode` is how an author says which node they meant. A `default`
+with no reference in it is unaffected: one literal serves any number of nodes.
+
+**A `self` reference is not a connection.** The value comes from the covered
 node's own workload, never from an upstream node, which is the line
 [component §6.2](../../component/v1/spec.md#outputs) draws around an output. A
-wired input is never covered ([§5.1](#coverage)), so a wire and a platform
-default never answer for one input.
+wired input is never covered ([§5.1](#coverage)), so a wire and a `default`
+never answer for one input.
 
 ### <a id="install-form"></a>5.3 Install-form presentation
 
@@ -973,9 +1042,9 @@ document in this family. This family adds:
 | `ERR_UNKNOWN_COMPONENT` | `capability` | A published `componentRef` reference names no component, or no such `revision`. |
 | `ERR_CONFLICTING_NODE_COMPUTE` | `semantic` | A node's `size` disagrees with whether the component it deploys is run. |
 | `ERR_INPUT_NOT_CONNECTABLE` | `semantic` | A connection fills an input that an `INPUT` output of the same component reads. |
-| `ERR_UNKNOWN_ROLE` | `semantic` | A connection's `fromRole` names no node in this blueprint. |
+| `ERR_UNKNOWN_NODE` | `semantic` | A connection's `fromNode`, or a parameter's `toNode`, names no node in this blueprint. |
 | `ERR_UNKNOWN_OUTPUT` | `semantic` | A connection's `fromOutput` names no output of the referenced component. |
-| `ERR_UNKNOWN_INPUT` | `semantic` | A connection's map key names no input of the consuming node's component. |
+| `ERR_UNKNOWN_INPUT` | `semantic` | A connection's map key, or a parameter's `toInput`, names no input of the node's component. |
 | `ERR_COMPONENT_NOT_PUBLISHED` | `capability` | A published `componentRef` reference resolves to a component that is not in a published state. |
 | `ERR_UNKNOWN_COMPUTE_PROFILE` | `capability` | A node's `size` names a Compute Profile the catalog does not offer. |
 | `ERR_INCOMPATIBLE_TYPE` | `semantic` | A connection joins an output and an input whose `schema.type`s differ. |
@@ -985,11 +1054,12 @@ document in this family. This family adds:
 | `ERR_UNBOUND_PARAMETER` | `semantic` | A parameter covers no input of any node. |
 | `ERR_UNSATISFIED_REQUIRED_INPUT` | `semantic` | A required input with no default is neither wired nor covered by a parameter. |
 | `ERR_GENERATED_INPUT_NOT_SENSITIVE` | `semantic` | A parameter carrying a `generator` covers an input not marked `sensitive`. |
-| `ERR_ENDPOINT_NOT_PUBLIC` | `semantic` | A platform default resolves to a `PRIVATE` endpoint. |
-| `ERR_ENDPOINT_NOT_L4` | `semantic` | A platform default deriving an edge address resolves to an endpoint whose protocol is in the HTTP family. |
+| `ERR_ENDPOINT_NOT_PUBLIC` | `semantic` | A `self` reference resolves to a `PRIVATE` endpoint. |
+| `ERR_ENDPOINT_NOT_L4` | `semantic` | A `self` reference reading an edge address resolves to an endpoint whose protocol is in the HTTP family. |
+| `ERR_AMBIGUOUS_SELF_REFERENCE` | `semantic` | A `default` carrying a `self` reference covers more than one node. |
 | `ERR_UNKNOWN_ENUM_MEMBER` | `semantic` | An `enumLabels` key names no member of the covered inputs' `enum`. |
 
-A platform default also reports three codes
+A `self` reference also reports three codes
 [component §8](../../component/v1/spec.md#diagnostics) declares:
 `ERR_UNKNOWN_ENDPOINT`, `ERR_AMBIGUOUS_ENDPOINT` and `ERR_ENDPOINT_NOT_HTTP`
 ([§5.2](#value-sources)). They are declared there, where the endpoint names and
@@ -1039,12 +1109,13 @@ name was a claim about a form holding other components' inputs. The form is now
 this document's, so the objection is gone and what remains is an unmade
 decision. Admitting a grouping later is additive.
 
-**The platform default has one kind.** `SELF_ADDRESS` reads the covered node's
-own addressing, which a node deploying an external component does not have, so
-a default covering one is rejected ([§5.2](#value-sources)). A second kind that
-resolved a value from a resource the organisation already holds would be
-meaningful there. Recorded so the rejection is not later read as a decision
-about platform defaults as a class.
+**`self` is the only namespace a `default` admits.** It reads the covered node's
+own addressing, which a node deploying an external component does not have, so a
+`default` covering one is rejected ([§5.2](#value-sources)). A namespace naming a
+resource the organisation already holds would be meaningful there, and
+[core v1 §5.2](../../core/v1/spec.md#reference-grammar) reserves several names
+against that. Recorded so the rejection is not later read as a decision about
+references as a class.
 
 What remains is not a gap in the prose but a vocabulary nothing publishes yet:
 [§4.4](#placement-constraints)'s compute-constraint pins, recorded there as a gap

@@ -4,6 +4,6 @@
   "expected": "fail",
   "clause": "specifications/blueprint/v1/spec.md#value-sources",
   "requirements": ["BP-PARAM-005"],
-  "summary": "PUBLIC_ADDRESS naming an HTTP-family endpoint has no edge port to derive.",
+  "summary": "`self.publicAddress` naming an HTTP-family endpoint has no edge port to read.",
   "document": "acme-wiki/blueprint.yaml"
 }

@@ -1,0 +1,7 @@
+{
+  "id": "structural-042-parameter-with-a-platform-default",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#parameters",
+  "summary": "A parameter carrying the retired platformDefault is rejected as an unknown field."
+}

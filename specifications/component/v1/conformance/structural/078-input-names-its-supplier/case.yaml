@@ -1,7 +1,7 @@
 # An input declares what the component needs, never who supplies it or how a
 # person is asked for it. Each of the four fields that once said so is now an
 # unknown field: a blueprint wires the input, or covers it with a parameter that
-# carries the generator, the platform default and the presentation.
+# carries the generator, the default and the presentation.
 specVersion: v1
 kind: COMPONENT
 metadata:

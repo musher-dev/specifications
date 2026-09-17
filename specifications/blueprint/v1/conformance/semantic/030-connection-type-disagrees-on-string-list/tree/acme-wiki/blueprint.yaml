@@ -20,6 +20,6 @@ spec:
       size: general.standard.small
       connections:
         replicas:
-          fromRole: db
+          fromNode: db
           fromOutput: replica
   parameters: {}

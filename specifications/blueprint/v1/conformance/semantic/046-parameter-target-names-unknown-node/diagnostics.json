@@ -1,0 +1,6 @@
+[
+  {
+    "code": "ERR_UNKNOWN_NODE",
+    "path": "/spec/parameters/brokerAddress/toNode"
+  }
+]

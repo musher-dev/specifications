@@ -8,7 +8,7 @@
 # `wire` is a PUBLIC TCP endpoint published at a host:port edge address, which
 # compels no readiness probe. The component only declares that it needs both
 # addresses; a blueprint decides where they come from, and may derive them from
-# these endpoints with a platform default (blueprint §5.2).
+# these endpoints with a `self` reference (blueprint §5.2).
 #
 # `telemetry` is a STRING_LIST: its string form is a JSON array of members of
 # `enum`, so its default is that array's text.
@@ -69,4 +69,16 @@ spec:
         required: false
         target:
           envVarKey: TELEMETRY_EXPORTERS
-    outputs: {}
+    # A DECLARED value is written in this document, and `${{ self.… }}` is how
+    # it names something this document cannot hold: the console's address is
+    # assigned after the file is sealed. The endpoint segment is required here
+    # for the reason the header gives — more than one endpoint is PUBLIC, so
+    # nothing may say "the component's URL".
+    outputs:
+      consoleEndpoint:
+        description: Address the admin console answers on.
+        valueFrom: DECLARED
+        value: "https://${{ self.publicHostname.console }}/admin"
+        schema:
+          type: STRING
+          format: ENDPOINT_URL

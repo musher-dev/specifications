@@ -1,0 +1,26 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+spec:
+  workload:
+    type: SERVICE
+    source:
+      type: IMAGE
+      ref: ghcr.io/musher-dev/broker:3.13.7
+    endpoints:
+      amqp:
+        containerPort: 5672
+        protocol: TCP
+        visibility: PUBLIC
+      metrics:
+        containerPort: 9090
+        protocol: HTTP
+        visibility: PRIVATE
+  contract:
+    inputs:
+      brokerAddress:
+        schema:
+          type: STRING
+        description: Edge address clients use to reach the broker.
+    outputs: {}

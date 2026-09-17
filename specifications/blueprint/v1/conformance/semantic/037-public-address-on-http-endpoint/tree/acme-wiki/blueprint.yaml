@@ -15,9 +15,6 @@ spec:
       connections: {}
   parameters:
     apiAddress:
-      platformDefault:
-        type: SELF_ADDRESS
-        source: PUBLIC_ADDRESS
-        endpoint: api
+      default: "${{ self.publicAddress.api }}"
       ui:
         label: API address

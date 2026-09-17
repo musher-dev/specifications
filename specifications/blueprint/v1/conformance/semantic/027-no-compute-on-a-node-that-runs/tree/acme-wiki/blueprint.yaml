@@ -18,10 +18,10 @@ spec:
       size: null
       connections:
         llmBaseUrl:
-          fromRole: models
+          fromNode: models
           fromOutput: baseUrl
         llmApiKey:
-          fromRole: models
+          fromNode: models
           fromOutput: apiKey
   parameters:
     baseUrl:

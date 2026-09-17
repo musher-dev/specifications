@@ -277,7 +277,7 @@ declare one; [§5](#workload) carries the rest of that rule.
 and one that does not is rejected in the `structural` phase with
 `ERR_INVALID_VALUE`. The name is not decoration: [§5.4](#health) points a probe
 at one and a blueprint's
-[platform default](../../blueprint/v1/spec.md#value-sources) derives an address
+[`self` reference](../../blueprint/v1/spec.md#value-sources) reads an address
 from one, so a dot or a space in a name is a hazard rather than a matter of
 taste.
 
@@ -331,8 +331,8 @@ server, an MQTT broker or an SMTP relay exposed to the internet, and rejecting
 it would make a working capability inexpressible. What the split does decide is
 which references may name such an endpoint. [§5.4](#health)'s probe reads a URL
 and may name only the first row.
-[Blueprint §5.2](../../blueprint/v1/spec.md#value-sources)'s platform default
-reads either, and each of its four sources is tied to the row it takes its value
+[Blueprint §5.2](../../blueprint/v1/spec.md#value-sources)'s `self` reference
+reads either, and each of its four paths is tied to the row it takes its value
 from.
 
 **A component MAY declare more than one `PUBLIC` endpoint**, and each one
@@ -347,7 +347,7 @@ MUST name the endpoint it means.** Where two exist there is no such thing as
 and where the selector lives.
 
 **The primary endpoint.** A reference MAY omit the endpoint it targets. A
-probe's `endpoint` and a blueprint platform default's are both OPTIONAL, and the
+probe's `endpoint` and a blueprint `self` reference's are both OPTIONAL, and the
 primary endpoint is what an omitted one selects. It is:
 
 1. the workload's sole endpoint, where it declares exactly one; failing that
@@ -588,7 +588,7 @@ what its blueprint supplies it.
 component declares what it needs exactly as a workload does ([§6.1](#inputs)).
 Whether a value is typed by the deploying user or arrives over a wire is decided
 by the [blueprint](../../blueprint/v1/spec.md#parameters) that deploys the node.
-A platform default has no addressing to read on a node with no endpoints, and
+A `self` reference has no addressing to read on a node with no endpoints, and
 [blueprint §5.2](../../blueprint/v1/spec.md#value-sources) rejects one there with
 the codes it already uses for an endpoint that does not exist.
 
@@ -701,8 +701,8 @@ leaves nothing unresolved.
 **The invariant is resolvability before any edge is bound.** A value typed into
 the install form resolves when the form is submitted, which is *earlier* than a
 `DERIVED` output resolves, since that one needs a running, addressed workload. A
-generated value is minted at deploy time out of nothing, and a platform default
-reads the node's own addressing. Only a wired input resolves after an edge is
+generated value is minted at deploy time out of nothing, and a parameter's
+`default` reads the node's own addressing. Only a wired input resolves after an edge is
 bound, and it is the only input an `INPUT` output may not read.
 
 <a id="COMP-OUT-001"></a>**`COMP-OUT-001`** — `input` is REQUIRED where
@@ -716,6 +716,35 @@ output's `input`. The name is a mapping key elsewhere in the same document,
 which is the class of reference
 [core v1 §6](../../core/v1/spec.md#validation-layers) puts in the `semantic`
 phase.
+
+**A `DECLARED` value may name this node's own addressing.** An output that
+publishes the URL this component answers on cannot write that URL down, because
+it is assigned after the document is sealed. `value` therefore admits references
+([core v1 §5.2](../../core/v1/spec.md#reference-grammar)), and `self` is the one
+namespace admitted there:
+
+```yaml
+outputs:
+  baseUrl:
+    description: The address this service answers on.
+    valueFrom: DECLARED
+    value: "https://${{ self.publicHostname }}/v1"
+    schema:
+      type: STRING
+      format: ENDPOINT_URL
+```
+
+`self` denotes the node this component is deployed as, and the paths it takes
+are the ones [blueprint §5.2](../../blueprint/v1/spec.md#value-sources) names.
+This keeps the invariant above rather than bending it: the node's own addressing
+is what a `DERIVED` output already reads, so a `DECLARED` value that composes
+from it depends on no inbound edge either.
+
+<a id="COMP-REF-001"></a>**`COMP-REF-001`** — A reference written in a
+`DECLARED` output's `value` MUST name the `self` namespace. `semantic`,
+[`ERR_REFERENCE_NOT_IN_SCOPE`](../../core/v1/spec.md#diagnostics), anchored at
+the output's `value`. No other position in this document admits a reference, and
+an unescaped `${{` elsewhere is text.
 
 **Which inputs are wired is the blueprint's to know, so the blueprint enforces
 the rest.** A component cannot tell whether an input it republishes will arrive
@@ -960,7 +989,8 @@ document in this family. This family adds:
 Every row above is this family's own, and three of them are reported by a
 second family. `ERR_UNKNOWN_ENDPOINT`, `ERR_AMBIGUOUS_ENDPOINT` and
 `ERR_ENDPOINT_NOT_HTTP` are decided by [§5.2](#endpoints)'s endpoint names and
-primary election, and a blueprint platform default resolves against those too
+primary election, and a `self` reference in a blueprint parameter's `default`
+resolves against those too
 ([blueprint §5.2](../../blueprint/v1/spec.md#value-sources)), so that family
 reports them against its own parameters. The rows are declared once here rather
 than restated there, since blueprint names this specification among its

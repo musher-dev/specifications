@@ -1,0 +1,19 @@
+# `toNode` narrows coverage to one node, so a `toNode` that names none covers
+# nothing. Reported at the field that caused it rather than as the empty
+# coverage it produces.
+specVersion: v1
+kind: BLUEPRINT
+metadata:
+  slug: acme-wiki
+  revision: 1
+spec:
+  components:
+    app:
+      componentRef: ./components/app.yaml
+      size: general.standard.small
+      connections: {}
+  parameters:
+    brokerAddress:
+      toNode: broker
+      ui:
+        label: Broker address

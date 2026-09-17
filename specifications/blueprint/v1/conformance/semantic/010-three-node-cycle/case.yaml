@@ -17,20 +17,20 @@ spec:
       size: general.standard.small
       connections:
         dbUrl:
-          fromRole: db
+          fromNode: db
           fromOutput: privateAddress
     db:
       componentRef: ./components/db.yaml
       size: general.standard.small
       connections:
         cacheUrl:
-          fromRole: cache
+          fromNode: cache
           fromOutput: privateAddress
     cache:
       componentRef: ./components/cache.yaml
       size: general.standard.small
       connections:
         queueUrl:
-          fromRole: queue
+          fromNode: queue
           fromOutput: privateAddress
   parameters: {}

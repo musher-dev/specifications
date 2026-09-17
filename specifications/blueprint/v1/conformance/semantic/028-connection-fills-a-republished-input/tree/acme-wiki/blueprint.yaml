@@ -17,14 +17,14 @@ spec:
       size: null
       connections:
         baseUrl:
-          fromRole: web
+          fromNode: web
           fromOutput: publicUrl
     web:
       componentRef: ./components/web.yaml
       size: general.standard.small
       connections:
         llmBaseUrl:
-          fromRole: models
+          fromNode: models
           fromOutput: baseUrl
   parameters:
     apiKey:

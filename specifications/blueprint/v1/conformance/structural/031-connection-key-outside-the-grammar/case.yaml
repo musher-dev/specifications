@@ -19,6 +19,6 @@ spec:
       size: general.standard.small
       connections:
         DATABASE_URL:
-          fromRole: db
+          fromNode: db
           fromOutput: connectionString
   parameters: {}

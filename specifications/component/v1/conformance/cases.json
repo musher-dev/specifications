@@ -381,6 +381,16 @@
       "id": "semantic-017-output-input-names-no-input",
       "phase": "semantic",
       "path": "semantic/017-output-input-names-no-input"
+    },
+    {
+      "id": "semantic-018-output-value-names-self",
+      "phase": "semantic",
+      "path": "semantic/018-output-value-names-self"
+    },
+    {
+      "id": "semantic-019-output-value-names-a-foreign-namespace",
+      "phase": "semantic",
+      "path": "semantic/019-output-value-names-a-foreign-namespace"
     }
   ]
 }

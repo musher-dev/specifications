@@ -105,13 +105,13 @@
     },
     "BlueprintConnection": {
       "additionalProperties": false,
-      "description": "A consumer-anchored wire (map value; keyed by the consumer input key).\n\nThe value names only the producer end (`fromRole` / `fromOutput`); the\nconsumer end is derived from the enclosing node (the node name) and the map\nkey (the input it fills). At most one wire per consumer input — the map key\nmakes that structural.",
+      "description": "A consumer-anchored wire (map value; keyed by the consumer input key).\n\nThe value names only the producer end (`fromNode` / `fromOutput`); the\nconsumer end is derived from the enclosing node (the node name) and the map\nkey (the input it fills). At most one wire per consumer input — the map key\nmakes that structural.",
       "properties": {
         "fromOutput": {
           "description": "Declared output key on the producer component.",
           "type": "string"
         },
-        "fromRole": {
+        "fromNode": {
           "description": "Node name of the producer component.",
           "maxLength": 63,
           "pattern": "^[a-z][a-z0-9-]{0,61}[a-z0-9]$",
@@ -119,7 +119,7 @@
         }
       },
       "required": [
-        "fromRole",
+        "fromNode",
         "fromOutput"
       ],
       "type": "object",
@@ -250,7 +250,7 @@
       "x-additionalPropertiesName": "nodeName"
     },
     "BlueprintParameter": {
-      "$comment": "spec.md §5.2. Minting a value and deriving one are two answers to one question, so a generator and a platformDefault are never written together. The parameter carries no schema, no required and no description: the inputs it covers declare all three (component §6), and whether a generated value is secret is read from them in the semantic phase (BP-PARAM-004).",
+      "$comment": "spec.md §5.2. Minting a value and prefilling one are two answers to one question, so a generator and a default are never written together. The parameter carries no schema, no required and no description: the inputs it covers declare all three (component §6), and whether a generated value is secret is read from them in the semantic phase (BP-PARAM-004). Whether a default's ${{ }} references are well-formed, in scope and single-valued is semantic too (CORE-REF-001..003, BP-REF-001, BP-PARAM-008).",
       "additionalProperties": false,
       "description": "One install-form field, keyed by the input key it covers on every node whose input of that key is not wired.",
       "if": {
@@ -265,17 +265,29 @@
       },
       "then": {
         "properties": {
-          "platformDefault": false
+          "default": false
         }
       },
       "properties": {
+        "default": {
+          "description": "Value the install form is prefilled with, which the deploying user may type over. Plain text is a literal the blueprint supplies; a ${{ self.… }} reference names the covered node's own addressing, which no author can write down. Replaces the covered inputs' schema.default for this composition.",
+          "type": "string"
+        },
         "generator": {
           "description": "Auto-generation spec when the platform mints the value at deploy time. Omitted when the deploying user supplies it. Every input the parameter covers MUST declare schema.sensitive: true.",
           "$ref": "#/$defs/BlueprintParameterGenerator"
         },
-        "platformDefault": {
-          "description": "Default the platform supplies when the deploying user does not. A SELF_ADDRESS default resolves against each node this parameter covers.",
-          "$ref": "#/$defs/BlueprintPlatformDefault"
+        "toInput": {
+          "description": "Input key this parameter covers, where it differs from the parameter's own key. Omitted, the parameter key is the input key.",
+          "maxLength": 64,
+          "pattern": "^[a-z][a-zA-Z0-9]{0,63}$",
+          "type": "string"
+        },
+        "toNode": {
+          "description": "Node this parameter's coverage is restricted to. Omitted, the parameter covers its input on every node no connection fills it on.",
+          "maxLength": 63,
+          "pattern": "^[a-z][a-z0-9-]{0,61}[a-z0-9]$",
+          "type": "string"
         },
         "ui": {
           "$ref": "#/$defs/BlueprintParameterUi",
@@ -357,40 +369,6 @@
       ],
       "type": "object"
     },
-    "BlueprintPlatformDefault": {
-      "$comment": "spec.md §5.2.  names the kind of default and is REQUIRED rather than defaulted, so a discriminator a document may omit is not one two implementations may read differently.",
-      "additionalProperties": false,
-      "description": "Default the platform supplies when the deploying user does not. Which endpoint a SELF_ADDRESS default derives from is named rather than assumed, because component spec.md §5.2 permits more than one PUBLIC endpoint.",
-      "properties": {
-        "endpoint": {
-          "description": "Name of the PUBLIC endpoint the value is derived from. Omitted, it selects the primary endpoint component spec.md §5.2 elects.",
-          "pattern": "^[a-z][a-z0-9]{0,19}$",
-          "type": "string"
-        },
-        "source": {
-          "description": "What is derived. PUBLIC_HOSTNAME for the endpoint's hostname alone and PUBLIC_URL for its full URL, both from the URL an HTTP-family endpoint publishes; PUBLIC_ADDRESS for the full host:port and PUBLIC_PORT for the port alone, both from the edge address a TCP or UDP endpoint publishes.",
-          "enum": [
-            "PUBLIC_HOSTNAME",
-            "PUBLIC_URL",
-            "PUBLIC_ADDRESS",
-            "PUBLIC_PORT"
-          ],
-          "type": "string"
-        },
-        "type": {
-          "description": "Kind of default. SELF_ADDRESS derives the value from the covered node's own public addressing.",
-          "enum": [
-            "SELF_ADDRESS"
-          ],
-          "type": "string"
-        }
-      },
-      "required": [
-        "source",
-        "type"
-      ],
-      "type": "object"
-    },
     "BlueprintSpec": {
       "additionalProperties": false,
       "description": "The `spec` block of a blueprint document.\n\n`components` names the nodes and wires them together. `parameters` is the install form: every field a deploying user is shown, always authored. Absent and empty both mean a form with no fields.",
@@ -399,7 +377,7 @@
           "additionalProperties": {
             "$ref": "#/$defs/BlueprintNode"
           },
-          "description": "Component references composing the graph, keyed by graph-local node name. The name is what a connection's fromRole refers to; it means nothing outside this document. At least one node is required — spec.md §1 makes a blueprint a composition of one or more components, and an empty graph deploys nothing.",
+          "description": "Component references composing the graph, keyed by graph-local node name. The name is what a connection's fromNode refers to; it means nothing outside this document. At least one node is required — spec.md §1 makes a blueprint a composition of one or more components, and an empty graph deploys nothing.",
           "minProperties": 1,
           "propertyNames": {
             "pattern": "^[a-z][a-z0-9-]{0,61}[a-z0-9]$"

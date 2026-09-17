@@ -267,6 +267,108 @@ The grammar carries no requirement ID. The rule a document violates is its
 family's rule that a field takes the grammar, and a value outside it is rejected
 in the `structural` phase with `ERR_INVALID_VALUE`.
 
+### <a id="reference-grammar"></a>5.2 The reference grammar
+
+A **reference** names a fact this document cannot contain. It is written
+`${{ <namespace>.<path> }}`, and it stands where a value would stand:
+
+```yaml
+default: "https://${{ self.publicHostname }}/oauth/cb"
+```
+
+A document is sealed before the thing it describes exists. The address that
+deployment will answer on is assigned afterwards, so no author can write it
+down, and no field can carry it. A reference is how a document names it anyway.
+
+**This is not an expression language, and the difference is the one
+[§6.1](#yaml-profile) already draws.** `CORE-YAML-007` withholds a YAML alias
+because "a document whose meaning depends on being expanded is not readable as
+the thing it declares". An alias hides information that is present in the
+document; expanding it reveals nothing a reader could not have read. A reference
+names information that is absent from the document and cannot be put into it.
+The first withholds nothing from an author, and the second withholds the value.
+
+So a reference names, and never computes. There are no functions, no operators,
+no conditionals, no arithmetic, no defaulting, and no way to name a sibling
+field — that last one is information the document contains, and `CORE-YAML-007`
+governs it.
+
+**The grammar.** A reference is `${{`, optional whitespace, a namespace, one or
+more `.`-separated segments, optional whitespace, and `}}`. A namespace is one
+of the names this section reserves. A segment matches `^[a-z][a-zA-Z0-9]*$`,
+which admits every name the identifier grammars
+[ADR 0007](../../../docs/adr/0007-naming-conventions.md) §4 gives a referable
+thing, and excludes `.`, so a dotted path is read one way. Whitespace inside the
+braces is insignificant; this specification and the examples write one space
+inside each brace pair.
+
+**The escape.** `$${{` is the only escape. It is a single four-character token
+rendering a literal `${{`, and not per-`$` doubling. A `$` that begins neither
+`${{` nor `$${{` is literal and needs no escape.
+
+**What a reference yields.** A reference occupying a whole value yields the
+value it names. A reference with text around it yields that value's string form,
+joined with the surrounding text. A value is carried as text in every family
+built on this document, so the two cases differ in composition and not in type.
+
+**A resolved value is never scanned again.** The text a reference yields is
+substituted, and a `${{` within it is literal. There is therefore no chain of
+references, no cycle to detect, no depth to bound, and no order in which
+resolution has to happen.
+
+**Where a reference may be written.** Nowhere, unless a family says so. A family
+opens a named position and names the namespaces admitted there, and a reference
+anywhere else is text. No family may open a position whose value decides
+identity or drives resolution itself — a `kind`, a `specVersion`, a mapping key,
+or a reference to another document — because a reference there would have to be
+resolved before the document could be read.
+
+<a id="CORE-REF-001"></a>**`CORE-REF-001`** — In a position a family opens to
+references, an unescaped `${{` MUST begin a well-formed reference. A malformed
+one is rejected in the `semantic` phase with `ERR_MALFORMED_REFERENCE`.
+
+An unclosed `${{`, a namespace with no path, and a path with no namespace are
+each one keystroke from a reference an author meant to write. Treating them as
+text carries the mistake through validation, through publication, and into the
+deployed thing as the literal characters, where it is discovered by whatever
+reads the value and fails.
+
+<a id="CORE-REF-002"></a>**`CORE-REF-002`** — A reference's namespace MUST be
+one this section reserves. `semantic`, `ERR_UNKNOWN_REFERENCE_NAMESPACE`.
+
+<a id="CORE-REF-003"></a>**`CORE-REF-003`** — A reference's namespace MUST be
+one the family admits at that position. `semantic`,
+`ERR_REFERENCE_NOT_IN_SCOPE`.
+
+**The reserved namespaces.** The set is closed. An author cannot extend it, and
+a family admits names from it rather than adding to it.
+
+| Namespace | Names | v1 |
+|---|---|---|
+| `self` | The addressing of the thing the value is bound to. | Defined by the family that admits it. |
+| `params` | A value supplied when a composition is installed. | Reserved. |
+| `config` | A configuration value held outside these documents. | Reserved. |
+| `deployment` | Facts about a deployment. | Reserved. |
+| `environment` | Facts about a target environment. | Reserved. |
+| `organization` | Facts about an owning organization. | Reserved. |
+| `output` | A value another node publishes. | Reserved. |
+
+A **reserved** namespace has no meaning in any document of any family at this
+line, and no family admits one, so writing it is `CORE-REF-003`. Reserving it is
+what keeps it from ever becoming a name an author can address. The set may grow
+by addition within this major version; a name in it may be given a meaning, and
+no name leaves it.
+
+Namespaces name a concept and never a vendor. A closed set has nothing to
+collide with, so the convention that prefixes a flat keyspace does not apply
+here.
+
+**A diagnostic quotes the reference, never the value.** An implementation
+reporting any of the three rules above MUST reproduce the reference as written
+and MUST NOT include a value it resolved or attempted to resolve, on the terms
+[§11](#security) sets for resolved configuration values. This binds an
+implementation rather than a document, so it carries no requirement ID.
+
 ## <a id="validation-layers"></a>6. Validation layers
 
 Structural validation is one layer of four. An implementation MUST apply them
@@ -451,6 +553,9 @@ code names one condition.
 | `ERR_INVALID_TYPE` | `structural` | A value has the wrong type. |
 | `ERR_INVALID_VALUE` | `structural` | A value violates a pattern, enum, or bound. |
 | `ERR_SLUG_MISMATCH` | `semantic` | `metadata.slug` disagrees with the item directory name. |
+| `ERR_MALFORMED_REFERENCE` | `semantic` | An unescaped `${{` does not begin a well-formed reference ([§5.2](#reference-grammar)). |
+| `ERR_UNKNOWN_REFERENCE_NAMESPACE` | `semantic` | A reference names a namespace [§5.2](#reference-grammar) does not reserve. |
+| `ERR_REFERENCE_NOT_IN_SCOPE` | `semantic` | A reference names a reserved namespace the family does not admit at that position. |
 
 ## <a id="conformance"></a>8. Conformance
 
@@ -542,6 +647,24 @@ reports.
 family schema writes the pattern out in full. Nothing but review holds those
 copies together, and no case pins the grammar as one rule rather than as each
 family's field.
+
+**What a `self` path may name is not stated here.** [§5.2](#reference-grammar)
+reserves the namespace and defines the grammar its path takes; which paths
+resolve is left to the family admitting it, and today only
+[blueprint §5.2](../../blueprint/v1/spec.md#value-sources) names any. Two
+families admitting `self` and disagreeing about its paths would be a
+contradiction nothing here detects, and review is what holds them together. The
+paths are not in core because [§1.2](#admission)'s first test fails: they are
+the addressing of a component's endpoints, which cannot be stated without
+naming a kind.
+
+**Six reserved namespaces have no meaning to exercise.**
+[§5.2](#reference-grammar) reserves `params`, `config`, `deployment`,
+`environment`, `organization` and `output` so that none can become a name an
+author addresses. Nothing a document can write tells one from another: each is
+`CORE-REF-003` and no case distinguishes them. That is the cost of reserving a
+name before it resolves, and it is the right way round — a name given a meaning
+later rejects no document that validates today.
 
 ## <a id="security"></a>11. Security considerations
 

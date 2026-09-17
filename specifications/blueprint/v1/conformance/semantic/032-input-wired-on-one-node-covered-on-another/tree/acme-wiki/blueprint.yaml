@@ -23,7 +23,7 @@ spec:
       size: general.standard.small
       connections:
         apiKey:
-          fromRole: models
+          fromNode: models
           fromOutput: apiKey
   parameters:
     apiKey:

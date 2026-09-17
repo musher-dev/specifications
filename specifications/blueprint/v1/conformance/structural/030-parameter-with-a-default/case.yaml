@@ -1,0 +1,23 @@
+# A `default` rides on the parameter, because prefilling a value is a way of
+# supplying it and supply is the blueprint's to decide. The field still reaches
+# the form: the platform fills it and the deploying user may type over it.
+# Whether the reference resolves, on the node the parameter covers, is §5.2's
+# semantic question and not this case's.
+specVersion: v1
+kind: BLUEPRINT
+metadata:
+  slug: acme-wiki
+  revision: 1
+spec:
+  components:
+    db:
+      componentRef: ./components/postgres.yaml
+      size: general.standard.small
+      connections: {}
+  parameters:
+    publicUrl:
+      toNode: db
+      default: "${{ self.publicUrl }}"
+      ui:
+        label: Public URL
+        prominence: SECONDARY

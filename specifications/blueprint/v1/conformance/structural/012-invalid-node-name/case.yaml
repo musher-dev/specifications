@@ -1,6 +1,6 @@
 # `Web_Server` is not a node name. The grammar is the one `metadata.slug`
 # uses, so a name that reads as an identifier in one language and not in
-# another cannot be what a connection's `fromRole` refers to.
+# another cannot be what a connection's `fromNode` refers to.
 specVersion: v1
 kind: BLUEPRINT
 metadata:

@@ -19,7 +19,7 @@ spec:
       size: general.standard.small
       connections:
         databaseUrl:
-          fromRole: db
+          fromNode: db
           fromOutput: connectionString
   parameters:
     adminPassword:
