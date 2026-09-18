@@ -1,4 +1,10 @@
 {
-  "releases": {},
+  "releases": {
+    "core/v1.0.0": {
+      "bundleSha256": null,
+      "path": "specifications/core/v1",
+      "tree": "3bc2818c3a1d305ef55c496edf044119bbe144aa"
+    }
+  },
   "version": 2
 }
