@@ -406,17 +406,18 @@ starting with core, is tagged:
    client ID, shown on the App's settings page, as the repository variable
    `RELEASE_APP_CLIENT_ID`, and its private key as the repository secret
    `RELEASE_APP_PRIVATE_KEY`. The numeric App ID is not what the token action
-   reads.
+   reads. This App is `musher-release`. musher-dev/infra owns it, installs it on
+   this repository alone, and delivers and rotates both values
+   ([infra#588](https://github.com/musher-dev/infra/issues/588)).
 5. **Set the release sign-off.** The `signoff` in
-   `.github/release-please/config.json` holds a placeholder:
+   `.github/release-please/config.json` names the App's bot user:
 
    ```
-   RELEASE_APP_SLUG[bot] <RELEASE_APP_BOT_USER_ID+RELEASE_APP_SLUG[bot]@users.noreply.github.com>
+   musher-release[bot] <330958847+musher-release[bot]@users.noreply.github.com>
    ```
 
-   Replace both `RELEASE_APP_SLUG` occurrences with the App's slug, and
-   `RELEASE_APP_BOT_USER_ID` with its bot user id, which
-   `gh api users/<slug>[bot] --jq .id` prints. Before release-please runs, the
+   The number is the bot user id, which
+   `gh api 'users/musher-release[bot]' --jq .id` prints. Before release-please runs, the
    release job compares the value on the default branch with the App's commit
    author, and it refuses to continue until they match, because every release
    pull request would otherwise fail `Signed off`.
