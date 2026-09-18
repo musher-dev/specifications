@@ -1,8 +1,9 @@
 # Blueprint specification
 
 A blueprint document describes a composition of components into one deployable
-application: which components participate, which values supply their inputs, and how compute,
-storage and public exposure are allocated. The blueprint is the unit of deployment.
+application: which components participate, which values supply their inputs, how compute,
+storage and public exposure are allocated, and what the installation takes from
+outside the documents as parameters. The blueprint is the unit of deployment.
 
 A blueprint is an [item document](../core/v1/spec.md#item-directory),
 `blueprint.yaml`, at the root of its catalog item. The component documents it references sit inside the same item.
@@ -21,7 +22,8 @@ A blueprint is an [item document](../core/v1/spec.md#item-directory),
 3. [§3 Identity](v1/spec.md#identity)
 4. [§4 Component graph](v1/spec.md#components), including
    [§4.2 Explicit bindings](v1/spec.md#connections)
-5. [§5 Parameters](v1/spec.md#parameters) and
+5. [§5 Parameters](v1/spec.md#parameters), including
+   [§5.3 Atomic connections](v1/spec.md#atomic-connections), and
    [§7 Diagnostics](v1/spec.md#diagnostics)
 
 An implementation implements every section of this specification and of each
@@ -38,9 +40,14 @@ dependencies" table in [§2](v1/spec.md#envelope).
 
 | Prefix | Covers | Section |
 |---|---|---|
-| `BP-ID` | Item identity particular to a blueprint | [§3](v1/spec.md#identity) |
-| `BP-CONN` | Explicit bindings | [§4.2](v1/spec.md#connections) |
-| `BP-NODE` | Node compute and placement | [§4.3](v1/spec.md#node-compute), [§4.4](v1/spec.md#placement-constraints) |
+| `BP-ID` | Item identity and description particular to a blueprint | [§3](v1/spec.md#identity) |
+| `BP-REF` | Component references and parameter sources | [§4.1](v1/spec.md#component-reference), [§5.2](v1/spec.md#value-sources) |
+| `BP-CONN` | Explicit bindings and the value-dependency graph | [§4.2](v1/spec.md#connections) |
+| `BP-NODE` | Node compute, storage and exposure | [§4.3](v1/spec.md#node-compute) |
+| `BP-PARAM` | Installation parameters, their recipients and supply | [§5](v1/spec.md#parameters) |
+| `BP-RESOLVE` | Installation resolution | [§5.2](v1/spec.md#value-sources) |
+| `BP-CONNECTION` | Atomic connections | [§5.3](v1/spec.md#atomic-connections) |
+| `BP-UI` | Install-form presentation | [§5.4](v1/spec.md#install-form) |
 
 Every ID, the clause stating it, and the cases pinning it:
 [blueprint/v1 in docs/traceability.md](../../docs/traceability.md#blueprintv1).

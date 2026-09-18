@@ -1,0 +1,17 @@
+specVersion: v1
+kind: BLUEPRINT
+metadata:
+  slug: app
+  revision: 1
+  description: Synthetic conformance fixture blueprint.
+spec:
+  components:
+    db:
+      componentRef: ./db.yaml
+      compute:
+        profile: general.standard.small
+      volumes:
+        data:
+          sizeGiB: 20
+          storageClass: local-nvme
+          minIOPS: 3000

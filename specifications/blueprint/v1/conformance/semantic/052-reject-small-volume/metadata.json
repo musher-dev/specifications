@@ -4,8 +4,8 @@
   "expected": "fail",
   "clause": "specifications/blueprint/v1/spec.md#node-compute",
   "requirements": [
-    "BP-NODE-001"
+    "BP-NODE-004"
   ],
-  "summary": "reject small volume",
+  "summary": "A volume allocated below the component’s minSizeGiB is rejected.",
   "document": "app/blueprint.yaml"
 }

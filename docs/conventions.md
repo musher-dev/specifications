@@ -4,10 +4,12 @@ This page names **repository artifacts**: directories, schema modules, bundles,
 identifiers, and conformance cases. What a **field**, a **value**, or a
 user-authored **mapping key** is called is decided by
 [ADR 0007](adr/0007-naming-conventions.md) instead: `camelCase` properties,
-`UPPER_SNAKE_CASE` enum values, `kind` for the document family and `type` for
-every other discriminator, adjectives rather than `is…` booleans, plural
-collections, `…Ref` references, correctly spelled units, and a named grammar for
-every identifier.
+`UPPER_SNAKE_CASE` enum values, `kind` for the document family, adjectives
+rather than `is…` booleans, plural collections, `…Ref` references to another
+document, correctly spelled units, and a named grammar for every identifier.
+[ADR 0031](adr/0031-one-grammar-for-the-authored-documents.md) §1 refines it: a
+`type` tag names a category, the key that is present names where a value comes
+from, and a field naming another key in the same document is a bare noun.
 
 ## Naming table
 

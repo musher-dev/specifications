@@ -1,0 +1,10 @@
+{
+  "id": "structural-096-image-and-git-in-one-source",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#source",
+  "requirements": [
+    "COMP-SRC-002"
+  ],
+  "summary": "A source naming both an image and a Git repository is rejected."
+}

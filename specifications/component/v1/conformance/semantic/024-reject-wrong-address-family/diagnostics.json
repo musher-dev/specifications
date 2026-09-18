@@ -1,6 +1,6 @@
 [
   {
     "code": "ERR_ENDPOINT_NOT_L4",
-    "path": "/spec/contract/outputs/url/source"
+    "path": "/spec/contract/outputs/url/from"
   }
 ]

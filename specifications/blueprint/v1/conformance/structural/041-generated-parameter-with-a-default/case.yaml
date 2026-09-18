@@ -3,20 +3,21 @@ kind: BLUEPRINT
 metadata:
   slug: acme-wiki
   revision: 1
+  description: Synthetic conformance fixture blueprint.
 spec:
-  components:
-    web:
-      componentRef: ./components/web.yaml
-      size: general.standard.small
-      bindings:
-        secretKey:
-          type: PARAMETER
-          parameter: secretKey
   parameters:
     secretKey:
       generator:
         byteLength: 32
         encoding: HEX
-      default: ${{ self.publicUrl }}
+      default: "${{ self.publicUrl }}"
       ui:
         label: Secret key
+  components:
+    web:
+      componentRef: ./components/web.yaml
+      compute:
+        profile: general.standard.small
+      bindings:
+        secretKey:
+          parameter: secretKey

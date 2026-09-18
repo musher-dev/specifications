@@ -1,0 +1,11 @@
+{
+  "id": "structural-087-scheduled-job",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v1/spec.md#workload",
+  "requirements": [
+    "COMP-TYPE-005",
+    "COMP-JOB-002"
+  ],
+  "summary": "A JOB with a command and a five-field cron schedule validates."
+}

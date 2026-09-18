@@ -3,5 +3,5 @@
   "phase": "structural",
   "expected": "pass",
   "clause": "specifications/blueprint/v1/spec.md#coverage",
-  "summary": "A parameter may name the node and the input it covers."
+  "summary": "A binding names the parameter that supplies its input."
 }

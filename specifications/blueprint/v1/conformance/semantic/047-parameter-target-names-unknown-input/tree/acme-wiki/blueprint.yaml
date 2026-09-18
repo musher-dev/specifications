@@ -3,16 +3,17 @@ kind: BLUEPRINT
 metadata:
   slug: acme-wiki
   revision: 1
+  description: Synthetic conformance fixture blueprint.
 spec:
   components:
     app:
       componentRef: ./components/app.yaml
-      size: general.standard.small
-      bindings:
-        missing:
-          type: LITERAL
-          value: text
+      compute:
+        profile: general.standard.small
+      volumes: {}
       exposure:
         amqp: PUBLIC
         metrics: PRIVATE
-      volumes: {}
+      bindings:
+        missing:
+          value: text

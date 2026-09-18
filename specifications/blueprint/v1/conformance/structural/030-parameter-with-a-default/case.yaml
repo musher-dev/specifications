@@ -3,18 +3,19 @@ kind: BLUEPRINT
 metadata:
   slug: acme-wiki
   revision: 1
+  description: Synthetic conformance fixture blueprint.
 spec:
-  components:
-    db:
-      componentRef: ./components/postgres.yaml
-      size: general.standard.small
-      bindings:
-        publicUrl:
-          type: PARAMETER
-          parameter: publicUrl
   parameters:
     publicUrl:
-      default: ${{ self.publicUrl }}
+      default: "${{ self.publicUrl }}"
       ui:
         label: Public URL
         prominence: SECONDARY
+  components:
+    db:
+      componentRef: ./components/postgres.yaml
+      compute:
+        profile: general.standard.small
+      bindings:
+        publicUrl:
+          parameter: publicUrl

@@ -1,6 +1,6 @@
 [
   {
     "code": "ERR_INVALID_VALUE",
-    "path": "/spec/workload/source/ref"
+    "path": "/spec/workload/source/image"
   }
 ]

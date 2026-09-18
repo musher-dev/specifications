@@ -128,9 +128,9 @@
       "path": "structural/030-parameter-with-a-default"
     },
     {
-      "id": "structural-031-connection-key-outside-the-grammar",
+      "id": "structural-031-binding-key-outside-the-grammar",
       "phase": "structural",
-      "path": "structural/031-connection-key-outside-the-grammar"
+      "path": "structural/031-binding-key-outside-the-grammar"
     },
     {
       "id": "structural-032-parameter-name-outside-the-grammar",
@@ -143,9 +143,9 @@
       "path": "structural/033-node-without-compute"
     },
     {
-      "id": "structural-034-placement-on-a-node-without-compute",
+      "id": "structural-034-placement-without-a-compute-profile",
       "phase": "structural",
-      "path": "structural/034-placement-on-a-node-without-compute"
+      "path": "structural/034-placement-without-a-compute-profile"
     },
     {
       "id": "structural-037-parameter-without-ui",
@@ -173,14 +173,14 @@
       "path": "structural/041-generated-parameter-with-a-default"
     },
     {
-      "id": "semantic-001-connection-names-unknown-node",
+      "id": "semantic-001-binding-names-unknown-node",
       "phase": "semantic",
-      "path": "semantic/001-connection-names-unknown-node"
+      "path": "semantic/001-binding-names-unknown-node"
     },
     {
-      "id": "semantic-002-connection-cycle",
+      "id": "semantic-002-binding-cycle",
       "phase": "semantic",
-      "path": "semantic/002-connection-cycle"
+      "path": "semantic/002-binding-cycle"
     },
     {
       "id": "semantic-003-slug-disagrees-with-directory",
@@ -203,9 +203,9 @@
       "path": "semantic/006-reference-escaping-the-item"
     },
     {
-      "id": "semantic-007-connection-names-unknown-output",
+      "id": "semantic-007-binding-names-unknown-output",
       "phase": "semantic",
-      "path": "semantic/007-connection-names-unknown-output"
+      "path": "semantic/007-binding-names-unknown-output"
     },
     {
       "id": "semantic-008-conflicting-input-schema",
@@ -223,9 +223,9 @@
       "path": "semantic/010-three-node-cycle"
     },
     {
-      "id": "semantic-011-connection-type-mismatch",
+      "id": "semantic-011-binding-type-mismatch",
       "phase": "semantic",
-      "path": "semantic/011-connection-type-mismatch"
+      "path": "semantic/011-binding-type-mismatch"
     },
     {
       "id": "semantic-012-connection-resource-type-mismatch",
@@ -233,9 +233,9 @@
       "path": "semantic/012-connection-resource-type-mismatch"
     },
     {
-      "id": "semantic-013-connection-names-unknown-input",
+      "id": "semantic-013-binding-names-unknown-input",
       "phase": "semantic",
-      "path": "semantic/013-connection-names-unknown-input"
+      "path": "semantic/013-binding-names-unknown-input"
     },
     {
       "id": "semantic-014-required-input-unwired",
@@ -293,14 +293,14 @@
       "path": "semantic/027-no-compute-on-a-node-that-runs"
     },
     {
-      "id": "semantic-028-connection-fills-a-republished-input",
+      "id": "semantic-028-binding-fills-a-republished-input",
       "phase": "semantic",
-      "path": "semantic/028-connection-fills-a-republished-input"
+      "path": "semantic/028-binding-fills-a-republished-input"
     },
     {
-      "id": "semantic-030-connection-type-disagrees-on-string-list",
+      "id": "semantic-030-binding-type-disagrees-on-string-list",
       "phase": "semantic",
-      "path": "semantic/030-connection-type-disagrees-on-string-list"
+      "path": "semantic/030-binding-type-disagrees-on-string-list"
     },
     {
       "id": "semantic-031-parameter-covers-only-a-wired-input",
@@ -353,9 +353,9 @@
       "path": "structural/042-parameter-with-a-platform-default"
     },
     {
-      "id": "structural-043-connection-with-a-from-role",
+      "id": "structural-043-binding-with-a-from-role",
       "phase": "structural",
-      "path": "structural/043-connection-with-a-from-role"
+      "path": "structural/043-binding-with-a-from-role"
     },
     {
       "id": "structural-044-parameter-naming-its-target",
@@ -413,9 +413,9 @@
       "path": "semantic/049-reject-unknown-parameter"
     },
     {
-      "id": "semantic-050-reject-interpolated-config",
+      "id": "semantic-050-parameter-source-interpolates-text",
       "phase": "semantic",
-      "path": "semantic/050-reject-interpolated-config"
+      "path": "semantic/050-parameter-source-interpolates-text"
     },
     {
       "id": "semantic-051-reject-invalid-binding-value",
@@ -443,9 +443,9 @@
       "path": "semantic/054-atomic-connection"
     },
     {
-      "id": "semantic-055-connection-unknown-slot",
+      "id": "semantic-055-connection-binding-names-unknown-parameter",
       "phase": "semantic",
-      "path": "semantic/055-connection-unknown-slot"
+      "path": "semantic/055-connection-binding-names-unknown-parameter"
     },
     {
       "id": "semantic-056-connection-independent-supplier",
@@ -461,6 +461,96 @@
       "id": "semantic-058-connection-unknown-requirement",
       "phase": "semantic",
       "path": "semantic/058-connection-unknown-requirement"
+    },
+    {
+      "id": "semantic-059-worker-endpoint-exposed-public",
+      "phase": "semantic",
+      "path": "semantic/059-worker-endpoint-exposed-public"
+    },
+    {
+      "id": "semantic-060-worker-endpoint-kept-private",
+      "phase": "semantic",
+      "path": "semantic/060-worker-endpoint-kept-private"
+    },
+    {
+      "id": "semantic-061-connection-parameter-in-a-binding",
+      "phase": "semantic",
+      "path": "semantic/061-connection-parameter-in-a-binding"
+    },
+    {
+      "id": "semantic-062-variable-parameter-in-a-connection-binding",
+      "phase": "semantic",
+      "path": "semantic/062-variable-parameter-in-a-connection-binding"
+    },
+    {
+      "id": "semantic-063-parameter-source-names-two-references",
+      "phase": "semantic",
+      "path": "semantic/063-parameter-source-names-two-references"
+    },
+    {
+      "id": "semantic-064-parameter-source-in-an-unknown-namespace",
+      "phase": "semantic",
+      "path": "semantic/064-parameter-source-in-an-unknown-namespace"
+    },
+    {
+      "id": "semantic-065-parameter-source-namespace-not-in-scope",
+      "phase": "semantic",
+      "path": "semantic/065-parameter-source-namespace-not-in-scope"
+    },
+    {
+      "id": "semantic-066-variable-parameter-feeds-an-input",
+      "phase": "semantic",
+      "path": "semantic/066-variable-parameter-feeds-an-input"
+    },
+    {
+      "id": "semantic-067-unbound-connection-parameter",
+      "phase": "semantic",
+      "path": "semantic/067-unbound-connection-parameter"
+    },
+    {
+      "id": "semantic-068-volume-storage-pins",
+      "phase": "semantic",
+      "path": "semantic/068-volume-storage-pins"
+    },
+    {
+      "id": "structural-046-parameter-with-from-and-default",
+      "phase": "structural",
+      "path": "structural/046-parameter-with-from-and-default"
+    },
+    {
+      "id": "structural-047-generated-parameter-with-a-from",
+      "phase": "structural",
+      "path": "structural/047-generated-parameter-with-a-from"
+    },
+    {
+      "id": "structural-048-binding-with-two-sources",
+      "phase": "structural",
+      "path": "structural/048-binding-with-two-sources"
+    },
+    {
+      "id": "structural-049-binding-node-without-output",
+      "phase": "structural",
+      "path": "structural/049-binding-node-without-output"
+    },
+    {
+      "id": "structural-050-missing-metadata-description",
+      "phase": "structural",
+      "path": "structural/050-missing-metadata-description"
+    },
+    {
+      "id": "structural-051-placement-storage-class",
+      "phase": "structural",
+      "path": "structural/051-placement-storage-class"
+    },
+    {
+      "id": "structural-052-volume-storage-pins",
+      "phase": "structural",
+      "path": "structural/052-volume-storage-pins"
+    },
+    {
+      "id": "structural-053-metadata-description-too-long",
+      "phase": "structural",
+      "path": "structural/053-metadata-description-too-long"
     }
   ]
 }

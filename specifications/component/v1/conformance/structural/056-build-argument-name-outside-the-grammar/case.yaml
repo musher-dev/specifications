@@ -2,18 +2,18 @@ specVersion: v1
 kind: COMPONENT
 metadata:
   revision: 1
+  description: Synthetic conformance fixture component.
 spec:
+  type: SERVICE
   workload:
-    type: SERVICE
     source:
-      type: GIT
-      repositoryURL: https://github.com/acme/web.git
-      build:
-        strategy: DOCKERFILE
-        dockerfilePath: Dockerfile
-        arguments:
-          node-version: "22"
+      git:
+        repositoryURL: https://github.com/acme/web.git
+        build:
+          dockerfile: Dockerfile
+          arguments:
+            node-version: "22"
     endpoints:
       web:
-        containerPort: 8080
+        targetPort: 8080
         protocol: HTTP

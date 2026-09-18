@@ -2,12 +2,12 @@ specVersion: v1
 kind: COMPONENT
 metadata:
   revision: 1
+  description: Synthetic conformance fixture component.
 spec:
+  type: WORKER
   workload:
-    type: WORKER
     source:
-      type: IMAGE
-      ref: ghcr.io/example/app:1.4.2
+      image: ghcr.io/example/app:1.4.2
   contract:
     inputs:
       apiKey:

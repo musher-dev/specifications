@@ -1,0 +1,39 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Queue consumer with a private health endpoint the platform probes; it serves no traffic of its own.
+spec:
+  type: WORKER
+  workload:
+    source:
+      image: ghcr.io/musher-dev/worker:1.4.0
+    command:
+      - /bin/consume
+      - --queue
+      - default
+    endpoints:
+      health:
+        targetPort: 8081
+        protocol: HTTP
+    health:
+      readiness:
+        http:
+          endpoint: health
+          path: /readyz
+      liveness:
+        http:
+          endpoint: health
+          path: /healthz
+        failureThreshold: 5
+  contract:
+    inputs:
+      queueUrl:
+        description: Address of the queue the worker consumes.
+        schema:
+          type: string
+        presentationHint: CONNECTION_STRING
+        sensitive: true
+        target:
+          envVarKey: QUEUE_URL
+    outputs: {}

@@ -2,28 +2,30 @@ specVersion: v1
 kind: COMPONENT
 metadata:
   revision: 1
+  description: Web application built from its Git repository with a Dockerfile.
 spec:
+  type: SERVICE
   workload:
-    type: SERVICE
     source:
-      type: GIT
-      repositoryURL: https://github.com/musher-dev/examples
-      ref:
-        type: BRANCH
-        name: main
-      build:
-        strategy: DOCKERFILE
-        dockerfilePath: Dockerfile
-        arguments:
-          NODE_ENV: production
+      git:
+        repositoryURL: https://github.com/musher-dev/examples
+        ref:
+          branch: main
+        build:
+          dockerfile: Dockerfile
+          arguments:
+            NODE_ENV: production
+    command:
+      - node
+      - server.js
     endpoints:
       web:
-        containerPort: 8080
+        targetPort: 8080
         protocol: HTTP
     health:
       readiness:
-        path: /healthz
-        endpoint: web
+        http:
+          endpoint: web
+          path: /healthz
         periodSeconds: 10
         failureThreshold: 3
-        type: HTTP

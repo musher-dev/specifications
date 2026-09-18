@@ -1,7 +1,0 @@
-{
-  "id": "structural-043-connection-with-a-from-role",
-  "phase": "structural",
-  "expected": "fail",
-  "clause": "specifications/blueprint/v1/spec.md#connections",
-  "summary": "A connection carrying the retired fromRole is rejected as an unknown field."
-}

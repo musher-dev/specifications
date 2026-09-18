@@ -3,16 +3,14 @@ kind: BLUEPRINT
 metadata:
   slug: acme-wiki
   revision: 1
+  description: Synthetic conformance fixture blueprint.
 spec:
   components:
     models:
       componentRef: ./components/models.yaml
-      size: null
       bindings:
         apiKey:
-          type: PARAMETER
           parameter: apiKey
         baseUrl:
-          type: OUTPUT
           node: models
           output: installDefault

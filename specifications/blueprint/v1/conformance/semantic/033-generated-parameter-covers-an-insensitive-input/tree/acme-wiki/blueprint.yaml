@@ -3,17 +3,8 @@ kind: BLUEPRINT
 metadata:
   slug: acme-wiki
   revision: 1
+  description: Synthetic conformance fixture blueprint.
 spec:
-  components:
-    api:
-      componentRef: ./components/api.yaml
-      size: general.standard.small
-      bindings:
-        signingKey:
-          type: PARAMETER
-          parameter: signingKey
-      exposure: {}
-      volumes: {}
   parameters:
     signingKey:
       generator:
@@ -21,3 +12,13 @@ spec:
         encoding: HEX
       ui:
         label: Signing key
+  components:
+    api:
+      componentRef: ./components/api.yaml
+      compute:
+        profile: general.standard.small
+      volumes: {}
+      exposure: {}
+      bindings:
+        signingKey:
+          parameter: signingKey

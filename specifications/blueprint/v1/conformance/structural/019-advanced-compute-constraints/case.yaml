@@ -3,23 +3,23 @@ kind: BLUEPRINT
 metadata:
   slug: inference
   revision: 1
+  description: Synthetic conformance fixture blueprint.
 spec:
+  parameters: {}
   components:
     api:
       componentRef: ./components/api.yaml
-      size: gpu.performance.large
-      placement:
-        cpuArchitectures:
-          - x86_64
-          - arm64
-        cpuDedication: dedicated
-        minAcceleratorMemoryGiB: 24
-        acceleratorRuntimes:
-          - cuda
-        acceleratorInterconnect: nvlink
-        acceleratorSKUClass: h100-sxm
-        storageClass: local-nvme
-        minStorageIOPS: 20000
-        networkClass: standard
+      compute:
+        profile: gpu.performance.large
+        placement:
+          cpuArchitectures:
+            - x86_64
+            - arm64
+          cpuDedication: dedicated
+          minAcceleratorMemoryGiB: 24
+          acceleratorRuntimes:
+            - cuda
+          acceleratorInterconnect: nvlink
+          acceleratorSKUClass: h100-sxm
+          networkClass: standard
       bindings: {}
-  parameters: {}

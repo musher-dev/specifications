@@ -3,12 +3,14 @@ kind: BLUEPRINT
 metadata:
   slug: postgres
   revision: 1
+  description: Synthetic conformance fixture blueprint.
 spec:
+  parameters: {}
   components:
     db:
       componentRef: ./components/postgres.yaml
-      size: storage.standard.large
-      placement:
-        storageClass: Local NVMe
+      compute:
+        profile: storage.standard.large
+        placement:
+          networkClass: High Throughput
       bindings: {}
-  parameters: {}

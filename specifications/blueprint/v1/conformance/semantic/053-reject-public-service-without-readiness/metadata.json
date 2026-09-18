@@ -4,8 +4,9 @@
   "expected": "fail",
   "clause": "specifications/blueprint/v1/spec.md#node-compute",
   "requirements": [
+    "BP-NODE-005",
     "COMP-EP-003"
   ],
-  "summary": "reject public service without readiness",
+  "summary": "A PUBLIC HTTP-family endpoint whose component declares no readiness probe is rejected.",
   "document": "app/blueprint.yaml"
 }

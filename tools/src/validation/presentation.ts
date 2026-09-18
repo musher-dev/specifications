@@ -1,6 +1,7 @@
 /** Non-normative presentation adapter over validated contracts. */
 import { HtmlRenderer, Parser } from 'commonmark'
 import type { Json } from '../lib/layout.ts'
+import { parameterSource } from './connections.ts'
 import { MEDIA_PATH, schemeIsPermitted } from './listing-policy.ts'
 import { at, record } from './semantic.ts'
 export function renderListing(
@@ -32,26 +33,32 @@ export function formControls(blueprint: Json, components: ReadonlyMap<string, Js
   for (const [name, parameter] of Object.entries(record(at(blueprint, 'spec', 'parameters')))) {
     const p = record(parameter),
       ui = record(p.ui)
-    if (!p.ui || p.generator) continue
+    // Blueprint §5.4: generated values and variables are never form fields. A
+    // connection is offered as a whole selection, never as its members.
+    const source = parameterSource(p)
+    if (!p.ui || p.generator || source?.namespace === 'variables') continue
     const receivers: Record<string, Json>[] = []
     for (const [node, n] of Object.entries(record(at(blueprint, 'spec', 'components'))).sort())
       for (const [key, b] of Object.entries(record(at(n, 'bindings'))).sort())
-        if (at(b, 'type') === 'PARAMETER' && at(b, 'parameter') === name)
+        if (at(b, 'parameter') === name)
           receivers.push(record(at(components.get(node), 'spec', 'contract', 'inputs', key)))
     const schema = record(receivers[0]?.schema)
-    const control = receivers.some((v) => v.sensitive === true)
-      ? 'secret'
-      : schema.enum
-        ? 'enum'
-        : schema.type === 'array' &&
-            at(schema.items, 'type') === 'string' &&
-            at(schema.items, 'enum')
-          ? 'multiChoice'
-          : schema.type === 'boolean'
-            ? 'boolean'
-            : ['array', 'object'].includes(String(schema.type))
-              ? 'json'
-              : 'text'
+    const control =
+      source?.namespace === 'connections'
+        ? 'connection'
+        : receivers.some((v) => v.sensitive === true)
+          ? 'secret'
+          : schema.enum
+            ? 'enum'
+            : schema.type === 'array' &&
+                at(schema.items, 'type') === 'string' &&
+                at(schema.items, 'enum')
+              ? 'multiChoice'
+              : schema.type === 'boolean'
+                ? 'boolean'
+                : ['array', 'object'].includes(String(schema.type))
+                  ? 'json'
+                  : 'text'
     fields.push({
       name,
       label: ui.label ?? name,

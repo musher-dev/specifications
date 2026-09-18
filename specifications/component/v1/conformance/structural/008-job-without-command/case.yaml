@@ -2,9 +2,9 @@ specVersion: v1
 kind: COMPONENT
 metadata:
   revision: 1
+  description: Synthetic conformance fixture component.
 spec:
+  type: JOB
   workload:
-    type: JOB
     source:
-      type: IMAGE
-      ref: ghcr.io/musher-dev/migrate:2.0.1
+      image: ghcr.io/musher-dev/migrate:2.0.1

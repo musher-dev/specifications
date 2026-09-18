@@ -6,6 +6,6 @@
   "requirements": [
     "BP-NODE-002"
   ],
-  "summary": "A node naming compute for an external component is rejected.",
+  "summary": "A node carrying compute for an external component is rejected at the compute it carries.",
   "document": "acme-wiki/blueprint.yaml"
 }

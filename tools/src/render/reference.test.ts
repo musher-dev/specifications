@@ -10,7 +10,7 @@
 import { describe, expect, test } from 'bun:test'
 import { discoverKinds, type Json } from '../lib/layout.ts'
 import { familyBundle } from '../schema/bundle.ts'
-import { buildReference, renderReference, type Shape } from './reference.ts'
+import { buildReference, renderReference } from './reference.ts'
 
 function model(defs: { [k: string]: Json }, root: { [k: string]: Json } = {}) {
   return buildReference(
@@ -77,41 +77,77 @@ describe('nullable fields', () => {
   })
 })
 
-describe('discriminated unions', () => {
-  const defs = (mapping: { [k: string]: Json }) => ({
-    A: { type: 'object', additionalProperties: false, properties: {} },
-    B: { type: 'object', additionalProperties: false, properties: {} },
+describe('unions selected by key', () => {
+  // The real ComponentOutputFrom: every field declared on the type, and a
+  // oneOf whose branches say only which keys select a form.
+  const from = (extra: { [k: string]: Json } = {}): { [k: string]: Json } => ({
     T: {
       type: 'object',
       additionalProperties: false,
       properties: {
-        f: {
-          oneOf: [{ $ref: '#/$defs/A' }, { $ref: '#/$defs/B' }],
-          'x-musher-discriminator': { propertyName: 'type', mapping },
-        },
+        value: { type: 'string' },
+        endpoint: { type: 'string' },
+        property: { type: 'string' },
       },
+      oneOf: [
+        { properties: { value: true }, required: ['value'] },
+        { properties: { endpoint: true, property: true }, required: ['endpoint', 'property'] },
+      ],
+      dependentRequired: { property: ['endpoint'] },
+      ...extra,
     },
   })
 
-  test('resolves by pointer, so mapping order cannot mislabel a branch', () => {
-    // The real ComponentEnvVar.value: oneOf is [Literal, ConfigRef] while the
-    // canonicalized mapping is {CONFIG_REF, LITERAL}. Zipping would swap them.
-    const forward = field(defs({ FIRST: '#/$defs/A', SECOND: '#/$defs/B' }), 'T', 'f')
-    const reversed = field(defs({ SECOND: '#/$defs/B', FIRST: '#/$defs/A' }), 'T', 'f')
-    const expected = [
-      { label: 'FIRST', target: 'A' },
-      { label: 'SECOND', target: 'B' },
-    ]
-    expect((forward.shape as Extract<Shape, { kind: 'union' }>).discriminator?.branches).toEqual(
-      expected,
-    )
-    expect((reversed.shape as Extract<Shape, { kind: 'union' }>).discriminator?.branches).toEqual(
-      expected,
-    )
+  test('reads each branch as the keys that select a form, in authored order', () => {
+    const type = model(from()).types.find((t) => t.name === 'T')
+    expect(type?.choice).toEqual({ forms: [['value'], ['endpoint', 'property']] })
+    expect(type?.dependencies).toEqual([{ field: 'property', requires: ['endpoint'] }])
   })
 
-  test('a mapping naming a missing definition throws', () => {
-    expect(() => field(defs({ FIRST: '#/$defs/Nope' }), 'T', 'f')).toThrow(/missing \$defs\/Nope/)
+  test('renders the forms as one sentence, and the dependency as another', () => {
+    const html = renderReference(model(from()), {
+      schemaPath: '/schema.json',
+      prosePath: null,
+      examplesPath: null,
+      sourceUrl: '/source',
+      links: null,
+    })
+    expect(html).toContain(
+      'Exactly one of <code>value</code> or <code>endpoint</code> with <code>property</code> is present.',
+    )
+    expect(html).toContain('<code>property</code> requires <code>endpoint</code>.')
+  })
+
+  test('a type with no oneOf has no choice', () => {
+    const type = model(withField({ type: 'string' })).types[0]
+    expect(type?.choice).toBeUndefined()
+    expect(type?.dependencies).toEqual([])
+  })
+
+  test('a branch asserting more than its keys is refused', () => {
+    const defs = from({
+      oneOf: [
+        { properties: { value: { const: 'x' } }, required: ['value'] },
+        { properties: { endpoint: true }, required: ['endpoint'] },
+      ],
+    })
+    expect(() => model(defs)).toThrow(/not a key-selected branch/)
+  })
+
+  test('a branch selecting by a key the type does not declare is refused', () => {
+    const defs = from({
+      oneOf: [
+        { properties: { value: true }, required: ['value'] },
+        { properties: { git: true }, required: ['git'] },
+      ],
+    })
+    expect(() => model(defs)).toThrow(/selects by "git"/)
+  })
+
+  test('a dependency naming an undeclared field is refused', () => {
+    expect(() => model(from({ dependentRequired: { property: ['nope'] } }))).toThrow(
+      /must list fields the type declares/,
+    )
   })
 })
 
@@ -209,6 +245,44 @@ describe('conditionals', () => {
     expect(condition?.when.kind).toBe('pattern')
     expect(condition?.consequent).toEqual([{ field: 'b', detail: 'must not be present' }])
     expect(condition?.alternative).toEqual([{ field: 'b', detail: 'is required' }])
+  })
+
+  test('a required key tested only for its type reads as present', () => {
+    // The real BlueprintParameter: a generator forbids a default beside it.
+    const built = model({
+      T: {
+        type: 'object',
+        additionalProperties: false,
+        properties: { generator: { type: 'object' }, default: { type: 'string' } },
+        allOf: [
+          {
+            if: { properties: { generator: { type: 'object' } }, required: ['generator'] },
+            [THEN]: { properties: { default: false } },
+          },
+        ],
+      },
+    })
+    const condition = built.types[0]?.conditions[0]
+    expect(condition?.when).toEqual({ kind: 'present', field: 'generator' })
+    expect(condition?.consequent).toEqual([{ field: 'default', detail: 'must not be present' }])
+  })
+
+  test('a type test on a key the if does not require stays opaque', () => {
+    const built = model({
+      T: {
+        type: 'object',
+        additionalProperties: false,
+        properties: { f: { type: 'object' } },
+        allOf: [
+          {
+            $comment: 'why',
+            if: { properties: { f: { type: 'object' } } },
+            [THEN]: { required: ['f'] },
+          },
+        ],
+      },
+    })
+    expect(built.types[0]?.conditions[0]?.when.kind).toBe('opaque')
   })
 
   test('a $ref narrowed by a sibling required reports both halves', () => {

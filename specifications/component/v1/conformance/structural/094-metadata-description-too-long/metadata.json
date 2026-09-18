@@ -1,0 +1,10 @@
+{
+  "id": "structural-094-metadata-description-too-long",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#metadata",
+  "requirements": [
+    "COMP-DESC-002"
+  ],
+  "summary": "A metadata description longer than 280 characters is rejected."
+}

@@ -1,0 +1,11 @@
+{
+  "id": "semantic-065-parameter-source-namespace-not-in-scope",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#value-sources",
+  "requirements": [
+    "BP-REF-001"
+  ],
+  "summary": "A parameter whose from names a reserved namespace other than variables or connections is rejected.",
+  "document": "app/blueprint.yaml"
+}

@@ -2,13 +2,13 @@ specVersion: v1
 kind: COMPONENT
 metadata:
   revision: 11
+  description: Synthetic conformance fixture component.
 spec:
+  type: SERVICE
   workload:
-    type: SERVICE
     source:
-      type: IMAGE
-      ref: postgres:17.10-alpine
+      image: postgres:17.10-alpine
     endpoints:
       db:
-        containerPort: 5432
+        targetPort: 5432
         protocol: TCP

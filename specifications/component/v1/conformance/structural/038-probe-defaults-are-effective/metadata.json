@@ -5,7 +5,7 @@
   "clause": "specifications/component/v1/spec.md#health",
   "summary": "A probe declaring only `path` has the five timing defaults as its effective values.",
   "effective": {
-    "/spec/workload/health/readiness/path": "/healthz",
+    "/spec/workload/health/readiness/http/path": "/healthz",
     "/spec/workload/health/readiness/initialDelaySeconds": 10,
     "/spec/workload/health/readiness/periodSeconds": 10,
     "/spec/workload/health/readiness/timeoutSeconds": 5,

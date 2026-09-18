@@ -6,6 +6,6 @@
   "requirements": [
     "BP-PARAM-007"
   ],
-  "summary": "A parameter whose toInput names no input of a covered node is rejected.",
+  "summary": "A binding whose key names no input of the component is rejected.",
   "document": "acme-wiki/blueprint.yaml"
 }

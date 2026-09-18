@@ -1,0 +1,23 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: EXTERNAL
+  workload:
+    source:
+      image: nginx:1.29.4-alpine
+    endpoints:
+      web:
+        targetPort: 8080
+        protocol: HTTP
+  contract:
+    inputs: {}
+    outputs:
+      baseUrl:
+        description: Base URL of the addressed service, for a consumer to call.
+        schema:
+          type: string
+        from:
+          value: https://api.example.com/v1

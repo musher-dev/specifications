@@ -6,6 +6,6 @@
   "requirements": [
     "BP-PARAM-007"
   ],
-  "summary": "reject unknown parameter",
+  "summary": "A binding naming no parameter is rejected.",
   "document": "app/blueprint.yaml"
 }

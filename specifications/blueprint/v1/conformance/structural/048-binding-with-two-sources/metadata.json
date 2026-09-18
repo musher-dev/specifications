@@ -1,0 +1,10 @@
+{
+  "id": "structural-048-binding-with-two-sources",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#connections",
+  "requirements": [
+    "BP-CONN-003"
+  ],
+  "summary": "A binding carrying both a parameter and a value is rejected: the key present names one source."
+}

@@ -6,6 +6,6 @@
   "requirements": [
     "BP-PARAM-008"
   ],
-  "summary": "reject invalid binding value",
+  "summary": "A literal binding value outside the receiving input’s schema is rejected.",
   "document": "app/blueprint.yaml"
 }

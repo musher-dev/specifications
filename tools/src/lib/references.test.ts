@@ -29,10 +29,11 @@ describe('a well-formed reference', () => {
     }
   })
 
-  test('carries an endpoint segment through as a second path element', () => {
-    expect(scan('${{ self.publicUrl.web }}', SELF).references[0]?.path).toEqual([
-      'publicUrl',
+  test('carries every segment of a dotted path through, in order', () => {
+    expect(scan('${{ self.endpoints.web.publicUrl }}', SELF).references[0]?.path).toEqual([
+      'endpoints',
       'web',
+      'publicUrl',
     ])
   })
 
@@ -125,17 +126,17 @@ describe('CORE-REF-002 and CORE-REF-003 — the closed set, and what a position 
   test('a reserved namespace the position does not admit is out of scope', () => {
     // The distinction matters: "core reserves no such name" and "this field
     // does not take that one" send an author to two different places.
-    for (const namespace of ['params', 'config', 'deployment', 'output']) {
+    for (const namespace of ['parameters', 'variables', 'connections', 'deployment', 'output']) {
       expect(kinds(`\${{ ${namespace}.thing }}`)).toEqual(['not-in-scope'])
     }
   })
 
   test('admitting a namespace is what makes it resolvable', () => {
-    expect(kinds('${{ params.siteTitle }}', ['self', 'params'])).toEqual([])
+    expect(kinds('${{ parameters.siteTitle }}', ['self', 'parameters'])).toEqual([])
   })
 
   test('reports each bad reference in a string separately', () => {
-    expect(kinds('${{ vault.a }} and ${{ params.b }} and ${{ c }}')).toEqual([
+    expect(kinds('${{ vault.a }} and ${{ parameters.b }} and ${{ c }}')).toEqual([
       'unknown-namespace',
       'not-in-scope',
       'malformed',

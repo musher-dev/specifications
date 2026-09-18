@@ -334,10 +334,10 @@ function checkDefsNames(doc: { [k: string]: Json }, rel: string, failures: Failu
 }
 
 /**
- * `$ref` is not the only thing that points into `$defs`.
- * `x-musher-discriminator.mapping` values are JSON Pointers too, and a rename
- * that misses one leaves a mapping naming a definition that no longer exists —
- * the document still compiles, and every check above still passes.
+ * `$ref` is not the only thing that can point into `$defs`. Any other string
+ * value spelled as a `#/$defs/` pointer is one too, and a rename that misses it
+ * leaves a pointer naming a definition that no longer exists: the document still
+ * compiles, and every check above still passes.
  */
 function checkDefsPointers(doc: { [k: string]: Json }, rel: string, failures: Failures): void {
   const defs = isObject(doc.$defs) ? doc.$defs : {}
@@ -400,10 +400,6 @@ const EXTENSION_KEYWORDS = [
   // sits on the `$def` that is the map's value type, or — where that value is
   // an inline scalar with no definition to carry it — on the map itself.
   'x-additionalPropertiesName',
-  // Which `oneOf` branch a reader should expect, keyed on a property. The
-  // adjacent `oneOf` and `const` do the actual validation; this is a rendering
-  // hint, prefixed to say so. See component §5.1 and §5.3.
-  'x-musher-discriminator',
 ] as const
 
 export function strictAjv(): Ajv2020 {

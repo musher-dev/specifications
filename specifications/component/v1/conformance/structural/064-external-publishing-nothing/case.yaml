@@ -2,8 +2,9 @@ specVersion: v1
 kind: COMPONENT
 metadata:
   revision: 1
+  description: Synthetic conformance fixture component.
 spec:
-  external: {}
+  type: EXTERNAL
   contract:
     inputs:
       baseUrl:

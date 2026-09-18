@@ -3,5 +3,8 @@
   "phase": "structural",
   "expected": "fail",
   "clause": "specifications/component/v1/spec.md#workload",
+  "requirements": [
+    "COMP-TYPE-005"
+  ],
   "summary": "A schedule on a SERVICE is rejected rather than ignored."
 }

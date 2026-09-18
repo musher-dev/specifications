@@ -1,0 +1,10 @@
+{
+  "id": "structural-021-endpoint-and-value-in-one-from",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#outputs",
+  "requirements": [
+    "COMP-OUT-001"
+  ],
+  "summary": "An output whose from names both an endpoint property and a literal value is rejected."
+}

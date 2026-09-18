@@ -6,6 +6,6 @@
   "requirements": [
     "BP-PARAM-001"
   ],
-  "summary": "A parameter whose key names no unwired input of any node is rejected.",
+  "summary": "A parameter no binding names is rejected.",
   "document": "acme-wiki/blueprint.yaml"
 }

@@ -3,40 +3,8 @@ kind: BLUEPRINT
 metadata:
   slug: web-and-database
   revision: 1
+  description: A web application backed by PostgreSQL on dedicated compute and fast local storage.
 spec:
-  components:
-    db:
-      componentRef: ./components/postgres.yaml
-      size: general.standard.medium
-      placement:
-        cpuDedication: dedicated
-      bindings:
-        postgresPassword:
-          type: PARAMETER
-          parameter: postgresPassword
-      volumes:
-        data:
-          sizeGiB: 20
-    web:
-      componentRef: ./component-web-server.yaml
-      size: general.standard.small
-      bindings:
-        databaseUrl:
-          type: OUTPUT
-          node: db
-          output: connectionString
-        siteTitle:
-          type: PARAMETER
-          parameter: siteTitle
-        callbackUrl:
-          type: OUTPUT
-          node: web
-          output: callbackUrl
-        telemetry:
-          type: PARAMETER
-          parameter: telemetry
-      exposure:
-        web: PUBLIC
   parameters:
     postgresPassword:
       generator:
@@ -45,6 +13,7 @@ spec:
     siteTitle:
       ui:
         label: Site title
+      default: My site
     telemetry:
       ui:
         label: Telemetry to export
@@ -53,3 +22,37 @@ spec:
           logs: Logs
           metrics: Metrics
           traces: Traces
+  components:
+    db:
+      componentRef: ./components/postgres.yaml
+      compute:
+        profile: general.standard.medium
+        placement:
+          cpuDedication: dedicated
+      volumes:
+        data:
+          sizeGiB: 20
+          storageClass: local-nvme
+          minIOPS: 3000
+      bindings:
+        postgresPassword:
+          parameter: postgresPassword
+    web:
+      componentRef: ./component-web-server.yaml
+      compute:
+        profile: general.standard.small
+      exposure:
+        web: PUBLIC
+      bindings:
+        databaseUrl:
+          node: db
+          output: connectionString
+        siteTitle:
+          parameter: siteTitle
+        callbackUrl:
+          node: web
+          output: callbackUrl
+        telemetry:
+          parameter: telemetry
+        mode:
+          value: production

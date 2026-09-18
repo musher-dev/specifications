@@ -96,7 +96,9 @@ The categories split by lifecycle and by whether the workload serves traffic:
 
 A `JOB` without `schedule` runs once per rollout: installation, update and
 redeploy. v1 orders it against nothing. A `JOB` with `schedule.cron` recurs. The
-expression is evaluated in UTC, and a run due while the previous run is still
+expression has exactly five fields (minute, hour, day of month, month, day of
+week), so a seconds field or an `@daily` macro is rejected rather than read two
+ways. It is evaluated in UTC, and a run due while the previous run is still
 executing is skipped. `CRON` is withdrawn as a type: a schedule is a property of
 a job. Kubernetes reached the same conclusion when it renamed `ScheduledJob` to
 `CronJob` as a job template plus a schedule, and Nomad makes a periodic job a
@@ -168,6 +170,11 @@ parameter rejects a submitted value with `ERR_PARAMETER_NOT_SUBMITTABLE`,
 replacing `ERR_GENERATED_OVERRIDE`. Variables resolve against the configuration
 visible to the environment the installation is deployed into: organization
 values, overridable per environment.
+
+The codes follow the vocabulary. A `from` that is not one whole reference in an
+admitted namespace is `ERR_INVALID_PARAMETER_SOURCE`, replacing
+`ERR_INVALID_CONFIG_REFERENCE`, and an installation denied a variable reports
+`ERR_VARIABLE_NOT_AUTHORIZED`, replacing `ERR_CONFIG_NOT_AUTHORIZED`.
 
 ### 5. Core's namespaces follow
 

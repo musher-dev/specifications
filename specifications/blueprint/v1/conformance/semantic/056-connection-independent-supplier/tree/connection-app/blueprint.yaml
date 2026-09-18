@@ -3,27 +3,29 @@
   "kind": "BLUEPRINT",
   "metadata": {
     "slug": "connection-app",
-    "revision": 1
+    "revision": 1,
+    "description": "Synthetic conformance fixture blueprint."
   },
   "spec": {
-    "connectionSources": {
+    "parameters": {
       "primary": {
-        "source": "${{ config.llm.default }}"
+        "from": "${{ connections.llm.default }}"
       }
     },
     "components": {
       "app": {
         "componentRef": "./component.yaml",
-        "size": "general.standard.small",
-        "connectionBindings": {
-          "llm": {
-            "source": "primary"
-          }
+        "compute": {
+          "profile": "general.standard.small"
         },
         "bindings": {
           "url": {
-            "type": "LITERAL",
             "value": "https://elsewhere.example"
+          }
+        },
+        "connectionBindings": {
+          "llm": {
+            "parameter": "primary"
           }
         }
       }

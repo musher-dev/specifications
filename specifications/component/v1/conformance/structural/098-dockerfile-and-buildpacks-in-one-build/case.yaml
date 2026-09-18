@@ -1,0 +1,19 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: SERVICE
+  workload:
+    source:
+      git:
+        repositoryURL: https://github.com/musher-dev/examples
+        build:
+          dockerfile: Dockerfile
+          buildpacks:
+            builderImage: paketobuildpacks/builder-jammy-base:0.4.0
+    endpoints:
+      web:
+        targetPort: 8080
+        protocol: HTTP

@@ -3,16 +3,17 @@ kind: BLUEPRINT
 metadata:
   slug: acme-wiki
   revision: 1
+  description: Synthetic conformance fixture blueprint.
 spec:
-  components:
-    payments:
-      componentRef: ./components/payments.yaml
-      size: general.standard.small
-      bindings:
-        apiKey:
-          type: PARAMETER
-          parameter: stripeKey
   parameters:
     stripeKey:
       ui:
         label: Stripe API key
+  components:
+    payments:
+      componentRef: ./components/payments.yaml
+      compute:
+        profile: general.standard.small
+      bindings:
+        apiKey:
+          parameter: stripeKey

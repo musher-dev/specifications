@@ -3,15 +3,22 @@ kind: BLUEPRINT
 metadata:
   slug: organization-config
   revision: 1
+  description: A web application that reads its region and error-reporting endpoint from organization variables.
 spec:
+  parameters:
+    region:
+      from: "${{ variables.cloud.region }}"
+    errorReportingUrl:
+      from: "${{ variables.observability.errorReportingUrl }}"
   components:
-    worker:
-      componentRef: ./components/llm-worker.yaml
-      size: general.standard.small
+    web:
+      componentRef: ./components/web.yaml
+      compute:
+        profile: general.standard.small
+      exposure:
+        web: PUBLIC
       bindings:
-        llmBaseUrl:
-          type: CONFIG_REF
-          source: "${{ config.llm.baseUrl }}"
-        llmApiKey:
-          type: CONFIG_REF
-          source: "${{ config.llm.apiKey }}"
+        region:
+          parameter: region
+        errorReportingUrl:
+          parameter: errorReportingUrl

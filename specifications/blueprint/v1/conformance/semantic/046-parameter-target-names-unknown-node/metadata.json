@@ -6,6 +6,6 @@
   "requirements": [
     "BP-PARAM-006"
   ],
-  "summary": "A parameter whose toNode names no node in this blueprint is rejected.",
+  "summary": "A binding whose node names no node in this blueprint is rejected.",
   "document": "acme-wiki/blueprint.yaml"
 }

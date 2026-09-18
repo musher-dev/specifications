@@ -1,0 +1,11 @@
+{
+  "id": "semantic-055-connection-binding-names-unknown-parameter",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#atomic-connections",
+  "requirements": [
+    "BP-CONNECTION-001"
+  ],
+  "summary": "A connection binding naming no parameter is rejected.",
+  "document": "connection-app/blueprint.yaml"
+}

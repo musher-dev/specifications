@@ -6,6 +6,6 @@
   "requirements": [
     "BP-PARAM-003"
   ],
-  "summary": "A required input that no connection fills and no parameter covers is rejected.",
+  "summary": "A required input that no binding supplies and that declares no default is rejected.",
   "document": "acme-wiki/blueprint.yaml"
 }

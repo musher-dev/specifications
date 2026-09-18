@@ -3,20 +3,21 @@ kind: BLUEPRINT
 metadata:
   slug: postgres
   revision: 1
+  description: A single PostgreSQL database with a generated superuser password.
 spec:
-  components:
-    db:
-      componentRef: ./components/postgres.yaml
-      size: general.standard.small
-      bindings:
-        postgresPassword:
-          type: PARAMETER
-          parameter: postgresPassword
-      volumes:
-        data:
-          sizeGiB: 10
   parameters:
     postgresPassword:
       generator:
         byteLength: 32
         encoding: BASE64URL
+  components:
+    db:
+      componentRef: ./components/postgres.yaml
+      compute:
+        profile: general.standard.small
+      volumes:
+        data:
+          sizeGiB: 10
+      bindings:
+        postgresPassword:
+          parameter: postgresPassword

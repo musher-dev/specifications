@@ -5,10 +5,11 @@ kind: LISTING
 metadata:
   slug: postgres
   revision: 1
+  description: A PostgreSQL database.
 spec:
   components:
     db:
       componentRef: ./components/postgres.yaml
-      size: general.standard.small
-      connections: {}
+      compute:
+        profile: general.standard.small
   parameters: {}

@@ -3,24 +3,26 @@ kind: BLUEPRINT
 metadata:
   slug: acme-wiki
   revision: 1
+  description: Synthetic conformance fixture blueprint.
 spec:
+  parameters: {}
   components:
     db:
       componentRef: ./components/postgres.yaml
-      size: general.standard.small
-      bindings: {}
+      compute:
+        profile: general.standard.small
+      volumes: {}
       exposure:
         primary: PRIVATE
-      volumes: {}
+      bindings: {}
     web:
       componentRef: ./components/web.yaml
-      size: general.standard.small
-      bindings:
-        databaseUrl:
-          type: OUTPUT
-          node: db
-          output: connectionString
+      compute:
+        profile: general.standard.small
+      volumes: {}
       exposure:
         web: PRIVATE
-      volumes: {}
-  parameters: {}
+      bindings:
+        databaseUrl:
+          node: db
+          output: connectionString

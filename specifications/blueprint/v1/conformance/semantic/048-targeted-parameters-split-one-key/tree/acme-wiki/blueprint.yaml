@@ -3,26 +3,8 @@ kind: BLUEPRINT
 metadata:
   slug: acme-wiki
   revision: 1
+  description: Synthetic conformance fixture blueprint.
 spec:
-  components:
-    payments:
-      componentRef: ./components/payments.yaml
-      size: general.standard.small
-      bindings:
-        apiKey:
-          type: PARAMETER
-          parameter: stripeKey
-      exposure: {}
-      volumes: {}
-    mailer:
-      componentRef: ./components/mailer.yaml
-      size: general.standard.small
-      bindings:
-        apiKey:
-          type: PARAMETER
-          parameter: sendgridKey
-      exposure: {}
-      volumes: {}
   parameters:
     stripeKey:
       ui:
@@ -30,3 +12,22 @@ spec:
     sendgridKey:
       ui:
         label: SendGrid API key
+  components:
+    payments:
+      componentRef: ./components/payments.yaml
+      compute:
+        profile: general.standard.small
+      volumes: {}
+      exposure: {}
+      bindings:
+        apiKey:
+          parameter: stripeKey
+    mailer:
+      componentRef: ./components/mailer.yaml
+      compute:
+        profile: general.standard.small
+      volumes: {}
+      exposure: {}
+      bindings:
+        apiKey:
+          parameter: sendgridKey

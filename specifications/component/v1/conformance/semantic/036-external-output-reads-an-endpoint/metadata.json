@@ -1,0 +1,10 @@
+{
+  "id": "semantic-036-external-output-reads-an-endpoint",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#external",
+  "requirements": [
+    "COMP-EXT-004"
+  ],
+  "summary": "An EXTERNAL component publishing an endpoint property is rejected; it declares no endpoint."
+}

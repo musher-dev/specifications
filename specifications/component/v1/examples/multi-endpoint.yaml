@@ -2,30 +2,30 @@ specVersion: v1
 kind: COMPONENT
 metadata:
   revision: 1
+  description: Message broker with an HTTP API, an admin console, a TCP wire protocol and a metrics endpoint.
 spec:
+  type: SERVICE
   workload:
-    type: SERVICE
     source:
-      type: IMAGE
-      ref: nginx:1.29.4-alpine
+      image: nginx:1.29.4-alpine
     endpoints:
       api:
-        containerPort: 8080
+        targetPort: 8080
         protocol: HTTP
       console:
-        containerPort: 8081
+        targetPort: 8081
         protocol: HTTP
       wire:
-        containerPort: 5671
+        targetPort: 5671
         protocol: TCP
       metrics:
-        containerPort: 9090
+        targetPort: 9090
         protocol: HTTP
     health:
       readiness:
-        path: /healthz
-        endpoint: api
-        type: HTTP
+        http:
+          endpoint: api
+          path: /healthz
   contract:
     inputs:
       consoleUrl:
@@ -63,6 +63,5 @@ spec:
         schema:
           type: string
         presentationHint: ENDPOINT_URL
-        source:
-          type: TEMPLATE
-          template: https://${{ self.publicHostname.console }}/admin
+        from:
+          template: "https://${{ self.endpoints.console.publicHostname }}/admin"

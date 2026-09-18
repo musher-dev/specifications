@@ -1,0 +1,18 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: SERVICE
+  workload:
+    source:
+      image: nginx:1.29.4-alpine
+      git:
+        repositoryURL: https://github.com/musher-dev/examples
+        build:
+          dockerfile: Dockerfile
+    endpoints:
+      web:
+        targetPort: 8080
+        protocol: HTTP

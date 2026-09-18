@@ -1,0 +1,10 @@
+{
+  "id": "structural-046-parameter-with-from-and-default",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#parameters",
+  "requirements": [
+    "BP-PARAM-010"
+  ],
+  "summary": "A parameter carrying both from and a default is rejected: it is supplied one way."
+}

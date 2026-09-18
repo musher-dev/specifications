@@ -3,29 +3,8 @@ kind: BLUEPRINT
 metadata:
   slug: acme-wiki
   revision: 1
+  description: Synthetic conformance fixture blueprint.
 spec:
-  components:
-    db:
-      componentRef: ./components/postgres.yaml
-      size: general.standard.small
-      bindings: {}
-      exposure:
-        primary: PRIVATE
-      volumes: {}
-    web:
-      componentRef: ./components/web.yaml
-      size: general.standard.small
-      bindings:
-        databaseUrl:
-          type: OUTPUT
-          node: db
-          output: connectionString
-        adminPassword:
-          type: PARAMETER
-          parameter: adminPassword
-      exposure:
-        primary: PRIVATE
-      volumes: {}
   parameters:
     adminPassword:
       ui:
@@ -33,3 +12,25 @@ spec:
     databaseUrl:
       ui:
         label: Database URL
+  components:
+    db:
+      componentRef: ./components/postgres.yaml
+      compute:
+        profile: general.standard.small
+      volumes: {}
+      exposure:
+        primary: PRIVATE
+      bindings: {}
+    web:
+      componentRef: ./components/web.yaml
+      compute:
+        profile: general.standard.small
+      volumes: {}
+      exposure:
+        primary: PRIVATE
+      bindings:
+        databaseUrl:
+          node: db
+          output: connectionString
+        adminPassword:
+          parameter: adminPassword

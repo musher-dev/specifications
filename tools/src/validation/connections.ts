@@ -10,7 +10,7 @@ export interface ConnectionSelection {
   readonly identity: string
   readonly version: string
   readonly installation: string
-  readonly slot: string
+  readonly parameter: string
   readonly source: {
     readonly reference: string
     readonly identity: string
@@ -45,7 +45,7 @@ export type ConnectionAcquisition =
 export interface ConnectionsContext {
   readonly connections?: {
     readonly installation: string
-    readonly slots: Readonly<Record<string, ConnectionAcquisition>>
+    readonly parameters: Readonly<Record<string, ConnectionAcquisition>>
   }
 }
 const record = (v: unknown): Record<string, Json> =>
@@ -96,42 +96,71 @@ export function connectionRequirementDiagnostics(component: Json): Diagnostic[] 
   }
   return out
 }
+/** The namespaces a parameter's `from` admits (blueprint BP-REF-001). */
+export const PARAMETER_SOURCE_NAMESPACES = ['variables', 'connections'] as const
+export type ParameterSourceNamespace = (typeof PARAMETER_SOURCE_NAMESPACES)[number]
+/**
+ * BP-REF-001: a parameter's `from` is one whole reference, and its namespace
+ * says what it names. Undefined when the parameter has no `from` or the
+ * reference is not one whole admitted reference.
+ */
+export function parameterSource(
+  parameter: Json | undefined,
+): { namespace: ParameterSourceNamespace; key: string; reference: string } | undefined {
+  const from = at(parameter, 'from')
+  if (typeof from !== 'string') return
+  const scan = scanReferences(from, PARAMETER_SOURCE_NAMESPACES)
+  const [reference] = scan.references
+  if (scan.failures.length || scan.references.length !== 1 || reference?.raw !== from) return
+  return {
+    namespace: reference.namespace as ParameterSourceNamespace,
+    key: reference.path.join('.'),
+    reference: from,
+  }
+}
+export function parameterSourceDiagnostics(
+  name: string,
+  parameter: Json | undefined,
+): Diagnostic[] {
+  const from = at(parameter, 'from')
+  if (typeof from !== 'string') return []
+  const path = '/spec/parameters/' + token(name) + '/from'
+  const scan = scanReferences(from, PARAMETER_SOURCE_NAMESPACES)
+  // Core's codes (CORE-REF-001..003) name what is wrong with a reference itself.
+  if (scan.failures.length)
+    return scan.failures.map((failure) =>
+      diagnostic(
+        failure.kind === 'malformed'
+          ? 'ERR_MALFORMED_REFERENCE'
+          : failure.kind === 'unknown-namespace'
+            ? 'ERR_UNKNOWN_REFERENCE_NAMESPACE'
+            : 'ERR_REFERENCE_NOT_IN_SCOPE',
+        path,
+      ),
+    )
+  return parameterSource(parameter) ? [] : [diagnostic('ERR_INVALID_PARAMETER_SOURCE', path)]
+}
+/** BP-CONNECTION-001: requirements are bound to connection parameters, and nothing else. */
 export function connectionBindingDiagnostics(
   blueprint: Json,
   components: ReadonlyMap<string, Json>,
 ): Diagnostic[] {
   const out: Diagnostic[] = [],
-    sources = record(at(blueprint, 'spec', 'connectionSources'))
-  const used = new Set<string>()
-  for (const [slot, source] of Object.entries(sources)) {
-    const scan = scanReferences(String(at(source, 'source')), ['config'])
-    if (
-      scan.failures.length ||
-      scan.references.length !== 1 ||
-      scan.references[0]?.raw !== at(source, 'source')
-    )
-      out.push(
-        diagnostic(
-          'ERR_INVALID_CONFIG_REFERENCE',
-          '/spec/connectionSources/' + token(slot) + '/source',
-        ),
-      )
-  }
+    parameters = record(at(blueprint, 'spec', 'parameters'))
   for (const [node, n] of Object.entries(record(at(blueprint, 'spec', 'components')))) {
     const component = components.get(node),
       componentRequirements = requirements(component)
     const base = '/spec/components/' + token(node),
       bindings = record(at(n, 'connectionBindings'))
     for (const [name, binding] of Object.entries(bindings)) {
-      const slot = String(at(binding, 'source'))
-      used.add(slot)
-      if (
-        (component && !Object.hasOwn(componentRequirements, name)) ||
-        !Object.hasOwn(sources, slot)
-      )
-        out.push(
-          diagnostic('ERR_INVALID_CONNECTION_BINDING', base + '/connectionBindings/' + token(name)),
-        )
+      const parameter = String(at(binding, 'parameter')),
+        path = base + '/connectionBindings/' + token(name)
+      if (component && !Object.hasOwn(componentRequirements, name))
+        out.push(diagnostic('ERR_INVALID_CONNECTION_BINDING', path))
+      if (!Object.hasOwn(parameters, parameter))
+        out.push(diagnostic('ERR_UNKNOWN_PARAMETER', path + '/parameter'))
+      else if (parameterSource(parameters[parameter])?.namespace !== 'connections')
+        out.push(diagnostic('ERR_INVALID_CONNECTION_BINDING', path + '/parameter'))
     }
     if (!component) continue
     for (const name of Object.keys(componentRequirements))
@@ -141,17 +170,12 @@ export function connectionBindingDiagnostics(
       if (Object.hasOwn(record(at(n, 'bindings')), key))
         out.push(diagnostic('ERR_INVALID_CONNECTION_BINDING', base + '/bindings/' + token(key)))
   }
-  for (const slot of Object.keys(sources))
-    if (!used.has(slot))
-      out.push(
-        diagnostic('ERR_INVALID_CONNECTION_BINDING', '/spec/connectionSources/' + token(slot)),
-      )
   return out
 }
 function validSelection(
   value: unknown,
   installation: string,
-  slot: string,
+  parameter: string,
 ): value is ConnectionSelection {
   if (!boundedValue(value as Json)) return false
   const s = record(value),
@@ -162,7 +186,7 @@ function validSelection(
     !text(s.identity) ||
     !text(s.version) ||
     s.installation !== installation ||
-    s.slot !== slot ||
+    s.parameter !== parameter ||
     !text(at(s.source, 'reference')) ||
     !text(at(s.source, 'identity')) ||
     !text(at(s.source, 'version')) ||
@@ -208,16 +232,23 @@ export function resolveConnections(
     { value: Json; sensitive: boolean; identity: string; version: string }
   > = Object.create(null)
   const selections = new Map<string, ConnectionSelection>()
-  const sources = record(at(blueprint, 'spec', 'connectionSources'))
-  for (const slot of Object.keys(record(context?.slots)))
-    if (!Object.hasOwn(sources, slot))
+  const sources = Object.fromEntries(
+    Object.entries(record(at(blueprint, 'spec', 'parameters'))).flatMap(([name, p]) => {
+      const source = parameterSource(p)
+      return source?.namespace === 'connections' ? [[name, source.reference]] : []
+    }),
+  )
+  for (const parameter of Object.keys(record(context?.parameters)))
+    if (!Object.hasOwn(sources, parameter))
       diagnostics.push(diagnostic('ERR_INVALID_RESOLUTION_CONTEXT', '/spec', true))
-  for (const slot of Object.keys(sources)) {
-    const path = '/spec/connectionSources/' + token(slot)
+  for (const parameter of Object.keys(sources)) {
+    const path = '/spec/parameters/' + token(parameter)
     const acquired =
-      context?.slots && Object.hasOwn(context.slots, slot) ? context.slots[slot] : undefined
+      context?.parameters && Object.hasOwn(context.parameters, parameter)
+        ? context.parameters[parameter]
+        : undefined
     if (!acquired || acquired.status === 'NOT_ACQUIRED') {
-      deferred.push({ rule: 'BP-CONNECTION-002', path, missing: 'connection:' + slot })
+      deferred.push({ rule: 'BP-CONNECTION-002', path, missing: 'connection:' + parameter })
       continue
     }
     if (acquired.status !== 'SELECTED') {
@@ -232,8 +263,8 @@ export function resolveConnections(
     } else if (
       !context?.installation ||
       acquired.persisted !== true ||
-      !validSelection(acquired.selection, context.installation, slot) ||
-      acquired.selection.source.reference !== at(sources[slot], 'source')
+      !validSelection(acquired.selection, context.installation, parameter) ||
+      acquired.selection.source.reference !== sources[parameter]
     ) {
       diagnostics.push(diagnostic('ERR_INVALID_RESOLUTION_CONTEXT', path, true))
     } else {
@@ -243,15 +274,15 @@ export function resolveConnections(
           (previous.kind === 'MANAGED' || acquired.selection.kind === 'MANAGED'),
       )
       if (conflicting) diagnostics.push(diagnostic('ERR_INVALID_RESOLUTION_CONTEXT', path, true))
-      else selections.set(slot, acquired.selection)
+      else selections.set(parameter, acquired.selection)
     }
   }
   for (const [node, n] of Object.entries(record(at(blueprint, 'spec', 'components')))) {
     const component = components.get(node)
     for (const [name, requirement] of Object.entries(requirements(component))) {
       const path = '/spec/components/' + token(node) + '/connectionBindings/' + token(name)
-      const slot = String(at(n, 'connectionBindings', name, 'source')),
-        selection = selections.get(slot)
+      const parameter = String(at(n, 'connectionBindings', name, 'parameter')),
+        selection = selections.get(parameter)
       if (!selection) continue
       const view = selection.views[String(at(requirement, 'protocol')) as ConnectionProtocol]
       const required = at(requirement, 'capabilities') ?? []
@@ -301,20 +332,20 @@ export interface ConnectionStore {
 export function selectConnection(
   store: ConnectionStore,
   installation: string,
-  slot: string,
+  parameter: string,
   generation: number,
   acquire: (idempotencyKey: string) => ConnectionSelection,
   authorized: (selection: ConnectionSelection) => boolean,
 ): ConnectionAcquisition {
-  if (!installation || !slot || !Number.isSafeInteger(generation) || generation < 0)
+  if (!installation || !parameter || !Number.isSafeInteger(generation) || generation < 0)
     throw new Error('invalid connection operation identity')
-  const key = JSON.stringify([installation, slot, generation])
+  const key = JSON.stringify([installation, parameter, generation])
   const denied = new Error('connection denied')
   let selection: ConnectionSelection
   try {
     selection = store.getOrCreate(key, () => {
       const selected = acquire(key)
-      if (!validSelection(selected, installation, slot))
+      if (!validSelection(selected, installation, parameter))
         throw new Error('invalid connection selection')
       if (!authorized(selected)) throw denied
       return selected
@@ -323,7 +354,7 @@ export function selectConnection(
     if (error === denied) return { status: 'DENIED' }
     throw error
   }
-  if (!validSelection(selection, installation, slot))
+  if (!validSelection(selection, installation, parameter))
     throw new Error('invalid persisted connection')
   // Reuse of immutable state is never permission to bypass current revocation.
   if (!authorized(selection)) return { status: 'DENIED' }

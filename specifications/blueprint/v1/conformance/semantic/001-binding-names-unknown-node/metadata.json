@@ -1,0 +1,7 @@
+{
+  "id": "semantic-001-binding-names-unknown-node",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#connections",
+  "summary": "A binding whose node names no node in this blueprint is rejected."
+}

@@ -1,0 +1,10 @@
+{
+  "id": "structural-088-job-without-a-schedule",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v1/spec.md#workload",
+  "requirements": [
+    "COMP-TYPE-004"
+  ],
+  "summary": "A JOB without a schedule validates; it runs once per rollout."
+}

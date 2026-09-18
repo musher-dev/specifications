@@ -2,15 +2,15 @@ specVersion: v1
 kind: COMPONENT
 metadata:
   revision: 1
+  description: Synthetic conformance fixture component.
 spec:
+  type: SERVICE
   workload:
-    type: SERVICE
     source:
-      type: IMAGE
-      ref: ghcr.io/musher-dev/mailer:1.4.2
+      image: ghcr.io/musher-dev/mailer:1.4.2
     endpoints:
       web:
-        containerPort: 8080
+        targetPort: 8080
         protocol: HTTP
   contract:
     inputs:

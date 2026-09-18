@@ -1044,6 +1044,22 @@ const UNPINNED: ReadonlyMap<string, string> = new Map([
     'metadata is required by every fixture in every corpus, so no single case pins it',
   ],
   ['CORE-ENV-004', 'spec is required by every fixture in every corpus, so no single case pins it'],
+  [
+    'COMP-JOB-001',
+    'When an unscheduled JOB runs (once per rollout, ordered against nothing) is a ' +
+      'runtime obligation of the platform; no document phase or behavioural operation ' +
+      'observes a rollout',
+  ],
+  [
+    'COMP-JOB-003',
+    'The time zone a schedule is evaluated in is a runtime obligation of the scheduler; ' +
+      'a document states no time zone, and no behavioural operation observes a run',
+  ],
+  [
+    'COMP-JOB-004',
+    'Skipping a run due while the previous one executes is a runtime obligation of the ' +
+      'scheduler; no document phase or behavioural operation observes a run',
+  ],
 ])
 
 /**

@@ -2,18 +2,18 @@ specVersion: v1
 kind: COMPONENT
 metadata:
   revision: 1
+  description: Synthetic conformance fixture component.
 spec:
+  type: SERVICE
   workload:
-    type: SERVICE
     source:
-      type: IMAGE
-      ref: ghcr.io/musher-dev/broker:3.13.7
+      image: ghcr.io/musher-dev/broker:3.13.7
     endpoints:
       amqp:
-        containerPort: 5672
+        targetPort: 5672
         protocol: TCP
       metrics:
-        containerPort: 9090
+        targetPort: 9090
         protocol: HTTP
   contract:
     inputs:
@@ -28,6 +28,5 @@ spec:
         description: Node-specific default address
         schema:
           type: string
-        source:
-          type: TEMPLATE
-          template: amqp://${{ self.publicAddress.amqp }}/vhost
+        from:
+          template: amqp://${{ self.endpoints.amqp.publicAddress }}/vhost

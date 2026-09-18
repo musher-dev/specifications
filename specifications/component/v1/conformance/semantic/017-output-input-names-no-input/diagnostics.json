@@ -1,6 +1,6 @@
 [
   {
     "code": "ERR_UNKNOWN_INPUT_REFERENCE",
-    "path": "/spec/contract/outputs/baseUrl/source/input"
+    "path": "/spec/contract/outputs/baseUrl/from/input"
   }
 ]

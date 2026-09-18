@@ -1,0 +1,10 @@
+{
+  "id": "structural-098-dockerfile-and-buildpacks-in-one-build",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#source",
+  "requirements": [
+    "COMP-SRC-002"
+  ],
+  "summary": "A build naming both a Dockerfile and a buildpacks builder is rejected."
+}

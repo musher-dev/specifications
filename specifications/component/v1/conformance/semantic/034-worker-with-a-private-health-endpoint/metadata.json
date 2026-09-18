@@ -1,0 +1,11 @@
+{
+  "id": "semantic-034-worker-with-a-private-health-endpoint",
+  "phase": "semantic",
+  "expected": "pass",
+  "clause": "specifications/component/v1/spec.md#workload",
+  "requirements": [
+    "COMP-TYPE-003",
+    "COMP-EP-002"
+  ],
+  "summary": "A WORKER may declare a private endpoint and probe it for readiness and liveness."
+}
