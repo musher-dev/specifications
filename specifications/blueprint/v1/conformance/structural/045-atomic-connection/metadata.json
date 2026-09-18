@@ -1,0 +1,10 @@
+{
+  "id": "structural-045-atomic-connection",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/blueprint/v1/spec.md#atomic-connections",
+  "requirements": [
+    "BP-CONNECTION-001"
+  ],
+  "summary": "atomic connection"
+}

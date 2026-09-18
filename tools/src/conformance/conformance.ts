@@ -139,7 +139,7 @@ export function profileFor(implemented: ReadonlySet<Phase>): string | null {
 }
 
 /** A row of a `| Code | Phase | Meaning |` table in a spec.md. */
-const DIAGNOSTIC_ROW = /^\|\s*`(ERR_[A-Z0-9_]+)`\s*\|\s*`([a-z]+)`\s*\|/
+const DIAGNOSTIC_ROW = /^\|\s*`(ERR_[A-Z0-9_]+)`\s*\|\s*((?:`[a-z]+`(?:\s*,\s*)?)+)\s*\|/
 /** A stable heading anchor, `## <a id="envelope"></a>2. Document envelope`. */
 const SPEC_ANCHOR = /<a id="([^"]+)"><\/a>/g
 /**
@@ -153,7 +153,7 @@ const PROSE_CODE = /`(ERR_[A-Z0-9_]+)`/g
 
 interface SpecIndex {
   /** Diagnostic code to the phase the prose assigns it. */
-  readonly codes: ReadonlyMap<string, Phase>
+  readonly codes: ReadonlyMap<string, readonly Phase[]>
   readonly anchors: ReadonlySet<string>
   /** Sections and the section each requirement is declared under. */
   readonly outline: Outline
@@ -169,10 +169,14 @@ function specIndex(path: string): SpecIndex | undefined {
   let index: SpecIndex | undefined
   if (existsSync(path)) {
     const source = readFileSync(path, 'utf8')
-    const codes = new Map<string, Phase>()
+    const codes = new Map<string, readonly Phase[]>()
     for (const line of source.split('\n')) {
       const row = DIAGNOSTIC_ROW.exec(line)
-      if (row?.[1] !== undefined && row[2] !== undefined) codes.set(row[1], row[2] as Phase)
+      if (row?.[1] !== undefined && row[2] !== undefined)
+        codes.set(
+          row[1],
+          [...row[2].matchAll(/`([a-z]+)`/g)].map((m) => m[1] as Phase),
+        )
     }
     const anchors = new Set<string>()
     for (const match of source.matchAll(SPEC_ANCHOR)) {
@@ -185,7 +189,7 @@ function specIndex(path: string): SpecIndex | undefined {
 }
 
 /** The codes one spec.md's diagnostics table declares; empty when it has none. */
-function codesOf(specPath: string): ReadonlyMap<string, Phase> {
+function codesOf(specPath: string): ReadonlyMap<string, readonly Phase[]> {
   return specIndex(specPath)?.codes ?? new Map()
 }
 
@@ -220,7 +224,7 @@ function requirementIndex(families: readonly Family[]): Map<string, string> {
 /** What a corpus may draw on: the codes it may declare, and the specs it may cite. */
 export interface Reach {
   /** Every diagnostic code a case in this corpus may declare, with its phase. */
-  readonly registry: ReadonlyMap<string, Phase>
+  readonly registry: ReadonlyMap<string, readonly Phase[]>
   /**
    * Absolute paths of every spec.md a case in this corpus may cite: the
    * family's own, core's, and each normative dependency its §2 declares.
@@ -324,7 +328,7 @@ export function resolveReach(
     ...dependencies.filter((d) => d.role === 'core'),
     ...dependencies.filter((d) => d.role !== 'core'),
   ]
-  const registry = new Map<string, Phase>()
+  const registry = new Map<string, readonly Phase[]>()
   for (const dependency of ordered) {
     for (const [code, phase] of codesOf(dependency.specPath)) registry.set(code, phase)
   }
@@ -760,7 +764,7 @@ function checkCaseShape(
           `${relativeToRepo(family.specPath)}`,
       )
       ok = false
-    } else if (declaredPhase !== metadata.phase) {
+    } else if (!declaredPhase.includes(metadata.phase)) {
       failures.add(
         `${label}: ${item.code} is a ${declaredPhase}-phase code but the case declares ` +
           `${metadata.phase}`,
@@ -843,7 +847,7 @@ function checkEffective(
 function runValidation(family: Family, caseDir: string, metadata: CaseMetadata) {
   if (metadata.document === undefined) {
     return validateDocument(family, readFileSync(join(caseDir, 'case.yaml')), {
-      profile: metadata.phase === 'structural' ? 'structural' : 'document',
+      validationProfile: metadata.phase === 'structural' ? 'structural' : 'document',
     })
   }
 
@@ -851,7 +855,7 @@ function runValidation(family: Family, caseDir: string, metadata: CaseMetadata) 
   try {
     const documentPath = join(scratch, metadata.document)
     return validateDocument(family, readFileSync(documentPath), {
-      profile: metadata.phase === 'structural' ? 'structural' : 'document',
+      validationProfile: metadata.phase === 'structural' ? 'structural' : 'document',
       itemRoot: dirname(documentPath),
       documentPath,
     })

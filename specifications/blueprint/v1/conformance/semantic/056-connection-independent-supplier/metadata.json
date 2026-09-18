@@ -1,0 +1,11 @@
+{
+  "id": "semantic-056-connection-independent-supplier",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#atomic-connections",
+  "requirements": [
+    "BP-CONNECTION-001"
+  ],
+  "summary": "connection independent supplier",
+  "document": "connection-app/blueprint.yaml"
+}

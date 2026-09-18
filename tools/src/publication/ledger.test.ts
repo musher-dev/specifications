@@ -96,7 +96,7 @@ describe('validateLedger', () => {
           'component/v1.0.0': { ...kindEntry, requires: { core: '1.0.0', listing: '1.0.0' } },
         },
       }),
-    ).toEqual([expect.stringContaining('unknown family "listing"')])
+    ).toEqual([])
   })
 
   test('rejects a non-tag key, an unknown field, a bad tree, and a path that escapes', () => {

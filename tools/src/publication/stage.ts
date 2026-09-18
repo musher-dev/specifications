@@ -17,8 +17,8 @@
  * A kind family stages `<family>.schema.json` and `<family>-v<X.Y.Z>.tar.gz`.
  * The archive's root `<family>-v<major>/` holds the bundle, `spec.md`,
  * `examples/`, `conformance/` with the fixture format as `conformance/README.md`,
- * `core/spec.md` and `core/conformance/` read from `core/v<requires.core>` —
- * not from the family tag, which may differ by non-releasable core commits —
+ * dependency specifications and corpora read from their exact tags, plus
+ * dependency schemas read from verified published assets — never rebuilt —
  * `LICENSE`, `NOTICE`, and `release.json`. Core stages only its archive.
  *
  * Every file is read out of git at a tag, never from the working tree. The
@@ -57,6 +57,7 @@ import {
   LayoutError,
   LICENSE_FILE,
   NOTICE_FILE,
+  RELEASE_CACHE_DIR,
   RELEASE_STAGE_DIR,
   REPO_ROOT,
   releaseDirPaths,
@@ -64,6 +65,8 @@ import {
 import { pinnedBundle } from '../schema/bundle.ts'
 import { gitReader } from '../schema/sources.ts'
 import { assertCoreGateTaggedContent } from './core-gate.ts'
+import { assertDependencyContent, dependencyClosure } from './dependency-gate.ts'
+import { readCachedBundle, readPendingReleases } from './fetch.ts'
 import { type AnyLedger, ledgerAtRef, sameEntry } from './ledger.ts'
 import { assetNames, isCore, parseReleaseTag, releaseTag, sha256 } from './releases.ts'
 
@@ -100,8 +103,6 @@ export function archiveEnv(env: NodeJS.ProcessEnv = process.env): NodeJS.Process
   return { ...rest, LC_ALL: 'C' }
 }
 
-/** Where core's files sit inside a kind family archive. */
-const CORE_MEMBER = CORE_FAMILY
 const RELEASE_MANIFEST = 'release.json'
 
 /** Copy every file under `from` at `ref` to `to`, keeping relative paths. Returns the count. */
@@ -245,6 +246,8 @@ export function stageRelease(
       }
       const failures = new Failures()
       assertCoreGateTaggedContent(repoRoot, tag, requires.core, failures, entry.path)
+      assertDependencyContent(repoRoot, tag, entry.path, requires, failures, [], tag)
+      const dependencies = dependencyClosure(repoRoot, tag, requires, failures, ledger, tag)
       if (failures.count > 0) throw new StageError(failures.messages.join('\n'))
 
       if (entry.path !== familyPaths(release.family, release.major).dir) {
@@ -272,21 +275,52 @@ export function stageRelease(
       }
 
       const coreTag = releaseTag(CORE_FAMILY, requires.core)
-      const coreLine = `v${requires.core.split('.')[0]}`
-      const corePath = ledger.releases[coreTag]?.path ?? familyPaths(CORE_FAMILY, coreLine).dir
-      const coreDir = releaseDirPaths(corePath)
       writeMember(join(root, names.bundle), bundle)
       if (hasPart(release.family, release.major, 'examples')) {
         requireTree(repoRoot, tag, dir.examples, join(root, 'examples'))
       } else {
         extractTree(repoRoot, tag, dir.examples, join(root, 'examples'))
       }
-      requireFile(repoRoot, coreTag, coreDir.spec, join(root, CORE_MEMBER, 'spec.md'))
-      requireTree(repoRoot, coreTag, coreDir.conformance, join(root, CORE_MEMBER, 'conformance'))
+      const dependencyManifest: Record<string, Json> = {}
+      const pendingDependencies = readPendingReleases(inRepo(repoRoot, RELEASE_CACHE_DIR))
+      for (const [family, dependency] of dependencies) {
+        if (pendingDependencies.has(dependency.tag))
+          throw new StageError(`${tag}: dependency ${dependency.tag} has not been published`)
+        const paths = releaseDirPaths(dependency.entry.path)
+        requireFile(repoRoot, dependency.tag, paths.spec, join(root, family, 'spec.md'))
+        requireTree(repoRoot, dependency.tag, paths.conformance, join(root, family, 'conformance'))
+        requireFile(
+          repoRoot,
+          dependency.tag,
+          CONFORMANCE_FORMAT_FILE,
+          join(root, family, 'conformance', 'README.md'),
+        )
+        extractTree(repoRoot, dependency.tag, paths.examples, join(root, family, 'examples'))
+        if (dependency.entry.bundleSha256 !== null) {
+          const bytes = readCachedBundle(
+            inRepo(repoRoot, RELEASE_CACHE_DIR),
+            dependency.tag,
+            dependency.entry.bundleSha256,
+          )
+          if (bytes === null)
+            throw new StageError(
+              `${tag}: verified dependency bundle ${dependency.tag} is missing; run task site:fetch`,
+            )
+          writeMember(join(root, family, `${family}.schema.json`), bytes)
+        }
+        dependencyManifest[family] = {
+          tag: dependency.tag,
+          commit: tagCommit(repoRoot, dependency.tag),
+          tree: dependency.entry.tree,
+          bundleSha256: dependency.entry.bundleSha256,
+          requires: { ...dependency.entry.requires },
+        }
+      }
       const manifest: Json = {
         tag,
         commit,
-        requires: { core: requires.core },
+        requires: { ...requires },
+        dependencies: dependencyManifest,
         bundleSha256: entry.bundleSha256,
         coreTag,
         coreCommit: tagCommit(repoRoot, coreTag),

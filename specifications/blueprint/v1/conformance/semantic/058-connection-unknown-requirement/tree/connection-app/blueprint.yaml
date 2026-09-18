@@ -1,0 +1,29 @@
+{
+  "specVersion": "v1",
+  "kind": "BLUEPRINT",
+  "metadata": {
+    "slug": "connection-app",
+    "revision": 1
+  },
+  "spec": {
+    "connectionSources": {
+      "primary": {
+        "source": "${{ config.llm.default }}"
+      }
+    },
+    "components": {
+      "app": {
+        "componentRef": "./component.yaml",
+        "size": "general.standard.small",
+        "connectionBindings": {
+          "llm": {
+            "source": "primary"
+          },
+          "other": {
+            "source": "primary"
+          }
+        }
+      }
+    }
+  }
+}

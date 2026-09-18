@@ -10,7 +10,7 @@
 import { describe, expect, test } from 'bun:test'
 import { discoverKinds, type Json } from '../lib/layout.ts'
 import { familyBundle } from '../schema/bundle.ts'
-import { buildReference, type Shape } from './reference.ts'
+import { buildReference, renderReference, type Shape } from './reference.ts'
 
 function model(defs: { [k: string]: Json }, root: { [k: string]: Json } = {}) {
   return buildReference(
@@ -380,4 +380,16 @@ describe('the published bundles', () => {
     )
     expect(notes).toEqual([])
   })
+})
+
+test('a null default remains an annotation in rendered reference', () => {
+  const html = renderReference(model(withField({ type: 'string', default: null })), {
+    schemaPath: '/schema.json',
+    prosePath: null,
+    examplesPath: null,
+    sourceUrl: '/source',
+    links: null,
+  })
+  expect(html).toContain('documented default <code>null</code>')
+  expect(html).not.toContain('absent means')
 })

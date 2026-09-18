@@ -431,6 +431,36 @@
       "id": "semantic-053-reject-public-service-without-readiness",
       "phase": "semantic",
       "path": "semantic/053-reject-public-service-without-readiness"
+    },
+    {
+      "id": "structural-045-atomic-connection",
+      "phase": "structural",
+      "path": "structural/045-atomic-connection"
+    },
+    {
+      "id": "semantic-054-atomic-connection",
+      "phase": "semantic",
+      "path": "semantic/054-atomic-connection"
+    },
+    {
+      "id": "semantic-055-connection-unknown-slot",
+      "phase": "semantic",
+      "path": "semantic/055-connection-unknown-slot"
+    },
+    {
+      "id": "semantic-056-connection-independent-supplier",
+      "phase": "semantic",
+      "path": "semantic/056-connection-independent-supplier"
+    },
+    {
+      "id": "semantic-057-connection-missing-binding",
+      "phase": "semantic",
+      "path": "semantic/057-connection-missing-binding"
+    },
+    {
+      "id": "semantic-058-connection-unknown-requirement",
+      "phase": "semantic",
+      "path": "semantic/058-connection-unknown-requirement"
     }
   ]
 }

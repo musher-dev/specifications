@@ -1,0 +1,6 @@
+[
+  {
+    "code": "ERR_INVALID_CONNECTION_REQUIREMENT",
+    "path": "/spec/contract/connectionRequirements/llm/inputs/apiKey"
+  }
+]

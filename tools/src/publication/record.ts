@@ -9,11 +9,11 @@
  * For each manifest version that is not tagged it writes `path`, `tree` (git's
  * tree id of the family version directory at HEAD), `bundleSha256` (the pinned
  * bundle built from HEAD, null for core) and, for a kind family,
- * `requires.core` (core's manifest version). It inserts or updates such pending
+ * `requires` (exact manifest versions of its declared dependencies). It inserts or updates such pending
  * entries — a branch updated from `main` is re-recorded, not left stale — and
  * never rewrites an entry whose tag exists.
  *
- * The core gate runs before anything is written.
+ * The dependency gates run before anything is written.
  *
  * NON-NORMATIVE, like everything under tools/.
  */
@@ -29,11 +29,8 @@ import {
 } from '../lib/layout.ts'
 import { pinnedBundle } from '../schema/bundle.ts'
 import { gitReader } from '../schema/sources.ts'
-import {
-  assertCoreGatePending,
-  coreManifestVersionFor,
-  type PendingKindRelease,
-} from './core-gate.ts'
+import { assertCoreGatePending, type PendingKindRelease } from './core-gate.ts'
+import { assertDependencyContent, selectDependencies } from './dependency-gate.ts'
 import { type LedgerEntry, readLedger, sameEntry, serializeLedger } from './ledger.ts'
 import {
   isCore,
@@ -112,9 +109,11 @@ export function record(repoRoot: string): RecordResult {
         problems.push(`${tag}: ${releaseDirPaths(key).src} has no schema modules at HEAD`)
         continue
       }
-      const core = coreManifestVersionFor(repoRoot, key) ?? UNRELEASED_VERSION
-      entry = { path: key, tree, bundleSha256: sha256(bundle), requires: { core } }
-      gated.push({ tag, path: key, requiresCore: core })
+      const selectionFailures = new Failures()
+      const requires = selectDependencies(repoRoot, key, selectionFailures)
+      problems.push(...selectionFailures.messages)
+      entry = { path: key, tree, bundleSha256: sha256(bundle), requires }
+      gated.push({ tag, path: key, requiresCore: requires.core ?? UNRELEASED_VERSION })
     }
 
     const previous = releases[tag]
@@ -126,6 +125,11 @@ export function record(repoRoot: string): RecordResult {
   const failures = new Failures()
   const warnings: string[] = []
   assertCoreGatePending(repoRoot, failures, warnings, gated)
+  for (const pending of gated) {
+    const requires = releases[pending.tag]?.requires
+    if (requires !== undefined)
+      assertDependencyContent(repoRoot, pending.tag, pending.path, requires, failures, warnings)
+  }
   problems.push(...failures.messages)
   if (problems.length > 0) throw new RecordError(problems)
 

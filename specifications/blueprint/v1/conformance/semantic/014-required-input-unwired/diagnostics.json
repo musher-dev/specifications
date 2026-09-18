@@ -1,6 +1,6 @@
 [
   {
     "code": "ERR_UNSATISFIED_REQUIRED_INPUT",
-    "path": "/spec/components/web/bindings/databaseUrl"
+    "path": "/spec/components/web/componentRef"
   }
 ]

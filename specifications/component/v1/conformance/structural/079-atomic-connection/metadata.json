@@ -1,0 +1,10 @@
+{
+  "id": "structural-079-atomic-connection",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v1/spec.md#connection-requirements",
+  "requirements": [
+    "COMP-CONNECTION-001"
+  ],
+  "summary": "atomic connection"
+}

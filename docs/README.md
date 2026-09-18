@@ -19,6 +19,8 @@ every guide by who it is for.
 - [Conformance suite](conformance.md): the fixture format every
   corpus follows, and the profiles an implementation claims. Normative, unlike
   the guides on this page.
+- [Downstream v1 adoption](downstream-v1-adoption.md): platform and catalog
+  migration order, durable connection lifecycle, and gateway verification.
 - [Requirement traceability](traceability.md): every requirement ID, its clause,
   and its cases. Generated.
 

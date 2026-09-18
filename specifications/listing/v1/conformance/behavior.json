@@ -1,31 +1,85 @@
 [
-  {
-    "id": "rendering-escapes-code",
-    "profile": "rendering",
-    "operation": "render",
-    "requirements": [],
-    "input": {
-      "markdown": "`<script>alert(1)</script>`"
-    },
-    "expect": {
-      "/html": "<p><code>&lt;script&gt;alert(1)&lt;/script&gt;</code></p>\n"
-    }
-  },
-  {
-    "id": "rendering-full-media-path",
-    "profile": "rendering",
-    "operation": "render",
-    "requirements": [
-      "LIST-MEDIA-003"
-    ],
-    "input": {
-      "markdown": "![Overview](media/mobile/overview.png)",
-      "media": {
-        "media/mobile/overview.png": "https://assets.invalid/item/media/mobile/overview.png"
-      }
-    },
-    "expect": {
-      "/html": "<p><img src=\"https://assets.invalid/item/media/mobile/overview.png\" alt=\"Overview\" /></p>\n"
-    }
-  }
+	{
+		"id": "rendering-escapes-code",
+		"profile": "rendering",
+		"operation": "render",
+		"requirements": [],
+		"input": {
+			"markdown": "`<script>alert(1)</script>`"
+		},
+		"expect": {
+			"/html": "<p><code>&lt;script&gt;alert(1)&lt;/script&gt;</code></p>\n"
+		}
+	},
+	{
+		"id": "rendering-full-media-path",
+		"profile": "rendering",
+		"operation": "render",
+		"requirements": ["LIST-MEDIA-003"],
+		"input": {
+			"markdown": "![Overview](media/mobile/overview.png)",
+			"media": {
+				"media/mobile/overview.png": "https://assets.invalid/item/media/mobile/overview.png"
+			}
+		},
+		"expect": {
+			"/html": "<p><img src=\"https://assets.invalid/item/media/mobile/overview.png\" alt=\"Overview\" /></p>\n"
+		}
+	},
+	{
+		"id": "rendering-suppresses-raw-html",
+		"profile": "rendering",
+		"operation": "render",
+		"requirements": ["LIST-MD-001"],
+		"input": { "markdown": "<script>alert(1)</script>" },
+		"expect": { "/html": "<!-- raw HTML omitted -->\n" }
+	},
+	{
+		"id": "rendering-permits-fragment",
+		"profile": "rendering",
+		"operation": "render",
+		"requirements": ["LIST-MD-002"],
+		"input": { "markdown": "[Details](#details)" },
+		"expect": { "/html": "<p><a href=\"#details\">Details</a></p>\n" }
+	},
+	{
+		"id": "rendering-rejects-ftp",
+		"profile": "rendering",
+		"operation": "render",
+		"requirements": ["LIST-MD-002"],
+		"input": { "markdown": "[Link](ftp://example.com/file)" },
+		"expect": { "/error": "disallowed link destination" }
+	},
+	{
+		"id": "rendering-rejects-relative",
+		"profile": "rendering",
+		"operation": "render",
+		"requirements": ["LIST-MD-002"],
+		"input": { "markdown": "[Link](guide.md)" },
+		"expect": { "/error": "disallowed link destination" }
+	},
+	{
+		"id": "rendering-rejects-protocol-relative",
+		"profile": "rendering",
+		"operation": "render",
+		"requirements": ["LIST-MD-002"],
+		"input": { "markdown": "[Link](//example.com/path)" },
+		"expect": { "/error": "disallowed link destination" }
+	},
+	{
+		"id": "rendering-rejects-javascript",
+		"profile": "rendering",
+		"operation": "render",
+		"requirements": ["LIST-MD-002"],
+		"input": { "markdown": "[Link](javascript:alert(1))" },
+		"expect": { "/error": "disallowed link destination" }
+	},
+	{
+		"id": "rendering-rejects-unresolved-media",
+		"profile": "rendering",
+		"operation": "render",
+		"requirements": ["LIST-MEDIA-003"],
+		"input": { "markdown": "![Image](media/missing.png)" },
+		"expect": { "/error": "unresolved media" }
+	}
 ]

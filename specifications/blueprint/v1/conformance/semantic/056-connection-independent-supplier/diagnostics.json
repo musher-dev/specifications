@@ -1,0 +1,6 @@
+[
+  {
+    "code": "ERR_INVALID_CONNECTION_BINDING",
+    "path": "/spec/components/app/bindings/url"
+  }
+]

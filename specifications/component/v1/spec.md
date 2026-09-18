@@ -213,6 +213,26 @@ Wrong address families fail with `ERR_ENDPOINT_NOT_HTTP` or
 `ERR_ENDPOINT_NOT_PUBLIC` in blueprint. The allocation context supplies the
 public URL scheme and routing address; a validator MUST NOT invent them.
 
+An authoritative endpoint allocation has opaque `identity` and `version`, an
+optional `privateHostname`, and optional public routing facts: `hostname`,
+`port`, `scheme` and `path`. The public scheme is http, https, ws or wss;
+port is 1–65535. Public routing requires PUBLIC exposure. Hostnames cannot carry
+credentials, a port, a path, query or fragment. Paths start with `/` and carry no
+query, fragment, whitespace or backslash. Allocation views are derived: private
+port comes from the component, addresses join hostname and port (bracketing IPv6),
+and public URL joins the supplied scheme, host, optional port and path with no
+trailing slash. Missing allocation context cannot make a declared private port
+incomplete. Redundant address properties are rejected; independent public URLs,
+hostnames or ports cannot disagree with these facts.
+The authoritative allocation has opaque identity/version, an optional
+privateHostname, and an optional public routing object with hostname and the
+applicable port, scheme and path. Container port comes only from the component.
+Derived views MUST NOT be independently supplied. Missing duplicate copies do
+not defer a property already determined by the component. HTTP-family URL scheme
+is supplied explicitly; the optional path defaults to empty, and the resulting
+URL has no trailing slash. TCP/UDP require an allocated public port. Inconsistent
+or malformed facts fail with blueprint's ERR_INVALID_RESOLUTION_CONTEXT.
+
 ### <a id="env-vars"></a>5.3 Environment variables
 
 `envVars` contains intrinsic non-secret constants as
@@ -346,7 +366,9 @@ outside schema; JSON Schema annotation processing never inserts values.
 <a id="COMP-VAL-005"></a>**`COMP-VAL-005`** — Defaults and statically known values
 MUST satisfy their schemas. Schema defects fail with `ERR_INVALID_VALUE_SCHEMA`;
 value defects fail with `ERR_VALUE_CONSTRAINT`. Resolved dynamic values are
-checked before encoding or workload execution.
+checked before encoding or workload execution. A reference-free TEMPLATE is a
+statically known string after escape processing and follows the same constraint
+and authored-secret rules as a literal.
 <a id="COMP-VAL-006"></a>**`COMP-VAL-006`** — Arrays validate every item. An item
 enumeration constrains members; an array enumeration constrains whole arrays.
 There is no special string-list transport type.
@@ -361,6 +383,26 @@ case-sensitive, without implicit anchors. Implementations MUST bound execution.
 Logical values share core's depth, byte and scalar limits. Numbers use finite
 binary64 values, with integers restricted to the inclusive safe-integer range.
 Unsupported numeric values are rejected, never silently rounded.
+
+### <a id="connection-requirements"></a>6.4 Connection requirements
+
+`contract.connectionRequirements` is an optional map of named atomic connection
+requirements. Names use the input-name grammar. Each requires `protocol` and
+`inputs`, mapping exactly `baseUrl`, `apiKey` and `model` to existing inputs.
+Protocols are OPENAI_CHAT_COMPLETIONS and ANTHROPIC_MESSAGES: client request and
+response contracts, independent of upstream vendor. Optional `capabilities` is a
+unique list of STREAMING and TOOL_CALLS. Unknown terms are rejected, not ignored.
+STREAMING requires incremental protocol-native response events and termination;
+TOOL_CALLS requires protocol-native tool requests and tool-result continuation.
+Omitting capabilities requests only ordinary non-streaming text conversation.
+
+<a id="COMP-CONNECTION-001"></a>**`COMP-CONNECTION-001`** — Every role MUST name a
+required string input with no default. A member belongs to exactly one requirement;
+roles cannot reuse an input. The apiKey role MUST name a sensitive input.
+Failure: `ERR_INVALID_CONNECTION_REQUIREMENT`. The inputs retain their schemas,
+descriptions and environment targets; the group does not duplicate them.
+Credentials are whole values, never templates or concatenated strings. Existing
+sensitivity propagation and secret-publication prohibitions apply.
 
 ## <a id="validation-layers"></a>7. Validation layers
 
@@ -383,10 +425,12 @@ Core diagnostics also apply.
 | `ERR_UNKNOWN_INPUT_REFERENCE` | `semantic` | Output names no own input. |
 | `ERR_INVALID_MOUNT` | `semantic` | Mount is not canonical or overlaps another. |
 | `ERR_INVALID_VALUE_SCHEMA` | `semantic` | Unsupported or invalid logical schema. |
-| `ERR_VALUE_CONSTRAINT` | `semantic` | Known value or source type violates a contract. |
+| `ERR_VALUE_CONSTRAINT` | `semantic`, `resolution` | Known value or source type violates a contract. |
 | `ERR_SECRET_LITERAL` | `semantic` | Authored literal supplies a sensitive contract. |
 | `ERR_VERSION_NOT_MONOTONIC` | `capability` | Published component revision does not increase. |
-| `ERR_ENV_ENCODING` | `capability` | Value cannot be encoded into an environment variable. |
+| `ERR_ENV_ENCODING` | `resolution` | Value cannot be encoded into an environment variable. |
+
+| `ERR_INVALID_CONNECTION_REQUIREMENT` | `semantic` | Invalid connection member or role. |
 
 ## <a id="conformance"></a>9. Conformance
 

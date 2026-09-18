@@ -3,34 +3,66 @@
  * persistence backend or production credential generator is provided here.
  */
 import { createHash } from 'node:crypto'
-import { canonicalJson, discoverKinds, type Family, type Json } from '../lib/layout.ts'
+import { readBindings } from '../lib/bindings.ts'
+import {
+  canonicalJson,
+  discoverFamilies,
+  discoverKinds,
+  type Family,
+  isObject,
+  type Json,
+} from '../lib/layout.ts'
 import { scanReferences } from '../lib/references.ts'
 import { familyBundle } from '../schema/bundle.ts'
 import { strictAjv } from '../schema/lint.ts'
-import { type Diagnostic, parseDocumentBytes } from './document.ts'
+import { type ConnectionsContext, resolveConnections } from './connections.ts'
+import { type Diagnostic, type Phase, parseDocumentBytes } from './document.ts'
 import { at, record, type SemanticContext, semanticReport, token } from './semantic.ts'
 import { compileFamily } from './validator.ts'
 import { boundedValue, encodeEnvironment, valueFits } from './values.ts'
 
+const addressHost = (hostname: string) =>
+  hostname.includes(':') && !hostname.startsWith('[') ? `[${hostname}]` : hostname
+function validHostname(hostname: string): boolean {
+  if (typeof hostname !== 'string' || !hostname || /[\s/@?#\\]/.test(hostname)) return false
+  try {
+    const url = new URL(`http://${addressHost(hostname)}`)
+    return !url.port && !url.username && !url.password
+  } catch {
+    return false
+  }
+}
 export interface ResolvedValue {
   readonly value: Json
   readonly sensitive: boolean
   readonly identity?: string
   readonly version?: string
 }
+export interface EndpointAllocation {
+  readonly identity: string
+  readonly version: string
+  readonly privateHostname?: string
+  readonly public?: {
+    readonly hostname: string
+    readonly port?: number
+    readonly scheme?: string
+    readonly path?: string
+  }
+}
 export interface InstallationContext extends SemanticContext {
+  readonly connections?: ConnectionsContext['connections']
   readonly parameters?: Readonly<Record<string, ResolvedValue>>
   /** Exact dotted config paths, already authorized by the acquisition boundary. */
   readonly configuration?: Readonly<
     Record<string, ResolvedValue & { identity: string; version: string; authorized: boolean }>
   >
-  readonly addresses?: Readonly<
-    Record<string, Readonly<Record<string, Readonly<Record<string, Json>>>>>
-  >
+  readonly allocations?: Readonly<Record<string, Readonly<Record<string, EndpointAllocation>>>>
   readonly credentials?: Readonly<Record<string, ResolvedValue>>
 }
 export interface InstallationResult {
+  /** Describes pre-start value resolution, never current deployment admission. */
   readonly status: 'VALID' | 'INVALID' | 'INCOMPLETE'
+  readonly phase: Phase
   readonly diagnostics: Diagnostic[]
   readonly deferred: { rule: string; path: string; missing: string }[]
   /** Private materialization channel. Never serialize to logs or public plans. */
@@ -48,8 +80,14 @@ export function resolveInstallation(
   if (!boundedValue(document) || !blueprint || !component || !compileFamily(blueprint)(document))
     return {
       status: 'INVALID',
+      phase: 'structural',
       diagnostics: [
-        { code: 'ERR_INVALID_VALUE', path: '', message: 'invalid blueprint structure' },
+        {
+          code: 'ERR_INVALID_VALUE',
+          path: '',
+          message: 'invalid blueprint structure',
+          phase: 'structural',
+        },
       ],
       deferred: [],
       inputs: {},
@@ -68,8 +106,10 @@ export function resolveInstallation(
   const inputs: Record<string, ResolvedValue> = Object.create(null),
     outputs: Record<string, ResolvedValue> = Object.create(null),
     environment: Record<string, Record<string, ResolvedValue>> = Object.create(null)
+  let reached: Phase = 'semantic'
   const result = (): InstallationResult => ({
     status: diagnostics.length ? 'INVALID' : deferred.length ? 'INCOMPLETE' : 'VALID',
+    phase: reached,
     diagnostics,
     deferred,
     inputs: diagnostics.length || deferred.length ? {} : inputs,
@@ -77,6 +117,7 @@ export function resolveInstallation(
     environment: diagnostics.length || deferred.length ? {} : environment,
   })
   if (diagnostics.length || deferred.length) return result()
+  reached = 'resolution'
   const nodes = record(at(document, 'spec', 'components')),
     parameters = record(at(document, 'spec', 'parameters'))
   const parameterSensitivity = new Set<string>()
@@ -87,32 +128,112 @@ export function resolveInstallation(
         at(report.components.get(node), 'spec', 'contract', 'inputs', name, 'sensitive') === true
       )
         parameterSensitivity.add(String(at(b, 'parameter')))
+  const connectionResult = resolveConnections(document, report.components, context.connections)
+  diagnostics.push(...connectionResult.diagnostics)
+  deferred.push(...connectionResult.deferred)
   const active = new Set<string>(),
     done = new Set<string>()
-  const fail = (code: string, path: string) => diagnostics.push({ code, path, message: code })
+  const fail = (code: string, path: string, stage: NonNullable<Diagnostic['stage']> = 'values') =>
+    diagnostics.push({ code, path, message: code, phase: 'resolution', stage })
   const missing = (path: string, what: string) =>
     deferred.push({ rule: 'BP-RESOLVE-001', path, missing: what })
+  for (const name of Object.keys(context.parameters ?? {}))
+    if (!Object.hasOwn(parameters, name))
+      fail('ERR_UNKNOWN_PARAMETER', '/spec/parameters', 'parameters')
+  if (context.allocations !== undefined && !isObject(context.allocations as unknown as Json)) {
+    fail('ERR_INVALID_RESOLUTION_CONTEXT', '/spec/components', 'allocation')
+    return result()
+  }
+  // Reject redundant derived fields: allocation has one authority for each fact.
+  for (const [node, endpoints] of Object.entries(context.allocations ?? {})) {
+    if (!Object.hasOwn(nodes, node) || !isObject(endpoints as unknown as Json)) {
+      fail('ERR_INVALID_RESOLUTION_CONTEXT', '/spec/components', 'allocation')
+      continue
+    }
+    for (const [name, allocation] of Object.entries(endpoints)) {
+      if (
+        !isObject(allocation as unknown as Json) ||
+        (allocation.public !== undefined && !isObject(allocation.public as unknown as Json))
+      ) {
+        fail(
+          'ERR_INVALID_RESOLUTION_CONTEXT',
+          `/spec/components/${token(node)}/componentRef`,
+          'allocation',
+        )
+        continue
+      }
+      const declared = at(report.components.get(node), 'spec', 'workload', 'endpoints', name)
+      const pub = allocation.public
+      if (
+        !declared ||
+        typeof allocation.identity !== 'string' ||
+        !allocation.identity ||
+        typeof allocation.version !== 'string' ||
+        !allocation.version ||
+        Object.keys(allocation).some(
+          (key) => !['identity', 'version', 'privateHostname', 'public'].includes(key),
+        ) ||
+        (allocation.privateHostname !== undefined && !validHostname(allocation.privateHostname)) ||
+        (pub &&
+          (!validHostname(pub.hostname) ||
+            Object.keys(pub).some((key) => !['hostname', 'port', 'scheme', 'path'].includes(key)) ||
+            (pub.port !== undefined &&
+              (!Number.isInteger(pub.port) || pub.port < 1 || pub.port > 65535)) ||
+            (pub.scheme !== undefined && !['http', 'https', 'ws', 'wss'].includes(pub.scheme)) ||
+            (pub.path !== undefined &&
+              (typeof pub.path !== 'string' ||
+                !pub.path.startsWith('/') ||
+                /[?#\\\s]/.test(pub.path))) ||
+            at(nodes[node], 'exposure', name) !== 'PUBLIC'))
+      )
+        fail(
+          'ERR_INVALID_RESOLUTION_CONTEXT',
+          Object.hasOwn(nodes, node)
+            ? `/spec/components/${token(node)}/componentRef`
+            : '/spec/components',
+          'allocation',
+        )
+    }
+  }
+  if (diagnostics.length || deferred.length) return result()
   function endpoint(
     node: string,
     name: string,
     property: string,
     path: string,
   ): ResolvedValue | undefined {
-    const addressNode =
-      context.addresses && Object.hasOwn(context.addresses, node)
-        ? context.addresses[node]
-        : undefined
-    const address = addressNode && Object.hasOwn(addressNode, name) ? addressNode[name] : undefined
-    const value = address && Object.hasOwn(address, property) ? address[property] : undefined
+    const allocation = context.allocations?.[node]?.[name]
+    const port = at(
+      report.components.get(node),
+      'spec',
+      'workload',
+      'endpoints',
+      name,
+      'containerPort',
+    )
+    let value: Json | undefined
+    if (property === 'privatePort') value = port
+    else if (property === 'privateHostname') value = allocation?.privateHostname
+    else if (property === 'privateAddress' && allocation?.privateHostname)
+      value = `${addressHost(allocation.privateHostname)}:${port}`
+    else if (property === 'publicHostname') value = allocation?.public?.hostname
+    else if (property === 'publicPort') value = allocation?.public?.port
+    else if (property === 'publicAddress' && allocation?.public?.port)
+      value = `${addressHost(allocation.public.hostname)}:${allocation.public.port}`
+    else if (property === 'publicUrl' && allocation?.public?.scheme) {
+      const p = allocation.public
+      value = `${p.scheme}://${addressHost(p.hostname)}${p.port === undefined ? '' : ':' + p.port}${(p.path ?? '').replace(/\/+$/, '')}`
+    }
     if (value === undefined) {
-      missing(path, `address:${node}:${name}:${property}`)
+      missing(path, `allocation:${node}:${name}:${property}`)
       return
     }
     return { value, sensitive: false }
   }
   function output(node: string, name: string): ResolvedValue | undefined {
     const id = `${node}:out:${name}`,
-      path = `/spec/components/${token(node)}/outputs/${token(name)}`
+      path = `/spec/components/${token(node)}/componentRef`
+    const diagnosticStart = diagnostics.length
     if (done.has(id)) return outputs[id]
     if (active.has(id)) {
       fail('ERR_VALUE_CYCLE', path)
@@ -160,13 +281,28 @@ export function resolveInstallation(
       if (!valueFits(definition.schema!, value.value)) fail('ERR_VALUE_CONSTRAINT', path)
       else outputs[id] = value
     }
+    for (let i = diagnosticStart; i < diagnostics.length; i++) {
+      const d = diagnostics[i]!
+      if (d.path === path)
+        diagnostics[i] = {
+          ...d,
+          related: [
+            {
+              artifact: String(at(nodes[node], 'componentRef')),
+              path: `/spec/contract/outputs/${token(name)}`,
+            },
+          ],
+        }
+    }
     active.delete(id)
     done.add(id)
     return outputs[id]
   }
   function input(node: string, name: string): ResolvedValue | undefined {
     const id = `${node}:in:${name}`,
-      path = `/spec/components/${token(node)}/bindings/${token(name)}`
+      path = Object.hasOwn(record(at(nodes[node], 'bindings')), name)
+        ? `/spec/components/${token(node)}/bindings/${token(name)}`
+        : `/spec/components/${token(node)}/componentRef`
     if (done.has(id)) return inputs[id]
     if (active.has(id)) {
       fail('ERR_VALUE_CYCLE', path)
@@ -175,8 +311,10 @@ export function resolveInstallation(
     active.add(id)
     const definition = record(at(report.components.get(node), 'spec', 'contract', 'inputs', name)),
       s = record(at(nodes[node], 'bindings', name))
-    let value: ResolvedValue | undefined
-    if (!s.type) {
+    let value: ResolvedValue | undefined = connectionResult.inputs[id]
+    if (value) {
+      /* The grouped connection owns this input. */
+    } else if (!s.type) {
       if (Object.hasOwn(definition, 'default'))
         value = { value: definition.default!, sensitive: false }
       else if (definition.required !== false) fail('ERR_UNSATISFIED_REQUIRED_INPUT', path)
@@ -226,6 +364,10 @@ export function resolveInstallation(
           version: config.version,
         }
     }
+    if (value && (typeof value.sensitive !== 'boolean' || !boundedValue(value.value))) {
+      fail('ERR_INVALID_RESOLUTION_CONTEXT', path)
+      value = undefined
+    }
     if (value) {
       value = {
         ...value,
@@ -266,7 +408,13 @@ export function resolveInstallation(
         try {
           environment[node]![target] = { ...value, value: encodeEnvironment(value.value) }
         } catch {
-          fail('ERR_ENV_ENCODING', `/spec/components/${token(node)}/bindings/${token(name)}`)
+          fail(
+            'ERR_ENV_ENCODING',
+            Object.hasOwn(record(at(nodes[node], 'bindings')), name)
+              ? `/spec/components/${token(node)}/bindings/${token(name)}`
+              : `/spec/components/${token(node)}/componentRef`,
+            'environment',
+          )
         }
       }
     }
@@ -280,7 +428,7 @@ export function resolveInstallation(
       try {
         environment[node]![key] = { value: encodeEnvironment(value), sensitive: false }
       } catch {
-        fail('ERR_ENV_ENCODING', `/spec/components/${token(node)}`)
+        fail('ERR_ENV_ENCODING', `/spec/components/${token(node)}`, 'environment')
       }
     }
     for (const name of Object.keys(
@@ -317,6 +465,7 @@ export function credential(
 export interface ResolutionRecord {
   readonly version: 1
   readonly blueprintDigest: string
+  readonly installationSnapshot: { readonly identity: string; readonly version: string }
   readonly specifications: Readonly<Record<string, string>>
   readonly credentials: Readonly<Record<string, { identity: string; rotation: number }>>
   readonly components: Readonly<
@@ -337,14 +486,161 @@ export interface ResolutionRecord {
   >
   readonly configuration: Readonly<Record<string, { identity: string; version: string }>>
 }
+/** Private, immutable platform state. Version changes whenever any selected fact changes. */
+export interface InstallationSnapshot {
+  readonly formatVersion: 1
+  readonly identity: string
+  readonly version: string
+  readonly parameters: NonNullable<InstallationContext['parameters']>
+  readonly configuration: NonNullable<InstallationContext['configuration']>
+  readonly credentials: Readonly<
+    Record<string, ResolvedValue & { identity: string; rotation: number }>
+  >
+  readonly allocations: NonNullable<InstallationContext['allocations']>
+  readonly connections?: ConnectionsContext['connections']
+}
+export interface RecordContext extends SemanticContext {
+  readonly snapshot: InstallationSnapshot
+  /** Exact release dependency manifests acquired with the pinned specifications. */
+  readonly specificationDependencies: Readonly<Record<string, Readonly<Record<string, string>>>>
+}
 /** A generated record contains identities, never resolved input/output values. */
 export function resolutionRecord(
   blueprint: Uint8Array,
   specifications: Record<string, string>,
   components: ResolutionRecord['components'],
   configuration: ResolutionRecord['configuration'],
-  credentials: ResolutionRecord['credentials'] = {},
+  credentials: ResolutionRecord['credentials'],
+  context: RecordContext,
 ): ResolutionRecord {
+  const parsed = parseDocumentBytes(blueprint)
+  const family = discoverKinds().find((f) => f.name === 'blueprint')!
+  if ('errors' in parsed || !compileFamily(family)(parsed.value))
+    throw new Error('invalid blueprint')
+  const snapshot = context?.snapshot
+  if (
+    !snapshot ||
+    snapshot.formatVersion !== 1 ||
+    !snapshot.identity ||
+    !snapshot.version ||
+    !snapshot.parameters ||
+    !snapshot.configuration ||
+    !snapshot.credentials ||
+    !snapshot.allocations
+  )
+    throw new Error('missing immutable installation snapshot')
+  const report = semanticReport({ name: 'blueprint' }, parsed.value, context)
+  if (report.diagnostics.length || report.deferred.length) throw new Error('unresolved blueprint')
+  const nodes = record(at(parsed.value, 'spec', 'components'))
+  const equal = (a: unknown, b: unknown) => canonicalJson(a as Json) === canonicalJson(b as Json)
+  const sameKeys = (a: object, b: object) => equal(Object.keys(a).sort(), Object.keys(b).sort())
+  if (!sameKeys(nodes, components)) throw new Error('component node set mismatch')
+  const expectedConfig = new Set<string>(),
+    expectedCredentials = new Set<string>()
+  for (const [node, authored] of Object.entries(nodes)) {
+    const c = components[node]!,
+      contract = report.components.get(node)!
+    const source = record(at(contract, 'spec', 'workload', 'source'))
+    const kind = at(contract, 'spec', 'workload') === undefined ? 'EXTERNAL' : source.type
+    if (
+      c.identity !== at(authored, 'componentRef') ||
+      c.revision !== at(contract, 'metadata', 'revision') ||
+      c.digest !== report.componentDigests.get(node) ||
+      c.source !== kind ||
+      !equal(c.volumes, at(authored, 'volumes') ?? {}) ||
+      !equal(c.exposure, at(authored, 'exposure') ?? {}) ||
+      (kind !== 'EXTERNAL' && c.compute?.identity !== at(authored, 'size'))
+    )
+      throw new Error('component record disagrees with blueprint')
+    if (
+      kind === 'IMAGE' &&
+      typeof source.ref === 'string' &&
+      source.ref.includes('@sha256:') &&
+      c.imageDigest !== source.ref.slice(source.ref.indexOf('@') + 1)
+    )
+      throw new Error('image digest mismatch')
+    if (
+      kind === 'GIT' &&
+      at(source, 'ref', 'type') === 'COMMIT' &&
+      c.gitCommit !== at(source, 'ref', 'name')
+    )
+      throw new Error('git commit mismatch')
+    for (const endpoint of Object.keys(record(at(contract, 'spec', 'workload', 'endpoints'))))
+      if (
+        !snapshot.allocations[node]?.[endpoint]?.identity ||
+        !snapshot.allocations[node]?.[endpoint]?.version
+      )
+        throw new Error('missing endpoint allocation snapshot')
+    for (const binding of Object.values(record(at(authored, 'bindings')))) {
+      if (at(binding, 'type') === 'CONFIG_REF')
+        expectedConfig.add(
+          scanReferences(String(at(binding, 'source')), ['config']).references[0]!.path.join('.'),
+        )
+      if (
+        at(binding, 'type') === 'PARAMETER' &&
+        at(parsed.value, 'spec', 'parameters', String(at(binding, 'parameter')), 'generator')
+      )
+        expectedCredentials.add(String(at(binding, 'parameter')))
+    }
+  }
+  if (
+    !equal([...expectedConfig].sort(), Object.keys(configuration).sort()) ||
+    !equal([...expectedConfig].sort(), Object.keys(snapshot.configuration).sort()) ||
+    !equal([...expectedCredentials].sort(), Object.keys(credentials).sort()) ||
+    !equal([...expectedCredentials].sort(), Object.keys(snapshot.credentials).sort())
+  )
+    throw new Error('selected source set mismatch')
+  for (const [key, selected] of Object.entries(configuration))
+    if (
+      selected.identity !== snapshot.configuration[key]?.identity ||
+      selected.version !== snapshot.configuration[key]?.version
+    )
+      throw new Error('configuration snapshot mismatch')
+  for (const [key, selected] of Object.entries(credentials))
+    if (
+      selected.identity !== snapshot.credentials[key]?.identity ||
+      selected.rotation !== snapshot.credentials[key]?.rotation
+    )
+      throw new Error('credential snapshot mismatch')
+  if (
+    !context.specificationDependencies ||
+    !sameKeys(specifications, context.specificationDependencies)
+  )
+    throw new Error('missing specification dependency manifests')
+  const availableFamilies = discoverFamilies(),
+    needed = new Set<string>()
+  const visit = (name: string) => {
+    if (needed.has(name)) return
+    needed.add(name)
+    const selected = availableFamilies.find(
+      (f) => f.name === name && f.major === 'v' + specifications[name]?.split('.')[0],
+    )
+    if (!selected) throw new Error('unsupported specification edition')
+    const declared = readBindings(selected)?.dependencies ?? []
+    const manifest = context.specificationDependencies[name]
+    if (!manifest || !equal(Object.keys(manifest).sort(), declared.map((d) => d.family).sort()))
+      throw new Error('specification manifest omits normative dependencies')
+    for (const dependency of declared) {
+      const version = manifest[dependency.family]
+      if (
+        specifications[dependency.family] !== version ||
+        dependency.line !== 'v' + version?.split('.')[0]
+      )
+        throw new Error('inconsistent specification dependency editions')
+      visit(dependency.family)
+    }
+  }
+  visit('blueprint')
+  if (!equal([...needed].sort(), Object.keys(specifications).sort()))
+    throw new Error('unexpected specification edition')
+  if (
+    resolveInstallation(parsed.value, {
+      ...context,
+      ...snapshot,
+      connections: snapshot.connections,
+    }).status !== 'VALID'
+  )
+    throw new Error('snapshot cannot reproduce configuration')
   const digest = /^[0-9a-f]{64}$/
   for (const c of Object.values(components)) {
     if (
@@ -387,6 +683,7 @@ export function resolutionRecord(
   )
   const generated: ResolutionRecord = {
     version: 1,
+    installationSnapshot: { identity: snapshot.identity, version: snapshot.version },
     blueprintDigest: createHash('sha256').update(blueprint).digest('hex'),
     specifications: { ...specifications },
     components: projected,
@@ -403,7 +700,6 @@ export function resolutionRecord(
       ]),
     ),
   }
-  const family = discoverKinds().find((f) => f.name === 'blueprint')!
   const schema = JSON.parse(familyBundle(family)!)
   const validate = strictAjv().compile({
     ...schema.$defs.BlueprintResolutionRecord,

@@ -121,7 +121,12 @@ function family(context: Context, name: string): Family {
 }
 
 function registryOf(context: Context, name: string): Map<string, string> {
-  return new Map(context.reach.get(`${name}/v1`)?.registry)
+  return new Map(
+    [...(context.reach.get(`${name}/v1`)?.registry ?? [])].map(([code, phases]) => [
+      code,
+      phases.join(','),
+    ]),
+  )
 }
 
 describe('diagnostic registries', () => {

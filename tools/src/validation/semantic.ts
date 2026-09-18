@@ -12,7 +12,13 @@ import { basename, dirname, isAbsolute, join, posix, relative, resolve } from 'n
 import { type Node, Parser } from 'commonmark'
 import { canonicalJson, type Family, isObject, type Json } from '../lib/layout.ts'
 import { scanReferences } from '../lib/references.ts'
+import {
+  connectionBindingDiagnostics,
+  connectionOwnedInputs,
+  connectionRequirementDiagnostics,
+} from './connections.ts'
 import { type Diagnostic, parseDocument, parseDocumentBytes } from './document.ts'
+import { MEDIA_PATH, schemeIsPermitted } from './listing-policy.ts'
 import { compatible, schemaProblem, valueFits } from './values.ts'
 
 export type { Diagnostic }
@@ -29,7 +35,7 @@ export interface SemanticContext {
   readonly itemRoot?: string
   readonly documentPath?: string
   readonly contracts?: Readonly<Record<string, PinnedContract>>
-  readonly profile?: 'structural' | 'document' | 'publication' | 'deployment'
+  readonly validationProfile?: 'structural' | 'document' | 'publication' | 'deployment'
   readonly checkComponent?: (source: Uint8Array) => boolean
 }
 export const record = (value: Json | undefined): Record<string, Json> =>
@@ -41,7 +47,7 @@ const asString = (value: Json | undefined) => (typeof value === 'string' ? value
 const keysOf = (value: Json | undefined) => Object.keys(record(value))
 export const token = (value: string) => value.replaceAll('~', '~0').replaceAll('/', '~1')
 const issue = (out: Diagnostic[], code: string, path: string) =>
-  out.push({ code, path, message: code })
+  out.push({ code, path, message: code, phase: 'semantic' })
 const FLOATING_TAGS = new Set([
   'latest',
   'main',
@@ -84,8 +90,15 @@ export function sourceEndpoints(source: Json): { endpoint: string; property: str
     property: ref.path.length === 2 ? (ref.path[0] ?? '') : '',
   }))
 }
+/** A template without references is a statically known logical string. */
+export function constantTemplate(source: Json | undefined): string | undefined {
+  if (at(source, 'type') !== 'TEMPLATE' || typeof at(source, 'template') !== 'string') return
+  const text = String(at(source, 'template'))
+  const scanned = scanReferences(text, ['self'])
+  if (!scanned.failures.length && !scanned.references.length) return text.replaceAll('$${{', '${{')
+}
 export function componentDiagnostics(document: Json): Diagnostic[] {
-  const out: Diagnostic[] = []
+  const out: Diagnostic[] = [...connectionRequirementDiagnostics(document)]
   const workload = record(at(document, 'spec', 'workload'))
   const contract = record(at(document, 'spec', 'contract'))
   const image = record(workload.source)
@@ -141,18 +154,22 @@ export function componentDiagnostics(document: Json): Diagnostic[] {
           ? v.default
           : at(v.source, 'type') === 'LITERAL'
             ? at(v.source, 'value')
-            : undefined
+            : constantTemplate(v.source)
       if (literal !== undefined && v.schema !== undefined && !valueFits(v.schema, literal))
         issue(
           out,
           'ERR_VALUE_CONSTRAINT',
-          direction === 'inputs' ? path + '/default' : path + '/source/value',
+          direction === 'inputs'
+            ? path + '/default'
+            : path + (at(v.source, 'type') === 'TEMPLATE' ? '/source/template' : '/source/value'),
         )
       if (literal !== undefined && v.sensitive === true)
         issue(
           out,
           'ERR_SECRET_LITERAL',
-          direction === 'inputs' ? path + '/default' : path + '/source/value',
+          direction === 'inputs'
+            ? path + '/default'
+            : path + (at(v.source, 'type') === 'TEMPLATE' ? '/source/template' : '/source/value'),
         )
       const target = at(v.target, 'envVarKey')
       if (typeof target === 'string') {
@@ -228,12 +245,6 @@ function checkScreenshotPaths(document: Json, out: Diagnostic[]): void {
  * because §4.1 holds a description image to the same shape, and a description
  * is a Markdown blob no `pattern` can reach into.
  */
-const MEDIA_PATH =
-  /^media\/(?:[A-Za-z0-9][A-Za-z0-9._-]*\/)*[A-Za-z0-9][A-Za-z0-9._-]*\.(?:[Pp][Nn][Gg]|[Jj][Pp][Gg]|[Jj][Pp][Ee][Gg]|[Ww][Ee][Bb][Pp])$/
-
-/** Listing §4.1 — the schemes a description link destination may use. */
-const PERMITTED_SCHEMES = new Set(['https:', 'http:', 'mailto:'])
-
 /**
  * `spec.description` parsed as CommonMark 0.31.2, or `undefined` when the
  * listing declares none. Parsed once and walked by every §4.1 rule: three
@@ -261,17 +272,6 @@ function* walk(ast: Node): Generator<Node> {
  * fragment. A destination CommonMark could not resolve to a URL at all is not
  * a scheme this set contains, so it fails with the rest.
  */
-function schemeIsPermitted(destination: string): boolean {
-  if (destination.startsWith('#')) return true
-  try {
-    return PERMITTED_SCHEMES.has(new URL(destination).protocol)
-  } catch {
-    // Not absolute. A storefront has no base URL to resolve it against, so a
-    // relative link resolves against the storefront's own path — a broken link
-    // rather than a hostile one, but not a link this profile permits either.
-    return false
-  }
-}
 
 /**
  * Listing §4.1 — the three rules the description profile carries. Every
@@ -489,6 +489,7 @@ export interface SemanticReport {
   diagnostics: Diagnostic[]
   deferred: DeferredObligation[]
   components: Map<string, Json>
+  componentDigests: Map<string, string>
   valueOrder?: string[]
 }
 export function semanticReport(
@@ -498,7 +499,8 @@ export function semanticReport(
 ): SemanticReport {
   const out: Diagnostic[] = [],
     deferred: DeferredObligation[] = [],
-    resolved = new Map<string, Json>()
+    resolved = new Map<string, Json>(),
+    componentDigests = new Map<string, string>()
   const defer = (rule: string, path: string, missing: string) =>
     deferred.push({ rule, path, missing })
   if (family.name === 'component') out.push(...componentDiagnostics(document))
@@ -511,7 +513,8 @@ export function semanticReport(
       checkMediaOnDisk(document, context.itemRoot, out)
     } else defer('LIST-ITEM-001', '/spec/itemType', 'itemRoot')
   }
-  if (family.name !== 'blueprint') return { diagnostics: out, deferred, components: resolved }
+  if (family.name !== 'blueprint')
+    return { diagnostics: out, deferred, components: resolved, componentDigests }
   const spec = record(at(document, 'spec')),
     nodes = record(spec.components),
     parameters = record(spec.parameters)
@@ -581,7 +584,9 @@ export function semanticReport(
       continue
     }
     resolved.set(name, parsed.value)
+    componentDigests.set(name, createHash('sha256').update(bytes).digest('hex'))
   }
+  out.push(...connectionBindingDiagnostics(document, resolved))
   if (context.itemRoot)
     for (const path of yamlFiles(context.itemRoot)) {
       const target = resolveReal(path)
@@ -629,16 +634,38 @@ export function semanticReport(
         )
         for (const ref of sourceEndpoints(source))
           if (ref.property.startsWith('public') && at(n.exposure, ref.endpoint) !== 'PUBLIC')
-            issue(out, 'ERR_ENDPOINT_NOT_PUBLIC', base + '/exposure/' + token(ref.endpoint))
+            out.push({
+              code: 'ERR_ENDPOINT_NOT_PUBLIC',
+              path: Object.hasOwn(record(n.exposure), ref.endpoint)
+                ? base + '/exposure/' + token(ref.endpoint)
+                : base + '/componentRef',
+              message: 'ERR_ENDPOINT_NOT_PUBLIC',
+              phase: 'semantic',
+              related: [
+                {
+                  artifact: String(n.componentRef),
+                  path: '/spec/contract/outputs/' + token(output),
+                },
+              ],
+            })
       }
       for (const [input, v] of Object.entries(inputs)) {
         dependencies.set(`${name}:in:${input}`, [])
         if (
+          !connectionOwnedInputs(component).has(input) &&
           at(n.bindings, input) === undefined &&
           at(v, 'default') === undefined &&
           at(v, 'required') !== false
         )
-          issue(out, 'ERR_UNSATISFIED_REQUIRED_INPUT', base + '/bindings/' + token(input))
+          out.push({
+            code: 'ERR_UNSATISFIED_REQUIRED_INPUT',
+            path: base + '/componentRef',
+            message: 'ERR_UNSATISFIED_REQUIRED_INPUT',
+            phase: 'semantic',
+            related: [
+              { artifact: String(n.componentRef), path: '/spec/contract/inputs/' + token(input) },
+            ],
+          })
       }
     }
     for (const [input, binding] of Object.entries(record(n.bindings))) {
@@ -686,7 +713,9 @@ export function semanticReport(
         if (output && inputs[input] && !compatible(record(output), consumer))
           issue(out, 'ERR_INCOMPATIBLE_TYPE', path + '/output')
         const literal =
-          at(output, 'source', 'type') === 'LITERAL' ? at(output, 'source', 'value') : undefined
+          at(output, 'source', 'type') === 'LITERAL'
+            ? at(output, 'source', 'value')
+            : constantTemplate(at(output, 'source'))
         if (
           literal !== undefined &&
           consumer.schema !== undefined &&
@@ -735,7 +764,14 @@ export function semanticReport(
         ? (at(schema.items, 'enum') as Json[])
         : []
     for (const member of Object.keys(record(at(p, 'ui', 'enumLabels'))))
-      if (receivers.length && !members.some((v) => String(v) === member))
+      if (
+        receivers.length &&
+        !members.some(
+          (v) =>
+            (v === null || ['string', 'number', 'boolean'].includes(typeof v)) &&
+            String(v) === member,
+        )
+      )
         issue(out, 'ERR_UNKNOWN_ENUM_MEMBER', path + '/ui/enumLabels/' + token(member))
     if (
       at(p, 'generator') !== undefined &&
@@ -777,6 +813,7 @@ export function semanticReport(
       direction === 'in' ? record(at(nodes[node], 'bindings', name)) : record(definition.source)
     let value: Json | undefined
     if (binding.type === 'LITERAL') value = binding.value
+    else if (binding.type === 'TEMPLATE') value = constantTemplate(binding)
     else if (binding.type === 'PARAMETER')
       value = at(parameters, String(binding.parameter), 'default')
     else if (!binding.type && direction === 'in') value = definition.default
@@ -789,17 +826,47 @@ export function semanticReport(
     const path =
       direction === 'in'
         ? '/spec/components/' + token(node) + '/bindings/' + token(name)
-        : '/spec/components/' + token(node) + '/outputs/' + token(name)
+        : '/spec/components/' + token(node) + '/componentRef'
     if (
       definition.schema &&
       !valueFits(definition.schema, value) &&
       !out.some((d) => d.code === 'ERR_VALUE_CONSTRAINT' && d.path === path)
     )
-      issue(out, 'ERR_VALUE_CONSTRAINT', path)
+      out.push({
+        code: 'ERR_VALUE_CONSTRAINT',
+        path,
+        message: 'ERR_VALUE_CONSTRAINT',
+        phase: 'semantic',
+        ...(direction === 'out'
+          ? {
+              related: [
+                {
+                  artifact: String(at(nodes[node], 'componentRef')),
+                  path: '/spec/contract/outputs/' + token(name),
+                },
+              ],
+            }
+          : {}),
+      })
     if (definition.sensitive === true && (binding.type === 'OUTPUT' || binding.type === 'INPUT'))
-      issue(out, 'ERR_SECRET_LITERAL', path)
+      out.push({
+        code: 'ERR_SECRET_LITERAL',
+        path,
+        message: 'ERR_SECRET_LITERAL',
+        phase: 'semantic',
+        ...(direction === 'out'
+          ? {
+              related: [
+                {
+                  artifact: String(at(nodes[node], 'componentRef')),
+                  path: '/spec/contract/outputs/' + token(name),
+                },
+              ],
+            }
+          : {}),
+      })
   }
-  return { diagnostics: out, deferred, components: resolved, valueOrder: ordered }
+  return { diagnostics: out, deferred, components: resolved, componentDigests, valueOrder: ordered }
 }
 export function semanticDiagnostics(
   family: Family,

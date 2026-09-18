@@ -195,7 +195,14 @@ Required when `expected` is `fail`. A non-empty array:
 [{ "code": "ERR_MISSING_FIELD", "path": "" }]
 ```
 
-`path` is a JSON Pointer into the document; `""` is the root.
+`path` is a JSON Pointer into the submitted document; `""` is the root.
+For a referenced component, the primary pointer identifies its authored binding
+or `componentRef`. Optional `related` locations carry the component `artifact`
+reference and its actual contract `path`; no synthetic blueprint output field
+stands in for a component output. Diagnostics report their actual `phase` and,
+for resolution, a `stage` such as parameters, allocation, values, environment,
+connections or record. A code may list several permitted phases in its registry;
+the condition is stable while the phase reports when it was discovered.
 
 An implementation passes a failing case when it rejects the document **in the
 declared phase** and produces **at least** the declared diagnostics. Producing
@@ -337,7 +344,8 @@ adapters MUST read it alongside `cases.json`. Each entry has a unique `id`,
 a `profile`, an `operation`, `requirements`, and `expect`. The latter maps
 JSON Pointers into an operation's observation to exact JSON values. Mapping
 order has no meaning; sequence order does. Optional `diagnostics` is a list
-of required `code` and optional `path` pairs; match these by membership,
+of a required `code` and optional `path`, `phase`, `stage` and `related`
+observations. Every supplied property must match one produced diagnostic,
 without imposing diagnostic order or forbidding additional diagnostics.
 
 An entry supplies either logical `input`, or `tree` (item-relative path to
@@ -351,7 +359,7 @@ including when testing sensitivity.
 | Profile | Operation | Observation |
 |---|---|---|
 | normalization | normalize | `value`, with effective schema defaults materialized only beneath existing ancestors; `idempotent`, true when a second normalization changes nothing |
-| resolution | validate | Core validation `status`, `profile`, `phase`, `diagnostics` and `deferred`, over the supplied context |
+| resolution | validate | Core validation `status`, `validationProfile`, `phase`, `diagnostics` and `deferred`, over the supplied context |
 | resolution | resolve | Pre-start value-resolution status, diagnostics, deferred obligations, private inputs/outputs/environment, and redacted public inspection |
 | resolution | record | VALID plus the generated resolution record, or INVALID with `ERR_INVALID_RESOLUTION_CONTEXT` |
 | rendering | render | `html` produced from `input.markdown` and the full-path `input.media` URL mapping under the listing rendering rules |
@@ -382,6 +390,10 @@ A lifecycle adapter substitutes a deterministic synthetic generator: successive
 new identities receive `synthetic-1`, `synthetic-2`, and so on. Repeated
 get-or-create calls must not invoke it again. This tests persistence and rotation,
 not a particular cryptographic random-number implementation.
+
+The result field `validationProfile` identifies core validation obligations.
+Implementation conformance profiles and behavioural fixture profiles are separate
+claims; a validation result does not claim either automatically.
 
 Behavioural profiles are independently claimed in addition to document phases.
 An implementation claiming a behavioural profile MUST run its own family and

@@ -314,7 +314,9 @@ without padding. Custom alphabets are unsupported. The generated string must
 satisfy every receiving schema; failing a constraint must not regenerate it.
 
 <a id="BP-PARAM-005"></a>**`BP-PARAM-005`** — Parameter defaults are logical literals,
-without interpolation. Submitted values override parameter defaults. No submitted
+without interpolation. Submitted values override parameter defaults. Unknown submitted parameter keys
+are rejected before defaults are applied; a misspelling cannot be silently ignored. Unknown submitted keys fail with
+`ERR_UNKNOWN_PARAMETER` before defaults are applied. No submitted
 value and no parameter default is `ERR_MISSING_PARAMETER_VALUE` at installation.
 <a id="BP-PARAM-008"></a>**`BP-PARAM-008`** — All statically known supply values must
 satisfy receivers. Dynamic values are checked after resolution, before execution.
@@ -344,6 +346,24 @@ or a new credential; reconciliation cannot silently rotate it.
 #### <a id="resolution-record"></a>Generated resolution record
 
 The record is generated, not an authored override layer. Its version is 1.
+The private installation snapshot uses formatVersion 1 and an immutable opaque
+identity/version. It persists submitted parameter values, selected configuration
+values and identity/version pairs, credential references and rotation generations,
+endpoint allocations, and any selected connections. Its sensitive values are
+private and never hashed into the public record. Reusing an identity/version for
+changed state is forbidden; any selected value or dependency change produces a
+new snapshot version and a new record. A record pins the snapshot identity/version.
+
+Record acceptance parses and validates its blueprint, resolves its pinned
+component artifacts, and verifies exact node sets, identities, revisions,
+artifact digests, source kinds, compute identities, volumes and exposure choices.
+Pinned image digests and authored Git commits must agree. Selected configuration
+and generated-credential maps must match their declarations and the private
+snapshot. Required endpoint allocation identities must be present. Replaying the
+snapshot must successfully resolve the blueprint without unpersisted selections.
+Exact specification dependency manifests must name all declared dependencies and
+agree on shared editions; missing dependencies or extra unrelated families fail.
+
 Its executable shape is `#/$defs/BlueprintResolutionRecord` in the self-contained
 blueprint bundle. It is a generated JSON artifact, not another Musher document
 kind. Unknown record fields are rejected.
@@ -357,12 +377,85 @@ image/commit/compute fields and have empty volume/exposure maps. All other nodes
 require image digest and compute identity/version; GIT additionally requires the
 full commit object ID. No secret plaintext or secret-content hashes are included.
 
+The required installationSnapshot contains an opaque identity and immutable
+version of private state. That private snapshot has formatVersion 1 and covers
+submitted parameters, configuration versions, generated credentials, endpoint
+allocations and connection selections, including source-policy revisions. Its
+physical storage format is implementation-defined. No public secret-derived hash
+stands in for that identity. Changing a selected value, rotation or allocation
+requires a new snapshot version and record. Persist before materialization.
+Before accepting a record, validate the blueprint and referenced contracts and
+reconcile the exact node set, identities/revisions/digests, workload sources,
+allocation choices, acquired dependencies and specification release graph.
+Schema validity alone is insufficient. The same accepted record MUST identify
+the same effective configuration, not identical behavior from external services.
+
 A Git commit alone does not establish build reproducibility; the resulting
 image digest is required. Redeploy uses the existing record and fails when a
 pinned dependency is unavailable. Updating produces a new record explicitly.
 Operational eligibility can change independently, but cannot rewrite the record.
 
-### <a id="install-form"></a>5.3 Install-form presentation
+### <a id="atomic-connections"></a>5.3 Atomic connection slots
+
+`spec.connectionSources` maps slot names to `{ source: "${{ config.llm.default }}" }`.
+Each source is one whole config reference identifying a connection, not a scalar
+lookup. Slot and requirement names use the input-name grammar. Each node's
+`connectionBindings` maps component requirement names to `{ source: slotName }`.
+
+<a id="BP-CONNECTION-001"></a>**`BP-CONNECTION-001`** — Every component connection
+requirement MUST have exactly one explicit slot binding. Unknown slots or
+requirements, unused slots, or ordinary bindings to group-owned inputs fail with
+`ERR_INVALID_CONNECTION_BINDING`. A source reference must satisfy BP-REF-001.
+There is no implicit sharing by input name or protocol. Ordinary CONFIG_REF
+bindings remain independent scalar lookups and cannot assemble a connection.
+
+<a id="BP-CONNECTION-002"></a>**`BP-CONNECTION-002`** — Installation acquires one
+immutable, authorized selection per installation identity and named slot. All
+consumers of that slot use protocol views of that same selection. Each view MUST
+satisfy the requested protocol, capabilities, and individual input schemas.
+Failure is `ERR_CONNECTION_INCOMPATIBLE` or `ERR_VALUE_CONSTRAINT`; never select
+another provider as fallback. Values enter the existing input/environment pipeline.
+No input, output or environment values are released on incomplete or invalid
+resolution, including when only one of several slots fails.
+
+Acquisition distinguishes NOT_ACQUIRED (INCOMPLETE), authoritative NOT_FOUND
+(ERR_CONNECTION_NOT_FOUND), DENIED (ERR_CONNECTION_DENIED), INCOMPATIBLE
+(ERR_CONNECTION_INCOMPATIBLE), and SELECTED. The synthetic context represents a
+SELECTED result with persisted: true and a selection containing identity, version,
+installation, slot, source reference/identity/version, kind MANAGED or USER, costOwner,
+credential identity/rotation/value/permittedBaseUrls, and protocol-keyed views.
+The source reference MUST equal the authored slot source, including for a complete
+USER replacement. It identifies the acquisition request, not the selected provider.
+Managed credential identities MUST NOT be reused across distinct slots.
+Each view has baseUrl, model and capabilities. Endpoints are absolute HTTPS URLs
+without user information, query or fragment. Every view URL must belong to the
+credential's permittedBaseUrls. Context is trusted acquisition evidence, not an
+authored mechanism for granting permission. Offline evaluation performs no network
+or credential issuance. Malformed evidence is ERR_INVALID_RESOLUTION_CONTEXT.
+
+<a id="BP-CONNECTION-003"></a>**`BP-CONNECTION-003`** — Persist the complete selection
+and scoped credential before materialization. Retry and redeploy reuse the selected
+identity/version and credential. Changes to organization defaults affect only new
+installations. An explicit update replaces the complete selection and produces a
+new private snapshot and resolution record. Rotation is durable and idempotent;
+clone creates a new installation and distinct scoped credential. Revocation denies
+use immediately, regardless of an existing record. Failed attempts must not leave
+multiple active credentials or silently change provider on retry.
+
+Overrides use a complete USER selection with its own endpoint, credential and
+model; missing members fail. Partial merging with a managed selection is forbidden.
+Managed credentials are scoped to installation, slot and permitted service, not
+unrestricted organization provider keys. Credential plaintext and its hashes MUST
+NOT appear in published artifacts, forms, public responses, previews or diagnostics.
+Installation interfaces disclose the selected connection and cost owner. Existing
+organization policy may authorize automated selection without repeated prompts.
+
+Gateway base paths, upstream providers, default models, quotas, spending limits,
+current authorization and durable persistence are platform responsibilities.
+Real SDK integration must verify client paths, authentication, streaming, tool
+calls and errors. Synthetic fixture credentials establish no production access.
+
+### <a id="install-form"></a>5.4 Install-form presentation
 
 <a id="BP-UI-001"></a>**`BP-UI-001`** — UI is optional; when supplied it requires
 label and rejects unknown properties.
@@ -404,22 +497,27 @@ Core and component diagnostics apply, with these additions:
 | `ERR_UNKNOWN_NODE` | `semantic` | Binding names no node. |
 | `ERR_UNKNOWN_OUTPUT` | `semantic` | Binding names no producer output. |
 | `ERR_UNKNOWN_INPUT` | `semantic` | Binding names no receiver input. |
-| `ERR_UNKNOWN_PARAMETER` | `semantic` | Binding names no parameter. |
+| `ERR_UNKNOWN_PARAMETER` | `semantic`, `resolution` | Binding or submitted value names no parameter. |
 | `ERR_INCOMPATIBLE_TYPE` | `semantic` | Producer type cannot supply consumer. |
 | `ERR_UNREFERENCED_COMPONENT` | `semantic` | Item contains an unused component. |
 | `ERR_CONFLICTING_INPUT_SCHEMA` | `semantic` | Shared parameter receivers disagree. |
 | `ERR_UNBOUND_PARAMETER` | `semantic` | Parameter has no explicit recipient. |
-| `ERR_UNSATISFIED_REQUIRED_INPUT` | `semantic` | Required input has no binding or default. |
+| `ERR_UNSATISFIED_REQUIRED_INPUT` | `semantic`, `resolution` | Required input has no binding or default. |
 | `ERR_ENDPOINT_NOT_PUBLIC` | `semantic` | Output requires exposure not selected by the blueprint. |
 | `ERR_UNKNOWN_ENUM_MEMBER` | `semantic` | UI label names no enum member. |
 | `ERR_INVALID_CONFIG_REFERENCE` | `semantic` | Config source is not one whole permitted reference. |
 | `ERR_INVALID_VOLUME_ALLOCATION` | `semantic` | Volume allocation is absent, unknown or below minimum. |
 | `ERR_READINESS_REQUIRED` | `semantic` | Public HTTP-family service has no readiness probe. |
 | `ERR_VALUE_CYCLE` | `semantic` | Value dependencies contain a cycle. |
-| `ERR_GENERATED_OVERRIDE` | `capability` | Submitted value attempts to replace generated supply. |
-| `ERR_MISSING_PARAMETER_VALUE` | `capability` | Required submitted value is absent. |
-| `ERR_CONFIG_NOT_AUTHORIZED` | `capability` | Installation cannot access configuration. |
-| `ERR_INVALID_RESOLUTION_CONTEXT` | `capability` | Resolution context lacks a required identity or version. |
+| `ERR_GENERATED_OVERRIDE` | `resolution` | Submitted value attempts to replace generated supply. |
+| `ERR_MISSING_PARAMETER_VALUE` | `resolution` | Required submitted value is absent. |
+| `ERR_CONFIG_NOT_AUTHORIZED` | `resolution` | Installation cannot access configuration. |
+| `ERR_INVALID_RESOLUTION_CONTEXT` | `resolution` | Resolution context lacks a required identity or version. |
+
+| `ERR_INVALID_CONNECTION_BINDING` | `semantic` | Unknown, missing, unused or conflicting grouped supplier. |
+| `ERR_CONNECTION_NOT_FOUND` | `resolution` | Authorized acquisition confirms no selected default exists. |
+| `ERR_CONNECTION_DENIED` | `resolution` | Acquisition denies permission to use the connection. |
+| `ERR_CONNECTION_INCOMPATIBLE` | `resolution` | Selection cannot satisfy required protocol or capabilities. |
 
 ## <a id="conformance"></a>8. Conformance
 
