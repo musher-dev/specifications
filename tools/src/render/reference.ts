@@ -690,9 +690,7 @@ function renderConstraints(field: FieldDoc): string {
   // validator inserts it, and none does; see ADR 0008.
   if (field.documented !== undefined) {
     parts.push(
-      field.documented.value === null
-        ? 'absent means <code>null</code>'
-        : `documented default <code>${escapeHtml(JSON.stringify(field.documented.value))}</code>`,
+      `documented default <code>${escapeHtml(JSON.stringify(field.documented.value))}</code>`,
     )
   }
   return parts.length === 0 ? '' : `<p class="meta">${parts.join(' · ')}</p>`

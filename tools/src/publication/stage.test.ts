@@ -131,6 +131,7 @@ describe('stageRelease', () => {
       'component-v1/conformance/cases.json',
       'component-v1/core/',
       'component-v1/core/conformance/',
+      'component-v1/core/conformance/README.md',
       'component-v1/core/conformance/cases.json',
       'component-v1/core/spec.md',
       'component-v1/examples/',
@@ -144,6 +145,15 @@ describe('stageRelease', () => {
       commit: tagCommit(fx.root, 'component/v1.0.0'),
       coreCommit: tagCommit(fx.root, 'core/v1.0.0'),
       coreTag: 'core/v1.0.0',
+      dependencies: {
+        core: {
+          tag: 'core/v1.0.0',
+          commit: tagCommit(fx.root, 'core/v1.0.0'),
+          tree: readLedger(fx.root).releases['core/v1.0.0']?.tree,
+          bundleSha256: null,
+          requires: {},
+        },
+      },
       requires: { core: '1.0.0' },
       tag: 'component/v1.0.0',
     })

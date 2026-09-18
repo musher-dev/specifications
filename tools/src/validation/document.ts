@@ -4,11 +4,21 @@
 import { Composer, type CST, type Document, isAlias, isMap, isScalar, isSeq, Parser } from 'yaml'
 import type { Json } from '../lib/layout.ts'
 
-export type Phase = 'parser' | 'structural' | 'semantic' | 'capability'
+export type Phase = 'parser' | 'structural' | 'semantic' | 'capability' | 'resolution'
 export interface Diagnostic {
   readonly code: string
   readonly path: string
   readonly message: string
+  readonly phase?: Phase
+  readonly stage?:
+    | 'contracts'
+    | 'parameters'
+    | 'allocation'
+    | 'values'
+    | 'environment'
+    | 'record'
+    | 'connections'
+  readonly related?: readonly { readonly artifact: string; readonly path: string }[]
 }
 export const MAX_DOCUMENT_BYTES = 1024 * 1024
 export const MAX_SCALAR_BYTES = 64 * 1024

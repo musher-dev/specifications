@@ -172,6 +172,24 @@ describe('assembleSite', () => {
     }
   })
 
+  test('released references follow pinned dependencies after a newer core release', async () => {
+    const fx = fixture()
+    fx.writeFile(COMPONENT.spec, 'See [core](../../core/v1/spec.md).\n')
+    await release(fx, 'component', 'v1', '1.0.0', fx.bundleDoc('component', 'v1'))
+    p().releaseCore('1.1.0')
+    await p().fetch()
+    assembleSite({ repoRoot: fx.root, siteDir: join(fx.root, 'site') })
+    for (const version of ['v1', 'v1.0.0']) {
+      const html = readSite(fx, 'reference', 'component', version, 'spec', 'index.html')
+      expect(html).toContain('href="/reference/core/v1.0.0/spec/"')
+      expect(html).not.toContain('href="/reference/core/v1/spec/"')
+    }
+    const home = readSite(fx, 'index.html')
+    expect(home).toContain('Define a reusable workload')
+    expect(home).toContain('Document format: v1')
+    expect(home).toContain('Set up your editor')
+  })
+
   test('an untagged family renders from the working tree', () => {
     const fx = fixture()
     fx.writeFile(COMPONENT.spec, PROSE)
@@ -797,9 +815,9 @@ describe('assembleSite', () => {
     expect(readSite(fx, 'reference', 'component', 'v1', 'spec', 'index.html')).toContain(
       'href="/reference/core/v1/spec/#envelope"',
     )
-    // Core leads the root index.
+    // Authors encounter the reusable workload before shared implementation rules.
     const index = readSite(fx, 'index.html')
-    expect(index.indexOf('href="/core/"')).toBeLessThan(index.indexOf('href="/component/"'))
+    expect(index.indexOf('href="/component/"')).toBeLessThan(index.indexOf('href="/core/"'))
   })
   // ---------------------------------------------------------------------------
   // Pinned bytes come from verified release assets and nowhere else.

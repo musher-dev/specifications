@@ -32,7 +32,6 @@ import { dirname, join } from 'node:path'
 import { isShallow, listTreeFiles, readBlobAtRef } from '../lib/git.ts'
 import {
   CATALOG_NAME,
-  CORE_FAMILY,
   canonicalJson,
   discoverFamilies,
   familyPaths,
@@ -166,6 +165,8 @@ const RESERVED_PATH = 'reference'
  * `schemaPath` are null, and it renders a specification page and nothing else.
  */
 interface ReferenceTarget {
+  /** Exact dependency editions of the release being described. */
+  readonly requires?: Readonly<Record<string, string>>
   readonly family: string
   readonly major: string
   /** `v1` for the moving alias, `v1.2.0` for an exact release. */
@@ -440,6 +441,7 @@ export function assembleSite(options: SiteOptions): SiteResult {
         bundle: null,
         spec: specAt(release.family, release.major, release.tag, entry.path),
         examples: [],
+        requires: entry.requires,
         ref: release.tag,
         dir: entry.path,
         schemaPath: null,
@@ -481,6 +483,7 @@ export function assembleSite(options: SiteOptions): SiteResult {
       bundle: pinnedBytes.toString('utf8'),
       spec: specAt(release.family, release.major, release.tag, entry.path),
       examples: examplesAt(release.family, release.major, release.tag, entry.path),
+      requires: entry.requires,
       ref: release.tag,
       dir: entry.path,
       schemaPath: `/${dir}/${fileName}`,
@@ -523,6 +526,7 @@ export function assembleSite(options: SiteOptions): SiteResult {
       family,
       major,
       version: major,
+      requires: releases.find(({ release }) => release.tag === ref)?.entry.requires,
       bundle: contents,
       spec: specAt(family, major, ref, dir),
       examples: examplesAt(family, major, ref, dir),
@@ -565,6 +569,7 @@ export function assembleSite(options: SiteOptions): SiteResult {
       family,
       major,
       version: major,
+      requires: releases.find(({ release }) => release.tag === ref)?.entry.requires,
       bundle: null,
       spec,
       examples: [],
@@ -641,13 +646,12 @@ export function assembleSite(options: SiteOptions): SiteResult {
     ...new Set([...aliases.map((a) => a.family), ...versionsByFamily.keys(), ...proseFamilies]),
   ]
     .sort()
-    // Core first, as everywhere else: it is what every other row is built on.
-    .sort((a, b) => Number(b === CORE_FAMILY) - Number(a === CORE_FAMILY))
+    .sort((a, b) => familyOrder(a) - familyOrder(b))
   let pages = 0
 
   emit(
     'index.html',
-    renderIndex(families, aliases, versionsByFamily, proseLines, proseReleasesByFamily),
+    renderIndex(families, aliases, versionsByFamily, proseLines, proseReleasesByFamily, references),
   )
   pages += 1
   for (const family of families) {
@@ -669,6 +673,7 @@ export function assembleSite(options: SiteOptions): SiteResult {
         family,
         aliases.filter((a) => a.family === family),
         versionsByFamily.get(family) ?? [],
+        references,
       ),
     )
     pages += 1
@@ -823,11 +828,17 @@ function linkResolver(
     const sibling = parseSpecPath(resolved)
     if (sibling !== null) {
       const { name: family, major } = sibling
-      // The same version shape the reader is on: an exact release cites the
-      // prose of its own moment, an alias cites the moving one.
+      const pinned = target.requires?.[family]
       const peer =
-        rendered.find((r) => r.family === family && r.version === target.version) ??
-        rendered.find((r) => r.family === family && r.version === major)
+        pinned !== undefined
+          ? rendered.find((r) => r.family === family && r.version === `v${pinned}`)
+          : target.ref === 'main'
+            ? rendered.find((r) => r.family === family && r.version === major)
+            : rendered.find((r) => r.family === family && r.ref === target.ref)
+      if (pinned !== undefined && peer?.spec == null)
+        throw new Error(
+          `${target.ref}: missing reference for pinned dependency ${family}/v${pinned}`,
+        )
       if (peer !== undefined) return `/${RESERVED_PATH}/${family}/${peer.version}/spec/${suffix}`
     }
 
@@ -926,12 +937,25 @@ function proseUrl(dir: string, ref: string): string {
   return `${REPO_URL}/blob/${ref}/${releaseDirPaths(dir).spec}`
 }
 
+const FAMILY_PURPOSE: Readonly<Record<string, string>> = {
+  component: 'Define a reusable workload and its configuration contract.',
+  blueprint: 'Compose components into an application with explicit bindings.',
+  listing: 'Describe a component or blueprint for the catalog.',
+  core: 'Shared rules for document authors and specification implementers.',
+}
+
+function familyOrder(family: string): number {
+  const index = ['component', 'blueprint', 'listing', 'core'].indexOf(family)
+  return index === -1 ? 4 : index
+}
+
 function renderIndex(
   families: readonly string[],
   aliases: readonly Alias[],
   versionsByFamily: ReadonlyMap<string, readonly PublishedVersion[]>,
   proseLines: readonly ProseLine[],
   proseReleasesByFamily: ReadonlyMap<string, readonly ProseRelease[]>,
+  references: readonly ReferenceTarget[],
 ): string {
   const muted = '<span class="muted">—</span>'
   const rows = families.map((family) => {
@@ -975,9 +999,30 @@ function renderIndex(
       'This host serves the schemas and the rendered specifications; the normative Markdown,',
       'the conformance suite and the publication ledger live in',
       `${link(REPO_URL, 'musher-dev/specifications')}.</p>`,
+      ...families.map((family) => {
+        const alias = aliases.find((a) => a.family === family)
+        const line = newestLine(proseLines.filter((l) => l.family === family))
+        const major = alias?.major ?? line?.major
+        const examples = references.find((r) => r.family === family && r.version === major)
+          ?.examples.length
+        const version =
+          versionsByFamily.get(family)?.at(-1)?.version ??
+          proseReleasesByFamily.get(family)?.at(-1)?.version
+        return (
+          `<section><h2>${link(`/${family}/`, family)}</h2>` +
+          `<p>${escapeHtml(FAMILY_PURPOSE[family] ?? 'Read this document specification.')}</p>` +
+          `<p class="muted">Document format: ${escapeHtml(major ?? 'historical')} · ${version ? `Latest release: ${escapeHtml(version)}` : 'Status: pre-stable / unreleased'}</p>` +
+          (major === undefined
+            ? ''
+            : `<p>${link(`/reference/${family}/${major}/${alias ? '' : 'spec/'}`, alias ? 'Read field reference' : 'Read specification')}${examples ? ` · ${link(`/reference/${family}/${major}/examples/`, 'View examples')}` : ''}${alias ? ` · ${link(alias.path, 'JSON Schema')}` : ''} · ${link(`/${family}/`, 'Versions and downloads')}</p>`) +
+          '</section>'
+        )
+      }),
+      `<p>${link(`${REPO_URL}/blob/main/docs/using-schemas.md`, 'Set up your editor')}</p>`,
+      '<h2>Versions and downloads</h2>',
       '<table>',
-      '<thead><tr><th>Family</th><th>Alias</th><th>Latest</th><th>Versions</th>',
-      '<th>Prose</th><th>Reference</th></tr></thead>',
+      '<thead><tr><th>Family</th><th>Current schema URL</th><th>Latest release</th><th>Downloads</th>',
+      '<th>Specification source</th><th>Reference</th></tr></thead>',
       `<tbody>${rows.join('')}</tbody>`,
       '</table>',
       '<p>An alias moves within its major version as backward-compatible additions ship.',
@@ -1000,6 +1045,7 @@ function renderFamilyIndex(
   family: string,
   aliases: readonly Alias[],
   versions: readonly PublishedVersion[],
+  references: readonly ReferenceTarget[],
 ): string {
   const aliasRows = aliases.map((alias) =>
     [
@@ -1064,6 +1110,7 @@ function renderFamilyIndex(
     [
       `<p>${link('/', 'Musher specifications')}</p>`,
       `<h1>${escapeHtml(family)}</h1>`,
+      `<p class="lead">${escapeHtml(FAMILY_PURPOSE[family] ?? 'Read this document specification.')}</p>`,
       // The newest major, not the first: `aliases` arrives in release order, so
       // once a family has both v1 and v2 the first entry is the older one.
       ...(newest === undefined
@@ -1071,10 +1118,14 @@ function renderFamilyIndex(
         : [
             `<p>${link(`/${RESERVED_PATH}/${family}/${newest}/`, 'Read the reference')}` +
               ' — every field, beside the specification.</p>',
+            ...(references.find((r) => r.family === family && r.version === newest)?.examples.length
+              ? [`<p>${link(`/reference/${family}/${newest}/examples/`, 'View examples')}</p>`]
+              : []),
           ]),
-      '<h2>Alias</h2>',
+      `<p>${link(`${REPO_URL}/blob/main/docs/using-schemas.md`, 'Set up your editor')}</p>`,
+      '<h2>Current schema URLs</h2>',
       ...alias,
-      '<h2>Published versions</h2>',
+      '<h2>Versions and downloads</h2>',
       ...published,
       `<footer>${[
         // Written only for a family that has released, so linked only then.
@@ -1131,6 +1182,7 @@ function renderProseFamilyIndex(
     [
       `<p>${link('/', 'Musher specifications')}</p>`,
       `<h1>${escapeHtml(family)}</h1>`,
+      `<p class="lead">${escapeHtml(FAMILY_PURPOSE[family] ?? 'Read this document specification.')}</p>`,
       '<p class="lead">This specification publishes no schema. Its rules are prose and a',
       'conformance corpus, and every document family built on it expresses them in its own',
       'schema.</p>',

@@ -25,7 +25,7 @@ export { parseDocument, parseDocumentBytes }
 export interface ValidationResult {
   readonly ok: boolean
   readonly status: 'VALID' | 'INVALID' | 'INCOMPLETE'
-  readonly profile: NonNullable<SemanticContext['profile']>
+  readonly validationProfile: NonNullable<SemanticContext['validationProfile']>
   readonly deferred: DeferredObligation[]
   /** Phase the document reached. On failure, the phase that rejected it. */
   readonly phase: Phase
@@ -103,16 +103,16 @@ export function validateDocument(
   source: string | Uint8Array,
   context: SemanticContext = {},
 ): ValidationResult {
-  const profile = context.profile ?? 'document'
+  const profile = context.validationProfile ?? 'document'
   const parsed = typeof source === 'string' ? parseDocument(source) : parseDocumentBytes(source)
   if ('errors' in parsed) {
     return {
       ok: false,
       status: 'INVALID',
-      profile,
+      validationProfile: profile,
       deferred: [],
       phase: 'parser',
-      diagnostics: parsed.errors,
+      diagnostics: parsed.errors.map((d) => ({ ...d, phase: 'parser' })),
     }
   }
 
@@ -122,7 +122,7 @@ export function validateDocument(
       return {
         ok: true,
         status: 'VALID',
-        profile,
+        validationProfile: profile,
         deferred: [],
         phase: 'structural',
         diagnostics: [],
@@ -135,7 +135,7 @@ export function validateDocument(
       ...context,
       checkComponent: (bytes) =>
         component !== undefined &&
-        validateDocument(component, bytes, { profile: 'document' }).status === 'VALID',
+        validateDocument(component, bytes, { validationProfile: 'document' }).status === 'VALID',
     })
     if (profile === 'publication' || profile === 'deployment')
       report.deferred.push({
@@ -157,10 +157,10 @@ export function validateDocument(
     return {
       ok: status === 'VALID',
       status,
-      profile,
+      validationProfile: profile,
       deferred: report.deferred,
       phase: 'semantic',
-      diagnostics: report.diagnostics,
+      diagnostics: report.diagnostics.map((d) => ({ ...d, phase: 'semantic' })),
     }
   }
 
@@ -171,8 +171,15 @@ export function validateDocument(
     const key = `${diagnostic.code}\u0000${diagnostic.path}`
     if (seen.has(key)) continue
     seen.add(key)
-    diagnostics.push(diagnostic)
+    diagnostics.push({ ...diagnostic, phase: 'structural' })
   }
 
-  return { ok: false, status: 'INVALID', profile, deferred: [], phase: 'structural', diagnostics }
+  return {
+    ok: false,
+    status: 'INVALID',
+    validationProfile: profile,
+    deferred: [],
+    phase: 'structural',
+    diagnostics,
+  }
 }

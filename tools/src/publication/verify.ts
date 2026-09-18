@@ -35,7 +35,8 @@ import {
   releaseDirPaths,
 } from '../lib/layout.ts'
 import { pinnedBundle } from '../schema/bundle.ts'
-import { assertCoreGatePending, assertCoreGateTagged } from './core-gate.ts'
+import { assertCoreGatePending } from './core-gate.ts'
+import { assertDependencyContent, dependencyClosure } from './dependency-gate.ts'
 import { type Ledger, ledgerAtRef, readLedger, sameEntry, validateLedger } from './ledger.ts'
 import {
   discoverReleases,
@@ -114,7 +115,7 @@ export function verifyPublications(
         continue
       }
       if (entry.requires !== undefined) {
-        assertCoreGateTagged(repoRoot, tag, entry.requires.core, failures)
+        dependencyClosure(repoRoot, tag, entry.requires, failures, ledger, tag)
       }
       continue
     }
@@ -176,6 +177,7 @@ export function verifyPublications(
     }
     if (entry.requires !== undefined) {
       pendingKinds.push({ tag, path: entry.path, requiresCore: entry.requires.core })
+      assertDependencyContent(repoRoot, tag, entry.path, entry.requires, failures, warnings)
     }
   }
   assertCoreGatePending(repoRoot, failures, warnings, pendingKinds)

@@ -45,6 +45,7 @@ import {
   REPO_ROOT,
   releaseDirPaths,
 } from '../lib/layout.ts'
+import { assertDependencyContent } from './dependency-gate.ts'
 import { readLedger } from './ledger.ts'
 import {
   compareVersions,
@@ -436,6 +437,12 @@ function main(): void {
 
   const pending = pendingKindReleases(REPO_ROOT)
   assertCoreGatePending(REPO_ROOT, failures, warnings, pending)
+  const ledger = readLedger(REPO_ROOT)
+  for (const entry of pending) {
+    const requires = ledger.releases[entry.tag]?.requires
+    if (requires !== undefined)
+      assertDependencyContent(REPO_ROOT, entry.tag, entry.path, requires, failures, warnings)
+  }
   for (const warning of warnings) console.log(`  ! ${warning}`)
   failures.report(
     pending.length === 0

@@ -185,7 +185,7 @@ messages, so put a footer at the end of the branch's last commit.
 
 Use the `core` scope for a change to `specifications/core/`. A releasable
 commit there holds every kind family's release until core has released it. See
-[docs/publication.md → The core gate](../docs/publication.md#the-core-gate).
+[docs/publication.md → The core gate](../docs/publication.md#the-dependency-gate).
 
 ### Squash merges and overrides
 

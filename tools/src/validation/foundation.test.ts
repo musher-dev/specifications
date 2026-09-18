@@ -7,10 +7,13 @@ import { discoverKinds, type Json } from '../lib/layout.ts'
 import { MAX_DEPTH, parseDocument, parseDocumentBytes } from './document.ts'
 import {
   credential,
+  type InstallationContext,
   inspectValue,
+  type RecordContext,
   type ResolvedValue,
   resolutionRecord,
   resolveInstallation,
+  sameResolution,
 } from './resolution.ts'
 import { validateDocument } from './validator.ts'
 import { encodeEnvironment, valueFits } from './values.ts'
@@ -223,7 +226,8 @@ test('published dependencies are incomplete without context and invalid with a b
   }
   expect(validateDocument(blueprintFamily, JSON.stringify(d)).status).toBe('INCOMPLETE')
   expect(
-    validateDocument(blueprintFamily, JSON.stringify(d), { profile: 'structural' }).status,
+    validateDocument(blueprintFamily, JSON.stringify(d), { validationProfile: 'structural' })
+      .status,
   ).toBe('VALID')
   const source = JSON.stringify(component())
   const invalid = validateDocument(blueprintFamily, JSON.stringify(d), {
@@ -259,27 +263,267 @@ test('credentials persist across retries and rotate only by explicit generation'
   expect(calls).toBe(1)
   expect(credential(store, 'install', 'key', 1, create).value).toBe('synthetic-2')
 })
-test('resolution records project identities without secret plaintext', () => {
+function recordSetup() {
+  const c = component({ value: input() })
+  const setup = item(
+    { web: c },
+    { web: { value: { type: 'PARAMETER', parameter: 'level' } } },
+    { level: { default: 'info' } },
+  )
   const components = {
     web: {
       source: 'IMAGE' as const,
       compute: { identity: 'general.standard.small', version: '1' },
-      identity: 'component',
+      identity: './web.yaml',
       revision: 1,
-      digest: 'a'.repeat(64),
+      digest: createHash('sha256').update(JSON.stringify(c)).digest('hex'),
       imageDigest: 'sha256:' + 'b'.repeat(64),
       volumes: {},
       exposure: {},
     },
   }
-  const configuration = { llm: { identity: 'config', version: '1', value: 'synthetic-secret' } }
-  const record = resolutionRecord(
-    Buffer.from('blueprint'),
-    { core: '1.0.0', component: '1.0.0', blueprint: '1.0.0' },
+  const context: RecordContext = {
+    ...setup.context,
+    snapshot: {
+      formatVersion: 1,
+      identity: 'installation-snapshot',
+      version: '1',
+      parameters: { level: { value: 'debug', sensitive: true } },
+      configuration: {},
+      credentials: {},
+      allocations: {},
+    },
+    specificationDependencies: {
+      core: {},
+      component: { core: '1.0.0' },
+      blueprint: { core: '1.0.0', component: '1.0.0' },
+    },
+  }
+  const versions = { core: '1.0.0', component: '1.0.0', blueprint: '1.0.0' }
+  const bytes = Buffer.from(JSON.stringify(setup.document))
+  return { setup, components, context, versions, bytes }
+}
+test('resolution record pins immutable snapshot without exposing submitted values', () => {
+  const { bytes, versions, components, context } = recordSetup()
+  const first = resolutionRecord(bytes, versions, components, {}, {}, context)
+  expect(first.installationSnapshot).toEqual({ identity: 'installation-snapshot', version: '1' })
+  expect(JSON.stringify(first)).not.toContain('debug')
+  const second = resolutionRecord(
+    bytes,
+    versions,
     components,
-    configuration,
+    {},
+    {},
+    {
+      ...context,
+      snapshot: {
+        ...context.snapshot,
+        version: '2',
+        parameters: { level: { value: 'info', sensitive: true } },
+      },
+    },
   )
-  expect(JSON.stringify(record)).not.toContain('synthetic-secret')
+  expect(sameResolution(first, second)).toBe(false)
+  expect(
+    sameResolution(first, resolutionRecord(bytes, versions, components, {}, {}, context)),
+  ).toBe(true)
+})
+test('record rejects arbitrary bytes, mismatched nodes, components and dependency editions', () => {
+  const { bytes, versions, components, context } = recordSetup()
+  expect(() =>
+    resolutionRecord(Buffer.from('blueprint'), versions, components, {}, {}, context),
+  ).toThrow()
+  expect(() => resolutionRecord(bytes, versions, {}, {}, {}, context)).toThrow()
+  for (const mismatch of [
+    { identity: 'other' },
+    { revision: 2 },
+    { digest: 'a'.repeat(64) },
+    { source: 'EXTERNAL' as const },
+    { exposure: { web: 'PUBLIC' } },
+  ])
+    expect(() =>
+      resolutionRecord(
+        bytes,
+        versions,
+        { web: { ...components.web, ...mismatch } },
+        {},
+        {},
+        context,
+      ),
+    ).toThrow()
+  expect(() =>
+    resolutionRecord(bytes, { ...versions, core: '1.1.0' }, components, {}, {}, context),
+  ).toThrow()
+  expect(() =>
+    resolutionRecord(
+      bytes,
+      versions,
+      components,
+      {},
+      {},
+      { ...context, specificationDependencies: { core: {}, component: {}, blueprint: {} } },
+    ),
+  ).toThrow()
+})
+test('reference-free templates validate known values and authored secrets', () => {
+  const output = {
+    description: 'constant template',
+    schema: { type: 'string', minLength: 8 },
+    sensitive: true,
+    source: { type: 'TEMPLATE', template: 'short' },
+  }
+  const result = validateDocument(componentFamily, JSON.stringify(component({}, { value: output })))
+  expect(result.diagnostics).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        code: 'ERR_VALUE_CONSTRAINT',
+        path: '/spec/contract/outputs/value/source/template',
+      }),
+      expect.objectContaining({
+        code: 'ERR_SECRET_LITERAL',
+        path: '/spec/contract/outputs/value/source/template',
+      }),
+    ]),
+  )
+})
+test('unknown submitted parameter keys fail before defaults can hide misspellings', () => {
+  const { setup } = recordSetup()
+  const result = resolveInstallation(setup.document, {
+    ...setup.context,
+    parameters: { verbosity: { value: 'debug', sensitive: false } },
+  })
+  expect(result).toMatchObject({
+    status: 'INVALID',
+    inputs: {},
+    diagnostics: [
+      expect.objectContaining({
+        code: 'ERR_UNKNOWN_PARAMETER',
+        phase: 'resolution',
+        stage: 'parameters',
+      }),
+    ],
+  })
+})
+test('whole-value object and array enum members cannot acquire scalar enum labels', () => {
+  for (const [schema, label] of [
+    [
+      { type: 'object', properties: {}, additionalProperties: false, enum: [{}] },
+      '[object Object]',
+    ],
+    [{ type: 'array', items: { type: 'string' }, enum: [['a']] }, 'a'],
+  ] as const) {
+    const setup = item(
+      { web: component({ value: input(schema) }) },
+      { web: { value: { type: 'PARAMETER', parameter: 'p' } } },
+      { p: { ui: { label: 'Value', enumLabels: { [label]: 'Invalid label' } } } },
+    )
+    expect(
+      validateDocument(blueprintFamily, JSON.stringify(setup.document), setup.context).diagnostics,
+    ).toContainEqual(expect.objectContaining({ code: 'ERR_UNKNOWN_ENUM_MEMBER' }))
+  }
+})
+test('endpoint ports derive from declarations and allocation views cannot disagree', () => {
+  const c = component(
+    {},
+    {
+      port: {
+        description: 'port',
+        schema: { type: 'integer' },
+        source: { type: 'ENDPOINT', endpoint: 'web', property: 'privatePort' },
+      },
+    },
+  )
+  const service = {
+    ...c,
+    spec: {
+      ...c.spec,
+      workload: {
+        type: 'SERVICE',
+        source: { type: 'IMAGE', ref: 'example/service:1' },
+        endpoints: { web: { protocol: 'HTTP', containerPort: 8080 } },
+      },
+    },
+  }
+  const setup = item({ web: service }, {})
+  expect(resolveInstallation(setup.document, setup.context)).toMatchObject({
+    status: 'VALID',
+    outputs: { 'web:out:port': { value: 8080 } },
+  })
+  const invalid = {
+    identity: 'allocation',
+    version: '1',
+    privateHostname: 'web.internal',
+    privatePort: 9090,
+  }
+  expect(
+    resolveInstallation(setup.document, {
+      ...setup.context,
+      allocations: { web: { web: invalid } },
+    }),
+  ).toMatchObject({
+    status: 'INVALID',
+    diagnostics: [
+      expect.objectContaining({ code: 'ERR_INVALID_RESOLUTION_CONTEXT', stage: 'allocation' }),
+    ],
+  })
+})
+test('malformed allocation context returns diagnostics without throwing', () => {
+  const { setup } = recordSetup()
+  for (const allocations of [
+    null,
+    [],
+    { web: null },
+    { web: { web: null } },
+    { web: { web: { identity: 'allocation', version: '1', public: null } } },
+  ]) {
+    expect(
+      resolveInstallation(setup.document, {
+        ...setup.context,
+        allocations: allocations as unknown as InstallationContext['allocations'],
+      }).status,
+    ).toBe('INVALID')
+  }
+})
+
+test('dynamic output constraints report actual component location and resolution stage', () => {
+  const c = component(
+    {},
+    {
+      hostname: {
+        description: 'hostname',
+        schema: { type: 'string', minLength: 30 },
+        source: { type: 'ENDPOINT', endpoint: 'web', property: 'privateHostname' },
+      },
+    },
+  )
+  const service = {
+    ...c,
+    spec: {
+      ...c.spec,
+      workload: {
+        type: 'SERVICE',
+        source: { type: 'IMAGE', ref: 'example/service:1' },
+        endpoints: { web: { protocol: 'HTTP', containerPort: 8080 } },
+      },
+    },
+  }
+  const setup = item({ web: service }, {})
+  expect(
+    resolveInstallation(setup.document, {
+      ...setup.context,
+      allocations: {
+        web: { web: { identity: 'allocation', version: '1', privateHostname: 'short.internal' } },
+      },
+    }).diagnostics,
+  ).toContainEqual(
+    expect.objectContaining({
+      code: 'ERR_VALUE_CONSTRAINT',
+      phase: 'resolution',
+      stage: 'values',
+      path: '/spec/components/web/componentRef',
+      related: [{ artifact: './web.yaml', path: '/spec/contract/outputs/hostname' }],
+    }),
+  )
 })
 
 test('deep concrete syntax is rejected before recursive composition, without misreporting UTF-8', () => {

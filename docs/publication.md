@@ -30,7 +30,7 @@ release line, tagged `<family>/v<MAJOR>.<MINOR>.<PATCH>`.
    that is neither tagged nor in `published.json`. `release-ledger.yml` runs
    `task release:record` on that pull request. For each manifest version that
    has no tag yet, it inserts or updates the pending entry in `published.json`,
-   applying the [core gate](#the-core-gate). It then commits and pushes as the
+   applying the [dependency gate](#the-dependency-gate). It then commits and pushes as the
    App, with git hooks disabled (`-c core.hooksPath=/dev/null` and
    `--no-verify`), so no hook runs while the App token is in scope. That push
    re-runs the required checks, and `task check:published` re-derives the entry
@@ -85,15 +85,22 @@ Every archive unpacks into one top-level directory, `<family>-v<MAJOR>/`, such
 as `component-v1/`. A kind family archive's directory holds:
 
 - the bundle, `spec.md`, `examples/` and `conformance/`;
-- `core/spec.md` and `core/conformance/`, read from the `core/v<requires.core>`
-  tag rather than from the family's own tree;
+- each transitive dependency under its family name (`core/`, `component/`),
+  with specification, conformance corpus and fixture format, and examples where
+  present, all read from that dependency's exact tag;
+- each schema dependency's bundle, taken from its verified published asset,
+  never rebuilt with the consuming release's tooling;
 - `LICENSE`, `NOTICE` and `release.json`, which names the tag, the commit and
-  the core edition.
+  exact direct dependencies and the complete dependency closure, including
+  tags, commits, tree identities and bundle digests.
 
 A core archive's directory holds `spec.md`, `conformance/`, `LICENSE`, `NOTICE`
 and `release.json`. In both archives, `conformance/` carries the fixture format,
 [docs/conformance.md](conformance.md), as `conformance/README.md` beside the corpus.
-Archives are deterministic: fixed tar ordering, owner and mtime, and `gzip -n`.
+Before staging, `task site:fetch` verifies dependency bundles into the cache.
+The release workflow permits the current tagged draft during that fetch; staging
+still refuses any missing or corrupt dependency bundle. Archives are deterministic:
+fixed tar ordering, owner and mtime, and `gzip -n`.
 
 How to check an asset's digest and provenance is in
 [SECURITY.md → Verifying a release](../.github/SECURITY.md#verifying-a-release).
@@ -216,7 +223,7 @@ The reasoning is in [ADR 0012 §2](adr/0012-cloudflare-pages-publication.md) and
 | `path` | The family version directory at that release. A release is read through this field, which is how it survives a later layout change. |
 | `tree` | Git's tree id for `path` at the tagged commit. It covers prose, sources, examples and corpus in one value. |
 | `bundleSha256` | SHA-256 of the pinned bundle, which is also the release asset. `null` exactly when the family publishes no schema, which today means core. |
-| `requires` | Exact versions of the families this release was built against. Required on a kind family entry, and forbidden on core's. `requires.core` is core's manifest version when the entry is recorded. This is where a release's core edition is recorded; the archive's `release.json` repeats it. |
+| `requires` | Exact versions of the families this release was built against. Required on a kind family entry, and forbidden on core's. Each key comes from the family's normative dependencies table, and each value is the exact manifest version selected when recording. Blueprint records both core and component. The archive's `release.json` repeats these direct pins and describes the transitive closure. |
 
 **The ledger is append-only.** An entry is *pending* until its tag exists, and
 *tagged* after that. `task release:record` inserts or updates pending entries
@@ -235,13 +242,14 @@ The checks that read the ledger:
 
 - **`task check:published`** runs offline, against git.
   - A tagged entry is verified by three things only: `<tag>:<path>` must equal
-    `tree`, the tag's own `published.json` must hold the same entry, and a kind
-    family's `core/v<requires.core>` must be an ancestor of the tag. Nothing
+    `tree`, the tag's own `published.json` must hold the same entry, and every
+    dependency tag must be an ancestor of its consumer, with consistent
+    transitive pins. Nothing
     else is re-run against tagged history. Commit classification ran while the
     entry was pending, and `task release:stage` ran it again on the tag's own
     tooling, so newer tooling never re-judges it.
   - A pending entry is rebuilt, must match `HEAD` and a fresh pinned build, and
-    must pass the pending core gate.
+    must pass the pending dependency gate.
   - A manifest version other than `0.0.0` that is neither tagged nor recorded
     fails.
   - A tag with no entry fails.
@@ -260,7 +268,25 @@ The checks that read the ledger:
 A tagged release is never rebuilt by newer tooling. Its tree is checked in git,
 and its bytes are checked on GitHub.
 
-## The core gate
+## The dependency gate
+
+The normative dependencies table in each family's §2 is the only dependency
+registry. Recording selects exact versions from those declared major lines.
+Each dependency must already have a tag and an immutable ledger entry matching
+its own tagged tree. Missing dependencies, undeclared pins, wrong major lines,
+cycles, and conflicting transitive editions fail. In particular, blueprint's
+core pin must agree with its selected component release's core pin.
+
+A dependency with unreleased normative changes must release first. Pending
+checks and tag-owned staging classify changes; historical verification checks
+pins and ancestry without reclassifying history. Archives carry the full
+closure, so publishing component 1.1.0 cannot change blueprint 1.0.0's component
+1.0.0 schema, specification or corpus.
+
+The first release order is core, then component and listing, then blueprint.
+Refresh and record each dependent release branch after its dependencies publish.
+
+### Core-specific checks
 
 A kind family release records the core edition it was built and tested against
 ([core v1 §9](../specifications/core/v1/spec.md#editions)). The gate keeps that

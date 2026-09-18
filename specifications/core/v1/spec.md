@@ -159,8 +159,9 @@ it holds.
 Within a major version, validation MUST NOT become stricter. A document that
 validated against `v1.0.0` MUST validate against every later `v1.x.y`.
 
-**A validator holding an older release than the document was written against
-MUST reject it.** A field introduced in `v1.3.0` is, to a validator holding
+**A validator MUST reject unsupported constructs.** A document using only its
+supported subset may be accepted even when authored against a newer release.
+A field introduced in `v1.3.0` is, to a validator holding
 `v1.1.0`, a property the schema does not define, and it is rejected in the
 `structural` phase with `ERR_UNKNOWN_FIELD` like any other. A validator MUST NOT
 ignore, strip, or pass through a property it cannot evaluate, and MUST NOT relax
@@ -257,8 +258,9 @@ component's is a different number.
 ## <a id="grammars"></a>5. Identifier grammars
 
 A grammar named here is used by more than one family, and is stated once. A
-family that uses one cites it, and its schema writes the pattern out in full,
-because a bundle is self-contained and a pattern cannot be shared by reference.
+family that uses one cites it. Schema sources reference generated shared grammar
+definitions; the deterministic bundler embeds those definitions into each
+self-contained publication. Families do not independently maintain the patterns.
 
 ### <a id="label-grammar"></a>5.1 The label grammar
 
@@ -403,8 +405,10 @@ means it is well-formed and uses something this contract withholds.
 
 ### <a id="coverage"></a>6.0 Validation coverage
 
-Results carry status (VALID, INVALID or INCOMPLETE), claimed profile, reached
-phase, diagnostics and deferred obligations. Each deferred obligation identifies
+Results carry status (VALID, INVALID or INCOMPLETE), `validationProfile`, reached
+phase, diagnostics and deferred obligations. `validationProfile` names the core
+validation obligations, separately from an implementation conformance profile or
+a behavioural fixture profile. Each deferred obligation identifies
 its rule, document pointer and missing context. Known failure takes precedence
 over incompleteness. VALID means all obligations required by the claimed profile
 completed. No caller may interpret INCOMPLETE as approval.
@@ -549,7 +553,18 @@ documents invalid, so it is a breaking change and needs an ADR.
 
 Diagnostic **codes** and the **phase** at which validation fails are normative.
 Human-readable messages are not — implementations in different languages emit
-different text and that is expected.
+different text and that is expected. A code identifies a condition and its registry
+lists all permitted phases. A diagnostic reports the actual phase where the
+condition was found. Resolution diagnostics additionally identify the stage:
+parameters, allocation, connections, values, environment or record. Successful
+value resolution establishes no current authorization, quota or placement grant.
+
+A diagnostic's primary `path` is a JSON Pointer into the submitted document.
+Cross-document diagnostics anchor at an authored binding or `componentRef` and
+carry `related` locations with an `artifact` reference and its actual `path`.
+Missing component inputs anchor at `componentRef`; implementations MUST NOT invent
+blueprint output fields or absent binding fields as diagnostic locations.
+Human-readable messages and related artifact labels MUST NOT expose secret values.
 
 The codes below apply to every document of every family. A family
 specification's diagnostics table adds codes to them, and MUST NOT declare one

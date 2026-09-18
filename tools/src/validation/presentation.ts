@@ -1,6 +1,7 @@
 /** Non-normative presentation adapter over validated contracts. */
 import { HtmlRenderer, Parser } from 'commonmark'
 import type { Json } from '../lib/layout.ts'
+import { MEDIA_PATH, schemeIsPermitted } from './listing-policy.ts'
 import { at, record } from './semantic.ts'
 export function renderListing(
   markdown: string,
@@ -10,7 +11,14 @@ export function renderListing(
     walker = ast.walker()
   let step = walker.next()
   while (step) {
+    if (
+      step.entering &&
+      step.node.type === 'link' &&
+      !schemeIsPermitted(step.node.destination ?? '')
+    )
+      throw new Error('disallowed link destination')
     if (step.entering && step.node.type === 'image') {
+      if (!MEDIA_PATH.test(step.node.destination ?? '')) throw new Error('invalid media path')
       const target = media[step.node.destination ?? '']
       if (!target) throw new Error('unresolved media')
       step.node.destination = target

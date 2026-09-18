@@ -11,6 +11,7 @@ import {
   credential,
   type InstallationContext,
   inspectValue,
+  type RecordContext,
   type ResolutionRecord,
   type ResolvedValue,
   resolutionRecord,
@@ -18,6 +19,7 @@ import {
 } from '../validation/resolution.ts'
 import { at, record, semanticReport } from '../validation/semantic.ts'
 import { validateDocument } from '../validation/validator.ts'
+import { observeConnectionLifecycle } from './connection-lifecycle.ts'
 
 export interface BehaviorCase {
   id: string
@@ -31,13 +33,14 @@ export interface BehaviorCase {
     | 'validate'
     | 'record'
     | 'revision'
+    | 'connection'
   requirements: string[]
   tree?: Record<string, string>
   document?: string
   input?: Json
   context?: Json
   expect: Record<string, Json>
-  diagnostics?: { code: string; path?: string }[]
+  diagnostics?: { code: string; path?: string; phase?: string; stage?: string; related?: Json }[]
 }
 export function observe(family: Family, c: BehaviorCase): Json {
   const scratch = mkdtempSync(join(tmpdir(), 'musher-behavior-'))
@@ -65,6 +68,7 @@ export function observe(family: Family, c: BehaviorCase): Json {
     } as InstallationContext
     if ('errors' in parsed && c.operation !== 'validate')
       throw new Error('behavior input does not parse')
+    if (c.operation === 'connection') return observeConnectionLifecycle(c.input ?? null)
     if (c.operation === 'revision') {
       const revision = Number(at(c.input, 'revision')),
         highest = Number(at(c.input, 'highestPublishedRevision'))
@@ -93,12 +97,20 @@ export function observe(family: Family, c: BehaviorCase): Json {
             v.components as unknown as ResolutionRecord['components'],
             v.configuration as unknown as ResolutionRecord['configuration'],
             v.credentials as unknown as ResolutionRecord['credentials'],
+            { ...context, ...record(v.recordContext) } as unknown as RecordContext,
           ),
         } as unknown as Json
       } catch {
         return {
           status: 'INVALID',
-          diagnostics: [{ code: 'ERR_INVALID_RESOLUTION_CONTEXT', path: '' }],
+          diagnostics: [
+            {
+              code: 'ERR_INVALID_RESOLUTION_CONTEXT',
+              path: '',
+              phase: 'resolution',
+              stage: 'record',
+            },
+          ],
         }
       }
     }
@@ -121,13 +133,18 @@ export function observe(family: Family, c: BehaviorCase): Json {
         ),
       } as unknown as Json
     }
-    if (c.operation === 'render')
-      return {
-        html: renderListing(
-          String(at(c.input, 'markdown')),
-          record(at(c.input, 'media')) as Record<string, string>,
-        ),
+    if (c.operation === 'render') {
+      try {
+        return {
+          html: renderListing(
+            String(at(c.input, 'markdown')),
+            record(at(c.input, 'media')) as Record<string, string>,
+          ),
+        }
+      } catch (error) {
+        return { error: error instanceof Error ? error.message : String(error) }
       }
+    }
     if (c.operation === 'form')
       return formControls(document, semanticReport(family, document, context).components)
     const entries = new Map<string, ResolvedValue>(),
@@ -198,7 +215,7 @@ export function runBehaviorCases(family: Family, log: (line: string) => void) {
         normalization: ['normalize'],
         resolution: ['resolve', 'validate', 'record'],
         rendering: ['render', 'form'],
-        lifecycle: ['credential', 'revision'],
+        lifecycle: ['credential', 'revision', 'connection'],
       }
       if (!operations[c.profile].includes(c.operation))
         throw new Error('operation does not belong to profile')
@@ -210,7 +227,11 @@ export function runBehaviorCases(family: Family, log: (line: string) => void) {
           !produced.some(
             (d) =>
               at(d, 'code') === expected.code &&
-              (expected.path === undefined || at(d, 'path') === expected.path),
+              (expected.path === undefined || at(d, 'path') === expected.path) &&
+              (expected.phase === undefined || at(d, 'phase') === expected.phase) &&
+              (expected.stage === undefined || at(d, 'stage') === expected.stage) &&
+              (expected.related === undefined ||
+                canonicalJson(at(d, 'related') ?? null) === canonicalJson(expected.related)),
           )
         )
           throw new Error('declared behavioural diagnostic was not produced')

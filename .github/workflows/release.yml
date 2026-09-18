@@ -296,6 +296,14 @@ jobs:
       # pinned build hashes to the recorded bundleSha256. Asset names are the
       # convention, not configuration: a kind family ships its bundle and its
       # archive, core ships the archive alone.
+      # The current release is still a draft; its already-published dependencies
+      # are fetched and hash-verified before they are included in its archive.
+      - name: Fetch dependency artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ALLOW_PENDING_RELEASES: '1'
+        run: task site:fetch
+
       - name: Stage release assets
         id: stage
         env:
@@ -388,10 +396,10 @@ jobs:
             done
           fi
 
-      # A kind family names the core edition it was built against, read from the
+      # A kind family names every exact dependency it was built against, read from the
       # release.json inside the archive just staged. The body is edited only
       # while the release is a draft, and only once.
-      - name: Note the core edition
+      - name: Note the specification dependencies
         if: steps.stage.outputs.family != 'core'
         env:
           GH_TOKEN: ${{ github.token }}
@@ -407,7 +415,7 @@ jobs:
             echo "::error::${ARCHIVE} release.json names no core edition: ${meta}" >&2
             exit 1
           fi
-          note="Built against Musher Document Core v${edition} (core/v${edition})"
+          note="Specification dependencies: $(jq -r '.requires | to_entries | sort_by(.key) | map(.key + "/v" + .value) | join(", ")' <<<"$meta")"
 
           api="repos/${GITHUB_REPOSITORY}/releases/${RELEASE_ID}"
           release="$(gh api "$api")"

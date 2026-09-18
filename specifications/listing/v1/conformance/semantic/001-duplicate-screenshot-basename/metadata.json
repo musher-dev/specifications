@@ -6,5 +6,5 @@
   "requirements": [
     "LIST-MEDIA-003"
   ],
-  "summary": "Two screenshots sharing a basename under different directories are rejected."
+  "summary": "Two screenshots naming the same full media path are rejected."
 }

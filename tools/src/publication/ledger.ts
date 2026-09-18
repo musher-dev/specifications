@@ -48,7 +48,7 @@ export interface LedgerEntry {
   /** SHA-256 of the bytes served at the pinned schema URL. Null exactly for core. */
   readonly bundleSha256: string | null
   /** Exact versions this release was built against. Present exactly when not core. */
-  readonly requires?: { readonly core: string }
+  readonly requires?: { readonly core: string; readonly [family: string]: string }
 }
 
 export interface Ledger {
@@ -131,9 +131,14 @@ export function validateLedger(
         failures.add(`${where}: a kind family must record "requires": { "core": "X.Y.Z" }`)
       } else {
         for (const key of Object.keys(requires)) {
-          if (key !== 'core') failures.add(`${where}: "requires" names unknown family "${key}"`)
+          if (!/^[a-z][a-z0-9-]*$/.test(key) || key === release.family) {
+            failures.add(`${where}: "requires" names invalid dependency "${key}"`)
+          }
+          if (typeof requires[key] !== 'string' || !isVersion(requires[key] as string)) {
+            failures.add(`${where}: "requires.${key}" must be an exact X.Y.Z version`)
+          }
         }
-        if (typeof requires.core !== 'string' || !isVersion(requires.core)) {
+        if (requires.core === undefined) {
           failures.add(`${where}: "requires.core" must be an exact X.Y.Z version`)
         }
       }
@@ -145,7 +150,7 @@ export function validateLedger(
       bundleSha256: bundleSha256 as string | null,
       ...(isCore(release.family)
         ? {}
-        : { requires: { core: (requires as { core: string }).core } }),
+        : { requires: { ...(requires as { core: string; [family: string]: string }) } }),
     }
   }
   return failures.count > before ? null : { version: 2, releases }
@@ -181,7 +186,7 @@ export function serializeLedger(ledger: Ledger): string {
       path: entry.path,
       tree: entry.tree,
       bundleSha256: entry.bundleSha256,
-      ...(entry.requires === undefined ? {} : { requires: { core: entry.requires.core } }),
+      ...(entry.requires === undefined ? {} : { requires: { ...entry.requires } }),
     }
   }
   return canonicalJson({ version: 2, releases })
@@ -193,7 +198,7 @@ export function sameEntry(a: LedgerEntry, b: LedgerEntry): boolean {
     a.path === b.path &&
     a.tree === b.tree &&
     a.bundleSha256 === b.bundleSha256 &&
-    a.requires?.core === b.requires?.core &&
+    canonicalJson(a.requires ?? {}) === canonicalJson(b.requires ?? {}) &&
     (a.requires === undefined) === (b.requires === undefined)
   )
 }

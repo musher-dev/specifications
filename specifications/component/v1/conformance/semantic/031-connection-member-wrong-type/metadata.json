@@ -1,0 +1,10 @@
+{
+  "id": "semantic-031-connection-member-wrong-type",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#connection-requirements",
+  "requirements": [
+    "COMP-CONNECTION-001"
+  ],
+  "summary": "connection member wrong type"
+}

@@ -1,0 +1,10 @@
+{
+  "id": "structural-081-unknown-connection-capability",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#connection-requirements",
+  "requirements": [
+    "COMP-CONNECTION-001"
+  ],
+  "summary": "unknown connection capability"
+}

@@ -426,6 +426,61 @@
       "id": "semantic-026-reject-unknown-namespace",
       "phase": "semantic",
       "path": "semantic/026-reject-unknown-namespace"
+    },
+    {
+      "id": "structural-079-atomic-connection",
+      "phase": "structural",
+      "path": "structural/079-atomic-connection"
+    },
+    {
+      "id": "structural-080-unknown-connection-protocol",
+      "phase": "structural",
+      "path": "structural/080-unknown-connection-protocol"
+    },
+    {
+      "id": "structural-081-unknown-connection-capability",
+      "phase": "structural",
+      "path": "structural/081-unknown-connection-capability"
+    },
+    {
+      "id": "structural-082-missing-connection-role",
+      "phase": "structural",
+      "path": "structural/082-missing-connection-role"
+    },
+    {
+      "id": "semantic-027-atomic-connection",
+      "phase": "semantic",
+      "path": "semantic/027-atomic-connection"
+    },
+    {
+      "id": "semantic-028-connection-credential-not-sensitive",
+      "phase": "semantic",
+      "path": "semantic/028-connection-credential-not-sensitive"
+    },
+    {
+      "id": "semantic-029-connection-member-default",
+      "phase": "semantic",
+      "path": "semantic/029-connection-member-default"
+    },
+    {
+      "id": "semantic-030-connection-member-optional",
+      "phase": "semantic",
+      "path": "semantic/030-connection-member-optional"
+    },
+    {
+      "id": "semantic-031-connection-member-wrong-type",
+      "phase": "semantic",
+      "path": "semantic/031-connection-member-wrong-type"
+    },
+    {
+      "id": "semantic-032-connection-member-unknown",
+      "phase": "semantic",
+      "path": "semantic/032-connection-member-unknown"
+    },
+    {
+      "id": "semantic-033-connection-member-reused",
+      "phase": "semantic",
+      "path": "semantic/033-connection-member-reused"
     }
   ]
 }

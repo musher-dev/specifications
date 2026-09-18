@@ -7,8 +7,8 @@
       "BP-RESOLVE-001"
     ],
     "tree": {
-      "app/blueprint.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"BLUEPRINT\",\n  \"metadata\": {\n    \"slug\": \"app\",\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"components\": {\n      \"web\": {\n        \"componentRef\": \"./web.yaml\",\n        \"size\": \"general.standard.small\",\n        \"bindings\": {\n          \"url\": {\n            \"type\": \"CONFIG_REF\",\n            \"source\": \"${{ config.llm.baseUrl }}\"\n          }\n        }\n      }\n    },\n    \"parameters\": {}\n  }\n}\n",
-      "app/web.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"COMPONENT\",\n  \"metadata\": {\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"workload\": {\n      \"type\": \"WORKER\",\n      \"source\": {\n        \"type\": \"IMAGE\",\n        \"ref\": \"example/worker:1\"\n      }\n    },\n    \"contract\": {\n      \"inputs\": {\n        \"url\": {\n          \"description\": \"Synthetic fixture input\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"target\": {\n            \"envVarKey\": \"VALUE\"\n          }\n        }\n      },\n      \"outputs\": {\n        \"forward\": {\n          \"description\": \"Synthetic fixture output\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"source\": {\n            \"type\": \"INPUT\",\n            \"input\": \"url\"\n          }\n        }\n      }\n    }\n  }\n}\n"
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"size\":\"general.standard.small\",\"bindings\":{\"url\":{\"type\":\"CONFIG_REF\",\"source\":\"${{ config.llm.baseUrl }}\"}}}},\"parameters\":{}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Synthetic fixture input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"VALUE\"}}},\"outputs\":{\"forward\":{\"description\":\"Synthetic fixture output\",\"schema\":{\"type\":\"string\"},\"source\":{\"type\":\"INPUT\",\"input\":\"url\"}}}}}}"
     },
     "document": "app/blueprint.yaml",
     "context": {
@@ -40,8 +40,8 @@
       "BP-RESOLVE-001"
     ],
     "tree": {
-      "app/blueprint.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"BLUEPRINT\",\n  \"metadata\": {\n    \"slug\": \"app\",\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"components\": {\n      \"web\": {\n        \"componentRef\": \"./web.yaml\",\n        \"size\": \"general.standard.small\",\n        \"bindings\": {\n          \"url\": {\n            \"type\": \"CONFIG_REF\",\n            \"source\": \"${{ config.llm.baseUrl }}\"\n          }\n        }\n      }\n    },\n    \"parameters\": {}\n  }\n}\n",
-      "app/web.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"COMPONENT\",\n  \"metadata\": {\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"workload\": {\n      \"type\": \"WORKER\",\n      \"source\": {\n        \"type\": \"IMAGE\",\n        \"ref\": \"example/worker:1\"\n      }\n    },\n    \"contract\": {\n      \"inputs\": {\n        \"url\": {\n          \"description\": \"Synthetic fixture input\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"target\": {\n            \"envVarKey\": \"VALUE\"\n          }\n        }\n      },\n      \"outputs\": {\n        \"forward\": {\n          \"description\": \"Synthetic fixture output\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"source\": {\n            \"type\": \"INPUT\",\n            \"input\": \"url\"\n          }\n        }\n      }\n    }\n  }\n}\n"
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"size\":\"general.standard.small\",\"bindings\":{\"url\":{\"type\":\"CONFIG_REF\",\"source\":\"${{ config.llm.baseUrl }}\"}}}},\"parameters\":{}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Synthetic fixture input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"VALUE\"}}},\"outputs\":{\"forward\":{\"description\":\"Synthetic fixture output\",\"schema\":{\"type\":\"string\"},\"source\":{\"type\":\"INPUT\",\"input\":\"url\"}}}}}}"
     },
     "document": "app/blueprint.yaml",
     "context": {},
@@ -57,8 +57,8 @@
       "BP-RESOLVE-001"
     ],
     "tree": {
-      "app/blueprint.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"BLUEPRINT\",\n  \"metadata\": {\n    \"slug\": \"app\",\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"components\": {\n      \"web\": {\n        \"componentRef\": \"./web.yaml\",\n        \"size\": \"general.standard.small\",\n        \"bindings\": {\n          \"url\": {\n            \"type\": \"CONFIG_REF\",\n            \"source\": \"${{ config.llm.baseUrl }}\"\n          }\n        }\n      }\n    },\n    \"parameters\": {}\n  }\n}\n",
-      "app/web.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"COMPONENT\",\n  \"metadata\": {\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"workload\": {\n      \"type\": \"WORKER\",\n      \"source\": {\n        \"type\": \"IMAGE\",\n        \"ref\": \"example/worker:1\"\n      }\n    },\n    \"contract\": {\n      \"inputs\": {\n        \"url\": {\n          \"description\": \"Synthetic fixture input\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"target\": {\n            \"envVarKey\": \"VALUE\"\n          }\n        }\n      },\n      \"outputs\": {\n        \"forward\": {\n          \"description\": \"Synthetic fixture output\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"source\": {\n            \"type\": \"INPUT\",\n            \"input\": \"url\"\n          }\n        }\n      }\n    }\n  }\n}\n"
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"size\":\"general.standard.small\",\"bindings\":{\"url\":{\"type\":\"CONFIG_REF\",\"source\":\"${{ config.llm.baseUrl }}\"}}}},\"parameters\":{}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Synthetic fixture input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"VALUE\"}}},\"outputs\":{\"forward\":{\"description\":\"Synthetic fixture output\",\"schema\":{\"type\":\"string\"},\"source\":{\"type\":\"INPUT\",\"input\":\"url\"}}}}}}"
     },
     "document": "app/blueprint.yaml",
     "context": {
@@ -89,8 +89,8 @@
       "BP-RESOLVE-001"
     ],
     "tree": {
-      "app/blueprint.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"BLUEPRINT\",\n  \"metadata\": {\n    \"slug\": \"app\",\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"components\": {\n      \"web\": {\n        \"componentRef\": \"./web.yaml\",\n        \"size\": \"general.standard.small\",\n        \"bindings\": {\n          \"url\": {\n            \"type\": \"CONFIG_REF\",\n            \"source\": \"${{ config.llm.baseUrl }}\"\n          }\n        }\n      }\n    },\n    \"parameters\": {}\n  }\n}\n",
-      "app/web.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"COMPONENT\",\n  \"metadata\": {\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"workload\": {\n      \"type\": \"WORKER\",\n      \"source\": {\n        \"type\": \"IMAGE\",\n        \"ref\": \"example/worker:1\"\n      }\n    },\n    \"contract\": {\n      \"inputs\": {\n        \"url\": {\n          \"description\": \"Synthetic fixture input\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"target\": {\n            \"envVarKey\": \"VALUE\"\n          }\n        }\n      },\n      \"outputs\": {\n        \"forward\": {\n          \"description\": \"Synthetic fixture output\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"source\": {\n            \"type\": \"INPUT\",\n            \"input\": \"url\"\n          }\n        }\n      }\n    }\n  }\n}\n"
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"size\":\"general.standard.small\",\"bindings\":{\"url\":{\"type\":\"CONFIG_REF\",\"source\":\"${{ config.llm.baseUrl }}\"}}}},\"parameters\":{}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Synthetic fixture input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"VALUE\"}}},\"outputs\":{\"forward\":{\"description\":\"Synthetic fixture output\",\"schema\":{\"type\":\"string\"},\"source\":{\"type\":\"INPUT\",\"input\":\"url\"}}}}}}"
     },
     "document": "app/blueprint.yaml",
     "context": {
@@ -121,8 +121,8 @@
       "BP-RESOLVE-001"
     ],
     "tree": {
-      "app/blueprint.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"BLUEPRINT\",\n  \"metadata\": {\n    \"slug\": \"app\",\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"components\": {\n      \"web\": {\n        \"componentRef\": \"./web.yaml\",\n        \"size\": \"general.standard.small\",\n        \"bindings\": {\n          \"url\": {\n            \"type\": \"CONFIG_REF\",\n            \"source\": \"${{ config.llm.baseUrl }}\"\n          }\n        }\n      }\n    },\n    \"parameters\": {}\n  }\n}\n",
-      "app/web.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"COMPONENT\",\n  \"metadata\": {\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"workload\": {\n      \"type\": \"WORKER\",\n      \"source\": {\n        \"type\": \"IMAGE\",\n        \"ref\": \"example/worker:1\"\n      }\n    },\n    \"contract\": {\n      \"inputs\": {\n        \"url\": {\n          \"description\": \"Synthetic fixture input\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"target\": {\n            \"envVarKey\": \"VALUE\"\n          }\n        }\n      },\n      \"outputs\": {\n        \"forward\": {\n          \"description\": \"Synthetic fixture output\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"source\": {\n            \"type\": \"INPUT\",\n            \"input\": \"url\"\n          }\n        }\n      }\n    }\n  }\n}\n"
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"size\":\"general.standard.small\",\"bindings\":{\"url\":{\"type\":\"CONFIG_REF\",\"source\":\"${{ config.llm.baseUrl }}\"}}}},\"parameters\":{}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Synthetic fixture input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"VALUE\"}}},\"outputs\":{\"forward\":{\"description\":\"Synthetic fixture output\",\"schema\":{\"type\":\"string\"},\"source\":{\"type\":\"INPUT\",\"input\":\"url\"}}}}}}"
     },
     "document": "app/blueprint.yaml",
     "context": {
@@ -153,8 +153,8 @@
       "BP-RESOLVE-001"
     ],
     "tree": {
-      "app/blueprint.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"BLUEPRINT\",\n  \"metadata\": {\n    \"slug\": \"app\",\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"components\": {\n      \"web\": {\n        \"componentRef\": \"./web.yaml\",\n        \"size\": \"general.standard.small\",\n        \"bindings\": {\n          \"url\": {\n            \"type\": \"PARAMETER\",\n            \"parameter\": \"key\"\n          }\n        }\n      }\n    },\n    \"parameters\": {\n      \"key\": {\n        \"generator\": {\n          \"byteLength\": 32,\n          \"encoding\": \"HEX\"\n        }\n      }\n    }\n  }\n}\n",
-      "app/web.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"COMPONENT\",\n  \"metadata\": {\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"workload\": {\n      \"type\": \"WORKER\",\n      \"source\": {\n        \"type\": \"IMAGE\",\n        \"ref\": \"example/worker:1\"\n      }\n    },\n    \"contract\": {\n      \"inputs\": {\n        \"url\": {\n          \"description\": \"Synthetic fixture input\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"target\": {\n            \"envVarKey\": \"VALUE\"\n          }\n        }\n      },\n      \"outputs\": {\n        \"forward\": {\n          \"description\": \"Synthetic fixture output\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"source\": {\n            \"type\": \"INPUT\",\n            \"input\": \"url\"\n          }\n        }\n      }\n    }\n  }\n}\n"
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"size\":\"general.standard.small\",\"bindings\":{\"url\":{\"type\":\"PARAMETER\",\"parameter\":\"key\"}}}},\"parameters\":{\"key\":{\"generator\":{\"byteLength\":32,\"encoding\":\"HEX\"}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Synthetic fixture input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"VALUE\"}}},\"outputs\":{\"forward\":{\"description\":\"Synthetic fixture output\",\"schema\":{\"type\":\"string\"},\"source\":{\"type\":\"INPUT\",\"input\":\"url\"}}}}}}"
     },
     "document": "app/blueprint.yaml",
     "context": {
@@ -189,8 +189,8 @@
       "BP-RESOLVE-001"
     ],
     "tree": {
-      "app/blueprint.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"BLUEPRINT\",\n  \"metadata\": {\n    \"slug\": \"app\",\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"components\": {\n      \"web\": {\n        \"componentRef\": \"./web.yaml\",\n        \"size\": \"general.standard.small\",\n        \"bindings\": {\n          \"url\": {\n            \"type\": \"PARAMETER\",\n            \"parameter\": \"key\"\n          }\n        }\n      }\n    },\n    \"parameters\": {\n      \"key\": {}\n    }\n  }\n}\n",
-      "app/web.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"COMPONENT\",\n  \"metadata\": {\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"workload\": {\n      \"type\": \"WORKER\",\n      \"source\": {\n        \"type\": \"IMAGE\",\n        \"ref\": \"example/worker:1\"\n      }\n    },\n    \"contract\": {\n      \"inputs\": {\n        \"url\": {\n          \"description\": \"Synthetic fixture input\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"target\": {\n            \"envVarKey\": \"VALUE\"\n          }\n        }\n      },\n      \"outputs\": {\n        \"forward\": {\n          \"description\": \"Synthetic fixture output\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"source\": {\n            \"type\": \"INPUT\",\n            \"input\": \"url\"\n          }\n        }\n      }\n    }\n  }\n}\n"
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"size\":\"general.standard.small\",\"bindings\":{\"url\":{\"type\":\"PARAMETER\",\"parameter\":\"key\"}}}},\"parameters\":{\"key\":{}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Synthetic fixture input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"VALUE\"}}},\"outputs\":{\"forward\":{\"description\":\"Synthetic fixture output\",\"schema\":{\"type\":\"string\"},\"source\":{\"type\":\"INPUT\",\"input\":\"url\"}}}}}}"
     },
     "document": "app/blueprint.yaml",
     "context": {},
@@ -211,8 +211,8 @@
       "BP-RESOLVE-001"
     ],
     "tree": {
-      "app/blueprint.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"BLUEPRINT\",\n  \"metadata\": {\n    \"slug\": \"app\",\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"components\": {\n      \"web\": {\n        \"componentRef\": \"./web.yaml\",\n        \"size\": \"general.standard.small\",\n        \"bindings\": {\n          \"url\": {\n            \"type\": \"PARAMETER\",\n            \"parameter\": \"key\"\n          }\n        }\n      }\n    },\n    \"parameters\": {\n      \"key\": {}\n    }\n  }\n}\n",
-      "app/web.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"COMPONENT\",\n  \"metadata\": {\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"workload\": {\n      \"type\": \"WORKER\",\n      \"source\": {\n        \"type\": \"IMAGE\",\n        \"ref\": \"example/worker:1\"\n      }\n    },\n    \"contract\": {\n      \"inputs\": {\n        \"url\": {\n          \"description\": \"Synthetic fixture input\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"target\": {\n            \"envVarKey\": \"VALUE\"\n          }\n        }\n      },\n      \"outputs\": {\n        \"forward\": {\n          \"description\": \"Synthetic fixture output\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"source\": {\n            \"type\": \"INPUT\",\n            \"input\": \"url\"\n          }\n        }\n      }\n    }\n  }\n}\n"
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"size\":\"general.standard.small\",\"bindings\":{\"url\":{\"type\":\"PARAMETER\",\"parameter\":\"key\"}}}},\"parameters\":{\"key\":{}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Synthetic fixture input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"VALUE\"}}},\"outputs\":{\"forward\":{\"description\":\"Synthetic fixture output\",\"schema\":{\"type\":\"string\"},\"source\":{\"type\":\"INPUT\",\"input\":\"url\"}}}}}}"
     },
     "document": "app/blueprint.yaml",
     "context": {
@@ -240,9 +240,9 @@
       "BP-RESOLVE-001"
     ],
     "tree": {
-      "app/blueprint.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"BLUEPRINT\",\n  \"metadata\": {\n    \"slug\": \"app\",\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"components\": {\n      \"web\": {\n        \"componentRef\": \"./web.yaml\",\n        \"size\": \"general.standard.small\",\n        \"bindings\": {\n          \"url\": {\n            \"type\": \"PARAMETER\",\n            \"parameter\": \"key\"\n          }\n        }\n      },\n      \"other\": {\n        \"componentRef\": \"./other.yaml\",\n        \"size\": \"general.standard.small\",\n        \"bindings\": {}\n      }\n    },\n    \"parameters\": {\n      \"key\": {}\n    }\n  }\n}\n",
-      "app/web.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"COMPONENT\",\n  \"metadata\": {\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"workload\": {\n      \"type\": \"WORKER\",\n      \"source\": {\n        \"type\": \"IMAGE\",\n        \"ref\": \"example/worker:1\"\n      }\n    },\n    \"contract\": {\n      \"inputs\": {\n        \"url\": {\n          \"description\": \"Synthetic fixture input\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"target\": {\n            \"envVarKey\": \"VALUE\"\n          },\n          \"required\": false\n        }\n      },\n      \"outputs\": {}\n    }\n  }\n}\n",
-      "app/other.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"COMPONENT\",\n  \"metadata\": {\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"workload\": {\n      \"type\": \"WORKER\",\n      \"source\": {\n        \"type\": \"IMAGE\",\n        \"ref\": \"example/worker:1\"\n      }\n    },\n    \"contract\": {\n      \"inputs\": {\n        \"url\": {\n          \"description\": \"Synthetic fixture input\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"target\": {\n            \"envVarKey\": \"VALUE\"\n          },\n          \"required\": false\n        }\n      },\n      \"outputs\": {}\n    }\n  }\n}\n"
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"size\":\"general.standard.small\",\"bindings\":{\"url\":{\"type\":\"PARAMETER\",\"parameter\":\"key\"}}},\"other\":{\"componentRef\":\"./other.yaml\",\"size\":\"general.standard.small\",\"bindings\":{}}},\"parameters\":{\"key\":{}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Synthetic fixture input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"VALUE\"},\"required\":false}},\"outputs\":{}}}}",
+      "app/other.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Synthetic fixture input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"VALUE\"},\"required\":false}},\"outputs\":{}}}}"
     },
     "document": "app/blueprint.yaml",
     "context": {
@@ -267,21 +267,25 @@
       "BP-RESOLVE-001"
     ],
     "tree": {
-      "app/blueprint.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"BLUEPRINT\",\n  \"metadata\": {\n    \"slug\": \"app\",\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"components\": {\n      \"web\": {\n        \"componentRef\": \"./web.yaml\",\n        \"size\": \"general.standard.small\",\n        \"bindings\": {\n          \"url\": {\n            \"type\": \"OUTPUT\",\n            \"node\": \"other\",\n            \"output\": \"address\"\n          }\n        }\n      },\n      \"other\": {\n        \"componentRef\": \"./other.yaml\",\n        \"size\": \"general.standard.small\",\n        \"bindings\": {\n          \"url\": {\n            \"type\": \"OUTPUT\",\n            \"node\": \"web\",\n            \"output\": \"address\"\n          }\n        }\n      }\n    },\n    \"parameters\": {}\n  }\n}\n",
-      "app/web.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"COMPONENT\",\n  \"metadata\": {\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"workload\": {\n      \"type\": \"SERVICE\",\n      \"source\": {\n        \"type\": \"IMAGE\",\n        \"ref\": \"example/service:1\"\n      },\n      \"endpoints\": {\n        \"web\": {\n          \"containerPort\": 8080,\n          \"protocol\": \"HTTP\"\n        }\n      }\n    },\n    \"contract\": {\n      \"inputs\": {\n        \"url\": {\n          \"description\": \"Synthetic fixture input\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"target\": {\n            \"envVarKey\": \"VALUE\"\n          }\n        }\n      },\n      \"outputs\": {\n        \"address\": {\n          \"description\": \"Synthetic fixture output\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"source\": {\n            \"type\": \"ENDPOINT\",\n            \"endpoint\": \"web\",\n            \"property\": \"privateHostname\"\n          }\n        }\n      }\n    }\n  }\n}\n",
-      "app/other.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"COMPONENT\",\n  \"metadata\": {\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"workload\": {\n      \"type\": \"SERVICE\",\n      \"source\": {\n        \"type\": \"IMAGE\",\n        \"ref\": \"example/service:1\"\n      },\n      \"endpoints\": {\n        \"web\": {\n          \"containerPort\": 8080,\n          \"protocol\": \"HTTP\"\n        }\n      }\n    },\n    \"contract\": {\n      \"inputs\": {\n        \"url\": {\n          \"description\": \"Synthetic fixture input\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"target\": {\n            \"envVarKey\": \"VALUE\"\n          }\n        }\n      },\n      \"outputs\": {\n        \"address\": {\n          \"description\": \"Synthetic fixture output\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"source\": {\n            \"type\": \"ENDPOINT\",\n            \"endpoint\": \"web\",\n            \"property\": \"privateHostname\"\n          }\n        }\n      }\n    }\n  }\n}\n"
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"size\":\"general.standard.small\",\"bindings\":{\"url\":{\"type\":\"OUTPUT\",\"node\":\"other\",\"output\":\"address\"}}},\"other\":{\"componentRef\":\"./other.yaml\",\"size\":\"general.standard.small\",\"bindings\":{\"url\":{\"type\":\"OUTPUT\",\"node\":\"web\",\"output\":\"address\"}}}},\"parameters\":{}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"SERVICE\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/service:1\"},\"endpoints\":{\"web\":{\"containerPort\":8080,\"protocol\":\"HTTP\"}}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Synthetic fixture input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"VALUE\"}}},\"outputs\":{\"address\":{\"description\":\"Synthetic fixture output\",\"schema\":{\"type\":\"string\"},\"source\":{\"type\":\"ENDPOINT\",\"endpoint\":\"web\",\"property\":\"privateHostname\"}}}}}}",
+      "app/other.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"SERVICE\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/service:1\"},\"endpoints\":{\"web\":{\"containerPort\":8080,\"protocol\":\"HTTP\"}}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Synthetic fixture input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"VALUE\"}}},\"outputs\":{\"address\":{\"description\":\"Synthetic fixture output\",\"schema\":{\"type\":\"string\"},\"source\":{\"type\":\"ENDPOINT\",\"endpoint\":\"web\",\"property\":\"privateHostname\"}}}}}}"
     },
     "document": "app/blueprint.yaml",
     "context": {
-      "addresses": {
+      "allocations": {
         "web": {
           "web": {
-            "privateHostname": "web.internal"
+            "privateHostname": "web.internal",
+            "identity": "allocation-web-web",
+            "version": "1"
           }
         },
         "other": {
           "web": {
-            "privateHostname": "other.internal"
+            "privateHostname": "other.internal",
+            "identity": "allocation-other-web",
+            "version": "1"
           }
         }
       }
@@ -300,9 +304,9 @@
       "BP-CONN-002"
     ],
     "tree": {
-      "app/blueprint.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"BLUEPRINT\",\n  \"metadata\": {\n    \"slug\": \"app\",\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"components\": {\n      \"web\": {\n        \"componentRef\": \"./web.yaml\",\n        \"size\": \"general.standard.small\",\n        \"bindings\": {\n          \"url\": {\n            \"type\": \"OUTPUT\",\n            \"node\": \"other\",\n            \"output\": \"forward\"\n          }\n        }\n      },\n      \"other\": {\n        \"componentRef\": \"./other.yaml\",\n        \"size\": \"general.standard.small\",\n        \"bindings\": {\n          \"url\": {\n            \"type\": \"OUTPUT\",\n            \"node\": \"web\",\n            \"output\": \"forward\"\n          }\n        }\n      }\n    },\n    \"parameters\": {}\n  }\n}\n",
-      "app/web.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"COMPONENT\",\n  \"metadata\": {\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"workload\": {\n      \"type\": \"WORKER\",\n      \"source\": {\n        \"type\": \"IMAGE\",\n        \"ref\": \"example/worker:1\"\n      }\n    },\n    \"contract\": {\n      \"inputs\": {\n        \"url\": {\n          \"description\": \"Synthetic fixture input\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"target\": {\n            \"envVarKey\": \"VALUE\"\n          }\n        }\n      },\n      \"outputs\": {\n        \"forward\": {\n          \"description\": \"Synthetic fixture output\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"source\": {\n            \"type\": \"INPUT\",\n            \"input\": \"url\"\n          }\n        }\n      }\n    }\n  }\n}\n",
-      "app/other.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"COMPONENT\",\n  \"metadata\": {\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"workload\": {\n      \"type\": \"WORKER\",\n      \"source\": {\n        \"type\": \"IMAGE\",\n        \"ref\": \"example/worker:1\"\n      }\n    },\n    \"contract\": {\n      \"inputs\": {\n        \"url\": {\n          \"description\": \"Synthetic fixture input\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"target\": {\n            \"envVarKey\": \"VALUE\"\n          }\n        }\n      },\n      \"outputs\": {\n        \"forward\": {\n          \"description\": \"Synthetic fixture output\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"source\": {\n            \"type\": \"INPUT\",\n            \"input\": \"url\"\n          }\n        }\n      }\n    }\n  }\n}\n"
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"size\":\"general.standard.small\",\"bindings\":{\"url\":{\"type\":\"OUTPUT\",\"node\":\"other\",\"output\":\"forward\"}}},\"other\":{\"componentRef\":\"./other.yaml\",\"size\":\"general.standard.small\",\"bindings\":{\"url\":{\"type\":\"OUTPUT\",\"node\":\"web\",\"output\":\"forward\"}}}},\"parameters\":{}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Synthetic fixture input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"VALUE\"}}},\"outputs\":{\"forward\":{\"description\":\"Synthetic fixture output\",\"schema\":{\"type\":\"string\"},\"source\":{\"type\":\"INPUT\",\"input\":\"url\"}}}}}}",
+      "app/other.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Synthetic fixture input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"VALUE\"}}},\"outputs\":{\"forward\":{\"description\":\"Synthetic fixture output\",\"schema\":{\"type\":\"string\"},\"source\":{\"type\":\"INPUT\",\"input\":\"url\"}}}}}}"
     },
     "document": "app/blueprint.yaml",
     "context": {},
@@ -323,12 +327,12 @@
       "CORE-ADMISSION-001"
     ],
     "tree": {
-      "app/blueprint.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"BLUEPRINT\",\n  \"metadata\": {\n    \"slug\": \"app\",\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"components\": {\n      \"web\": {\n        \"componentRef\": \"./web.yaml\",\n        \"size\": \"general.standard.small\",\n        \"bindings\": {}\n      }\n    },\n    \"parameters\": {}\n  }\n}\n",
-      "app/web.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"COMPONENT\",\n  \"metadata\": {\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"workload\": {\n      \"type\": \"WORKER\",\n      \"source\": {\n        \"type\": \"IMAGE\",\n        \"ref\": \"example/worker:1\"\n      }\n    },\n    \"contract\": {\n      \"inputs\": {},\n      \"outputs\": {}\n    }\n  }\n}\n"
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"size\":\"general.standard.small\",\"bindings\":{}}},\"parameters\":{}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{},\"outputs\":{}}}}"
     },
     "document": "app/blueprint.yaml",
     "context": {
-      "profile": "publication"
+      "validationProfile": "publication"
     },
     "expect": {
       "/status": "INCOMPLETE",
@@ -343,8 +347,8 @@
       "BP-UI-001"
     ],
     "tree": {
-      "app/blueprint.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"BLUEPRINT\",\n  \"metadata\": {\n    \"slug\": \"app\",\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"components\": {\n      \"web\": {\n        \"componentRef\": \"./web.yaml\",\n        \"size\": \"general.standard.small\",\n        \"bindings\": {\n          \"url\": {\n            \"type\": \"PARAMETER\",\n            \"parameter\": \"key\"\n          }\n        }\n      }\n    },\n    \"parameters\": {\n      \"key\": {\n        \"ui\": {\n          \"label\": \"API key\"\n        }\n      }\n    }\n  }\n}\n",
-      "app/web.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"COMPONENT\",\n  \"metadata\": {\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"workload\": {\n      \"type\": \"WORKER\",\n      \"source\": {\n        \"type\": \"IMAGE\",\n        \"ref\": \"example/worker:1\"\n      }\n    },\n    \"contract\": {\n      \"inputs\": {\n        \"url\": {\n          \"description\": \"Synthetic fixture input\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"target\": {\n            \"envVarKey\": \"VALUE\"\n          },\n          \"sensitive\": true\n        }\n      },\n      \"outputs\": {}\n    }\n  }\n}\n"
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"size\":\"general.standard.small\",\"bindings\":{\"url\":{\"type\":\"PARAMETER\",\"parameter\":\"key\"}}}},\"parameters\":{\"key\":{\"ui\":{\"label\":\"API key\"}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Synthetic fixture input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"VALUE\"},\"sensitive\":true}},\"outputs\":{}}}}"
     },
     "document": "app/blueprint.yaml",
     "context": {},
@@ -395,7 +399,7 @@
       "BP-RESOLVE-001"
     ],
     "input": {
-      "blueprint": "synthetic blueprint bytes",
+      "blueprint": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"size\":\"general.standard.small\",\"bindings\":{\"url\":{\"type\":\"CONFIG_REF\",\"source\":\"${{ config.llm.baseUrl }}\"},\"key\":{\"type\":\"PARAMETER\",\"parameter\":\"apiKey\"}}}},\"parameters\":{\"apiKey\":{\"generator\":{}}}}}",
       "specifications": {
         "core": "1.0.0",
         "component": "1.0.0",
@@ -404,9 +408,9 @@
       "components": {
         "web": {
           "source": "IMAGE",
-          "identity": "component-1",
+          "identity": "./web.yaml",
           "revision": 1,
-          "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "digest": "f3de6a1bdd44fa0065f127fd0b6b4c1ed663f0af53b7b107bbd3be5bdb70ea14",
           "imageDigest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
           "compute": {
             "identity": "general.standard.small",
@@ -428,6 +432,42 @@
           "identity": "credential-1",
           "rotation": 0
         }
+      },
+      "recordContext": {
+        "snapshot": {
+          "formatVersion": 1,
+          "identity": "snapshot-1",
+          "version": "1",
+          "parameters": {},
+          "configuration": {
+            "llm.baseUrl": {
+              "identity": "config-1",
+              "version": "3",
+              "authorized": true,
+              "value": "https://synthetic.invalid",
+              "sensitive": false
+            }
+          },
+          "credentials": {
+            "apiKey": {
+              "identity": "credential-1",
+              "rotation": 0,
+              "value": "synthetic-secret",
+              "sensitive": true
+            }
+          },
+          "allocations": {}
+        },
+        "specificationDependencies": {
+          "core": {},
+          "component": {
+            "core": "1.0.0"
+          },
+          "blueprint": {
+            "core": "1.0.0",
+            "component": "1.0.0"
+          }
+        }
       }
     },
     "expect": {
@@ -443,8 +483,17 @@
           "identity": "credential-1",
           "rotation": 0
         }
+      },
+      "/record/installationSnapshot": {
+        "identity": "snapshot-1",
+        "version": "1"
       }
-    }
+    },
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"size\":\"general.standard.small\",\"bindings\":{\"url\":{\"type\":\"CONFIG_REF\",\"source\":\"${{ config.llm.baseUrl }}\"},\"key\":{\"type\":\"PARAMETER\",\"parameter\":\"apiKey\"}}}},\"parameters\":{\"apiKey\":{\"generator\":{}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Endpoint\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Credential\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}}},\"outputs\":{}}}}"
+    },
+    "document": "app/blueprint.yaml"
   },
   {
     "id": "resolution-record-needs-image-digest",
@@ -454,7 +503,7 @@
       "BP-RESOLVE-001"
     ],
     "input": {
-      "blueprint": "synthetic blueprint bytes",
+      "blueprint": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"size\":\"general.standard.small\",\"bindings\":{\"url\":{\"type\":\"CONFIG_REF\",\"source\":\"${{ config.llm.baseUrl }}\"},\"key\":{\"type\":\"PARAMETER\",\"parameter\":\"apiKey\"}}}},\"parameters\":{\"apiKey\":{\"generator\":{}}}}}",
       "specifications": {
         "core": "1.0.0",
         "component": "1.0.0",
@@ -463,9 +512,9 @@
       "components": {
         "web": {
           "source": "IMAGE",
-          "identity": "component-1",
+          "identity": "./web.yaml",
           "revision": 1,
-          "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "digest": "f3de6a1bdd44fa0065f127fd0b6b4c1ed663f0af53b7b107bbd3be5bdb70ea14",
           "compute": {
             "identity": "general.standard.small",
             "version": "7"
@@ -486,6 +535,42 @@
           "identity": "credential-1",
           "rotation": 0
         }
+      },
+      "recordContext": {
+        "snapshot": {
+          "formatVersion": 1,
+          "identity": "snapshot-1",
+          "version": "1",
+          "parameters": {},
+          "configuration": {
+            "llm.baseUrl": {
+              "identity": "config-1",
+              "version": "3",
+              "authorized": true,
+              "value": "https://synthetic.invalid",
+              "sensitive": false
+            }
+          },
+          "credentials": {
+            "apiKey": {
+              "identity": "credential-1",
+              "rotation": 0,
+              "value": "synthetic-secret",
+              "sensitive": true
+            }
+          },
+          "allocations": {}
+        },
+        "specificationDependencies": {
+          "core": {},
+          "component": {
+            "core": "1.0.0"
+          },
+          "blueprint": {
+            "core": "1.0.0",
+            "component": "1.0.0"
+          }
+        }
       }
     },
     "expect": {
@@ -495,7 +580,12 @@
       {
         "code": "ERR_INVALID_RESOLUTION_CONTEXT"
       }
-    ]
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"size\":\"general.standard.small\",\"bindings\":{\"url\":{\"type\":\"CONFIG_REF\",\"source\":\"${{ config.llm.baseUrl }}\"},\"key\":{\"type\":\"PARAMETER\",\"parameter\":\"apiKey\"}}}},\"parameters\":{\"apiKey\":{\"generator\":{}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Endpoint\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Credential\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}}},\"outputs\":{}}}}"
+    },
+    "document": "app/blueprint.yaml"
   },
   {
     "id": "resolution-shared-sensitivity",
@@ -507,7 +597,7 @@
     "tree": {
       "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"size\":\"general.standard.small\",\"bindings\":{\"url\":{\"type\":\"PARAMETER\",\"parameter\":\"key\"}}},\"other\":{\"componentRef\":\"./other.yaml\",\"size\":\"general.standard.small\",\"bindings\":{\"url\":{\"type\":\"PARAMETER\",\"parameter\":\"key\"}}}},\"parameters\":{\"key\":{}}}}",
       "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Synthetic fixture input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"VALUE\"},\"required\":false,\"sensitive\":true}},\"outputs\":{}}}}",
-      "app/other.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"COMPONENT\",\n  \"metadata\": {\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"workload\": {\n      \"type\": \"WORKER\",\n      \"source\": {\n        \"type\": \"IMAGE\",\n        \"ref\": \"example/worker:1\"\n      }\n    },\n    \"contract\": {\n      \"inputs\": {\n        \"url\": {\n          \"description\": \"Synthetic fixture input\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"target\": {\n            \"envVarKey\": \"VALUE\"\n          },\n          \"required\": false\n        }\n      },\n      \"outputs\": {}\n    }\n  }\n}\n"
+      "app/other.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Synthetic fixture input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"VALUE\"},\"required\":false}},\"outputs\":{}}}}"
     },
     "document": "app/blueprint.yaml",
     "context": {
@@ -608,6 +698,2009 @@
       "/status": "VALID",
       "/inputs/web:in:url/value": null,
       "/environment/web/VALUE/value": "null"
+    }
+  },
+  {
+    "id": "resolution-record-rejects-arbitrary-blueprint",
+    "profile": "resolution",
+    "operation": "record",
+    "requirements": [
+      "BP-RESOLVE-001"
+    ],
+    "input": {
+      "blueprint": "not a blueprint",
+      "specifications": {
+        "core": "1.0.0",
+        "component": "1.0.0",
+        "blueprint": "1.0.0"
+      },
+      "components": {
+        "web": {
+          "source": "IMAGE",
+          "identity": "./web.yaml",
+          "revision": 1,
+          "digest": "f3de6a1bdd44fa0065f127fd0b6b4c1ed663f0af53b7b107bbd3be5bdb70ea14",
+          "imageDigest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "compute": {
+            "identity": "general.standard.small",
+            "version": "7"
+          },
+          "volumes": {},
+          "exposure": {}
+        }
+      },
+      "configuration": {
+        "llm.baseUrl": {
+          "identity": "config-1",
+          "version": "3",
+          "value": "synthetic-secret"
+        }
+      },
+      "credentials": {
+        "apiKey": {
+          "identity": "credential-1",
+          "rotation": 0
+        }
+      },
+      "recordContext": {
+        "snapshot": {
+          "formatVersion": 1,
+          "identity": "snapshot-1",
+          "version": "1",
+          "parameters": {},
+          "configuration": {
+            "llm.baseUrl": {
+              "identity": "config-1",
+              "version": "3",
+              "authorized": true,
+              "value": "https://synthetic.invalid",
+              "sensitive": false
+            }
+          },
+          "credentials": {
+            "apiKey": {
+              "identity": "credential-1",
+              "rotation": 0,
+              "value": "synthetic-secret",
+              "sensitive": true
+            }
+          },
+          "allocations": {}
+        },
+        "specificationDependencies": {
+          "core": {},
+          "component": {
+            "core": "1.0.0"
+          },
+          "blueprint": {
+            "core": "1.0.0",
+            "component": "1.0.0"
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID"
+    },
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"size\":\"general.standard.small\",\"bindings\":{\"url\":{\"type\":\"CONFIG_REF\",\"source\":\"${{ config.llm.baseUrl }}\"},\"key\":{\"type\":\"PARAMETER\",\"parameter\":\"apiKey\"}}}},\"parameters\":{\"apiKey\":{\"generator\":{\"type\":\"RANDOM_STRING\"}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Endpoint\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Credential\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}}},\"outputs\":{}}}}"
+    },
+    "document": "app/blueprint.yaml",
+    "diagnostics": [
+      {
+        "code": "ERR_INVALID_RESOLUTION_CONTEXT",
+        "phase": "resolution",
+        "stage": "record"
+      }
+    ]
+  },
+  {
+    "id": "resolution-record-rejects-wrong-node",
+    "profile": "resolution",
+    "operation": "record",
+    "requirements": [
+      "BP-RESOLVE-001"
+    ],
+    "input": {
+      "blueprint": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"size\":\"general.standard.small\",\"bindings\":{\"url\":{\"type\":\"CONFIG_REF\",\"source\":\"${{ config.llm.baseUrl }}\"},\"key\":{\"type\":\"PARAMETER\",\"parameter\":\"apiKey\"}}}},\"parameters\":{\"apiKey\":{\"generator\":{}}}}}",
+      "specifications": {
+        "core": "1.0.0",
+        "component": "1.0.0",
+        "blueprint": "1.0.0"
+      },
+      "components": {
+        "other": {
+          "source": "IMAGE",
+          "identity": "./web.yaml",
+          "revision": 1,
+          "digest": "f3de6a1bdd44fa0065f127fd0b6b4c1ed663f0af53b7b107bbd3be5bdb70ea14",
+          "imageDigest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "compute": {
+            "identity": "general.standard.small",
+            "version": "7"
+          },
+          "volumes": {},
+          "exposure": {}
+        }
+      },
+      "configuration": {
+        "llm.baseUrl": {
+          "identity": "config-1",
+          "version": "3",
+          "value": "synthetic-secret"
+        }
+      },
+      "credentials": {
+        "apiKey": {
+          "identity": "credential-1",
+          "rotation": 0
+        }
+      },
+      "recordContext": {
+        "snapshot": {
+          "formatVersion": 1,
+          "identity": "snapshot-1",
+          "version": "1",
+          "parameters": {},
+          "configuration": {
+            "llm.baseUrl": {
+              "identity": "config-1",
+              "version": "3",
+              "authorized": true,
+              "value": "https://synthetic.invalid",
+              "sensitive": false
+            }
+          },
+          "credentials": {
+            "apiKey": {
+              "identity": "credential-1",
+              "rotation": 0,
+              "value": "synthetic-secret",
+              "sensitive": true
+            }
+          },
+          "allocations": {}
+        },
+        "specificationDependencies": {
+          "core": {},
+          "component": {
+            "core": "1.0.0"
+          },
+          "blueprint": {
+            "core": "1.0.0",
+            "component": "1.0.0"
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID"
+    },
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"size\":\"general.standard.small\",\"bindings\":{\"url\":{\"type\":\"CONFIG_REF\",\"source\":\"${{ config.llm.baseUrl }}\"},\"key\":{\"type\":\"PARAMETER\",\"parameter\":\"apiKey\"}}}},\"parameters\":{\"apiKey\":{\"generator\":{}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Endpoint\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Credential\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}}},\"outputs\":{}}}}"
+    },
+    "document": "app/blueprint.yaml",
+    "diagnostics": [
+      {
+        "code": "ERR_INVALID_RESOLUTION_CONTEXT",
+        "phase": "resolution",
+        "stage": "record"
+      }
+    ]
+  },
+  {
+    "id": "resolution-record-rejects-wrong-revision",
+    "profile": "resolution",
+    "operation": "record",
+    "requirements": [
+      "BP-RESOLVE-001"
+    ],
+    "input": {
+      "blueprint": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"size\":\"general.standard.small\",\"bindings\":{\"url\":{\"type\":\"CONFIG_REF\",\"source\":\"${{ config.llm.baseUrl }}\"},\"key\":{\"type\":\"PARAMETER\",\"parameter\":\"apiKey\"}}}},\"parameters\":{\"apiKey\":{\"generator\":{}}}}}",
+      "specifications": {
+        "core": "1.0.0",
+        "component": "1.0.0",
+        "blueprint": "1.0.0"
+      },
+      "components": {
+        "web": {
+          "source": "IMAGE",
+          "identity": "./web.yaml",
+          "revision": 2,
+          "digest": "f3de6a1bdd44fa0065f127fd0b6b4c1ed663f0af53b7b107bbd3be5bdb70ea14",
+          "imageDigest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "compute": {
+            "identity": "general.standard.small",
+            "version": "7"
+          },
+          "volumes": {},
+          "exposure": {}
+        }
+      },
+      "configuration": {
+        "llm.baseUrl": {
+          "identity": "config-1",
+          "version": "3",
+          "value": "synthetic-secret"
+        }
+      },
+      "credentials": {
+        "apiKey": {
+          "identity": "credential-1",
+          "rotation": 0
+        }
+      },
+      "recordContext": {
+        "snapshot": {
+          "formatVersion": 1,
+          "identity": "snapshot-1",
+          "version": "1",
+          "parameters": {},
+          "configuration": {
+            "llm.baseUrl": {
+              "identity": "config-1",
+              "version": "3",
+              "authorized": true,
+              "value": "https://synthetic.invalid",
+              "sensitive": false
+            }
+          },
+          "credentials": {
+            "apiKey": {
+              "identity": "credential-1",
+              "rotation": 0,
+              "value": "synthetic-secret",
+              "sensitive": true
+            }
+          },
+          "allocations": {}
+        },
+        "specificationDependencies": {
+          "core": {},
+          "component": {
+            "core": "1.0.0"
+          },
+          "blueprint": {
+            "core": "1.0.0",
+            "component": "1.0.0"
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID"
+    },
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"size\":\"general.standard.small\",\"bindings\":{\"url\":{\"type\":\"CONFIG_REF\",\"source\":\"${{ config.llm.baseUrl }}\"},\"key\":{\"type\":\"PARAMETER\",\"parameter\":\"apiKey\"}}}},\"parameters\":{\"apiKey\":{\"generator\":{}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Endpoint\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Credential\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}}},\"outputs\":{}}}}"
+    },
+    "document": "app/blueprint.yaml",
+    "diagnostics": [
+      {
+        "code": "ERR_INVALID_RESOLUTION_CONTEXT",
+        "phase": "resolution",
+        "stage": "record"
+      }
+    ]
+  },
+  {
+    "id": "resolution-record-rejects-inconsistent-core",
+    "profile": "resolution",
+    "operation": "record",
+    "requirements": [
+      "BP-RESOLVE-001"
+    ],
+    "input": {
+      "blueprint": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"size\":\"general.standard.small\",\"bindings\":{\"url\":{\"type\":\"CONFIG_REF\",\"source\":\"${{ config.llm.baseUrl }}\"},\"key\":{\"type\":\"PARAMETER\",\"parameter\":\"apiKey\"}}}},\"parameters\":{\"apiKey\":{\"generator\":{}}}}}",
+      "specifications": {
+        "core": "1.0.0",
+        "component": "1.0.0",
+        "blueprint": "1.0.0"
+      },
+      "components": {
+        "web": {
+          "source": "IMAGE",
+          "identity": "./web.yaml",
+          "revision": 1,
+          "digest": "f3de6a1bdd44fa0065f127fd0b6b4c1ed663f0af53b7b107bbd3be5bdb70ea14",
+          "imageDigest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "compute": {
+            "identity": "general.standard.small",
+            "version": "7"
+          },
+          "volumes": {},
+          "exposure": {}
+        }
+      },
+      "configuration": {
+        "llm.baseUrl": {
+          "identity": "config-1",
+          "version": "3",
+          "value": "synthetic-secret"
+        }
+      },
+      "credentials": {
+        "apiKey": {
+          "identity": "credential-1",
+          "rotation": 0
+        }
+      },
+      "recordContext": {
+        "snapshot": {
+          "formatVersion": 1,
+          "identity": "snapshot-1",
+          "version": "1",
+          "parameters": {},
+          "configuration": {
+            "llm.baseUrl": {
+              "identity": "config-1",
+              "version": "3",
+              "authorized": true,
+              "value": "https://synthetic.invalid",
+              "sensitive": false
+            }
+          },
+          "credentials": {
+            "apiKey": {
+              "identity": "credential-1",
+              "rotation": 0,
+              "value": "synthetic-secret",
+              "sensitive": true
+            }
+          },
+          "allocations": {}
+        },
+        "specificationDependencies": {
+          "core": {},
+          "component": {
+            "core": "1.1.0"
+          },
+          "blueprint": {
+            "core": "1.0.0",
+            "component": "1.0.0"
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID"
+    },
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"size\":\"general.standard.small\",\"bindings\":{\"url\":{\"type\":\"CONFIG_REF\",\"source\":\"${{ config.llm.baseUrl }}\"},\"key\":{\"type\":\"PARAMETER\",\"parameter\":\"apiKey\"}}}},\"parameters\":{\"apiKey\":{\"generator\":{}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Endpoint\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Credential\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}}},\"outputs\":{}}}}"
+    },
+    "document": "app/blueprint.yaml",
+    "diagnostics": [
+      {
+        "code": "ERR_INVALID_RESOLUTION_CONTEXT",
+        "phase": "resolution",
+        "stage": "record"
+      }
+    ]
+  },
+  {
+    "id": "resolution-record-rejects-configuration-snapshot-mismatch",
+    "profile": "resolution",
+    "operation": "record",
+    "requirements": [
+      "BP-RESOLVE-001"
+    ],
+    "input": {
+      "blueprint": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"size\":\"general.standard.small\",\"bindings\":{\"url\":{\"type\":\"CONFIG_REF\",\"source\":\"${{ config.llm.baseUrl }}\"},\"key\":{\"type\":\"PARAMETER\",\"parameter\":\"apiKey\"}}}},\"parameters\":{\"apiKey\":{\"generator\":{}}}}}",
+      "specifications": {
+        "core": "1.0.0",
+        "component": "1.0.0",
+        "blueprint": "1.0.0"
+      },
+      "components": {
+        "web": {
+          "source": "IMAGE",
+          "identity": "./web.yaml",
+          "revision": 1,
+          "digest": "f3de6a1bdd44fa0065f127fd0b6b4c1ed663f0af53b7b107bbd3be5bdb70ea14",
+          "imageDigest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "compute": {
+            "identity": "general.standard.small",
+            "version": "7"
+          },
+          "volumes": {},
+          "exposure": {}
+        }
+      },
+      "configuration": {
+        "llm.baseUrl": {
+          "identity": "config-1",
+          "version": "3",
+          "value": "synthetic-secret"
+        }
+      },
+      "credentials": {
+        "apiKey": {
+          "identity": "credential-1",
+          "rotation": 0
+        }
+      },
+      "recordContext": {
+        "snapshot": {
+          "formatVersion": 1,
+          "identity": "snapshot-1",
+          "version": "1",
+          "parameters": {},
+          "configuration": {
+            "llm.baseUrl": {
+              "identity": "config-1",
+              "version": "4",
+              "authorized": true,
+              "value": "https://synthetic.invalid",
+              "sensitive": false
+            }
+          },
+          "credentials": {
+            "apiKey": {
+              "identity": "credential-1",
+              "rotation": 0,
+              "value": "synthetic-secret",
+              "sensitive": true
+            }
+          },
+          "allocations": {}
+        },
+        "specificationDependencies": {
+          "core": {},
+          "component": {
+            "core": "1.0.0"
+          },
+          "blueprint": {
+            "core": "1.0.0",
+            "component": "1.0.0"
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID"
+    },
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"size\":\"general.standard.small\",\"bindings\":{\"url\":{\"type\":\"CONFIG_REF\",\"source\":\"${{ config.llm.baseUrl }}\"},\"key\":{\"type\":\"PARAMETER\",\"parameter\":\"apiKey\"}}}},\"parameters\":{\"apiKey\":{\"generator\":{}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Endpoint\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Credential\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}}},\"outputs\":{}}}}"
+    },
+    "document": "app/blueprint.yaml",
+    "diagnostics": [
+      {
+        "code": "ERR_INVALID_RESOLUTION_CONTEXT",
+        "phase": "resolution",
+        "stage": "record"
+      }
+    ]
+  },
+  {
+    "profile": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-CONNECTION-002"
+    ],
+    "tree": {
+      "connection-app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"connection-app\",\"revision\":1},\"spec\":{\"connectionSources\":{\"primary\":{\"source\":\"${{ config.llm.default }}\"}},\"components\":{\"app\":{\"componentRef\":\"./component.yaml\",\"size\":\"general.standard.small\",\"connectionBindings\":{\"llm\":{\"source\":\"primary\"}}}}}}",
+      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseUrl\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
+    },
+    "document": "connection-app/blueprint.yaml",
+    "context": {
+      "connections": {
+        "installation": "install-1",
+        "slots": {
+          "primary": {
+            "status": "SELECTED",
+            "persisted": true,
+            "selection": {
+              "identity": "connection-1",
+              "version": "1",
+              "installation": "install-1",
+              "slot": "primary",
+              "source": {
+                "identity": "default-policy",
+                "version": "3",
+                "reference": "${{ config.llm.default }}"
+              },
+              "kind": "MANAGED",
+              "costOwner": "org-1",
+              "credential": {
+                "identity": "credential-1",
+                "rotation": 0,
+                "value": "synthetic-only",
+                "permittedBaseUrls": [
+                  "https://gateway.example/openai/v1"
+                ]
+              },
+              "views": {
+                "OPENAI_CHAT_COMPLETIONS": {
+                  "baseUrl": "https://gateway.example/openai/v1",
+                  "model": "model-a",
+                  "capabilities": [
+                    "STREAMING",
+                    "TOOL_CALLS"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "id": "connection-selected",
+    "expect": {
+      "/status": "VALID",
+      "/inputs/app:in:model/value": "model-a",
+      "/inspection/app:in:key": {
+        "sensitive": true,
+        "redacted": true
+      }
+    }
+  },
+  {
+    "profile": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-CONNECTION-002"
+    ],
+    "tree": {
+      "connection-app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"connection-app\",\"revision\":1},\"spec\":{\"connectionSources\":{\"primary\":{\"source\":\"${{ config.llm.default }}\"}},\"components\":{\"app\":{\"componentRef\":\"./component.yaml\",\"size\":\"general.standard.small\",\"connectionBindings\":{\"llm\":{\"source\":\"primary\"}}}}}}",
+      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseUrl\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
+    },
+    "document": "connection-app/blueprint.yaml",
+    "context": {},
+    "id": "connection-offline",
+    "expect": {
+      "/status": "INCOMPLETE",
+      "/inputs": {}
+    }
+  },
+  {
+    "profile": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-CONNECTION-002"
+    ],
+    "tree": {
+      "connection-app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"connection-app\",\"revision\":1},\"spec\":{\"connectionSources\":{\"primary\":{\"source\":\"${{ config.llm.default }}\"}},\"components\":{\"app\":{\"componentRef\":\"./component.yaml\",\"size\":\"general.standard.small\",\"connectionBindings\":{\"llm\":{\"source\":\"primary\"}}}}}}",
+      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseUrl\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
+    },
+    "document": "connection-app/blueprint.yaml",
+    "context": {
+      "connections": {
+        "installation": "install-1",
+        "slots": {
+          "primary": {
+            "status": "NOT_FOUND"
+          }
+        }
+      }
+    },
+    "id": "connection-not-found",
+    "expect": {
+      "/status": "INVALID",
+      "/inputs": {}
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_CONNECTION_NOT_FOUND",
+        "path": "/spec/connectionSources/primary"
+      }
+    ]
+  },
+  {
+    "profile": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-CONNECTION-002"
+    ],
+    "tree": {
+      "connection-app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"connection-app\",\"revision\":1},\"spec\":{\"connectionSources\":{\"primary\":{\"source\":\"${{ config.llm.default }}\"}},\"components\":{\"app\":{\"componentRef\":\"./component.yaml\",\"size\":\"general.standard.small\",\"connectionBindings\":{\"llm\":{\"source\":\"primary\"}}}}}}",
+      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseUrl\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
+    },
+    "document": "connection-app/blueprint.yaml",
+    "context": {
+      "connections": {
+        "installation": "install-1",
+        "slots": {
+          "primary": {
+            "status": "DENIED"
+          }
+        }
+      }
+    },
+    "id": "connection-denied",
+    "expect": {
+      "/status": "INVALID",
+      "/inputs": {}
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_CONNECTION_DENIED",
+        "path": "/spec/connectionSources/primary"
+      }
+    ]
+  },
+  {
+    "profile": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-CONNECTION-002"
+    ],
+    "tree": {
+      "connection-app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"connection-app\",\"revision\":1},\"spec\":{\"connectionSources\":{\"primary\":{\"source\":\"${{ config.llm.default }}\"}},\"components\":{\"app\":{\"componentRef\":\"./component.yaml\",\"size\":\"general.standard.small\",\"connectionBindings\":{\"llm\":{\"source\":\"primary\"}}}}}}",
+      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseUrl\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
+    },
+    "document": "connection-app/blueprint.yaml",
+    "context": {
+      "connections": {
+        "installation": "install-1",
+        "slots": {
+          "primary": {
+            "status": "INCOMPATIBLE"
+          }
+        }
+      }
+    },
+    "id": "connection-incompatible",
+    "expect": {
+      "/status": "INVALID",
+      "/inputs": {}
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_CONNECTION_INCOMPATIBLE",
+        "path": "/spec/connectionSources/primary"
+      }
+    ]
+  },
+  {
+    "profile": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-CONNECTION-002"
+    ],
+    "tree": {
+      "connection-app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"connection-app\",\"revision\":1},\"spec\":{\"connectionSources\":{\"primary\":{\"source\":\"${{ config.llm.default }}\"}},\"components\":{\"app\":{\"componentRef\":\"./component.yaml\",\"size\":\"general.standard.small\",\"connectionBindings\":{\"llm\":{\"source\":\"primary\"}}}}}}",
+      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseUrl\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
+    },
+    "document": "connection-app/blueprint.yaml",
+    "context": {
+      "connections": {
+        "installation": "install-1",
+        "slots": {
+          "primary": {
+            "status": "SELECTED",
+            "persisted": true,
+            "selection": {
+              "identity": "connection-1",
+              "version": "1",
+              "installation": "install-1",
+              "slot": "primary",
+              "source": {
+                "identity": "default-policy",
+                "version": "3",
+                "reference": "${{ config.llm.default }}"
+              },
+              "kind": "MANAGED",
+              "costOwner": "org-1",
+              "credential": {
+                "identity": "credential-1",
+                "rotation": 0,
+                "value": "synthetic-only",
+                "permittedBaseUrls": [
+                  "https://gateway.example/openai/v1"
+                ]
+              },
+              "views": {
+                "OPENAI_CHAT_COMPLETIONS": {
+                  "baseUrl": "https://gateway.example/openai/v1",
+                  "model": "model-a",
+                  "capabilities": []
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "id": "connection-missing-capability",
+    "expect": {
+      "/status": "INVALID",
+      "/inputs": {}
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_CONNECTION_INCOMPATIBLE"
+      }
+    ]
+  },
+  {
+    "profile": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-CONNECTION-002"
+    ],
+    "tree": {
+      "connection-app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"connection-app\",\"revision\":1},\"spec\":{\"connectionSources\":{\"primary\":{\"source\":\"${{ config.llm.default }}\"}},\"components\":{\"app\":{\"componentRef\":\"./component.yaml\",\"size\":\"general.standard.small\",\"connectionBindings\":{\"llm\":{\"source\":\"primary\"}}}}}}",
+      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseUrl\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
+    },
+    "document": "connection-app/blueprint.yaml",
+    "context": {
+      "connections": {
+        "installation": "install-1",
+        "slots": {
+          "primary": {
+            "status": "SELECTED",
+            "persisted": true,
+            "selection": {
+              "identity": "connection-1",
+              "version": "1",
+              "installation": "install-1",
+              "slot": "primary",
+              "source": {
+                "identity": "default-policy",
+                "version": "3",
+                "reference": "${{ config.llm.default }}"
+              },
+              "kind": "MANAGED",
+              "costOwner": "org-1",
+              "credential": {
+                "identity": "credential-1",
+                "rotation": 0,
+                "value": "synthetic-only",
+                "permittedBaseUrls": [
+                  "https://gateway.example/openai/v1"
+                ]
+              },
+              "views": {
+                "OPENAI_CHAT_COMPLETIONS": {
+                  "baseUrl": "https://other.example",
+                  "model": "model-a",
+                  "capabilities": [
+                    "STREAMING",
+                    "TOOL_CALLS"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "id": "connection-url-only-override",
+    "expect": {
+      "/status": "INVALID",
+      "/inputs": {}
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_INVALID_RESOLUTION_CONTEXT"
+      }
+    ]
+  },
+  {
+    "profile": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-CONNECTION-002"
+    ],
+    "tree": {
+      "connection-app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"connection-app\",\"revision\":1},\"spec\":{\"connectionSources\":{\"primary\":{\"source\":\"${{ config.llm.default }}\"}},\"components\":{\"app\":{\"componentRef\":\"./component.yaml\",\"size\":\"general.standard.small\",\"connectionBindings\":{\"llm\":{\"source\":\"primary\"}}}}}}",
+      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseUrl\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
+    },
+    "document": "connection-app/blueprint.yaml",
+    "context": {
+      "connections": {
+        "installation": "install-1",
+        "slots": {
+          "primary": {
+            "status": "SELECTED",
+            "persisted": true,
+            "selection": {
+              "identity": "connection-1",
+              "version": "1",
+              "installation": "install-1",
+              "slot": "primary",
+              "source": {
+                "identity": "default-policy",
+                "version": "3"
+              },
+              "kind": "MANAGED",
+              "costOwner": "org-1",
+              "views": {
+                "OPENAI_CHAT_COMPLETIONS": {
+                  "baseUrl": "https://gateway.example/openai/v1",
+                  "model": "model-a",
+                  "capabilities": [
+                    "STREAMING",
+                    "TOOL_CALLS"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "id": "connection-partial-override",
+    "expect": {
+      "/status": "INVALID",
+      "/inputs": {}
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_INVALID_RESOLUTION_CONTEXT"
+      }
+    ]
+  },
+  {
+    "profile": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-CONNECTION-002"
+    ],
+    "tree": {
+      "connection-app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"connection-app\",\"revision\":1},\"spec\":{\"connectionSources\":{\"primary\":{\"source\":\"${{ config.llm.default }}\"}},\"components\":{\"app\":{\"componentRef\":\"./component.yaml\",\"size\":\"general.standard.small\",\"connectionBindings\":{\"llm\":{\"source\":\"primary\"}}}}}}",
+      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseUrl\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
+    },
+    "document": "connection-app/blueprint.yaml",
+    "context": {
+      "connections": {
+        "installation": "install-1",
+        "slots": {
+          "primary": {
+            "status": "SELECTED",
+            "persisted": true,
+            "selection": {
+              "identity": "connection-1",
+              "version": "1",
+              "installation": "other",
+              "slot": "primary",
+              "source": {
+                "identity": "default-policy",
+                "version": "3",
+                "reference": "${{ config.llm.default }}"
+              },
+              "kind": "MANAGED",
+              "costOwner": "org-1",
+              "credential": {
+                "identity": "credential-1",
+                "rotation": 0,
+                "value": "synthetic-only",
+                "permittedBaseUrls": [
+                  "https://gateway.example/openai/v1"
+                ]
+              },
+              "views": {
+                "OPENAI_CHAT_COMPLETIONS": {
+                  "baseUrl": "https://gateway.example/openai/v1",
+                  "model": "model-a",
+                  "capabilities": [
+                    "STREAMING",
+                    "TOOL_CALLS"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "id": "connection-wrong-installation",
+    "expect": {
+      "/status": "INVALID",
+      "/inputs": {}
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_INVALID_RESOLUTION_CONTEXT"
+      }
+    ]
+  },
+  {
+    "profile": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-CONNECTION-002"
+    ],
+    "tree": {
+      "connection-app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"connection-app\",\"revision\":1},\"spec\":{\"connectionSources\":{\"primary\":{\"source\":\"${{ config.llm.default }}\"}},\"components\":{\"app\":{\"componentRef\":\"./component.yaml\",\"size\":\"general.standard.small\",\"connectionBindings\":{\"llm\":{\"source\":\"primary\"}}}}}}",
+      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"ANTHROPIC_MESSAGES\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseUrl\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
+    },
+    "document": "connection-app/blueprint.yaml",
+    "context": {
+      "connections": {
+        "installation": "install-1",
+        "slots": {
+          "primary": {
+            "status": "SELECTED",
+            "persisted": true,
+            "selection": {
+              "identity": "connection-1",
+              "version": "1",
+              "installation": "install-1",
+              "slot": "primary",
+              "source": {
+                "identity": "default-policy",
+                "version": "3",
+                "reference": "${{ config.llm.default }}"
+              },
+              "kind": "MANAGED",
+              "costOwner": "org-1",
+              "credential": {
+                "identity": "credential-1",
+                "rotation": 0,
+                "value": "synthetic-only",
+                "permittedBaseUrls": [
+                  "https://gateway.example/anthropic"
+                ]
+              },
+              "views": {
+                "ANTHROPIC_MESSAGES": {
+                  "baseUrl": "https://gateway.example/anthropic",
+                  "model": "model-a",
+                  "capabilities": [
+                    "STREAMING",
+                    "TOOL_CALLS"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "id": "connection-anthropic",
+    "expect": {
+      "/status": "VALID",
+      "/inputs/app:in:url/value": "https://gateway.example/anthropic"
+    }
+  },
+  {
+    "id": "connection-lifecycle-default-retry-update-clone-revocation",
+    "profile": "lifecycle",
+    "operation": "connection",
+    "requirements": [
+      "BP-CONNECTION-003"
+    ],
+    "input": {
+      "steps": [
+        {
+          "installation": "install-1",
+          "slot": "primary",
+          "generation": 0,
+          "defaultVersion": "1"
+        },
+        {
+          "installation": "install-1",
+          "slot": "primary",
+          "generation": 0,
+          "defaultVersion": "2"
+        },
+        {
+          "installation": "install-1",
+          "slot": "primary",
+          "generation": 1,
+          "defaultVersion": "2"
+        },
+        {
+          "installation": "clone",
+          "slot": "primary",
+          "generation": 0,
+          "defaultVersion": "2"
+        },
+        {
+          "installation": "install-1",
+          "slot": "primary",
+          "generation": 0,
+          "defaultVersion": "1",
+          "revoked": true
+        }
+      ]
+    },
+    "expect": {
+      "/issued": 3,
+      "/persisted": 3,
+      "/observations/0/credential": "credential-1",
+      "/observations/1/credential": "credential-1",
+      "/observations/1/version": "1",
+      "/observations/2/rotation": 1,
+      "/observations/3/credential": "credential-3",
+      "/observations/4/status": "DENIED"
+    }
+  },
+  {
+    "id": "connection-retry-before-acquisition",
+    "profile": "lifecycle",
+    "operation": "connection",
+    "requirements": [
+      "BP-CONNECTION-003"
+    ],
+    "input": {
+      "steps": [
+        {
+          "installation": "install-1",
+          "slot": "primary",
+          "generation": 0,
+          "defaultVersion": "1",
+          "fault": "beforeAcquisition"
+        },
+        {
+          "installation": "install-1",
+          "slot": "primary",
+          "generation": 0,
+          "defaultVersion": "2"
+        }
+      ]
+    },
+    "expect": {
+      "/issued": 1,
+      "/persisted": 1,
+      "/observations/0/status": "INTERRUPTED",
+      "/observations/1/status": "SELECTED",
+      "/observations/1/version": "2"
+    }
+  },
+  {
+    "id": "connection-retry-after-issuance",
+    "profile": "lifecycle",
+    "operation": "connection",
+    "requirements": [
+      "BP-CONNECTION-003"
+    ],
+    "input": {
+      "steps": [
+        {
+          "installation": "install-1",
+          "slot": "primary",
+          "generation": 0,
+          "defaultVersion": "1",
+          "fault": "afterIssuance"
+        },
+        {
+          "installation": "install-1",
+          "slot": "primary",
+          "generation": 0,
+          "defaultVersion": "2"
+        }
+      ]
+    },
+    "expect": {
+      "/issued": 1,
+      "/persisted": 1,
+      "/observations/0/status": "INTERRUPTED",
+      "/observations/1/status": "SELECTED",
+      "/observations/1/version": "1"
+    }
+  },
+  {
+    "id": "connection-retry-before-persistence",
+    "profile": "lifecycle",
+    "operation": "connection",
+    "requirements": [
+      "BP-CONNECTION-003"
+    ],
+    "input": {
+      "steps": [
+        {
+          "installation": "install-1",
+          "slot": "primary",
+          "generation": 0,
+          "defaultVersion": "1",
+          "fault": "beforePersistence"
+        },
+        {
+          "installation": "install-1",
+          "slot": "primary",
+          "generation": 0,
+          "defaultVersion": "2"
+        }
+      ]
+    },
+    "expect": {
+      "/issued": 1,
+      "/persisted": 1,
+      "/observations/0/status": "INTERRUPTED",
+      "/observations/1/status": "SELECTED",
+      "/observations/1/version": "1"
+    }
+  },
+  {
+    "id": "connection-retry-after-persistence",
+    "profile": "lifecycle",
+    "operation": "connection",
+    "requirements": [
+      "BP-CONNECTION-003"
+    ],
+    "input": {
+      "steps": [
+        {
+          "installation": "install-1",
+          "slot": "primary",
+          "generation": 0,
+          "defaultVersion": "1",
+          "fault": "afterPersistence"
+        },
+        {
+          "installation": "install-1",
+          "slot": "primary",
+          "generation": 0,
+          "defaultVersion": "2"
+        }
+      ]
+    },
+    "expect": {
+      "/issued": 1,
+      "/persisted": 1,
+      "/observations/0/status": "INTERRUPTED",
+      "/observations/1/status": "SELECTED",
+      "/observations/1/version": "1"
+    }
+  },
+  {
+    "id": "connection-retry-before-materialization",
+    "profile": "lifecycle",
+    "operation": "connection",
+    "requirements": [
+      "BP-CONNECTION-003"
+    ],
+    "input": {
+      "steps": [
+        {
+          "installation": "install-1",
+          "slot": "primary",
+          "generation": 0,
+          "defaultVersion": "1",
+          "fault": "beforeMaterialization"
+        },
+        {
+          "installation": "install-1",
+          "slot": "primary",
+          "generation": 0,
+          "defaultVersion": "2"
+        }
+      ]
+    },
+    "expect": {
+      "/issued": 1,
+      "/persisted": 1,
+      "/observations/0/status": "INTERRUPTED",
+      "/observations/1/status": "SELECTED",
+      "/observations/1/version": "1"
+    }
+  },
+  {
+    "id": "resolution-rejects-unknown-submitted-parameter",
+    "profile": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-RESOLVE-001"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"size\":\"general.standard.small\",\"bindings\":{\"value\":{\"type\":\"PARAMETER\",\"parameter\":\"logLevel\"}}}},\"parameters\":{\"logLevel\":{\"default\":\"info\"}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"value\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"VALUE\"}}},\"outputs\":{}}}}"
+    },
+    "document": "app/blueprint.yaml",
+    "context": {
+      "parameters": {
+        "verbosity": {
+          "value": "debug",
+          "sensitive": false
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID",
+      "/inputs": {}
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_UNKNOWN_PARAMETER",
+        "phase": "resolution",
+        "stage": "parameters"
+      }
+    ]
+  },
+  {
+    "id": "enum-label-rejects-object",
+    "profile": "resolution",
+    "operation": "validate",
+    "requirements": [
+      "BP-UI-003"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"size\":\"general.standard.small\",\"bindings\":{\"value\":{\"type\":\"PARAMETER\",\"parameter\":\"p\"}}}},\"parameters\":{\"p\":{\"ui\":{\"label\":\"Value\",\"enumLabels\":{\"[object Object]\":\"Invalid label\"}}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"value\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"object\",\"properties\":{},\"additionalProperties\":false,\"enum\":[{}]},\"target\":{\"envVarKey\":\"VALUE\"}}},\"outputs\":{}}}}"
+    },
+    "document": "app/blueprint.yaml",
+    "context": {},
+    "expect": {
+      "/status": "INVALID"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_UNKNOWN_ENUM_MEMBER",
+        "phase": "semantic"
+      }
+    ]
+  },
+  {
+    "id": "enum-label-rejects-array",
+    "profile": "resolution",
+    "operation": "validate",
+    "requirements": [
+      "BP-UI-003"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"size\":\"general.standard.small\",\"bindings\":{\"value\":{\"type\":\"PARAMETER\",\"parameter\":\"p\"}}}},\"parameters\":{\"p\":{\"ui\":{\"label\":\"Value\",\"enumLabels\":{\"a\":\"Invalid label\"}}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"value\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"array\",\"items\":{\"type\":\"string\"},\"enum\":[[\"a\"]]},\"target\":{\"envVarKey\":\"VALUE\"}}},\"outputs\":{}}}}"
+    },
+    "document": "app/blueprint.yaml",
+    "context": {},
+    "expect": {
+      "/status": "INVALID"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_UNKNOWN_ENUM_MEMBER",
+        "phase": "semantic"
+      }
+    ]
+  },
+  {
+    "id": "resolution-private-port-needs-no-context",
+    "profile": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-RESOLVE-001"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"size\":\"general.standard.small\",\"bindings\":{}}},\"parameters\":{}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"SERVICE\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/service:1\"},\"endpoints\":{\"web\":{\"protocol\":\"HTTP\",\"containerPort\":8080}},\"health\":{\"readiness\":{\"endpoint\":\"web\",\"path\":\"/\",\"type\":\"HTTP\"}}},\"contract\":{\"inputs\":{},\"outputs\":{\"port\":{\"description\":\"Synthetic output\",\"source\":{\"type\":\"ENDPOINT\",\"endpoint\":\"web\",\"property\":\"privatePort\"},\"schema\":{\"type\":\"integer\"}}}}}}"
+    },
+    "document": "app/blueprint.yaml",
+    "context": {},
+    "expect": {
+      "/status": "VALID",
+      "/outputs/web:out:port/value": 8080
+    }
+  },
+  {
+    "id": "resolution-rejects-duplicate-private-port",
+    "profile": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-RESOLVE-001"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"size\":\"general.standard.small\",\"bindings\":{}}},\"parameters\":{}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"SERVICE\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/service:1\"},\"endpoints\":{\"web\":{\"protocol\":\"HTTP\",\"containerPort\":8080}},\"health\":{\"readiness\":{\"endpoint\":\"web\",\"path\":\"/\",\"type\":\"HTTP\"}}},\"contract\":{\"inputs\":{},\"outputs\":{\"port\":{\"description\":\"Synthetic output\",\"source\":{\"type\":\"ENDPOINT\",\"endpoint\":\"web\",\"property\":\"privatePort\"},\"schema\":{\"type\":\"integer\"}}}}}}"
+    },
+    "document": "app/blueprint.yaml",
+    "context": {
+      "allocations": {
+        "web": {
+          "web": {
+            "identity": "allocation-1",
+            "version": "1",
+            "privateHostname": "web.internal",
+            "privatePort": 9090
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_INVALID_RESOLUTION_CONTEXT",
+        "phase": "resolution",
+        "stage": "allocation"
+      }
+    ]
+  },
+  {
+    "id": "resolution-canonical-public-url",
+    "profile": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-RESOLVE-001"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"size\":\"general.standard.small\",\"bindings\":{},\"exposure\":{\"web\":\"PUBLIC\"}}},\"parameters\":{}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"SERVICE\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/service:1\"},\"endpoints\":{\"web\":{\"protocol\":\"HTTP\",\"containerPort\":8080}},\"health\":{\"readiness\":{\"endpoint\":\"web\",\"path\":\"/\",\"type\":\"HTTP\"}}},\"contract\":{\"inputs\":{},\"outputs\":{\"url\":{\"description\":\"Synthetic output\",\"source\":{\"type\":\"ENDPOINT\",\"endpoint\":\"web\",\"property\":\"publicUrl\"},\"schema\":{\"type\":\"string\"}}}}}}"
+    },
+    "document": "app/blueprint.yaml",
+    "context": {
+      "allocations": {
+        "web": {
+          "web": {
+            "identity": "allocation-1",
+            "version": "1",
+            "public": {
+              "hostname": "example.invalid",
+              "scheme": "https",
+              "port": 8443,
+              "path": "/api/"
+            }
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "VALID",
+      "/outputs/web:out:url/value": "https://example.invalid:8443/api"
+    }
+  },
+  {
+    "id": "resolution-rejects-competing-public-url",
+    "profile": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-RESOLVE-001"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"size\":\"general.standard.small\",\"bindings\":{},\"exposure\":{\"web\":\"PUBLIC\"}}},\"parameters\":{}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"SERVICE\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/service:1\"},\"endpoints\":{\"web\":{\"protocol\":\"HTTP\",\"containerPort\":8080}},\"health\":{\"readiness\":{\"endpoint\":\"web\",\"path\":\"/\",\"type\":\"HTTP\"}}},\"contract\":{\"inputs\":{},\"outputs\":{\"url\":{\"description\":\"Synthetic output\",\"source\":{\"type\":\"ENDPOINT\",\"endpoint\":\"web\",\"property\":\"publicUrl\"},\"schema\":{\"type\":\"string\"}}}}}}"
+    },
+    "document": "app/blueprint.yaml",
+    "context": {
+      "allocations": {
+        "web": {
+          "web": {
+            "identity": "allocation-1",
+            "version": "1",
+            "public": {
+              "hostname": "example.invalid",
+              "scheme": "https",
+              "port": 8443,
+              "path": "/api/",
+              "publicUrl": "https://different.invalid"
+            }
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_INVALID_RESOLUTION_CONTEXT",
+        "phase": "resolution",
+        "stage": "allocation"
+      }
+    ]
+  },
+  {
+    "id": "resolution-output-location-and-phase",
+    "profile": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-RESOLVE-001"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"size\":\"general.standard.small\",\"bindings\":{}}},\"parameters\":{}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"SERVICE\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/service:1\"},\"endpoints\":{\"web\":{\"protocol\":\"HTTP\",\"containerPort\":8080}},\"health\":{\"readiness\":{\"endpoint\":\"web\",\"path\":\"/\",\"type\":\"HTTP\"}}},\"contract\":{\"inputs\":{},\"outputs\":{\"host\":{\"description\":\"Synthetic output\",\"source\":{\"type\":\"ENDPOINT\",\"endpoint\":\"web\",\"property\":\"privateHostname\"},\"schema\":{\"type\":\"string\",\"minLength\":30}}}}}}"
+    },
+    "document": "app/blueprint.yaml",
+    "context": {
+      "allocations": {
+        "web": {
+          "web": {
+            "identity": "allocation-1",
+            "version": "1",
+            "privateHostname": "short.internal"
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_VALUE_CONSTRAINT",
+        "path": "/spec/components/web/componentRef",
+        "phase": "resolution",
+        "stage": "values",
+        "related": [
+          {
+            "artifact": "./web.yaml",
+            "path": "/spec/contract/outputs/host"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "resolution-record-submitted-value-debug",
+    "profile": "resolution",
+    "operation": "record",
+    "requirements": [
+      "BP-RESOLVE-001"
+    ],
+    "input": {
+      "blueprint": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"size\":\"general.standard.small\",\"bindings\":{\"url\":{\"type\":\"CONFIG_REF\",\"source\":\"${{ config.llm.baseUrl }}\"},\"key\":{\"type\":\"PARAMETER\",\"parameter\":\"apiKey\"},\"logLevel\":{\"type\":\"PARAMETER\",\"parameter\":\"logLevel\"}}}},\"parameters\":{\"apiKey\":{\"generator\":{}},\"logLevel\":{\"default\":\"info\"}}}}",
+      "specifications": {
+        "core": "1.0.0",
+        "component": "1.0.0",
+        "blueprint": "1.0.0"
+      },
+      "components": {
+        "web": {
+          "source": "IMAGE",
+          "identity": "./web.yaml",
+          "revision": 1,
+          "digest": "50b104a21e4f89cf9c7cacdbfb3d5f251325839828231444c7bc1db016b741c0",
+          "imageDigest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "compute": {
+            "identity": "general.standard.small",
+            "version": "7"
+          },
+          "volumes": {},
+          "exposure": {}
+        }
+      },
+      "configuration": {
+        "llm.baseUrl": {
+          "identity": "config-1",
+          "version": "3",
+          "value": "synthetic-secret"
+        }
+      },
+      "credentials": {
+        "apiKey": {
+          "identity": "credential-1",
+          "rotation": 0
+        }
+      },
+      "recordContext": {
+        "snapshot": {
+          "formatVersion": 1,
+          "identity": "snapshot-1",
+          "version": "1",
+          "parameters": {
+            "logLevel": {
+              "value": "debug",
+              "sensitive": false
+            }
+          },
+          "configuration": {
+            "llm.baseUrl": {
+              "identity": "config-1",
+              "version": "3",
+              "authorized": true,
+              "value": "https://synthetic.invalid",
+              "sensitive": false
+            }
+          },
+          "credentials": {
+            "apiKey": {
+              "identity": "credential-1",
+              "rotation": 0,
+              "value": "synthetic-secret",
+              "sensitive": true
+            }
+          },
+          "allocations": {}
+        },
+        "specificationDependencies": {
+          "core": {},
+          "component": {
+            "core": "1.0.0"
+          },
+          "blueprint": {
+            "core": "1.0.0",
+            "component": "1.0.0"
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "VALID",
+      "/record/configuration": {
+        "llm.baseUrl": {
+          "identity": "config-1",
+          "version": "3"
+        }
+      },
+      "/record/credentials": {
+        "apiKey": {
+          "identity": "credential-1",
+          "rotation": 0
+        }
+      },
+      "/record/installationSnapshot": {
+        "identity": "snapshot-1",
+        "version": "1"
+      }
+    },
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"size\":\"general.standard.small\",\"bindings\":{\"url\":{\"type\":\"CONFIG_REF\",\"source\":\"${{ config.llm.baseUrl }}\"},\"key\":{\"type\":\"PARAMETER\",\"parameter\":\"apiKey\"},\"logLevel\":{\"type\":\"PARAMETER\",\"parameter\":\"logLevel\"}}}},\"parameters\":{\"apiKey\":{\"generator\":{}},\"logLevel\":{\"default\":\"info\"}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Endpoint\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Credential\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"logLevel\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"LOG_LEVEL\"}}},\"outputs\":{}}}}"
+    },
+    "document": "app/blueprint.yaml"
+  },
+  {
+    "id": "resolution-record-submitted-value-info",
+    "profile": "resolution",
+    "operation": "record",
+    "requirements": [
+      "BP-RESOLVE-001"
+    ],
+    "input": {
+      "blueprint": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"size\":\"general.standard.small\",\"bindings\":{\"url\":{\"type\":\"CONFIG_REF\",\"source\":\"${{ config.llm.baseUrl }}\"},\"key\":{\"type\":\"PARAMETER\",\"parameter\":\"apiKey\"},\"logLevel\":{\"type\":\"PARAMETER\",\"parameter\":\"logLevel\"}}}},\"parameters\":{\"apiKey\":{\"generator\":{}},\"logLevel\":{\"default\":\"info\"}}}}",
+      "specifications": {
+        "core": "1.0.0",
+        "component": "1.0.0",
+        "blueprint": "1.0.0"
+      },
+      "components": {
+        "web": {
+          "source": "IMAGE",
+          "identity": "./web.yaml",
+          "revision": 1,
+          "digest": "50b104a21e4f89cf9c7cacdbfb3d5f251325839828231444c7bc1db016b741c0",
+          "imageDigest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "compute": {
+            "identity": "general.standard.small",
+            "version": "7"
+          },
+          "volumes": {},
+          "exposure": {}
+        }
+      },
+      "configuration": {
+        "llm.baseUrl": {
+          "identity": "config-1",
+          "version": "3",
+          "value": "synthetic-secret"
+        }
+      },
+      "credentials": {
+        "apiKey": {
+          "identity": "credential-1",
+          "rotation": 0
+        }
+      },
+      "recordContext": {
+        "snapshot": {
+          "formatVersion": 1,
+          "identity": "snapshot-1",
+          "version": "2",
+          "parameters": {
+            "logLevel": {
+              "value": "info",
+              "sensitive": false
+            }
+          },
+          "configuration": {
+            "llm.baseUrl": {
+              "identity": "config-1",
+              "version": "3",
+              "authorized": true,
+              "value": "https://synthetic.invalid",
+              "sensitive": false
+            }
+          },
+          "credentials": {
+            "apiKey": {
+              "identity": "credential-1",
+              "rotation": 0,
+              "value": "synthetic-secret",
+              "sensitive": true
+            }
+          },
+          "allocations": {}
+        },
+        "specificationDependencies": {
+          "core": {},
+          "component": {
+            "core": "1.0.0"
+          },
+          "blueprint": {
+            "core": "1.0.0",
+            "component": "1.0.0"
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "VALID",
+      "/record/configuration": {
+        "llm.baseUrl": {
+          "identity": "config-1",
+          "version": "3"
+        }
+      },
+      "/record/credentials": {
+        "apiKey": {
+          "identity": "credential-1",
+          "rotation": 0
+        }
+      },
+      "/record/installationSnapshot": {
+        "identity": "snapshot-1",
+        "version": "2"
+      }
+    },
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"size\":\"general.standard.small\",\"bindings\":{\"url\":{\"type\":\"CONFIG_REF\",\"source\":\"${{ config.llm.baseUrl }}\"},\"key\":{\"type\":\"PARAMETER\",\"parameter\":\"apiKey\"},\"logLevel\":{\"type\":\"PARAMETER\",\"parameter\":\"logLevel\"}}}},\"parameters\":{\"apiKey\":{\"generator\":{}},\"logLevel\":{\"default\":\"info\"}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Endpoint\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Credential\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"logLevel\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"LOG_LEVEL\"}}},\"outputs\":{}}}}"
+    },
+    "document": "app/blueprint.yaml"
+  },
+  {
+    "profile": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-CONNECTION-002"
+    ],
+    "tree": {
+      "connection-app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"connection-app\",\"revision\":1},\"spec\":{\"connectionSources\":{\"primary\":{\"source\":\"${{ config.llm.default }}\"}},\"components\":{\"app\":{\"componentRef\":\"./component.yaml\",\"size\":\"general.standard.small\",\"connectionBindings\":{\"llm\":{\"source\":\"primary\"}}}}}}",
+      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseUrl\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
+    },
+    "document": "connection-app/blueprint.yaml",
+    "context": {
+      "connections": {
+        "installation": "install-1",
+        "slots": {
+          "primary": {
+            "status": "SELECTED",
+            "persisted": true,
+            "selection": {
+              "identity": "connection-1",
+              "version": "1",
+              "installation": "install-1",
+              "slot": "primary",
+              "source": {
+                "identity": "default-policy",
+                "version": "3",
+                "reference": "${{ config.llm.other }}"
+              },
+              "kind": "MANAGED",
+              "costOwner": "org-1",
+              "credential": {
+                "identity": "credential-1",
+                "rotation": 0,
+                "value": "synthetic-only",
+                "permittedBaseUrls": [
+                  "https://gateway.example/openai/v1"
+                ]
+              },
+              "views": {
+                "OPENAI_CHAT_COMPLETIONS": {
+                  "baseUrl": "https://gateway.example/openai/v1",
+                  "model": "model-a",
+                  "capabilities": [
+                    "STREAMING",
+                    "TOOL_CALLS"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "id": "connection-provenance-mismatch",
+    "expect": {
+      "/status": "INVALID",
+      "/inputs": {}
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_INVALID_RESOLUTION_CONTEXT"
+      }
+    ]
+  },
+  {
+    "profile": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-CONNECTION-002"
+    ],
+    "tree": {
+      "connection-app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"connection-app\",\"revision\":1},\"spec\":{\"connectionSources\":{\"primary\":{\"source\":\"${{ config.llm.default }}\"}},\"components\":{\"app\":{\"componentRef\":\"./component.yaml\",\"size\":\"general.standard.small\",\"connectionBindings\":{\"llm\":{\"source\":\"primary\"}}}}}}",
+      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseUrl\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
+    },
+    "document": "connection-app/blueprint.yaml",
+    "context": {
+      "connections": {
+        "installation": "install-1",
+        "slots": {
+          "primary": {
+            "status": "SELECTED",
+            "persisted": true,
+            "selection": {
+              "identity": "user-connection",
+              "version": "1",
+              "installation": "install-1",
+              "slot": "primary",
+              "source": {
+                "identity": "default-policy",
+                "version": "3",
+                "reference": "${{ config.llm.default }}"
+              },
+              "kind": "USER",
+              "costOwner": "org-1",
+              "credential": {
+                "identity": "user-credential",
+                "rotation": 0,
+                "value": "synthetic-user",
+                "permittedBaseUrls": [
+                  "https://user.example/v1"
+                ]
+              },
+              "views": {
+                "OPENAI_CHAT_COMPLETIONS": {
+                  "baseUrl": "https://user.example/v1",
+                  "model": "user-model",
+                  "capabilities": [
+                    "STREAMING",
+                    "TOOL_CALLS"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "id": "connection-complete-user-replacement",
+    "expect": {
+      "/status": "VALID",
+      "/inputs/app:in:model/value": "user-model",
+      "/inspection/app:in:key": {
+        "sensitive": true,
+        "redacted": true
+      }
+    }
+  },
+  {
+    "profile": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-CONNECTION-002"
+    ],
+    "tree": {
+      "connection-app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"connection-app\",\"revision\":1},\"spec\":{\"connectionSources\":{\"primary\":{\"source\":\"${{ config.llm.default }}\"}},\"components\":{\"app\":{\"componentRef\":\"./component.yaml\",\"size\":\"general.standard.small\",\"connectionBindings\":{\"llm\":{\"source\":\"primary\"}}}}}}",
+      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\",\"enum\":[\"different-model\"]},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseUrl\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
+    },
+    "document": "connection-app/blueprint.yaml",
+    "context": {
+      "connections": {
+        "installation": "install-1",
+        "slots": {
+          "primary": {
+            "status": "SELECTED",
+            "persisted": true,
+            "selection": {
+              "identity": "connection-1",
+              "version": "1",
+              "installation": "install-1",
+              "slot": "primary",
+              "source": {
+                "identity": "default-policy",
+                "version": "3",
+                "reference": "${{ config.llm.default }}"
+              },
+              "kind": "MANAGED",
+              "costOwner": "org-1",
+              "credential": {
+                "identity": "credential-1",
+                "rotation": 0,
+                "value": "synthetic-only",
+                "permittedBaseUrls": [
+                  "https://gateway.example/openai/v1"
+                ]
+              },
+              "views": {
+                "OPENAI_CHAT_COMPLETIONS": {
+                  "baseUrl": "https://gateway.example/openai/v1",
+                  "model": "model-a",
+                  "capabilities": [
+                    "STREAMING",
+                    "TOOL_CALLS"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "id": "connection-members-obey-input-constraints",
+    "expect": {
+      "/status": "INVALID",
+      "/inputs": {}
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_VALUE_CONSTRAINT"
+      }
+    ]
+  },
+  {
+    "profile": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-CONNECTION-002"
+    ],
+    "tree": {
+      "connection-app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"connection-app\",\"revision\":1},\"spec\":{\"connectionSources\":{\"primary\":{\"source\":\"${{ config.llm.default }}\"},\"second\":{\"source\":\"${{ config.llm.secondary }}\"}},\"components\":{\"app\":{\"componentRef\":\"./component.yaml\",\"size\":\"general.standard.small\",\"connectionBindings\":{\"llm\":{\"source\":\"primary\"}}},\"worker\":{\"componentRef\":\"./component.yaml\",\"size\":\"general.standard.small\",\"connectionBindings\":{\"llm\":{\"source\":\"second\"}}}}}}",
+      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseUrl\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
+    },
+    "document": "connection-app/blueprint.yaml",
+    "context": {
+      "connections": {
+        "installation": "install-1",
+        "slots": {
+          "primary": {
+            "status": "SELECTED",
+            "persisted": true,
+            "selection": {
+              "identity": "connection-1",
+              "version": "1",
+              "installation": "install-1",
+              "slot": "primary",
+              "source": {
+                "identity": "default-policy",
+                "version": "3",
+                "reference": "${{ config.llm.default }}"
+              },
+              "kind": "MANAGED",
+              "costOwner": "org-1",
+              "credential": {
+                "identity": "credential-1",
+                "rotation": 0,
+                "value": "synthetic-only",
+                "permittedBaseUrls": [
+                  "https://gateway.example/openai/v1"
+                ]
+              },
+              "views": {
+                "OPENAI_CHAT_COMPLETIONS": {
+                  "baseUrl": "https://gateway.example/openai/v1",
+                  "model": "model-a",
+                  "capabilities": [
+                    "STREAMING",
+                    "TOOL_CALLS"
+                  ]
+                }
+              }
+            }
+          },
+          "second": {
+            "status": "SELECTED",
+            "persisted": true,
+            "selection": {
+              "identity": "connection-2",
+              "version": "1",
+              "installation": "install-1",
+              "slot": "second",
+              "source": {
+                "identity": "default-policy",
+                "version": "3",
+                "reference": "${{ config.llm.secondary }}"
+              },
+              "kind": "MANAGED",
+              "costOwner": "org-1",
+              "credential": {
+                "identity": "credential-2",
+                "rotation": 0,
+                "value": "synthetic-only",
+                "permittedBaseUrls": [
+                  "https://gateway.example/openai/v1"
+                ]
+              },
+              "views": {
+                "OPENAI_CHAT_COMPLETIONS": {
+                  "baseUrl": "https://gateway.example/openai/v1",
+                  "model": "model-b",
+                  "capabilities": [
+                    "STREAMING",
+                    "TOOL_CALLS"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "id": "connection-independent-same-protocol-slots",
+    "expect": {
+      "/status": "VALID",
+      "/inputs/app:in:model/value": "model-a",
+      "/inputs/worker:in:model/value": "model-b",
+      "/inputs/worker:in:model/identity": "connection-2"
+    }
+  },
+  {
+    "profile": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-CONNECTION-002"
+    ],
+    "tree": {
+      "connection-app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"connection-app\",\"revision\":1},\"spec\":{\"connectionSources\":{\"primary\":{\"source\":\"${{ config.llm.default }}\"}},\"components\":{\"app\":{\"componentRef\":\"./component.yaml\",\"size\":\"general.standard.small\",\"connectionBindings\":{\"llm\":{\"source\":\"primary\"}}},\"worker\":{\"componentRef\":\"./component.yaml\",\"size\":\"general.standard.small\",\"connectionBindings\":{\"llm\":{\"source\":\"primary\"}}}}}}",
+      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseUrl\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
+    },
+    "document": "connection-app/blueprint.yaml",
+    "context": {
+      "connections": {
+        "installation": "install-1",
+        "slots": {
+          "primary": {
+            "status": "SELECTED",
+            "persisted": true,
+            "selection": {
+              "identity": "connection-1",
+              "version": "1",
+              "installation": "install-1",
+              "slot": "primary",
+              "source": {
+                "identity": "default-policy",
+                "version": "3",
+                "reference": "${{ config.llm.default }}"
+              },
+              "kind": "MANAGED",
+              "costOwner": "org-1",
+              "credential": {
+                "identity": "credential-1",
+                "rotation": 0,
+                "value": "synthetic-only",
+                "permittedBaseUrls": [
+                  "https://gateway.example/openai/v1"
+                ]
+              },
+              "views": {
+                "OPENAI_CHAT_COMPLETIONS": {
+                  "baseUrl": "https://gateway.example/openai/v1",
+                  "model": "model-a",
+                  "capabilities": [
+                    "STREAMING",
+                    "TOOL_CALLS"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "id": "connection-explicit-sharing",
+    "expect": {
+      "/status": "VALID",
+      "/inputs/app:in:model/value": "model-a",
+      "/inputs/worker:in:model/value": "model-a",
+      "/inputs/worker:in:model/identity": "connection-1"
+    }
+  },
+  {
+    "id": "connection-lifecycle-first-denial",
+    "profile": "lifecycle",
+    "operation": "connection",
+    "requirements": [
+      "BP-CONNECTION-003"
+    ],
+    "input": {
+      "steps": [
+        {
+          "installation": "install-1",
+          "slot": "primary",
+          "revoked": true
+        }
+      ]
+    },
+    "expect": {
+      "/observations/0/status": "DENIED",
+      "/persisted": 0
     }
   }
 ]

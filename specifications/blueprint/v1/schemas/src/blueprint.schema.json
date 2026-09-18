@@ -238,6 +238,18 @@
           },
           "description": "Endpoint exposure; omitted endpoint entries are PRIVATE.",
           "x-additionalPropertiesName": "endpointName"
+        },
+        "connectionBindings": {
+          "type": "object",
+          "description": "Explicit suppliers for the referenced component connection requirements.",
+          "propertyNames": {
+            "pattern": "^[a-z][a-zA-Z0-9]{0,63}$",
+            "maxLength": 64
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/BlueprintConnectionBinding"
+          },
+          "x-additionalPropertiesName": "requirementName"
         }
       },
       "required": [
@@ -319,7 +331,7 @@
           "x-additionalPropertiesName": "enumMember"
         },
         "examples": {
-          "description": "Example values illustrating the form a value takes. Never submitted — a value that is actually submitted is schema.default.",
+          "description": "Example values illustrating the form a value takes. Never submitted — parameter.default supplies an omitted submission.",
           "items": {
             "type": "string"
           },
@@ -373,6 +385,18 @@
             "maxLength": 64,
             "pattern": "^[a-z][a-zA-Z0-9]{0,63}$"
           }
+        },
+        "connectionSources": {
+          "type": "object",
+          "description": "Named atomic connection slots. Selection is persisted per installation and slot.",
+          "propertyNames": {
+            "pattern": "^[a-z][a-zA-Z0-9]{0,63}$",
+            "maxLength": 64
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/BlueprintConnectionSource"
+          },
+          "x-additionalPropertiesName": "slotName"
         }
       },
       "required": [
@@ -498,7 +522,8 @@
         "specifications",
         "components",
         "configuration",
-        "credentials"
+        "credentials",
+        "installationSnapshot"
       ],
       "properties": {
         "version": {
@@ -532,6 +557,10 @@
             "$ref": "#/$defs/BlueprintResolvedCredential"
           },
           "x-additionalPropertiesName": "parameterName"
+        },
+        "installationSnapshot": {
+          "$ref": "#/$defs/BlueprintResolvedConfiguration",
+          "description": "Opaque identity and immutable version of the private installation snapshot; never a secret-derived hash."
         }
       }
     },
@@ -733,6 +762,36 @@
           "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
         }
       }
+    },
+    "BlueprintConnectionSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "description": "One whole config reference selecting a versioned connection, not independent scalar fields."
+        }
+      },
+      "required": [
+        "source"
+      ]
+    },
+    "BlueprintConnectionBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "type": "string",
+          "pattern": "^[a-z][a-zA-Z0-9]{0,63}$",
+          "maxLength": 64,
+          "description": "Named connection slot in spec.connectionSources."
+        }
+      },
+      "required": [
+        "source"
+      ]
     }
   }
 }
