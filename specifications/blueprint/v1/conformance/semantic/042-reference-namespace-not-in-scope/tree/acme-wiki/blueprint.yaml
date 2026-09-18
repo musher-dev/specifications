@@ -1,6 +1,3 @@
-# `params` is reserved by core §5.2 and given no meaning in these documents, so
-# no family admits it. Reserving the name is what makes this reportable rather
-# than leaving `params` a key an author could one day address.
 specVersion: v1
 kind: BLUEPRINT
 metadata:
@@ -11,9 +8,12 @@ spec:
     app:
       componentRef: ./components/app.yaml
       size: general.standard.small
-      connections: {}
-  parameters:
-    brokerAddress:
-      default: "${{ params.brokerAddress }}"
-      ui:
-        label: Broker address
+      bindings:
+        brokerAddress:
+          type: OUTPUT
+          node: app
+          output: installDefault
+      exposure:
+        amqp: PUBLIC
+        metrics: PRIVATE
+      volumes: {}

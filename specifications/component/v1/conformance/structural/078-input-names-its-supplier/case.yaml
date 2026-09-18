@@ -1,7 +1,3 @@
-# An input declares what the component needs, never who supplies it or how a
-# person is asked for it. Each of the four fields that once said so is now an
-# unknown field: a blueprint wires the input, or covers it with a parameter that
-# carries the generator, the default and the presentation.
 specVersion: v1
 kind: COMPONENT
 metadata:
@@ -16,32 +12,39 @@ spec:
       web:
         containerPort: 8080
         protocol: HTTP
-        visibility: PRIVATE
   contract:
     inputs:
       databaseUrl:
         description: Connection URL of the database the service reads and writes.
         schema:
-          type: STRING
+          type: string
         suppliedBy: CONNECTION
+        target:
+          envVarKey: DATABASE_URL
       siteTitle:
         description: Title shown in the site header.
         schema:
-          type: STRING
+          type: string
         ui:
           label: Site title
+        target:
+          envVarKey: SITE_TITLE
       sessionSecret:
         description: Secret the service signs session cookies with.
         schema:
-          type: STRING
-          sensitive: true
+          type: string
         generator:
           byteLength: 32
+        sensitive: true
+        target:
+          envVarKey: SESSION_SECRET
       publicUrl:
         description: Public URL the service is reached at.
         schema:
-          type: STRING
+          type: string
         platformDefault:
           type: SELF_ADDRESS
           source: PUBLIC_URL
+        target:
+          envVarKey: PUBLIC_URL
     outputs: {}

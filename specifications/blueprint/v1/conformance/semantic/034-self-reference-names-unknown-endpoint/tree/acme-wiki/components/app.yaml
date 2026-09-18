@@ -12,15 +12,24 @@ spec:
       api:
         containerPort: 8080
         protocol: HTTP
-        visibility: PUBLIC
     health:
       readiness:
         path: /healthz
         endpoint: api
+        type: HTTP
   contract:
     inputs:
       consoleUrl:
         schema:
-          type: STRING
+          type: string
         description: Public URL of the administration console.
-    outputs: {}
+        target:
+          envVarKey: CONSOLE_URL
+    outputs:
+      installDefault:
+        description: Node-specific default address
+        schema:
+          type: string
+        source:
+          type: TEMPLATE
+          template: ${{ self.publicUrl.console }}

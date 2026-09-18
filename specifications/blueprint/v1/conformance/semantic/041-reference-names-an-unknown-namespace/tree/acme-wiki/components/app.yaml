@@ -12,15 +12,22 @@ spec:
       amqp:
         containerPort: 5672
         protocol: TCP
-        visibility: PUBLIC
       metrics:
         containerPort: 9090
         protocol: HTTP
-        visibility: PRIVATE
   contract:
     inputs:
       brokerAddress:
         schema:
-          type: STRING
+          type: string
         description: Edge address clients use to reach the broker.
-    outputs: {}
+        target:
+          envVarKey: BROKER_ADDRESS
+    outputs:
+      installDefault:
+        description: Node-specific default address
+        schema:
+          type: string
+        source:
+          type: TEMPLATE
+          template: ${{ slef.publicAddress }}

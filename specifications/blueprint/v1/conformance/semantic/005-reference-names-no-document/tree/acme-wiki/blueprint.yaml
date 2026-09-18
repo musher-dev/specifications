@@ -1,6 +1,3 @@
-# The reference is well-formed and resolves to nothing: the item ships
-# `mysql.yaml` and the graph asks for `postgres.yaml`. A typo in a path is
-# indistinguishable from a missing file until something looks on disk.
 specVersion: v1
 kind: BLUEPRINT
 metadata:
@@ -11,5 +8,5 @@ spec:
     db:
       componentRef: ./components/postgres.yaml
       size: general.standard.small
-      connections: {}
+      bindings: {}
   parameters: {}

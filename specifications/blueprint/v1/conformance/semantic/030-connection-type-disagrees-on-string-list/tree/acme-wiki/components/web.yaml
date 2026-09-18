@@ -12,14 +12,18 @@ spec:
       web:
         containerPort: 8080
         protocol: HTTP
-        visibility: PRIVATE
   contract:
     inputs:
       replicas:
         schema:
-          type: STRING_LIST
-          enum:
-            - primary
-            - replica
+          type: array
+          items:
+            type: string
+            enum:
+              - primary
+              - replica
+          uniqueItems: true
         description: Which database replicas the application reads from.
+        target:
+          envVarKey: REPLICAS
     outputs: {}

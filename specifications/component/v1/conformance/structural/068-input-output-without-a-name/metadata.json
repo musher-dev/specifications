@@ -3,6 +3,8 @@
   "phase": "structural",
   "expected": "fail",
   "clause": "specifications/component/v1/spec.md#outputs",
-  "requirements": ["COMP-OUT-001"],
+  "requirements": [
+    "COMP-OUT-001"
+  ],
   "summary": "An INPUT output without an input reference is rejected."
 }

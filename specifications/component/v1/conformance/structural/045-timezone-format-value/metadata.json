@@ -8,6 +8,6 @@
   ],
   "summary": "A STRING value may be refined as an IANA time-zone identifier.",
   "effective": {
-    "/spec/contract/inputs/timezone/schema/sensitive": false
+    "/spec/contract/inputs/timezone/sensitive": false
   }
 }

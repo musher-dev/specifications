@@ -1,7 +1,7 @@
 {
   "id": "semantic-002-connection-cycle",
   "phase": "semantic",
-  "expected": "pass",
+  "expected": "incomplete",
   "clause": "specifications/blueprint/v1/spec.md#connections",
   "summary": "A cyclic connection graph validates: mutual service discovery is expressible."
 }

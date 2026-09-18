@@ -1,8 +1,3 @@
-# Both ends of one tag in one document, so the grammar is pinned for an input
-# and an output alike. The identifiers are namespaced because membership is a
-# registry §6.3 puts outside this repository — which is the whole point of the
-# namespace: `com.acme.billing.tenant-key` addresses something this
-# specification has never heard of, and an offline validator must accept it.
 specVersion: v1
 kind: COMPONENT
 metadata:
@@ -17,20 +12,23 @@ spec:
       primary:
         containerPort: 5432
         protocol: TCP
-        visibility: PRIVATE
   contract:
     inputs:
       tenantKey:
         description: Tenant key identifying this installation to the Acme billing API.
         schema:
-          type: STRING
-          sensitive: true
-          resourceType: com.acme.billing.tenant-key
+          type: string
+        sensitive: true
+        target:
+          envVarKey: TENANT_KEY
+        resourceType: dev.musher.llm.base-url
     outputs:
       connectionString:
         description: Connection string a client uses to reach this database.
         schema:
-          type: STRING
-          sensitive: true
-          resourceType: dev.musher.postgresql.connection-string
-        valueFrom: DERIVED
+          type: string
+        sensitive: true
+        source:
+          type: ENDPOINT
+          endpoint: primary
+          property: privateAddress

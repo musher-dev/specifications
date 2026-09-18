@@ -1,6 +1,6 @@
 [
   {
     "code": "ERR_UNKNOWN_FIELD",
-    "path": "/spec/components/web/connections/databaseUrl"
+    "path": "/spec/components/web/bindings/bad"
   }
 ]

@@ -1,6 +1,3 @@
-# envVars is a sequence, so two entries sharing a key repeat nothing at the
-# YAML level and the parser phase sees no duplicate. The rule that catches it
-# is §5.3's, and it anchors at the later entry — the first declaration stands.
 specVersion: v1
 kind: COMPONENT
 metadata:
@@ -15,7 +12,6 @@ spec:
       web:
         containerPort: 8080
         protocol: HTTP
-        visibility: PRIVATE
     envVars:
       - key: LOG_LEVEL
         value:

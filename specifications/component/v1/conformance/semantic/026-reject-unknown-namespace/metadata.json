@@ -1,0 +1,10 @@
+{
+  "id": "semantic-026-reject-unknown-namespace",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/core/v1/spec.md#reference-grammar",
+  "requirements": [
+    "CORE-REF-002"
+  ],
+  "summary": "reject unknown namespace"
+}

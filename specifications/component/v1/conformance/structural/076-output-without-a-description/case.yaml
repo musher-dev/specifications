@@ -1,5 +1,3 @@
-# The output half of COMP-DESC-001. A consumer wiring an output reads what it is
-# from the producer's own document, and nowhere else.
 specVersion: v1
 kind: COMPONENT
 metadata:
@@ -14,12 +12,14 @@ spec:
       web:
         containerPort: 8080
         protocol: HTTP
-        visibility: PRIVATE
   contract:
     inputs: {}
     outputs:
       baseUrl:
         schema:
-          type: STRING
-          format: ENDPOINT_URL
-        valueFrom: DERIVED
+          type: string
+        presentationHint: ENDPOINT_URL
+        source:
+          type: ENDPOINT
+          endpoint: web
+          property: publicUrl

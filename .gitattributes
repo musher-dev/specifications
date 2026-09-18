@@ -7,14 +7,16 @@
 *.yaml    text eol=lf
 *.yml     text eol=lf
 *.md      text eol=lf
-*.ts      text eol=lf
+*.ts      text diff eol=lf
 *.sh      text eol=lf
 
 *.png     binary
 
-# Two parser fixtures are *about* their bytes, so normalization would quietly
+# These parser fixtures are *about* their bytes, so normalization would quietly
 # destroy what they test. The CRLF case asserts CRLF endings are accepted; the
 # `* text=auto eol=lf` rule above rewrote it to LF, and it passed while testing
-# nothing. `-text` opts both out of every normalization.
+# nothing. `-text` opts them out of every normalization.
 specifications/core/v1/conformance/parser/013-crlf-line-endings/case.yaml -text
 specifications/core/v1/conformance/parser/012-byte-order-mark/case.yaml   -text
+
+specifications/core/v1/conformance/parser/015-reject-malformed-utf8/case.yaml -text

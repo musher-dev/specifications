@@ -85,7 +85,7 @@ expression over that same form. `type` therefore names the shape the value's
 
 Read that way, `JSON` needs no change to any sibling field: a default is written
 `default: '{"logLevel":"info"}'`, quoted, and the
-[YAML profile](../../specifications/component/v1/spec.md#yaml-profile) makes the
+[YAML profile](../../specifications/core/v1/spec.md#yaml-profile) makes the
 unquoted spelling self-diagnosing — it parses as a flow mapping and fails
 `type: string`.
 
@@ -136,7 +136,7 @@ For any member. A `DECLARED` output may write `type: NUMBER` beside
 code, a registry row, and an implementation, and it would have made the newest
 member the only one whose `default` is validated. Also rejected:
 `contentMediaType`, for the reason
-[component §7.2](../../specifications/component/v1/spec.md#format-policy)
+[component §7.2](../../specifications/component/v1/spec.md#value-schema)
 already gives about annotations that assert nothing.
 
 The silence is recorded in §6.3 rather than closed. Closing it rejects documents

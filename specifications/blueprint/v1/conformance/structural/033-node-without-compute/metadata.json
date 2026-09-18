@@ -3,6 +3,8 @@
   "phase": "structural",
   "expected": "pass",
   "clause": "specifications/blueprint/v1/spec.md#node-compute",
-  "requirements": ["BP-NODE-001"],
+  "requirements": [
+    "BP-NODE-001"
+  ],
   "summary": "A node deploying a component this platform does not run writes size: null."
 }

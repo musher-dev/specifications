@@ -1,4 +1,3 @@
-# Port 0 binds nothing. The bound is a grammar, so the schema carries it.
 specVersion: v1
 kind: COMPONENT
 metadata:
@@ -13,4 +12,3 @@ spec:
       web:
         containerPort: 0
         protocol: HTTP
-        visibility: PRIVATE

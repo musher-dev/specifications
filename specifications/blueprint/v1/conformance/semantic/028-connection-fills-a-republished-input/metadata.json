@@ -1,9 +1,11 @@
 {
   "id": "semantic-028-connection-fills-a-republished-input",
   "phase": "semantic",
-  "expected": "fail",
+  "expected": "pass",
   "clause": "specifications/blueprint/v1/spec.md#connections",
-  "requirements": ["BP-CONN-002"],
-  "summary": "A connection filling an input that one of the component's own outputs republishes is rejected.",
+  "requirements": [
+    "BP-CONN-002"
+  ],
+  "summary": "Explicit supply is accepted without the retired restriction.",
   "document": "acme-wiki/blueprint.yaml"
 }

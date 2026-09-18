@@ -12,11 +12,19 @@ spec:
       internal:
         containerPort: 8080
         protocol: HTTP
-        visibility: PRIVATE
   contract:
     inputs:
       selfUrl:
         schema:
-          type: STRING
+          type: string
         description: URL the application advertises for itself.
-    outputs: {}
+        target:
+          envVarKey: SELF_URL
+    outputs:
+      installDefault:
+        description: Node-specific default address
+        schema:
+          type: string
+        source:
+          type: TEMPLATE
+          template: ${{ self.publicUrl.internal }}

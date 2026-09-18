@@ -15,9 +15,11 @@
 - [ ] **Correction** — does not change what validates.
 - [ ] **Breaking** — a previously valid document now fails.
 
-A breaking change requires maintainer approval (an obligation, not a gate — see
-[Governance](../docs/governance.md#compatibility-review)), a new `v<N>` directory, and a
-migration note. Validation must never become stricter inside a major version.
+A breaking change requires maintainer approval (an obligation, not a gate), a
+new `v<N>` directory, and a migration note after the family's first release.
+Before that release, drafts may be corrected in place under the
+[governance exception](../docs/governance.md#compatibility-review). Preserve
+acceptance and defined meaning within a released major version.
 
 ## Checklist
 

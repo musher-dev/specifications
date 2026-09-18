@@ -12,11 +12,19 @@ spec:
       db:
         containerPort: 5432
         protocol: TCP
-        visibility: PUBLIC
   contract:
     inputs:
       databaseUrl:
         schema:
-          type: STRING
+          type: string
         description: Connection URL clients outside the item use to reach the database.
-    outputs: {}
+        target:
+          envVarKey: DATABASE_URL
+    outputs:
+      installDefault:
+        description: Node-specific default address
+        schema:
+          type: string
+        source:
+          type: TEMPLATE
+          template: ${{ self.publicUrl.db }}

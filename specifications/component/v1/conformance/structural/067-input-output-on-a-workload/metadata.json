@@ -3,6 +3,9 @@
   "phase": "structural",
   "expected": "pass",
   "clause": "specifications/component/v1/spec.md#outputs",
-  "requirements": ["COMP-OUT-001", "COMP-OUT-002"],
+  "requirements": [
+    "COMP-OUT-001",
+    "COMP-OUT-002"
+  ],
   "summary": "An INPUT output is permitted on a workload component, not only on an external one."
 }

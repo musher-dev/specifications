@@ -1,5 +1,3 @@
-# `kind` names a different family. Each family's schema constrains kind to
-# its own constant, so a document cannot be validated by the wrong schema.
 specVersion: v1
 kind: COMPONENT
 metadata:

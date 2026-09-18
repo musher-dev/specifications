@@ -1,7 +1,3 @@
-# A parameter carries no schema. The inputs it covers each declare one, and a
-# second copy on the parameter could only agree with them or be wrong, with
-# nothing to say which the deploying user is validated against. The property is
-# gone rather than ignored, so a document still carrying one is told so.
 specVersion: v1
 kind: BLUEPRINT
 metadata:
@@ -12,7 +8,10 @@ spec:
     web:
       componentRef: ./components/web.yaml
       size: general.standard.small
-      connections: {}
+      bindings:
+        siteTitle:
+          type: PARAMETER
+          parameter: siteTitle
   parameters:
     siteTitle:
       schema:

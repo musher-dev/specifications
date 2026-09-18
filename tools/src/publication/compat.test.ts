@@ -74,19 +74,19 @@ describe('replayRelease', () => {
   }
 
   describe('replayAll', () => {
-    test('skips a core release, which accepted no document a schema decided', () => {
+    test('replays the core parser corpus even without a schema', () => {
       const fx = new FixtureRepo()
       repo = fx
       new Pipeline(fx).releaseCore('1.0.0')
       const failures = new Failures()
-      expect(replayAll(fx.root, failures)).toEqual({ replayed: 0, checked: 0 })
+      expect(replayAll(fx.root, failures)).toEqual({ replayed: 0, checked: 1 })
       expect(failures.count).toBe(0)
     })
 
     test('still replays a kind release beside a core one', () => {
       const fx = cut()
       const failures = new Failures()
-      expect(replayAll(fx.root, failures)).toEqual({ replayed: 1, checked: 1 })
+      expect(replayAll(fx.root, failures)).toEqual({ replayed: 1, checked: 2 })
       expect(failures.count).toBe(0)
     })
   })

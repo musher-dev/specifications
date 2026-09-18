@@ -1,7 +1,3 @@
-# `db` publishes a NUMBER port; `web` asks for a STRING. Both ends resolve —
-# the node, the output and the input all exist — so nothing above §4.2's
-# compatibility rule fires. Without it the mismatch reaches the consuming
-# workload at deploy time with nothing pointing back at either document.
 specVersion: v1
 kind: BLUEPRINT
 metadata:
@@ -12,12 +8,19 @@ spec:
     db:
       componentRef: ./components/postgres.yaml
       size: general.standard.small
-      connections: {}
+      bindings: {}
+      exposure:
+        primary: PRIVATE
+      volumes: {}
     web:
       componentRef: ./components/web.yaml
       size: general.standard.small
-      connections:
+      bindings:
         databasePort:
-          fromNode: db
-          fromOutput: port
+          type: OUTPUT
+          node: db
+          output: port
+      exposure:
+        web: PRIVATE
+      volumes: {}
   parameters: {}

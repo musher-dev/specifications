@@ -1,5 +1,3 @@
-# A component may front two public URLs. Each is addressed by name, which is
-# what makes the second one no harder than the first.
 specVersion: v1
 kind: COMPONENT
 metadata:
@@ -14,19 +12,20 @@ spec:
       api:
         containerPort: 8080
         protocol: HTTP
-        visibility: PUBLIC
       console:
         containerPort: 8081
         protocol: HTTP
-        visibility: PUBLIC
     health:
       readiness:
         path: /healthz
         endpoint: api
+        type: HTTP
   contract:
     inputs:
       consoleUrl:
         description: Public URL the admin console is served at.
         schema:
-          type: STRING
+          type: string
+        target:
+          envVarKey: CONSOLE_URL
     outputs: {}

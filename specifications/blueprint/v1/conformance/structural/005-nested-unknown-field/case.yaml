@@ -1,6 +1,3 @@
-# A misspelled optional field below the envelope. `lable` is a typo for
-# `label`, three levels down inside a parameter's presentation block.
-# Rejection must not depend on how deeply the typo is nested.
 specVersion: v1
 kind: BLUEPRINT
 metadata:
@@ -11,7 +8,10 @@ spec:
     db:
       componentRef: ./components/postgres.yaml
       size: general.standard.small
-      connections: {}
+      bindings:
+        siteTitle:
+          type: PARAMETER
+          parameter: siteTitle
   parameters:
     siteTitle:
       ui:

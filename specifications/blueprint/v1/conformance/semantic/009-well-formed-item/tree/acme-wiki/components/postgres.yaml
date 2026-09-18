@@ -12,18 +12,22 @@ spec:
       primary:
         containerPort: 5432
         protocol: TCP
-        visibility: PRIVATE
   contract:
     inputs:
       adminPassword:
         schema:
-          type: STRING
-          sensitive: true
+          type: string
         description: Password of the administrator account the component creates on first start.
+        sensitive: true
+        target:
+          envVarKey: ADMIN_PASSWORD
     outputs:
       connectionString:
         schema:
-          type: STRING
-          sensitive: true
-        valueFrom: DERIVED
+          type: string
         description: Connection string a client uses to reach this database.
+        sensitive: true
+        source:
+          type: ENDPOINT
+          endpoint: primary
+          property: privateAddress

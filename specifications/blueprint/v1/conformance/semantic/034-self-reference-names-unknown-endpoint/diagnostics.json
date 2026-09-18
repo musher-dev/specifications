@@ -1,6 +1,6 @@
 [
   {
-    "code": "ERR_UNKNOWN_ENDPOINT",
-    "path": "/spec/parameters/consoleUrl/default"
+    "code": "ERR_INVALID_DEPENDENCY",
+    "path": "/spec/components/app/componentRef"
   }
 ]

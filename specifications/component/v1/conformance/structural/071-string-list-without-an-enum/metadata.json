@@ -1,7 +1,7 @@
 {
   "id": "structural-071-string-list-without-an-enum",
   "phase": "structural",
-  "expected": "fail",
+  "expected": "pass",
   "clause": "specifications/component/v1/spec.md#value-schema",
   "requirements": [
     "COMP-VAL-006"

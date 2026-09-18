@@ -1,6 +1,3 @@
-# The positive side of COMP-OUT-002: the named input exists. Whether a wire
-# fills it is not this document's to know; blueprint §4.2 rejects a connection
-# into an input an INPUT output reads, which is where §6.2's invariant is kept.
 specVersion: v1
 kind: COMPONENT
 metadata:
@@ -15,21 +12,21 @@ spec:
       web:
         containerPort: 8080
         protocol: HTTP
-        visibility: PRIVATE
   contract:
     inputs:
       apiToken:
         description: Bearer token the service accepts on its API.
         schema:
-          type: STRING
-          sensitive: true
+          type: string
         target:
           envVarKey: API_TOKEN
+        sensitive: true
     outputs:
       apiToken:
         description: The bearer token this service accepts, for a client that calls it.
         schema:
-          type: STRING
-          sensitive: true
-        valueFrom: INPUT
-        input: apiToken
+          type: string
+        sensitive: true
+        source:
+          type: INPUT
+          input: apiToken

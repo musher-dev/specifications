@@ -8,5 +8,8 @@ spec:
     db:
       componentRef: ./components/postgres.yaml
       size: general.standard.small
-      connections: {}
+      bindings: {}
+      exposure:
+        db: PRIVATE
+      volumes: {}
   parameters: {}

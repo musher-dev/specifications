@@ -103,28 +103,6 @@
       },
       "type": "object"
     },
-    "BlueprintConnection": {
-      "additionalProperties": false,
-      "description": "A consumer-anchored wire (map value; keyed by the consumer input key).\n\nThe value names only the producer end (`fromNode` / `fromOutput`); the\nconsumer end is derived from the enclosing node (the node name) and the map\nkey (the input it fills). At most one wire per consumer input — the map key\nmakes that structural.",
-      "properties": {
-        "fromOutput": {
-          "description": "Declared output key on the producer component.",
-          "type": "string"
-        },
-        "fromNode": {
-          "description": "Node name of the producer component.",
-          "maxLength": 63,
-          "pattern": "^[a-z][a-z0-9-]{0,61}[a-z0-9]$",
-          "type": "string"
-        }
-      },
-      "required": [
-        "fromNode",
-        "fromOutput"
-      ],
-      "type": "object",
-      "x-additionalPropertiesName": "inputKey"
-    },
     "BlueprintMetadata": {
       "additionalProperties": false,
       "description": "Identity block of a blueprint document. The blueprint carries the item's revision; its sibling listing carries none. See spec.md §3.",
@@ -136,8 +114,8 @@
         },
         "slug": {
           "description": "Item slug — must equal the item's directory name.",
-          "pattern": "^[a-z][a-z0-9-]{0,61}[a-z0-9]$",
-          "type": "string"
+          "type": "string",
+          "x-musher-grammar": "label"
         }
       },
       "required": [
@@ -206,18 +184,6 @@
           "maxLength": 256,
           "type": "string"
         },
-        "connections": {
-          "additionalProperties": {
-            "$ref": "#/$defs/BlueprintConnection"
-          },
-          "description": "Inbound wires for this node, keyed by the consumer input key each fills (value names the producer role and output; one wire per input).",
-          "type": "object",
-          "propertyNames": {
-            "$comment": "spec.md §4.2 / ADR 0007 §4. A connection key IS an input name — §4.2 makes the map key the input being filled — so it takes the input grammar rather than one of its own.",
-            "maxLength": 64,
-            "pattern": "^[a-z][a-zA-Z0-9]{0,63}$"
-          }
-        },
         "placement": {
           "description": "Optional placement compute pins that narrow the eligible-host set at schedule time. Absent and a block with no pin set mean the same thing. See spec.md §4.4.",
           "$ref": "#/$defs/BlueprintComputeConstraints"
@@ -240,6 +206,38 @@
             }
           ],
           "description": "Compute Profile slug bound to this node, in family.tier.size form — for example general.standard.small — or null where the node deploys a component this platform does not run and there is no compute to name. Required either way, because a component document carries no compute of its own. The profiles actually on offer are published at https://api.musher.dev/v1/reference/compute-profiles."
+        },
+        "bindings": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[a-z][a-zA-Z0-9]{0,63}$",
+            "maxLength": 64
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/BlueprintBinding"
+          },
+          "description": "Explicit input suppliers keyed by receiving input name."
+        },
+        "volumes": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/BlueprintVolumeAllocation"
+          }
+        },
+        "exposure": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[a-z][a-z0-9]{0,19}$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "enum": [
+              "PUBLIC",
+              "PRIVATE"
+            ]
+          },
+          "description": "Endpoint exposure; omitted endpoint entries are PRIVATE.",
+          "x-additionalPropertiesName": "endpointName"
         }
       },
       "required": [
@@ -250,9 +248,8 @@
       "x-additionalPropertiesName": "nodeName"
     },
     "BlueprintParameter": {
-      "$comment": "spec.md §5.2. Minting a value and prefilling one are two answers to one question, so a generator and a default are never written together. The parameter carries no schema, no required and no description: the inputs it covers declare all three (component §6), and whether a generated value is secret is read from them in the semantic phase (BP-PARAM-004). Whether a default's ${{ }} references are well-formed, in scope and single-valued is semantic too (CORE-REF-001..003, BP-REF-001, BP-PARAM-008).",
       "additionalProperties": false,
-      "description": "One install-form field, keyed by the input key it covers on every node whose input of that key is not wired.",
+      "description": "Named installation value, explicitly bound by consuming nodes.",
       "if": {
         "properties": {
           "generator": {
@@ -270,35 +267,20 @@
       },
       "properties": {
         "default": {
-          "description": "Value the install form is prefilled with, which the deploying user may type over. Plain text is a literal the blueprint supplies; a ${{ self.… }} reference names the covered node's own addressing, which no author can write down. Replaces the covered inputs' schema.default for this composition.",
-          "type": "string"
+          "description": "Logical default, overridable by a submitted value. No interpolation."
         },
         "generator": {
-          "description": "Auto-generation spec when the platform mints the value at deploy time. Omitted when the deploying user supplies it. Every input the parameter covers MUST declare schema.sensitive: true.",
+          "description": "Persisted credential generation; submitted overrides are forbidden.",
           "$ref": "#/$defs/BlueprintParameterGenerator"
-        },
-        "toInput": {
-          "description": "Input key this parameter covers, where it differs from the parameter's own key. Omitted, the parameter key is the input key.",
-          "maxLength": 64,
-          "pattern": "^[a-z][a-zA-Z0-9]{0,63}$",
-          "type": "string"
-        },
-        "toNode": {
-          "description": "Node this parameter's coverage is restricted to. Omitted, the parameter covers its input on every node no connection fills it on.",
-          "maxLength": 63,
-          "pattern": "^[a-z][a-z0-9-]{0,61}[a-z0-9]$",
-          "type": "string"
         },
         "ui": {
           "$ref": "#/$defs/BlueprintParameterUi",
-          "description": "How the field is presented. The control itself is derived from the covered inputs' schema (spec.md §5.3)."
+          "description": "Optional form presentation."
         }
       },
-      "required": [
-        "ui"
-      ],
       "type": "object",
-      "x-additionalPropertiesName": "parameterKey"
+      "x-additionalPropertiesName": "parameterKey",
+      "$comment": "The selected branch requires its applicable fields and forbids fields that have no meaning for that branch."
     },
     "BlueprintParameterGenerator": {
       "additionalProperties": false,
@@ -306,20 +288,17 @@
         "byteLength": {
           "default": 32,
           "description": "Number of random bytes generated for the value.",
-          "type": "integer"
-        },
-        "charset": {
-          "description": "Explicit character set for the generated value. Omitted when the encoding default is used.",
-          "type": "string"
+          "type": "integer",
+          "minimum": 16,
+          "maximum": 64
         },
         "encoding": {
           "default": "HEX",
-          "description": "Encoding applied to the random bytes: HEX, BASE64, BASE64URL, or ALPHANUMERIC.",
+          "description": "Encoding applied to securely generated random bytes.",
           "enum": [
             "HEX",
             "BASE64",
-            "BASE64URL",
-            "ALPHANUMERIC"
+            "BASE64URL"
           ],
           "type": "string"
         }
@@ -371,16 +350,16 @@
     },
     "BlueprintSpec": {
       "additionalProperties": false,
-      "description": "The `spec` block of a blueprint document.\n\n`components` names the nodes and wires them together. `parameters` is the install form: every field a deploying user is shown, always authored. Absent and empty both mean a form with no fields.",
+      "description": "Composition, explicit input suppliers, allocation and installation parameters.",
       "properties": {
         "components": {
           "additionalProperties": {
             "$ref": "#/$defs/BlueprintNode"
           },
-          "description": "Component references composing the graph, keyed by graph-local node name. The name is what a connection's fromNode refers to; it means nothing outside this document. At least one node is required — spec.md §1 makes a blueprint a composition of one or more components, and an empty graph deploys nothing.",
+          "description": "Named component instances.",
           "minProperties": 1,
           "propertyNames": {
-            "pattern": "^[a-z][a-z0-9-]{0,61}[a-z0-9]$"
+            "x-musher-grammar": "label"
           },
           "type": "object"
         },
@@ -388,10 +367,9 @@
           "additionalProperties": {
             "$ref": "#/$defs/BlueprintParameter"
           },
-          "description": "Install-form fields, keyed by the input key each covers. A parameter covers every input of that key that no connection on its node fills.",
+          "description": "Named installation values; no implicit binding by name.",
           "type": "object",
           "propertyNames": {
-            "$comment": "spec.md §4 / ADR 0007 §4. An input, output and parameter name is lowerCamelCase: it is bound by key across three documents — the input, the connection key that fills it, and the parameter that covers it — and it is read by a person in an install form. Kebab-case survives neither the binding nor a generated SDK type without a translation nobody has to write today.",
             "maxLength": 64,
             "pattern": "^[a-z][a-zA-Z0-9]{0,63}$"
           }
@@ -401,6 +379,360 @@
         "components"
       ],
       "type": "object"
+    },
+    "BlueprintBinding": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/BlueprintParameterBinding"
+        },
+        {
+          "$ref": "#/$defs/BlueprintOutputBinding"
+        },
+        {
+          "$ref": "#/$defs/BlueprintLiteralBinding"
+        },
+        {
+          "$ref": "#/$defs/BlueprintConfigBinding"
+        }
+      ],
+      "x-additionalPropertiesName": "inputName"
+    },
+    "BlueprintParameterBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "PARAMETER",
+          "type": "string"
+        },
+        "parameter": {
+          "type": "string",
+          "pattern": "^[a-z][a-zA-Z0-9]{0,63}$",
+          "maxLength": 64
+        }
+      },
+      "required": [
+        "type",
+        "parameter"
+      ]
+    },
+    "BlueprintOutputBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "OUTPUT",
+          "type": "string"
+        },
+        "node": {
+          "type": "string",
+          "x-musher-grammar": "label"
+        },
+        "output": {
+          "type": "string",
+          "pattern": "^[a-z][a-zA-Z0-9]{0,63}$",
+          "maxLength": 64
+        }
+      },
+      "required": [
+        "type",
+        "node",
+        "output"
+      ]
+    },
+    "BlueprintLiteralBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "LITERAL",
+          "type": "string"
+        },
+        "value": true
+      },
+      "required": [
+        "type",
+        "value"
+      ]
+    },
+    "BlueprintConfigBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "CONFIG_REF",
+          "type": "string"
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "description": "One whole config reference, for example ${{ config.llm.baseUrl }}. Authorized at installation."
+        }
+      },
+      "required": [
+        "type",
+        "source"
+      ]
+    },
+    "BlueprintVolumeAllocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sizeGiB": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "sizeGiB"
+      ],
+      "x-additionalPropertiesName": "volumeName"
+    },
+    "BlueprintResolutionRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "blueprintDigest",
+        "specifications",
+        "components",
+        "configuration",
+        "credentials"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "blueprintDigest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "specifications": {
+          "$ref": "#/$defs/BlueprintResolvedSpecifications"
+        },
+        "components": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/BlueprintResolvedComponent"
+          },
+          "x-additionalPropertiesName": "nodeName",
+          "minProperties": 1
+        },
+        "configuration": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/BlueprintResolvedConfiguration"
+          },
+          "x-additionalPropertiesName": "configurationPath"
+        },
+        "credentials": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/BlueprintResolvedCredential"
+          },
+          "x-additionalPropertiesName": "parameterName"
+        }
+      }
+    },
+    "BlueprintResolvedConfiguration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identity",
+        "version"
+      ],
+      "properties": {
+        "identity": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "BlueprintResolvedCredential": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identity",
+        "rotation"
+      ],
+      "properties": {
+        "identity": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rotation": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "BlueprintResolvedComponent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identity",
+        "revision",
+        "digest",
+        "source",
+        "volumes",
+        "exposure"
+      ],
+      "properties": {
+        "identity": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "source": {
+          "enum": [
+            "EXTERNAL",
+            "IMAGE",
+            "GIT"
+          ]
+        },
+        "imageDigest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "gitCommit": {
+          "type": "string",
+          "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+        },
+        "compute": {
+          "$ref": "#/$defs/BlueprintResolvedConfiguration"
+        },
+        "volumes": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/BlueprintVolumeAllocation"
+          },
+          "x-additionalPropertiesName": "volumeName"
+        },
+        "exposure": {
+          "type": "object",
+          "additionalProperties": {
+            "enum": [
+              "PUBLIC",
+              "PRIVATE"
+            ]
+          },
+          "x-additionalPropertiesName": "endpointName"
+        }
+      },
+      "allOf": [
+        {
+          "$comment": "External components have no image, source commit or compute allocation.",
+          "if": {
+            "required": [
+              "source"
+            ],
+            "properties": {
+              "source": {
+                "const": "EXTERNAL"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "imageDigest": false,
+              "gitCommit": false,
+              "compute": false
+            },
+            "required": [
+              "volumes",
+              "exposure"
+            ],
+            "allOf": [
+              {
+                "properties": {
+                  "volumes": {
+                    "maxProperties": 0
+                  },
+                  "exposure": {
+                    "maxProperties": 0
+                  }
+                },
+                "$comment": "External components allocate neither storage nor public exposure."
+              }
+            ]
+          },
+          "else": {
+            "required": [
+              "imageDigest",
+              "compute"
+            ],
+            "properties": {
+              "imageDigest": true,
+              "compute": true
+            }
+          }
+        },
+        {
+          "$comment": "Git builds pin the source commit as well as the built image digest.",
+          "if": {
+            "required": [
+              "source"
+            ],
+            "properties": {
+              "source": {
+                "const": "GIT"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "gitCommit"
+            ],
+            "properties": {
+              "gitCommit": true
+            }
+          },
+          "else": {
+            "properties": {
+              "gitCommit": false
+            }
+          }
+        }
+      ]
+    },
+    "BlueprintResolvedSpecifications": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "core",
+        "component",
+        "blueprint"
+      ],
+      "properties": {
+        "core": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "component": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "blueprint": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "listing": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        }
+      }
     }
   }
 }

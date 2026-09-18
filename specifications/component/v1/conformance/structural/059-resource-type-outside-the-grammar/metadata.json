@@ -3,6 +3,8 @@
   "phase": "structural",
   "expected": "fail",
   "clause": "specifications/component/v1/spec.md#value-schema",
-  "requirements": ["COMP-VAL-005"],
-  "summary": "An unqualified resourceType is rejected; the identifier is namespaced."
+  "requirements": [
+    "COMP-VAL-005"
+  ],
+  "summary": "Removed resourceType fields are rejected regardless of identifier spelling."
 }

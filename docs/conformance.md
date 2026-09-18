@@ -28,7 +28,8 @@ honest inside this repository and carries no special authority.
 
 ```
 specifications/<family>/v<major>/conformance/
-  cases.json                   index of every case
+  cases.json                   index of document cases
+  behavior.json                optional behavioural cases
   <phase>/<case-id>/
     metadata.json              declared outcome
     case.yaml                  the document under test, with no item root
@@ -53,9 +54,8 @@ which [core v1 §8.1](../specifications/core/v1/spec.md#core-corpus) states:
 - **An adapter runs a core case through its parser alone.** `expected: "pass"`
   means the parser accepts the document, and no later phase runs.
 - **A core `case.yaml` asserts that there is no kind**, as every `case.yaml`
-  asserts that there is no item root. Its document keeps an otherwise valid
-  envelope, `kind: COMPONENT` included, but the value has no effect and an
-  adapter MUST NOT dispatch on it.
+  asserts that there is no item root. An adapter MUST NOT dispatch on a kind. Parser boundary cases may
+  contain arbitrary bytes or structures that never reach an envelope check.
 - **A core case cites core only.** Its `clause` and every one of its
   `requirements` are declared in `specifications/core/v1/spec.md`.
 
@@ -99,7 +99,7 @@ directory without indexing it is a no-op — index entries are the contract.
 |---|---|
 | `id` | REQUIRED. MUST equal the `cases.json` entry and follow `<phase>-<NNN>-<description>`. |
 | `phase` | REQUIRED. One of `parser`, `structural`, `semantic`, `capability`. |
-| `expected` | REQUIRED. `pass` or `fail`. |
+| `expected` | REQUIRED. `pass`, `fail`, or `incomplete`. |
 | `clause` | RECOMMENDED. Link to the normative clause the case exercises. Every case should trace to prose. Where the case also declares `requirements`, the two MUST be consistent: every specification declaring one of the requirements is the case's own family, core, or a normative dependency the family's §2 declares; `clause` cites the family's own `spec.md` or one of those declaring specifications; and where it cites a declaring specification, its anchor is the section holding the requirement's anchor or a section enclosing that one. A core case cites core only. |
 | `requirements` | RECOMMENDED. Stable requirement IDs this case pins, e.g. `["CORE-ENV-002"]`. Each MUST resolve to an anchor in a `spec.md`. |
 | `summary` | RECOMMENDED. One sentence, present tense. |
@@ -123,13 +123,11 @@ An ID is `<FAMILY>-<SECTION>-<NNN>`, is declared beside the rule it names, and
 is stable: renaming a heading moves the anchor a `clause` points at, and leaves
 the ID alone.
 
-**An ID names a rule a document can violate.** That is what makes the coverage
-gate meaningful — every declared ID must be pinned by a case or recorded in the
-runner's `UNPINNED` list with a reason, exactly as diagnostic codes are. Rules
-about what an *implementation* does rather than what a document contains — that
-a validator MUST NOT reach the network, MUST NOT echo a value in a diagnostic —
-are normative prose and carry no ID, because an identifier whose permanent
-state is "excused" documents nothing.
+**An ID names an observable obligation.** Document acceptance, normalization,
+resolution, safe rendering and credential persistence can all carry IDs.
+Every declared ID must be pinned by a case or have a reviewed explanation in
+the adapter's coverage exceptions. A missing fixture shape is a reason to
+extend the corpus, not to leave an implementation obligation untested.
 
 [`docs/traceability.md`](traceability.md) is generated from these and
 shows every requirement against the clause stating it and the cases pinning it.
@@ -160,8 +158,8 @@ directory's *name*, so the tree has to contain a directory that has one.
 item root, which [core v1 §4.1](../specifications/core/v1/spec.md#item-directory)
 makes a real state: a document submitted over an API arrives without a
 directory, and an implementation in that position MUST NOT report any rule
-measured against one. An adapter that invents an item root for a `case.yaml` is
-wrong.
+measured against one. Required item checks remain deferred and the document
+result is INCOMPLETE. An adapter must not invent an item root.
 
 **Symlinks are declared, not committed.** `ERR_PATH_ESCAPE` needs a link
 resolving outside the item, and a committed one does not survive a checkout
@@ -254,7 +252,7 @@ resolves to neither is an error in the fixture: an absent field with no default
 has no effective value, and a case claiming otherwise is claiming something the
 specification does not say.
 
-`effective` is forbidden on a failing case. A rejected document has diagnostics,
+`effective` is forbidden on a failing or incomplete case. A rejected document has diagnostics,
 not values.
 
 ## Phases
@@ -295,7 +293,8 @@ a phase that profile requires — a skipped case is never a passed one
 `offline` is the highest profile reachable without a network, and it is
 deliberately a named stopping point rather than a shortfall. No phase below
 `capability` may reach the network, so an implementation running everything a
-client is permitted to run is `offline`-conformant and complete.
+client is permitted to run is `offline`-conformant. This is a claim about adapter behavior across the corpus,
+not proof that every document it encounters has sufficient context.
 
 ### Reporting a result
 
@@ -331,37 +330,93 @@ A result with `failed` greater than zero is not a conformance claim. A result
 with `skipped` greater than zero is a claim only if every skipped case belongs
 to a phase outside the declared profile.
 
-## Coverage status
+## <a id="behavioural-cases"></a>Behavioural cases
 
-`parser`, `structural` and `semantic` are covered. Every diagnostic code the
-`spec.md` files declare is exercised by at least one case, with five
-exceptions, all `capability`:
+Each family's optional `behavior.json` is an array. It is an explicit index;
+adapters MUST read it alongside `cases.json`. Each entry has a unique `id`,
+a `profile`, an `operation`, `requirements`, and `expect`. The latter maps
+JSON Pointers into an operation's observation to exact JSON values. Mapping
+order has no meaning; sequence order does. Optional `diagnostics` is a list
+of required `code` and optional `path` pairs; match these by membership,
+without imposing diagnostic order or forbidding additional diagnostics.
 
-| Code | Why it has no case |
-|---|---|
-| `ERR_UNKNOWN_COMPONENT` | `capability` — resolving a published reference needs the catalog, and no phase a client runs may reach the network |
-| `ERR_VERSION_NOT_MONOTONIC` | `capability` — comparing a version against the lineage it extends needs the catalog, and a fixture is one document with no previous release to be greater than |
-| `ERR_COMPONENT_NOT_PUBLISHED` | `capability` — only the registry holds publication state, and a fixture is a tree of files none of which has one |
-| `ERR_UNKNOWN_COMPUTE_PROFILE` | `capability` — the slug grammar is fixtured, but which profiles are offered changes when the platform gains hardware to back a tier, not when this repository releases |
-| `ERR_UNKNOWN_RESOURCE_TYPE` | `capability` — the grammar is fixtured, but membership is a registry [ADR 0009](adr/0009-resource-type-registry.md) §2 puts outside this repository, and its §3 forbids an offline client from reporting the code at all |
+An entry supplies either logical `input`, or `tree` (item-relative path to
+UTF-8 document text) plus `document` naming the document within that tree.
+The document's parent is its item root. Paths must remain within the fixture.
+Optional `context` supplies synthetic catalog contracts, configuration,
+parameters, allocated addresses and persisted credentials. No operation uses
+a live account or fetches document-selected URLs. Fixtures use synthetic values,
+including when testing sensitivity.
 
-That table is a copy, and it can go stale; the list that counts is the runner's
-`UNCOVERED`. What `task check:conformance` enforces is the rule behind it: every
-`ERR_*` row in a family's own
-diagnostics table must be exercised by an indexed case or appear in the
-runner's `UNCOVERED` list with a reason. A row of core's table counts as
-exercised by a case in any corpus, because the core corpus is `parser`-only and
-core's structural and item codes are fixtured by the families that apply them. A code goes untested only by someone
-writing down why, in a diff a reviewer sees.
+| Profile | Operation | Observation |
+|---|---|---|
+| normalization | normalize | `value`, with effective schema defaults materialized only beneath existing ancestors; `idempotent`, true when a second normalization changes nothing |
+| resolution | validate | Core validation `status`, `profile`, `phase`, `diagnostics` and `deferred`, over the supplied context |
+| resolution | resolve | Pre-start value-resolution status, diagnostics, deferred obligations, private inputs/outputs/environment, and redacted public inspection |
+| resolution | record | VALID plus the generated resolution record, or INVALID with `ERR_INVALID_RESOLUTION_CONTEXT` |
+| rendering | render | `html` produced from `input.markdown` and the full-path `input.media` URL mapping under the listing rendering rules |
+| rendering | form | Ordered array of `name`, `label`, `control`, `order` (null when omitted), and effective `prominence` |
+| lifecycle | revision | VALID when input.revision exceeds input.highestPublishedRevision; otherwise INVALID with ERR_VERSION_NOT_MONOTONIC at /metadata/revision |
+| lifecycle | credential | Count `generated` and ordered `values` for installation/parameter/rotation `input.steps` |
 
-The check runs in both directions, and the second one is the reason for the
-first. Before it existed, ten codes reached `main` with no fixture and CI
-green — the corpus could only tell you that the cases it had were right, never
-that it had the cases it needed.
+The resolution context's `contracts` map uses `identity@revision` keys and
+`{source, digest}` values. Configuration uses exact dotted paths and entries
+`{value, sensitive, identity, version, authorized}`. Parameters and stored
+credentials use `{value, sensitive}`. Addresses map node, endpoint and property
+to logical values. An unavailable entry is absent, never a fabricated empty
+value. The complete meaning of each source belongs to blueprint and component.
 
-An adapter encountering a phase it does not implement, or a case shape it does
-not support, SHOULD skip the case and report it as skipped. It MUST NOT report
-it as passed.
+Private resolved keys are `node:in:input` and `node:out:output`; environment
+maps node to environment key. Each private entry has `value` and `sensitive`,
+and may retain configuration identity/version. Public inspection maps input
+keys to `{sensitive: true, redacted: true}` for sensitive values and
+`{sensitive: false, value}` otherwise. No materialization is released for
+INVALID or INCOMPLETE resolution.
+
+The record operation supplies `blueprint` text, `specifications`,
+`components`, `configuration` and `credentials` in `input`. It generates
+the shape defined in blueprint §5.2 and projects configuration and credential
+identities without resolved plaintext.
+
+A lifecycle adapter substitutes a deterministic synthetic generator: successive
+new identities receive `synthetic-1`, `synthetic-2`, and so on. Repeated
+get-or-create calls must not invoke it again. This tests persistence and rotation,
+not a particular cryptographic random-number implementation.
+
+Behavioural profiles are independently claimed in addition to document phases.
+An implementation claiming a behavioural profile MUST run its own family and
+normative dependency cases in that profile. Unknown operations or unsupported
+profiles are reported as skipped, never passed. Acceptance fixtures and
+behavioural fixtures both contribute to requirement and diagnostic coverage.
+
+### Validation coverage
+
+Every document result distinguishes VALID, INVALID and INCOMPLETE for its
+claimed core validation profile. A structural fixture runs the structural
+profile; a semantic fixture runs the document profile with its declared context.
+`expected: incomplete` requires INCOMPLETE, not INVALID or skipped. Missing
+context must be listed in deferred obligations. A passing structural fixture
+makes no deployment-validity claim.
+
+Publication and deployment admission MUST complete their respective deferred
+obligations. The local adapter reports unresolved catalog/policy admission rather
+than inventing an authorization result. Its value-resolution and credential
+adapters are test implementations, not a production deployment engine.
+
+### Historical compatibility
+
+Compatibility replay reads the historical index, bytes, item trees, declared
+symlinks, effective values and behavioural expectations from each released tag.
+It evaluates them with candidate semantics under the same supplied context.
+Editing or deleting today's fixtures cannot replace that historical evidence.
+A missing historical part is an error. A finite corpus is evidence, not a proof:
+schema review and boundary tests remain required.
+
+The coverage gate requires every declared diagnostic and requirement to have
+a fixture in its family or a consuming family's reachable corpus, or a reviewed
+exception. All currently declared diagnostic codes have fixtures. Publication revision
+fixtures supply a synthetic lineage snapshot; implementations acquire and
+verify the real catalog context before applying that rule.
 
 ## Adding a case
 

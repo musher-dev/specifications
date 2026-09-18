@@ -1,6 +1,3 @@
-# PUBLIC_URL takes its value from a URL. A PUBLIC TCP endpoint publishes a
-# host:port edge address instead, so it has none to give: the endpoint is
-# declared and PUBLIC, and still cannot answer.
 specVersion: v1
 kind: BLUEPRINT
 metadata:
@@ -11,9 +8,11 @@ spec:
     app:
       componentRef: ./components/app.yaml
       size: general.standard.small
-      connections: {}
-  parameters:
-    databaseUrl:
-      default: "${{ self.publicUrl.db }}"
-      ui:
-        label: Database URL
+      bindings:
+        databaseUrl:
+          type: OUTPUT
+          node: app
+          output: installDefault
+      exposure:
+        db: PUBLIC
+      volumes: {}

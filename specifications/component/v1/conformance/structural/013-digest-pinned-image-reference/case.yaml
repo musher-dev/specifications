@@ -1,6 +1,3 @@
-# Both accepted spellings of a pin, and the case the grammar has to get
-# right: the colon in localhost:5000 is a registry port, not a tag, so the tag
-# is the colon after the final slash.
 specVersion: v1
 kind: COMPONENT
 metadata:
@@ -15,4 +12,3 @@ spec:
       api:
         containerPort: 8080
         protocol: HTTP
-        visibility: PRIVATE

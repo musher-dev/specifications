@@ -1,6 +1,6 @@
 [
   {
     "code": "ERR_INVALID_VALUE",
-    "path": "/spec/components/web/connections"
+    "path": "/spec/components/web/bindings"
   }
 ]

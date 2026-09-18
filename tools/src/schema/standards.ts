@@ -26,11 +26,14 @@ import { join } from 'node:path'
 import {
   discoverFamilies,
   Failures,
+  isObject,
+  type Json,
   REPO_ROOT,
   relativeToRepo,
   sourceModules,
+  walkObjects,
 } from '../lib/layout.ts'
-import { ensureBundleFile } from './bundle.ts'
+import { ensureBundleFile, familyBundle } from './bundle.ts'
 
 const CLI = join(REPO_ROOT, 'tools', 'node_modules', '.bin', 'jsonschema')
 
@@ -44,6 +47,10 @@ const CLI = join(REPO_ROOT, 'tools', 'node_modules', '.bin', 'jsonschema')
  * turning the linter off.
  */
 const EXCLUDED_RULES: ReadonlyMap<string, string> = new Map([
+  [
+    'orphan_definitions',
+    'Public resolution-record entry points are reached externally. orphanDefinitions below checks reachability from the document root and explicitly exported roots, so unused definitions still fail.',
+  ],
   [
     'description_trailing_period',
     'Descriptions here are sentences and are punctuated as sentences. The rule ' +
@@ -75,6 +82,28 @@ const EXCLUDED_RULES: ReadonlyMap<string, string> = new Map([
       'readable, for no change in what validates.',
   ],
 ])
+
+/** Reachability includes named public artifacts, not only the Musher document root. */
+export function orphanDefinitions(schema: Json, publicEntries: readonly string[] = []): string[] {
+  if (!isObject(schema)) return []
+  const defs = isObject(schema.$defs) ? schema.$defs : {}
+  for (const entry of publicEntries)
+    if (!Object.hasOwn(defs, entry)) throw new Error('missing public schema entry point: ' + entry)
+  const root = { ...schema }
+  delete root.$defs
+  const reachable = new Set<string>(),
+    pending = [root, ...publicEntries.map((name) => defs[name]!)]
+  for (const entry of publicEntries) reachable.add(entry)
+  for (let i = 0; i < pending.length; i++)
+    for (const { node } of walkObjects(pending[i]!)) {
+      if (typeof node.$ref !== 'string' || !node.$ref.startsWith('#/$defs/')) continue
+      const name = decodeURIComponent(node.$ref.slice('#/$defs/'.length))
+      if (reachable.has(name) || !Object.hasOwn(defs, name)) continue
+      reachable.add(name)
+      pending.push(defs[name]!)
+    }
+  return Object.keys(defs).filter((name) => !reachable.has(name))
+}
 
 function run(args: string[]): { status: number; output: string } {
   const result = spawnSync(CLI, args, { encoding: 'utf8' })
@@ -122,6 +151,13 @@ function main(): void {
 
   for (const family of discoverFamilies()) {
     const paths = [...sourceModules(family)]
+    const bundle = familyBundle(family)
+    if (bundle !== null)
+      for (const name of orphanDefinitions(
+        JSON.parse(bundle),
+        family.name === 'blueprint' && family.major === 'v1' ? ['BlueprintResolutionRecord'] : [],
+      ))
+        failures.add(`${family.name}/${family.major}: unreferenced definition ${name}`)
     // The CLI reads files, so the bundle is written to dist/ first.
     const bundlePath = ensureBundleFile(family)
     if (bundlePath !== null) paths.push(bundlePath)

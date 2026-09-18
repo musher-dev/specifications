@@ -1,0 +1,11 @@
+{
+  "id": "semantic-050-reject-interpolated-config",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#value-sources",
+  "requirements": [
+    "BP-REF-001"
+  ],
+  "summary": "reject interpolated config",
+  "document": "app/blueprint.yaml"
+}

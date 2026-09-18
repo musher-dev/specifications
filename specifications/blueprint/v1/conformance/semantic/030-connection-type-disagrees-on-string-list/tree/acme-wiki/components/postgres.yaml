@@ -12,13 +12,13 @@ spec:
       primary:
         containerPort: 5432
         protocol: TCP
-        visibility: PRIVATE
   contract:
     inputs: {}
     outputs:
       replica:
         schema:
-          type: STRING
-        valueFrom: DECLARED
-        value: primary
+          type: string
         description: Which replica this database serves as.
+        source:
+          type: LITERAL
+          value: primary

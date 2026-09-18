@@ -1,7 +1,3 @@
-# The same rule reached the other way. The block is present and empty, so this
-# is a value the schema rejects rather than a field it misses — the two are
-# separate diagnostics because they read differently to an author. One forgot
-# the block; the other wrote it and put nothing in it.
 specVersion: v1
 kind: COMPONENT
 metadata:

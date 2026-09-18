@@ -1,8 +1,8 @@
 {
   "id": "semantic-012-connection-resource-type-mismatch",
   "phase": "semantic",
-  "expected": "fail",
+  "expected": "pass",
   "clause": "specifications/blueprint/v1/spec.md#connections",
-  "summary": "A connection joining an output and an input whose resourceTypes disagree is rejected.",
+  "summary": "Explicit supply is accepted without the retired restriction.",
   "document": "acme-wiki/blueprint.yaml"
 }

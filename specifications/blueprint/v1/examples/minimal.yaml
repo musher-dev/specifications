@@ -1,16 +1,3 @@
-# yaml-language-server: $schema=https://specifications.musher.dev/blueprint/v1/blueprint.schema.json
-#
-# A single-component blueprint. The component declares what it needs, a
-# required and sensitive `postgresPassword`, and says nothing about who supplies
-# it. The blueprint decides: one parameter covers the input, the platform mints
-# the value, and the install form shows the field so a deploying user can see a
-# secret will be generated for them.
-#
-# `componentRef` is a repo-local reference: it resolves relative to the
-# directory holding this file, and the revision it deploys is that document's
-# own `metadata.revision`. The paths here are illustrative. Examples are
-# validated structurally, and reference resolution belongs to the semantic
-# phase.
 specVersion: v1
 kind: BLUEPRINT
 metadata:
@@ -21,11 +8,15 @@ spec:
     db:
       componentRef: ./components/postgres.yaml
       size: general.standard.small
-      connections: {}
+      bindings:
+        postgresPassword:
+          type: PARAMETER
+          parameter: postgresPassword
+      volumes:
+        data:
+          sizeGiB: 10
   parameters:
     postgresPassword:
       generator:
         byteLength: 32
         encoding: BASE64URL
-      ui:
-        label: Database password

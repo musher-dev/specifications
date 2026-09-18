@@ -1,6 +1,6 @@
 [
   {
-    "code": "ERR_AMBIGUOUS_ENDPOINT",
-    "path": "/spec/parameters/baseUrl/default"
+    "code": "ERR_INVALID_DEPENDENCY",
+    "path": "/spec/components/models/componentRef"
   }
 ]

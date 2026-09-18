@@ -360,7 +360,7 @@ Three rules need the filesystem and are therefore `semantic`:
 |---|---|---|
 | <a id="LIST-MEDIA-001"></a>`LIST-MEDIA-001` | The path MUST resolve to a file that exists. | `ERR_MEDIA_NOT_FOUND` |
 | <a id="LIST-MEDIA-002"></a>`LIST-MEDIA-002` | The resolved target MUST lie inside the item root. | `ERR_PATH_ESCAPE` |
-| <a id="LIST-MEDIA-003"></a>`LIST-MEDIA-003` | Two screenshots MUST NOT share a basename. | `ERR_DUPLICATE_MEDIA_BASENAME` |
+| <a id="LIST-MEDIA-003"></a>`LIST-MEDIA-003` | Two screenshots MUST NOT share the same full item-relative path. | `ERR_DUPLICATE_MEDIA_PATH` |
 
 **`ERR_PATH_ESCAPE` outlives the grammar.** The pattern above makes `..`
 unspellable, so no path can escape by traversal any more. One can still escape
@@ -370,14 +370,9 @@ location rather than of the string, the same distinction
 [core v1 §11](../../core/v1/spec.md#security) draws for every path inside an
 item.
 
-**Basenames must differ across the whole item**, not merely within a
-directory: `media/desktop/overview.png` and `media/mobile/overview.png`
-collide. A gallery addresses its entries by basename, so two screenshots called
-`overview.png` are one entry. The constraint is a real one on an author and is
-stated here rather than left to be found out when the second screenshot
-silently replaces the first. It stops at the gallery because
-[§5.1](#media-resolution) keys the published media set on the whole path rather
-than on the basename.
+**Media identity is the full item-relative path**, compared case-sensitively.
+`media/desktop/overview.png` and `media/mobile/overview.png` are distinct
+assets. Gallery identity and publication resolution use the same key.
 
 **What v1 does not constrain.** Neither dimensions nor file size are bounded.
 A storefront cannot reserve space for an image whose aspect ratio it does not
@@ -462,7 +457,7 @@ document in this family. This family adds:
 | `ERR_ITEM_TYPE_MISMATCH` | `semantic` | `spec.itemType` disagrees with what the item root holds. |
 | `ERR_MEDIA_NOT_FOUND` | `semantic` | A referenced media file does not exist. |
 | `ERR_PATH_ESCAPE` | `semantic` | A media path resolves outside the item directory. |
-| `ERR_DUPLICATE_MEDIA_BASENAME` | `semantic` | Two screenshots share a basename. |
+| `ERR_DUPLICATE_MEDIA_PATH` | `semantic` | Two screenshots share a full item-relative path. |
 | `ERR_RAW_HTML` | `semantic` | `description` contains raw HTML. |
 | `ERR_DISALLOWED_SCHEME` | `semantic` | A `description` link uses a scheme outside the permitted set. |
 | `ERR_IMAGE_NOT_LOCAL` | `semantic` | A `description` image is not an item media path. |

@@ -12,13 +12,13 @@ spec:
       primary:
         containerPort: 5432
         protocol: TCP
-        visibility: PRIVATE
   contract:
     inputs: {}
     outputs:
       port:
         schema:
-          type: NUMBER
-        valueFrom: DECLARED
-        value: '5432'
+          type: number
         description: Port the database listens on.
+        source:
+          type: LITERAL
+          value: 5432

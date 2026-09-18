@@ -1,6 +1,6 @@
 [
   {
     "code": "ERR_INCOMPATIBLE_TYPE",
-    "path": "/spec/components/web/connections/replicas/fromOutput"
+    "path": "/spec/components/web/bindings/replicas/output"
   }
 ]

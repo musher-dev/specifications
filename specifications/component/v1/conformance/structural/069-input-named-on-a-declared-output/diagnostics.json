@@ -1,6 +1,6 @@
 [
   {
-    "code": "ERR_INVALID_VALUE",
-    "path": "/spec/contract/outputs/siteTitle/input"
+    "code": "ERR_UNKNOWN_FIELD",
+    "path": "/spec/contract/outputs/siteTitle/source"
   }
 ]

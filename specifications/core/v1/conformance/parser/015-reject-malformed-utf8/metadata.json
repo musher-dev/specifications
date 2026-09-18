@@ -1,0 +1,10 @@
+{
+  "id": "parser-015-reject-malformed-utf8",
+  "phase": "parser",
+  "expected": "fail",
+  "clause": "specifications/core/v1/spec.md#yaml-profile",
+  "requirements": [
+    "CORE-YAML-001"
+  ],
+  "summary": "reject malformed utf8"
+}

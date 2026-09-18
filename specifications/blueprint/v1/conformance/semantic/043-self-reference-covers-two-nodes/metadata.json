@@ -1,11 +1,11 @@
 {
   "id": "semantic-043-self-reference-covers-two-nodes",
   "phase": "semantic",
-  "expected": "fail",
-  "clause": "specifications/blueprint/v1/spec.md#value-sources",
+  "expected": "pass",
+  "clause": "specifications/blueprint/v1/spec.md#components",
   "requirements": [
-    "BP-PARAM-008"
+    "BP-CONN-002"
   ],
-  "summary": "A default reading self addressing across two covered nodes is rejected.",
+  "summary": "Explicit named endpoint outputs retain their meaning across multiple endpoints and nodes.",
   "document": "acme-wiki/blueprint.yaml"
 }

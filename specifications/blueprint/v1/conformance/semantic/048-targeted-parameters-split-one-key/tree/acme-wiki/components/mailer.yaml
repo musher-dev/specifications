@@ -12,12 +12,13 @@ spec:
       web:
         containerPort: 8080
         protocol: HTTP
-        visibility: PUBLIC
   contract:
     inputs:
       apiKey:
         schema:
-          type: STRING
-          sensitive: true
+          type: string
         description: Credential this service authenticates with.
+        sensitive: true
+        target:
+          envVarKey: API_KEY
     outputs: {}

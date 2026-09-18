@@ -1,5 +1,3 @@
-# One PUBLIC endpoint beside a PRIVATE one. The sole PUBLIC endpoint is the
-# primary, so the probe naming none resolves to "web".
 specVersion: v1
 kind: COMPONENT
 metadata:
@@ -14,11 +12,11 @@ spec:
       web:
         containerPort: 8080
         protocol: HTTP
-        visibility: PUBLIC
       metrics:
         containerPort: 9090
         protocol: HTTP
-        visibility: PRIVATE
     health:
       readiness:
         path: /healthz
+        type: HTTP
+        endpoint: web

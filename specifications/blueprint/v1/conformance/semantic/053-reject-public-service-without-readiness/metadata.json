@@ -1,0 +1,11 @@
+{
+  "id": "semantic-053-reject-public-service-without-readiness",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#node-compute",
+  "requirements": [
+    "COMP-EP-003"
+  ],
+  "summary": "reject public service without readiness",
+  "document": "app/blueprint.yaml"
+}

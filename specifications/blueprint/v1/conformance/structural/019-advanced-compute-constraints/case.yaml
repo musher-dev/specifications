@@ -1,6 +1,3 @@
-# Every one of the nine pins, each a lowercase token or a positive integer.
-# The pins narrow which host may run the node; none of them changes the compute
-# `size` names.
 specVersion: v1
 kind: BLUEPRINT
 metadata:
@@ -12,14 +9,17 @@ spec:
       componentRef: ./components/api.yaml
       size: gpu.performance.large
       placement:
-        cpuArchitectures: [x86_64, arm64]
+        cpuArchitectures:
+          - x86_64
+          - arm64
         cpuDedication: dedicated
         minAcceleratorMemoryGiB: 24
-        acceleratorRuntimes: [cuda]
+        acceleratorRuntimes:
+          - cuda
         acceleratorInterconnect: nvlink
         acceleratorSKUClass: h100-sxm
         storageClass: local-nvme
         minStorageIOPS: 20000
         networkClass: standard
-      connections: {}
+      bindings: {}
   parameters: {}

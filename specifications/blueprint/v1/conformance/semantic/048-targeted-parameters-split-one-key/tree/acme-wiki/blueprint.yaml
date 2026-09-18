@@ -1,8 +1,3 @@
-# Two components each declare an `apiKey` of the same shape. Binding by key
-# alone would cover both with one field and hand two unrelated services one
-# secret: nothing in either document is wrong, BP-PARAM-002 is satisfied, and
-# the composition is silently mis-wired. `toNode` and `toInput` are what let the
-# two be two fields, each asked for under its own name.
 specVersion: v1
 kind: BLUEPRINT
 metadata:
@@ -13,19 +8,25 @@ spec:
     payments:
       componentRef: ./components/payments.yaml
       size: general.standard.small
-      connections: {}
+      bindings:
+        apiKey:
+          type: PARAMETER
+          parameter: stripeKey
+      exposure: {}
+      volumes: {}
     mailer:
       componentRef: ./components/mailer.yaml
       size: general.standard.small
-      connections: {}
+      bindings:
+        apiKey:
+          type: PARAMETER
+          parameter: sendgridKey
+      exposure: {}
+      volumes: {}
   parameters:
     stripeKey:
-      toNode: payments
-      toInput: apiKey
       ui:
         label: Stripe API key
     sendgridKey:
-      toNode: mailer
-      toInput: apiKey
       ui:
         label: SendGrid API key

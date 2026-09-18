@@ -1,8 +1,3 @@
-# The other end of §6's grammar. An output name is what a connection's
-# `fromOutput` names, so it is bound across documents exactly as an input name
-# is and takes the same spelling. A hyphen is the interesting rejection: it is
-# legal in a node name and in a volume name, both of which are DNS labels, and
-# illegal here because a contract identifier is lowerCamelCase.
 specVersion: v1
 kind: COMPONENT
 metadata:
@@ -17,12 +12,14 @@ spec:
       primary:
         containerPort: 5432
         protocol: TCP
-        visibility: PRIVATE
   contract:
     inputs: {}
     outputs:
       connection-string:
         description: Connection string a client uses to reach this database.
         schema:
-          type: STRING
-        valueFrom: DERIVED
+          type: string
+        source:
+          type: ENDPOINT
+          endpoint: primary
+          property: privateAddress

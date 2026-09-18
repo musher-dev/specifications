@@ -1,6 +1,3 @@
-# An absent graph and an empty one fail differently, and both fail. `spec`
-# without `components` is a missing required property rather than a bound
-# violation.
 specVersion: v1
 kind: BLUEPRINT
 metadata:

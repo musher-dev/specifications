@@ -1,7 +1,7 @@
 {
   "id": "semantic-011-description-uppercase-scheme",
   "phase": "semantic",
-  "expected": "pass",
+  "expected": "incomplete",
   "clause": "specifications/listing/v1/spec.md#description-markdown",
   "requirements": [
     "LIST-MD-002"

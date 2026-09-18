@@ -1,8 +1,3 @@
-# Section 5 requires a SERVICE to declare at least one endpoint. A service that
-# exposes nothing is a WORKER wearing another kind's name, and permitting it
-# leaves `kind` carrying no information.
-#
-# The block is absent here, so the failure is a missing field.
 specVersion: v1
 kind: COMPONENT
 metadata:

@@ -1,8 +1,3 @@
-# The labels are the blueprint's and the members are the component's. `backend`
-# offers S3 and AZURE, and the parameter covering it labels AZUR, a member no
-# covered input declares. The typo changes nothing a deploying user would see
-# except that Azure appears under its raw spelling, which is why it has to be
-# caught here: nothing else ever would.
 specVersion: v1
 kind: BLUEPRINT
 metadata:
@@ -13,7 +8,13 @@ spec:
     db:
       componentRef: ./components/postgres.yaml
       size: general.standard.small
-      connections: {}
+      bindings:
+        backend:
+          type: PARAMETER
+          parameter: backend
+      exposure:
+        primary: PRIVATE
+      volumes: {}
   parameters:
     backend:
       ui:

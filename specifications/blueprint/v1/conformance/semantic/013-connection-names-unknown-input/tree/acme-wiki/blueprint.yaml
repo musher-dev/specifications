@@ -1,7 +1,3 @@
-# `db` publishes `connectionString` and `web` declares an input called
-# `databaseUrl`, but the wire is keyed `databaseUri`. The producer end
-# resolves, so ERR_UNKNOWN_OUTPUT does not fire — only the consumer end is
-# misspelled, which is the half nothing checked before.
 specVersion: v1
 kind: BLUEPRINT
 metadata:
@@ -12,12 +8,19 @@ spec:
     db:
       componentRef: ./components/postgres.yaml
       size: general.standard.small
-      connections: {}
+      bindings: {}
+      exposure:
+        primary: PRIVATE
+      volumes: {}
     web:
       componentRef: ./components/web.yaml
       size: general.standard.small
-      connections:
+      bindings:
         databaseUri:
-          fromNode: db
-          fromOutput: connectionString
+          type: OUTPUT
+          node: db
+          output: connectionString
+      exposure:
+        web: PRIVATE
+      volumes: {}
   parameters: {}

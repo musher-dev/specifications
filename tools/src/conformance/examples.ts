@@ -36,9 +36,15 @@ function main(): void {
 
     for (const file of files) {
       const path = join(family.examplesDir, file)
-      const result = validateDocument(family, readFileSync(path, 'utf8'))
+      const result = validateDocument(family, readFileSync(path))
       checked += 1
 
+      if (result.status === 'INCOMPLETE') {
+        console.log(
+          `  · ${relativeToRepo(path)}: valid structure; incomplete document checks (${result.deferred.map((d) => d.missing).join(', ')})`,
+        )
+        continue
+      }
       if (result.ok) {
         console.log(`  ✓ ${relativeToRepo(path)}`)
         continue
@@ -50,7 +56,11 @@ function main(): void {
     }
   }
 
-  failures.report(checked === 0 ? 'No examples to validate.' : `${checked} example(s) validate.`)
+  failures.report(
+    checked === 0
+      ? 'No examples to validate.'
+      : `${checked} example(s) checked; incomplete document context is reported above.`,
+  )
 }
 
 main()

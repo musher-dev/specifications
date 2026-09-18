@@ -1,8 +1,10 @@
 {
   "id": "structural-063-external-without-a-resource-type",
   "phase": "structural",
-  "expected": "fail",
+  "expected": "pass",
   "clause": "specifications/component/v1/spec.md#external",
-  "requirements": ["COMP-EXT-002"],
-  "summary": "An external block without a resourceType is rejected."
+  "requirements": [
+    "COMP-EXT-002"
+  ],
+  "summary": "An external node needs no registry resource type."
 }

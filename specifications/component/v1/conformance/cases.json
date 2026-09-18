@@ -391,6 +391,41 @@
       "id": "semantic-019-output-value-names-a-foreign-namespace",
       "phase": "semantic",
       "path": "semantic/019-output-value-names-a-foreign-namespace"
+    },
+    {
+      "id": "semantic-020-reject-invalid-default",
+      "phase": "semantic",
+      "path": "semantic/020-reject-invalid-default"
+    },
+    {
+      "id": "semantic-021-reject-secret-literal",
+      "phase": "semantic",
+      "path": "semantic/021-reject-secret-literal"
+    },
+    {
+      "id": "semantic-022-reject-unsupported-pattern",
+      "phase": "semantic",
+      "path": "semantic/022-reject-unsupported-pattern"
+    },
+    {
+      "id": "semantic-023-reject-overlapping-mounts",
+      "phase": "semantic",
+      "path": "semantic/023-reject-overlapping-mounts"
+    },
+    {
+      "id": "semantic-024-reject-wrong-address-family",
+      "phase": "semantic",
+      "path": "semantic/024-reject-wrong-address-family"
+    },
+    {
+      "id": "semantic-025-reject-malformed-reference",
+      "phase": "semantic",
+      "path": "semantic/025-reject-malformed-reference"
+    },
+    {
+      "id": "semantic-026-reject-unknown-namespace",
+      "phase": "semantic",
+      "path": "semantic/026-reject-unknown-namespace"
     }
   ]
 }

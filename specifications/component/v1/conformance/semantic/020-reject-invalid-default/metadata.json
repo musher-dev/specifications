@@ -1,0 +1,10 @@
+{
+  "id": "semantic-020-reject-invalid-default",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#value-schema",
+  "requirements": [
+    "COMP-VAL-005"
+  ],
+  "summary": "reject invalid default"
+}

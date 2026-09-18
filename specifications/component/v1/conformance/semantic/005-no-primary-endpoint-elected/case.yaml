@@ -1,6 +1,3 @@
-# Two PUBLIC endpoints, and the probe names neither. Section 5.2 elects no
-# primary here and the reference is rejected rather than resolved by sort
-# order, which would let a new endpoint silently re-point this probe.
 specVersion: v1
 kind: COMPONENT
 metadata:
@@ -15,11 +12,11 @@ spec:
       api:
         containerPort: 8080
         protocol: HTTP
-        visibility: PUBLIC
       console:
         containerPort: 8081
         protocol: HTTP
-        visibility: PUBLIC
     health:
       readiness:
         path: /healthz
+        type: HTTP
+        endpoint: missing

@@ -1,5 +1,3 @@
-# The POSIX shape is required rather than conventional: a name outside it is
-# not portably settable by the thing that has to set it.
 specVersion: v1
 kind: COMPONENT
 metadata:
@@ -11,7 +9,6 @@ spec:
       web:
         containerPort: 8080
         protocol: HTTP
-        visibility: PRIVATE
     source:
       type: IMAGE
       ref: nginx:1.29.4-alpine

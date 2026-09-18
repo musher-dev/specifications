@@ -1,13 +1,3 @@
-# Every item-scoped rule satisfied at once, which is what makes this the
-# regression pin: a careless implementation of any one of them rejects a
-# well-formed item, and nothing else in the corpus would notice.
-#
-# The slug is the directory name, the sibling listing names the same item, both
-# component documents are referenced, both references resolve inside the item,
-# the connection names an output `db` really publishes and an input `web`
-# really declares, the two ends of that wire agree on type and resourceType,
-# and `adminPassword` is required on both nodes, declared identically, and
-# covered by one generated parameter whose inputs are both sensitive.
 specVersion: v1
 kind: BLUEPRINT
 metadata:
@@ -18,14 +8,27 @@ spec:
     db:
       componentRef: ./components/postgres.yaml
       size: general.standard.small
-      connections: {}
+      bindings:
+        adminPassword:
+          type: PARAMETER
+          parameter: adminPassword
+      exposure:
+        primary: PRIVATE
+      volumes: {}
     web:
       componentRef: ./components/web.yaml
       size: general.standard.small
-      connections:
+      bindings:
         databaseUrl:
-          fromNode: db
-          fromOutput: connectionString
+          type: OUTPUT
+          node: db
+          output: connectionString
+        adminPassword:
+          type: PARAMETER
+          parameter: adminPassword
+      exposure:
+        primary: PRIVATE
+      volumes: {}
   parameters:
     adminPassword:
       generator:

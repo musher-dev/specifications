@@ -1,12 +1,3 @@
-# yaml-language-server: $schema=https://specifications.musher.dev/blueprint/v1/blueprint.schema.json
-#
-# The published reference form. `componentRef` is the UUID of a component the
-# platform already holds, and `revision` pins the lineage version to
-# deploy — required here, because no document on disk carries it.
-#
-# The same field carries both forms; the shape of the value selects the
-# resolver. A local reference would begin `./` or `../`, and must not carry a
-# `revision`.
 specVersion: v1
 kind: BLUEPRINT
 metadata:
@@ -18,5 +9,5 @@ spec:
       componentRef: 550e8400-e29b-41d4-a716-446655440000
       revision: 3
       size: general.standard.small
-      connections: {}
+      bindings: {}
   parameters: {}

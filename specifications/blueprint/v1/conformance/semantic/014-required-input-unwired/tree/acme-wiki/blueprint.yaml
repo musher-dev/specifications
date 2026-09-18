@@ -1,7 +1,3 @@
-# `web` requires `databaseUrl`, and nothing supplies it: no connection fills it
-# and no parameter covers it. The component says only that it needs the value.
-# Whether a wire or a person provides it is the blueprint's decision, and this
-# blueprint has made neither, so the workload would start without it.
 specVersion: v1
 kind: BLUEPRINT
 metadata:
@@ -12,8 +8,14 @@ spec:
     db:
       componentRef: ./components/postgres.yaml
       size: general.standard.small
-      connections: {}
+      bindings: {}
+      exposure:
+        primary: PRIVATE
+      volumes: {}
     web:
       componentRef: ./components/web.yaml
       size: general.standard.small
-      connections: {}
+      bindings: {}
+      exposure:
+        web: PRIVATE
+      volumes: {}

@@ -406,6 +406,31 @@
       "id": "semantic-048-targeted-parameters-split-one-key",
       "phase": "semantic",
       "path": "semantic/048-targeted-parameters-split-one-key"
+    },
+    {
+      "id": "semantic-049-reject-unknown-parameter",
+      "phase": "semantic",
+      "path": "semantic/049-reject-unknown-parameter"
+    },
+    {
+      "id": "semantic-050-reject-interpolated-config",
+      "phase": "semantic",
+      "path": "semantic/050-reject-interpolated-config"
+    },
+    {
+      "id": "semantic-051-reject-invalid-binding-value",
+      "phase": "semantic",
+      "path": "semantic/051-reject-invalid-binding-value"
+    },
+    {
+      "id": "semantic-052-reject-small-volume",
+      "phase": "semantic",
+      "path": "semantic/052-reject-small-volume"
+    },
+    {
+      "id": "semantic-053-reject-public-service-without-readiness",
+      "phase": "semantic",
+      "path": "semantic/053-reject-public-service-without-readiness"
     }
   ]
 }

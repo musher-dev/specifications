@@ -1,7 +1,3 @@
-# `config` is reserved by core §5.2 and given no meaning in these documents, so
-# no family admits it. An output value names this node's own addressing or
-# nothing: a value reaching outside the node would depend on something the
-# component cannot see, which is the invariant §6.2 rests on.
 specVersion: v1
 kind: COMPONENT
 metadata:
@@ -16,17 +12,18 @@ spec:
       web:
         containerPort: 8080
         protocol: HTTP
-        visibility: PUBLIC
     health:
       readiness:
         path: /healthz
         endpoint: web
+        type: HTTP
   contract:
     inputs: {}
     outputs:
       baseUrl:
         description: Address this service answers on.
-        valueFrom: DECLARED
-        value: "${{ config.baseUrl }}"
         schema:
-          type: STRING
+          type: string
+        source:
+          type: TEMPLATE
+          template: ${{ config.baseUrl }}

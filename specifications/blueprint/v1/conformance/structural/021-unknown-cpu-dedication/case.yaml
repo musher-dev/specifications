@@ -1,5 +1,3 @@
-# The one pin whose vocabulary this contract closes. A vCPU is shared or it is
-# not; a third term would be a different concept wearing this one's name.
 specVersion: v1
 kind: BLUEPRINT
 metadata:
@@ -12,5 +10,5 @@ spec:
       size: general.standard.small
       placement:
         cpuDedication: exclusive
-      connections: {}
+      bindings: {}
   parameters: {}

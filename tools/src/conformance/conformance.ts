@@ -50,10 +50,12 @@ import {
   type Diagnostic,
   type Phase,
   parseDocument,
+  parseDocumentBytes,
   validateDocument,
 } from '../validation/validator.ts'
+import { runBehaviorCases } from './behavior.ts'
 
-interface CaseIndexEntry {
+export interface CaseIndexEntry {
   readonly id: string
   readonly phase: Phase
   readonly path: string
@@ -62,7 +64,7 @@ interface CaseIndexEntry {
 export interface CaseMetadata {
   readonly id: string
   readonly phase: Phase
-  readonly expected: 'pass' | 'fail'
+  readonly expected: 'pass' | 'fail' | 'incomplete'
   readonly clause?: string
   /**
    * Stable requirement identifiers this case exercises, e.g. `CORE-ENV-002`.
@@ -698,7 +700,7 @@ function checkCaseShape(
       ok = false
       continue
     }
-    if (!context.requirements.has(requirement)) {
+    if (!reachOf(context, family).specs.has(context.requirements.get(requirement) ?? '')) {
       failures.add(
         `${label}: requirement ${requirement} is not declared in any spec.md. ` +
           'Declare it beside the rule it names, or cite one that exists.',
@@ -731,7 +733,7 @@ function checkCaseShape(
     }
   }
 
-  if (metadata.expected === 'pass') return ok ? [] : null
+  if (metadata.expected !== 'fail') return ok ? [] : null
 
   const diagnosticsPath = join(caseDir, 'diagnostics.json')
   if (!existsSync(diagnosticsPath)) {
@@ -840,13 +842,16 @@ function checkEffective(
  */
 function runValidation(family: Family, caseDir: string, metadata: CaseMetadata) {
   if (metadata.document === undefined) {
-    return validateDocument(family, readFileSync(join(caseDir, 'case.yaml'), 'utf8'))
+    return validateDocument(family, readFileSync(join(caseDir, 'case.yaml')), {
+      profile: metadata.phase === 'structural' ? 'structural' : 'document',
+    })
   }
 
   const scratch = materialiseTree(caseDir, metadata)
   try {
     const documentPath = join(scratch, metadata.document)
-    return validateDocument(family, readFileSync(documentPath, 'utf8'), {
+    return validateDocument(family, readFileSync(documentPath), {
+      profile: metadata.phase === 'structural' ? 'structural' : 'document',
       itemRoot: dirname(documentPath),
       documentPath,
     })
@@ -863,10 +868,11 @@ function runValidation(family: Family, caseDir: string, metadata: CaseMetadata) 
  */
 function runParserOnly(caseDir: string): {
   readonly ok: boolean
+  readonly status?: string
   readonly phase: Phase
   readonly diagnostics: Diagnostic[]
 } {
-  const parsed = parseDocument(readFileSync(join(caseDir, 'case.yaml'), 'utf8'))
+  const parsed = parseDocumentBytes(readFileSync(join(caseDir, 'case.yaml')))
   return 'errors' in parsed
     ? { ok: false, phase: 'parser', diagnostics: parsed.errors }
     : { ok: true, phase: 'parser', diagnostics: [] }
@@ -874,7 +880,7 @@ function runParserOnly(caseDir: string): {
 
 export type Log = (line: string) => void
 
-function runCase(
+export function runCase(
   context: Context,
   family: Family,
   entry: CaseIndexEntry,
@@ -899,7 +905,11 @@ function runCase(
     failures.add(`${label}: metadata.json id is "${metadata.id}" but cases.json says "${entry.id}"`)
     return 'failed'
   }
-  if (metadata.expected !== 'pass' && metadata.expected !== 'fail') {
+  if (
+    metadata.expected !== 'pass' &&
+    metadata.expected !== 'fail' &&
+    metadata.expected !== 'incomplete'
+  ) {
     failures.add(`${label}: metadata.expected must be "pass" or "fail"`)
     return 'failed'
   }
@@ -925,6 +935,16 @@ function runCase(
     result = runValidation(family, caseDir, metadata)
   }
 
+  if (metadata.expected === 'incomplete') {
+    if (result.status === 'INCOMPLETE') {
+      log(`  ✓ ${label} (incomplete as declared)`)
+      return 'ran'
+    }
+    failures.add(
+      `${label}: expected INCOMPLETE, got ${result.status ?? (result.ok ? 'VALID' : 'INVALID')}`,
+    )
+    return 'failed'
+  }
   if (metadata.expected === 'pass') {
     if (result.ok) {
       if (family.role !== 'core' && !checkEffective(family, caseDir, label, metadata, failures)) {
@@ -971,28 +991,7 @@ function runCase(
  * Diagnostic codes deliberately left without a fixture, and why. Every entry is
  * a claim a reviewer can check; the list is short on purpose.
  */
-const UNCOVERED: ReadonlyMap<string, string> = new Map([
-  [
-    'ERR_UNKNOWN_COMPONENT',
-    'capability — resolving a published reference needs the catalog, and no phase this repository runs may reach the network',
-  ],
-  [
-    'ERR_VERSION_NOT_MONOTONIC',
-    'capability — comparing a version against the lineage it extends needs the catalog, and a fixture is one document with no previous release to be greater than',
-  ],
-  [
-    'ERR_COMPONENT_NOT_PUBLISHED',
-    'capability — only the registry holds publication state, so deciding it needs the catalog, and a fixture is a tree of files none of which has one',
-  ],
-  [
-    'ERR_UNKNOWN_COMPUTE_PROFILE',
-    'capability — the grammar is fixtured (structural/015 through 018), but which profiles are offered changes when the platform gains hardware to back a tier, so deciding membership needs the catalog',
-  ],
-  [
-    'ERR_UNKNOWN_RESOURCE_TYPE',
-    'capability — the grammar is fixtured, but membership is a registry ADR 0009 §2 puts outside this repository, so deciding it needs the network; ADR 0009 §3 forbids an offline client from reporting it at all, which makes a grammatical identifier the registry does not name reserved rather than invalid',
-  ],
-])
+const UNCOVERED: ReadonlyMap<string, string> = new Map()
 
 /**
  * The reverse of `checkCaseShape`'s registry check.
@@ -1173,16 +1172,28 @@ export function runConformance(
       if (outcome === 'ran') ran += 1
       if (outcome === 'skipped') skipped += 1
     }
+    const behavior = runBehaviorCases(family, log)
+    ran += behavior.ran
+    for (const failure of behavior.failures) failures.add(failure)
+    for (const requirement of behavior.requirements) {
+      if (!context.requirements.has(requirement))
+        failures.add(`unknown behavioural requirement ${requirement}`)
+      cited.add(requirement)
+    }
+    for (const code of behavior.codes) {
+      if (!reachOf(context, family).registry.has(code))
+        failures.add(`unknown behavioural diagnostic ${code}`)
+      exercised.add(code)
+    }
     for (const code of exercised) exercisedAnywhere.add(code)
 
-    if (family.role !== 'core') checkCoverage(family, exercised, failures)
     checkOrphans(family, entries, failures)
   }
 
   // Core's codes are covered by any corpus, so they are asked about only once
   // every corpus has run.
   for (const family of context.families) {
-    if (family.role === 'core') checkCoverage(family, exercisedAnywhere, failures)
+    checkCoverage(family, exercisedAnywhere, failures)
   }
 
   checkRequirementCoverage(context.requirements, cited, failures)

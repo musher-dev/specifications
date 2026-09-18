@@ -1,0 +1,30 @@
+{
+  "specVersion": "v1",
+  "kind": "COMPONENT",
+  "metadata": {
+    "revision": 1
+  },
+  "spec": {
+    "workload": {
+      "type": "WORKER",
+      "source": {
+        "type": "IMAGE",
+        "ref": "example/worker:1"
+      }
+    },
+    "contract": {
+      "inputs": {
+        "value": {
+          "description": "Synthetic fixture value",
+          "schema": {
+            "type": "string"
+          },
+          "target": {
+            "envVarKey": "VALUE"
+          }
+        }
+      },
+      "outputs": {}
+    }
+  }
+}

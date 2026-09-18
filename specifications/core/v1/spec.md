@@ -146,6 +146,12 @@ reads the third.
 
 ## <a id="compatibility"></a>3. Version compatibility
 
+For the same document and pinned external context, a compatible release MUST
+preserve acceptance and defined meaning: defaults, binding recipients, reference
+selection, encodings and sensitivity. Moving a check between structural and
+semantic phases does not alter this guarantee. Changing operational admission
+policy is separate and MUST NOT silently rewrite document meaning.
+
 `specVersion: v1` declares a **compatibility family**, not an exact schema. A
 validator MUST evaluate the document against the newest `v1.x.y` schema release
 it holds.
@@ -273,25 +279,16 @@ A **reference** names a fact this document cannot contain. It is written
 `${{ <namespace>.<path> }}`, and it stands where a value would stand:
 
 ```yaml
-default: "https://${{ self.publicHostname }}/oauth/cb"
+template: "https://${{ self.publicHostname.web }}/oauth/cb"
 ```
 
 A document is sealed before the thing it describes exists. The address that
 deployment will answer on is assigned afterwards, so no author can write it
 down, and no field can carry it. A reference is how a document names it anyway.
 
-**This is not an expression language, and the difference is the one
-[§6.1](#yaml-profile) already draws.** `CORE-YAML-007` withholds a YAML alias
-because "a document whose meaning depends on being expanded is not readable as
-the thing it declares". An alias hides information that is present in the
-document; expanding it reveals nothing a reader could not have read. A reference
-names information that is absent from the document and cannot be put into it.
-The first withholds nothing from an author, and the second withholds the value.
-
-So a reference names, and never computes. There are no functions, no operators,
-no conditionals, no arithmetic, no defaulting, and no way to name a sibling
-field — that last one is information the document contains, and `CORE-YAML-007`
-governs it.
+References use single-pass substitution, without functions, operators,
+conditionals, arithmetic, recursive expansion or fallback expressions.
+Families explicitly identify the permitted positions and namespaces.
 
 **The grammar.** A reference is `${{`, optional whitespace, a namespace, one or
 more `.`-separated segments, optional whitespace, and `}}`. A namespace is one
@@ -308,13 +305,12 @@ rendering a literal `${{`, and not per-`$` doubling. A `$` that begins neither
 
 **What a reference yields.** A reference occupying a whole value yields the
 value it names. A reference with text around it yields that value's string form,
-joined with the surrounding text. A value is carried as text in every family
-built on this document, so the two cases differ in composition and not in type.
+joined with the surrounding text. Whole references preserve logical types. Families define where string
+composition is permitted and the encoding used there.
 
 **A resolved value is never scanned again.** The text a reference yields is
-substituted, and a `${{` within it is literal. There is therefore no chain of
-references, no cycle to detect, no depth to bound, and no order in which
-resolution has to happen.
+substituted, and a `${{` within it is literal. Substitution is non-recursive. This does not eliminate value dependencies
+between explicit input and output bindings; their ordering belongs to blueprint.
 
 **Where a reference may be written.** Nowhere, unless a family says so. A family
 opens a named position and names the namespaces admitted there, and a reference
@@ -347,7 +343,7 @@ a family admits names from it rather than adding to it.
 |---|---|---|
 | `self` | The addressing of the thing the value is bound to. | Defined by the family that admits it. |
 | `params` | A value supplied when a composition is installed. | Reserved. |
-| `config` | A configuration value held outside these documents. | Reserved. |
+| `config` | Organization configuration authorized for an installation. | Defined by blueprint CONFIG_REF bindings. |
 | `deployment` | Facts about a deployment. | Reserved. |
 | `environment` | Facts about a target environment. | Reserved. |
 | `organization` | Facts about an owning organization. | Reserved. |
@@ -366,8 +362,7 @@ here.
 **A diagnostic quotes the reference, never the value.** An implementation
 reporting any of the three rules above MUST reproduce the reference as written
 and MUST NOT include a value it resolved or attempted to resolve, on the terms
-[§11](#security) sets for resolved configuration values. This binds an
-implementation rather than a document, so it carries no requirement ID.
+[§11](#security) sets for resolved configuration values. Behavioural conformance fixtures exercise implementation obligations.
 
 ## <a id="validation-layers"></a>6. Validation layers
 
@@ -382,8 +377,9 @@ pass.
 | `semantic` | Rules JSON Schema cannot express — reference resolution, path containment, uniqueness across collections. | Client and server |
 | `capability` | Account, region, and quota checks. | Server only |
 
-A client MUST NOT require network access for the `parser`, `structural`, or
-`semantic` phases.
+An evaluator MUST NOT access the network in the `parser`, `structural`, or
+`semantic` phases. An authorized resolver acquires dependencies separately and
+supplies pinned context; catalog-backed facts can then be checked offline.
 
 **Why the `parser` phase rejects legal YAML.** A duplicate key, an anchor and
 an alias are all well-formed YAML 1.2, and all three are rejected here.
@@ -405,6 +401,24 @@ it can measure has no way to refuse cheaply.
 different things to an author. One means the document is malformed; the other
 means it is well-formed and uses something this contract withholds.
 
+### <a id="coverage"></a>6.0 Validation coverage
+
+Results carry status (VALID, INVALID or INCOMPLETE), claimed profile, reached
+phase, diagnostics and deferred obligations. Each deferred obligation identifies
+its rule, document pointer and missing context. Known failure takes precedence
+over incompleteness. VALID means all obligations required by the claimed profile
+completed. No caller may interpret INCOMPLETE as approval.
+
+Profiles are structural (parser and schema), document (including semantic
+obligations), publication (document plus catalog/publication admission), and
+deployment (publication plus installation resolution and current policy).
+Document validation without required item or dependency context is INCOMPLETE.
+
+<a id="CORE-ADMISSION-001"></a>**`CORE-ADMISSION-001`** — Publication and deployment
+MUST complete all respective deferred obligations before admission. Synthetic
+catalog/account fixtures may exercise these checks offline; a production
+implementation still acquires and verifies its own authorized context.
+
 ### <a id="yaml-profile"></a>6.1 The Musher YAML profile
 
 Musher documents are written in a **restricted profile of
@@ -423,7 +437,7 @@ unusual.
 
 | ID | Rule | Diagnostic |
 |---|---|---|
-| <a id="CORE-YAML-001"></a>`CORE-YAML-001` | A document MUST be encoded in UTF-8. Malformed UTF-8 is rejected. | `ERR_INVALID_YAML` |
+| <a id="CORE-YAML-001"></a>`CORE-YAML-001` | A document MUST be encoded in UTF-8. Malformed UTF-8 is rejected before replacement decoding. | `ERR_INVALID_UTF8` |
 | <a id="CORE-YAML-002"></a>`CORE-YAML-002` | A document MAY begin with a UTF-8 byte order mark. It carries no meaning and MUST be ignored. | — |
 | <a id="CORE-YAML-003"></a>`CORE-YAML-003` | Line endings MAY be LF or CRLF, and carry no meaning. | — |
 | <a id="CORE-YAML-004"></a>`CORE-YAML-004` | A file MUST contain exactly one YAML document. The `---` and `...` markers MAY be present; a stream carrying more than one document is rejected. | `ERR_MULTIPLE_DOCUMENTS` |
@@ -496,6 +510,14 @@ document, and an implementation MUST NOT derive meaning from any of them.
 Because YAML 1.2 is a superset of JSON, a document written as JSON is a valid
 Musher document and is read identically.
 
+The byte boundary MUST use fatal UTF-8 decoding. Parser/profile errors and
+representation depth are checked before conversion to JSON; aliases are never
+expanded. Implementations return diagnostics rather than conversion exceptions.
+Non-finite numbers and integers outside ±9007199254740991 are rejected.
+Other numbers use finite binary64 representation. Logical values may contain
+null when explicitly admitted by their value schema; this is separate from
+optional document-field omission.
+
 ### <a id="format-policy"></a>6.2 The `format` keyword
 
 This clause is about the JSON Schema **keyword** `format`, not about any field
@@ -536,7 +558,9 @@ code names one condition.
 
 | Code | Phase | Meaning |
 |---|---|---|
-| `ERR_INVALID_YAML` | `parser` | The document is not well-formed YAML 1.2, or is not valid UTF-8. |
+| `ERR_INVALID_YAML` | `parser` | The document is not well-formed YAML 1.2. |
+| `ERR_INVALID_UTF8` | `parser` | Original bytes are malformed UTF-8. |
+| `ERR_INVALID_NUMBER` | `parser` | A numeric scalar is non-finite or an unsafe integer. |
 | `ERR_DUPLICATE_KEY` | `parser` | The same mapping key appears twice. |
 | `ERR_ANCHOR_OR_ALIAS` | `parser` | The document declares a YAML anchor or an alias. |
 | `ERR_MULTIPLE_DOCUMENTS` | `parser` | The file carries more than one YAML document. |
@@ -629,7 +653,7 @@ once, which is why [§1.2](#admission) admits only rules that grow by addition.
 A rule that needs narrowing is core v2, a new line that each family adopts in a
 major release of its own.
 
-## <a id="known-debt"></a>10. Known debt
+## <a id="known-debt"></a>10. Boundaries and unsupported capabilities
 
 **No core schema.** This document publishes no JSON Schema. Each family's bundle
 states the envelope for its own documents, and
@@ -637,34 +661,20 @@ states the envelope for its own documents, and
 records why neither available shape of a shared schema was worth publishing.
 Adding one later rejects no document and is additive.
 
-**No code for an unknown `kind` before a family is chosen.** `ERR_WRONG_KIND` is
-reported by a family, against the constant it binds, once that family has been
-chosen. An implementation that chooses the family by reading `kind` has no code
-for a value that names no family, and this document does not yet say what it
-reports.
+**Family dispatch.** After parser validation, a dispatcher rejects an unknown
+`kind` with structural `ERR_WRONG_KIND`. An explicitly selected family uses that
+same code when the document's kind differs from its bound constant. Dispatch
+never precedes parser/profile checks.
 
-**The label grammar carries no ID.** [§5.1](#label-grammar) names it, and each
-family schema writes the pattern out in full. Nothing but review holds those
-copies together, and no case pins the grammar as one rule rather than as each
-family's field.
+**Shared grammar ownership.** Family sources identify core's label grammar with
+`x-musher-grammar: label`. Bundles inline its constraints from §5.1; published
+bundles are self-contained. Source copies do not independently author the pattern.
 
-**What a `self` path may name is not stated here.** [§5.2](#reference-grammar)
-reserves the namespace and defines the grammar its path takes; which paths
-resolve is left to the family admitting it, and today only
-[blueprint §5.2](../../blueprint/v1/spec.md#value-sources) names any. Two
-families admitting `self` and disagreeing about its paths would be a
-contradiction nothing here detects, and review is what holds them together. The
-paths are not in core because [§1.2](#admission)'s first test fails: they are
-the addressing of a component's endpoints, which cannot be stated without
-naming a kind.
+**Endpoint semantics.** Component defines self endpoint paths. Blueprint consumes
+that definition. Core defines syntax only.
 
-**Six reserved namespaces have no meaning to exercise.**
-[§5.2](#reference-grammar) reserves `params`, `config`, `deployment`,
-`environment`, `organization` and `output` so that none can become a name an
-author addresses. Nothing a document can write tells one from another: each is
-`CORE-REF-003` and no case distinguishes them. That is the cost of reserving a
-name before it resolves, and it is the right way round — a name given a meaning
-later rejects no document that validates today.
+**Reserved namespaces.** params, deployment, environment, organization and output
+are reserved and unsupported in v1 reference strings.
 
 ## <a id="security"></a>11. Security considerations
 

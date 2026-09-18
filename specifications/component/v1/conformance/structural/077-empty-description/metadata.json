@@ -3,6 +3,8 @@
   "phase": "structural",
   "expected": "fail",
   "clause": "specifications/component/v1/spec.md#contract",
-  "requirements": ["COMP-DESC-001"],
+  "requirements": [
+    "COMP-DESC-001"
+  ],
   "summary": "An empty description is rejected."
 }

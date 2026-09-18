@@ -1,0 +1,10 @@
+{
+  "id": "parser-017-reject-complex-key",
+  "phase": "parser",
+  "expected": "fail",
+  "clause": "specifications/core/v1/spec.md#yaml-profile",
+  "requirements": [
+    "CORE-YAML-005"
+  ],
+  "summary": "reject complex key"
+}

@@ -12,14 +12,15 @@ spec:
       primary:
         containerPort: 5432
         protocol: TCP
-        visibility: PRIVATE
   contract:
     inputs:
       backend:
         schema:
-          type: STRING
+          type: string
           enum:
             - S3
             - AZURE
         description: Object store the database ships its write-ahead log to.
+        target:
+          envVarKey: BACKEND
     outputs: {}

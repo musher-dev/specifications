@@ -12,11 +12,12 @@ spec:
       web:
         containerPort: 8080
         protocol: HTTP
-        visibility: PRIVATE
   contract:
     inputs:
       databasePort:
         schema:
-          type: STRING
+          type: string
         description: Port the database listens on.
+        target:
+          envVarKey: DATABASE_PORT
     outputs: {}
