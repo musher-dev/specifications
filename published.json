@@ -1,9 +1,9 @@
 {
   "releases": {
-    "core/v1.0.0": {
+    "core/v2.0.0": {
       "bundleSha256": null,
       "path": "specifications/core/v1",
-      "tree": "3bc2818c3a1d305ef55c496edf044119bbe144aa"
+      "tree": "9f41ad32ec2db5153f3bfcd5bc27a0122a412b40"
     }
   },
   "version": 2
