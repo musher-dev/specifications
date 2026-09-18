@@ -66,7 +66,7 @@ every rule of core v1 applies to it. This family binds the parameters
 | Item document ([core v1 §4.1](../../core/v1/spec.md#item-directory)) | No — it sits inside an item |
 
 This specification narrows core v1 where it says so and relaxes it nowhere. It
-cites core by its line — "core v1 §N" — and the core edition a release was
+cites core by its line ("core v1 §N"), and the core edition a release was
 built and tested against is recorded with that release
 ([core v1 §9](../../core/v1/spec.md#editions)).
 
@@ -85,10 +85,10 @@ narrowing.
 ## <a id="metadata"></a>4. Metadata
 
 `metadata` carries `revision` and `description`, and nothing else. A component
-document has no `slug`. A [blueprint](../../blueprint/v1/spec.md#identity) and
-its listing each name the item they are two halves of; a component is not the
-item, and the name it answers to is the stem of the file that holds it, which is
-what a repo-local reference spells out in full
+document has no `slug`: a [blueprint](../../blueprint/v1/spec.md#identity) and
+its listing each name the item they are two halves of, and a component is not
+the item. The name a component answers to is the stem of the file that holds
+it, which a repo-local reference spells out in full
 ([blueprint §4.1](../../blueprint/v1/spec.md#component-reference)). Any other
 property is `ERR_UNKNOWN_FIELD`, as
 [core v1 §2](../../core/v1/spec.md#envelope) requires at every level.
@@ -121,10 +121,11 @@ against another. It orders, and that is the whole of its job.
 | Repo-local | The referenced document's own `metadata.revision`. The node's `revision` MUST NOT be present. |
 | Published | `revision` on the node. |
 
-<a id="COMP-ID-001"></a>**`COMP-ID-001`**: A revision is used once. Each publication of a component MUST carry a revision
-strictly greater than the highest already published for that component. Gaps are
-permitted — 1 to 7 is a release and not an error — but a revision that does not
-increase is rejected in the `capability` phase with `ERR_VERSION_NOT_MONOTONIC`.
+<a id="COMP-ID-001"></a>**`COMP-ID-001`**: A revision is used once. Each
+publication of a component MUST carry a revision strictly greater than the
+highest already published for that component. Gaps are permitted: 1 to 7 is a
+release and not an error. A revision that does not increase is rejected in the
+`capability` phase with `ERR_VERSION_NOT_MONOTONIC`.
 
 Reuse is the case the rule exists for. `revision: 3` on a published node
 selects that component revision, and a registry that let 3 mean two
@@ -133,12 +134,11 @@ same problem one step removed: a blueprint that deployed revision 3 last month
 and revision 3 today, with different bytes behind it, has no way to say so.
 
 **Why the phase is `capability`.** Deciding the rule needs to know what was
-published before, which needs the catalog, which needs the network — and
+published before, which needs the catalog, which needs the network, and
 [core v1 §6](../../core/v1/spec.md#validation-layers) forbids the `parser`,
 `structural` and `semantic` phases from requiring it. A client validating a
 file it has just written cannot see the lineage and MUST NOT report this rule.
-Offline validation is therefore
-exactly as strict as it was.
+Offline validation is therefore exactly as strict as it was.
 
 Whether a registry treats an identical re-submission as a no-op rather than as a
 publication is outside this contract. This document orders publications; it does
@@ -157,14 +157,29 @@ carries no diagnostic: the disagreement is visible only across two revisions,
 and a validator is handed one.
 
 **What v1 does not constrain.** Nothing orders one component's revisions against
-another's — two components in the same item sitting at 4 and 11 mean nothing
+another's: two components in the same item sitting at 4 and 11 mean nothing
 worth reading into. Nothing checks a revision offline at all: `minimum: 1` is the
 whole of the `structural` rule, and every other statement in this section is
 either `capability` or a SHOULD.
 
 ## <a id="workload"></a><a id="type"></a>5. The component's shape
 
-`spec` holds `type`, `workload` and `contract`.
+`spec` holds `type`, `workload` and `contract`. The type says what kind of
+node the component is, the workload says how the platform runs it, and the
+contract ([§6](#contract)) says what configuration it consumes and produces. A
+minimal service needs only a type, an image and one endpoint:
+
+```yaml
+spec:
+  type: SERVICE
+  workload:
+    source:
+      image: nginx:1.29.4-alpine
+    endpoints:
+      web:
+        targetPort: 8080
+        protocol: HTTP
+```
 
 <a id="COMP-TYPE-001"></a>**`COMP-TYPE-001`**: `spec.type` is REQUIRED and names
 the component's category: `SERVICE`, `WORKER`, `JOB` or `EXTERNAL`. An absent
@@ -196,6 +211,12 @@ The type decides which workload fields apply:
 | `schedule` | Forbidden | Forbidden | Optional |
 | `envVars`, `volumes` | Optional | Optional | Optional |
 
+Forbidden means absent. Empty mappings and null are not alternative spellings.
+A forbidden field is `ERR_INVALID_VALUE` at its own path, and a required one
+that is missing is `ERR_MISSING_FIELD` at the object that lacks it. Unknown
+fields are rejected. These are structural rules. The four rules that follow say
+why each type allows what it does.
+
 <a id="COMP-TYPE-002"></a>**`COMP-TYPE-002`**: A `SERVICE` MUST declare at least
 one endpoint. It is request-driven, and a service nothing can reach serves
 nothing.
@@ -217,25 +238,32 @@ nothing, so there is nothing to route to or probe.
 <a id="COMP-TYPE-005"></a>**`COMP-TYPE-005`**: Only a `JOB` MAY declare
 `schedule`. A schedule is a property of a job, not a category of its own.
 
-Forbidden means absent. Empty mappings and null are not alternative spellings.
-A forbidden field is `ERR_INVALID_VALUE` at its own path, and a required one
-that is missing is `ERR_MISSING_FIELD` at the object that lacks it. Unknown
-fields are rejected. These are structural rules.
-
 <a id="command"></a>**Command.** <a id="COMP-CMD-001"></a>**`COMP-CMD-001`**:
 `command` is a non-empty list of strings in exec form. Each item is one
 argument, passed to the process verbatim, and no shell parses, splits or expands
-them. It replaces the image's `CMD` and keeps its `ENTRYPOINT`, which is what
-`command` means in Docker and Compose. A string is `ERR_INVALID_TYPE` and an
-empty list `ERR_INVALID_VALUE`. A workload that needs a shell names one, as in
-`["/bin/sh", "-c", "…"]`. Where `command` is omitted, the image's own `CMD`
-runs. These are structural rules.
+it. A string is `ERR_INVALID_TYPE` and an empty list `ERR_INVALID_VALUE`. These
+are structural rules.
+
+`command` replaces the image's `CMD` and keeps its `ENTRYPOINT`, which is what
+`command` means in Docker and Compose. Where `command` is omitted, the image's
+own `CMD` runs. A workload that needs a shell names one, as in
+`["/bin/sh", "-c", "…"]`.
 
 ### <a id="source"></a>5.1 Source
 
 `source` says where the workload image comes from, and the key that is present
 says which: `image` for an image that already exists, `git` for a repository the
 platform builds into one.
+
+```yaml
+source:
+  git:
+    repositoryURL: https://github.com/musher-dev/examples
+    ref: { branch: main }
+    build:
+      dockerfile: Dockerfile
+      arguments: { NODE_ENV: production }
+```
 
 <a id="COMP-SRC-001"></a>**`COMP-SRC-001`**: `source` MUST hold exactly one of
 `image` and `git`. A Git source requires `repositoryURL` and `build`; its `ref`,
@@ -250,8 +278,8 @@ and is `ERR_INVALID_VALUE`, structural. A tag is an author request; only a
 resolved digest identifies immutable content.
 
 An omitted Git `ref` requests the repository's default branch. A `branch` is a
-request, not a pin: the branch moves. A `commit` identifies source, not every
-build input or the resulting image.
+request, not a pin: the branch moves. A `commit` identifies the repository
+content, not every build input or the resulting image.
 
 `build.dockerfile` is the path of a Dockerfile relative to the repository root.
 `build.buildpacks.builderImage` names a Cloud Native Buildpacks builder.
@@ -263,20 +291,25 @@ build only; runtime configuration rides on `envVars` and inputs.
 be latest, main, main-stable, master, stable, edge, nightly, dev or rolling,
 compared case-insensitively. Failure: `ERR_UNPINNED_IMAGE` at
 `/spec/workload/source/image`, semantic.
+
 This set is fixed for v1. Extending it to reject previously accepted documents
 is breaking regardless of validation phase. Other tags are still mutable.
 
 ### <a id="endpoints"></a>5.2 Endpoints
 
 Each named endpoint requires `targetPort` (integer 1–65535) and `protocol`
-(HTTP, HTTPS, WS, GRPC, TCP or UDP). `targetPort` is the port the workload
-listens on, where traffic for the endpoint is forwarded. It is never the public
-port, which the platform allocates. A `targetPort` below 1024 is structurally
-valid; admission MAY reject it as a capability check, because binding a
-privileged port needs a capability the runtime may not grant. Endpoint names
-match `^[a-z][a-z0-9]{0,19}$`. Components declare capabilities, never exposure.
-Blueprint nodes select public exposure; otherwise endpoints are private. A
-`WORKER`'s endpoints are never public ([`COMP-TYPE-003`](#COMP-TYPE-003)).
+(HTTP, HTTPS, WS, GRPC, TCP or UDP). Endpoint names match
+`^[a-z][a-z0-9]{0,19}$`.
+
+`targetPort` is the port the workload listens on, where traffic for the
+endpoint is forwarded. It is never the public port, which the platform
+allocates. A `targetPort` below 1024 is structurally valid; admission MAY reject
+it as a capability check, because binding a privileged port needs a capability
+the runtime may not grant.
+
+Components declare endpoints, never exposure. A blueprint node selects public
+exposure, and an endpoint it does not expose is private. A `WORKER`'s endpoints
+are never public ([`COMP-TYPE-003`](#COMP-TYPE-003)).
 
 <a id="COMP-EP-001"></a>**`COMP-EP-001`**: Every endpoint reference MUST name its
 endpoint, including on a single-endpoint workload. There is no primary endpoint.
@@ -303,47 +336,66 @@ and otherwise fail with `ERR_ENDPOINT_NOT_L4`. The private properties apply to
 every protocol. Each diagnostic anchors at the reading output's `from`, or at
 `from/template` for a template, and these are semantic rules.
 
-Public properties require explicit PUBLIC exposure at composition time. Public
-addresses for private endpoints fail with `ERR_ENDPOINT_NOT_PUBLIC` in
-blueprint. The allocation context supplies the public URL scheme and routing
-address; a validator MUST NOT invent them.
+Public properties require explicit `PUBLIC` exposure at composition time. A
+public address read from a private endpoint fails with `ERR_ENDPOINT_NOT_PUBLIC`
+in blueprint ([blueprint §4.3](../../blueprint/v1/spec.md#node-compute)). The
+allocation context supplies the public URL scheme and routing address; a
+validator MUST NOT invent them.
 
 An authoritative endpoint allocation has opaque `identity` and `version`, an
 optional `privateHostname`, and optional public routing facts: `hostname`,
-`port`, `scheme` and `path`. The public scheme is http, https, ws or wss;
-port is 1–65535. Public routing requires PUBLIC exposure. Hostnames cannot carry
-credentials, a port, a path, query or fragment. Paths start with `/` and carry no
-query, fragment, whitespace or backslash. Allocation views are derived: private
-port comes only from the component's `targetPort`, addresses join hostname and
-port (bracketing IPv6), and public URL joins the supplied scheme, host, optional
-port and path with no trailing slash. TCP and UDP require an allocated public
-port. Missing allocation context cannot make a declared private port
-incomplete. Redundant address properties are rejected; independent public URLs,
-hostnames or ports cannot disagree with these facts. Inconsistent or malformed
-facts fail with blueprint's `ERR_INVALID_RESOLUTION_CONTEXT`.
+`port`, `scheme` and `path`. Public routing requires `PUBLIC` exposure. The
+public scheme is http, https, ws or wss, and the port is 1–65535. Hostnames
+cannot carry credentials, a port, a path, query or fragment. Paths start with
+`/` and carry no query, fragment, whitespace or backslash. TCP and UDP require
+an allocated public port.
+
+The address properties are derived from those facts. The private port comes
+only from the component's `targetPort`. An address joins hostname and port,
+bracketing an IPv6 host. A public URL joins the supplied scheme, host, optional
+port and path, with no trailing slash. Missing allocation context cannot make a
+declared private port incomplete. Redundant address properties are rejected, so
+an independently supplied public URL, hostname or port cannot disagree with
+these facts. Inconsistent or malformed facts fail with blueprint's
+`ERR_INVALID_RESOLUTION_CONTEXT`.
 
 ### <a id="env-vars"></a>5.3 Environment variables
 
 `envVars` maps each variable name to its value, an intrinsic non-secret
-constant written verbatim. An empty string is a value. Configurable values are
-inputs with a target ([§6.1](#inputs)), supplied by the blueprint, and
-organization variables reach a component only that way. Names match
+constant written verbatim. An empty string is a value. Names match
 `^[A-Z_][A-Z0-9_]*$` and contain 1–128 characters. A name appears once: the YAML
 profile rejects a repeated mapping key in the `parser` phase
 ([`CORE-YAML-006`](../../core/v1/spec.md#CORE-YAML-006)), so no rule here
 restates it.
+
+```yaml
+envVars:
+  PGDATA: /var/lib/postgresql/data/pgdata
+  POSTGRES_DB: app
+```
+
+A value that varies between installations is not an environment constant. It is
+an input with a target ([§6.1](#inputs)), supplied by the blueprint, and an
+organization variable reaches a component only that way.
 
 <a id="COMP-ENVVAR-002"></a>**`COMP-ENVVAR-002`**: An input target MUST NOT claim
 a name `envVars` declares, or another input's key. Failure:
 `ERR_CONFLICTING_ENV_KEY` at the claiming input's `target/envVarKey`; input
 names are compared in UTF-8 order to select the later declaration.
 
-Environment encoding happens after logical validation. Strings are unchanged;
-booleans are lowercase; numbers use ECMAScript JSON number serialization,
-negative zero becomes zero; null is `null`; arrays and objects use compact JSON,
-with object keys sorted recursively by Unicode code point and array order
-preserved. Environment strings containing NUL fail with `ERR_ENV_ENCODING`.
-An absent optional input adds no environment entry.
+An input's value is encoded into its environment variable after logical
+validation:
+
+- Strings are unchanged.
+- Booleans are lowercase.
+- Numbers use ECMAScript JSON number serialization, and negative zero becomes
+  zero.
+- Null is `null`.
+- Arrays and objects use compact JSON, with object keys sorted recursively by
+  Unicode code point and array order preserved.
+
+An encoded string containing NUL fails with `ERR_ENV_ENCODING`. An absent
+optional input adds no environment entry.
 
 ### <a id="health"></a>5.4 Health probes
 
@@ -370,13 +422,21 @@ successThreshold 1, failureThreshold 3. Initial delay is non-negative; every
 other numeric probe field is a positive integer.
 
 <a id="COMP-EP-003"></a>**`COMP-EP-003`**: Public HTTP-family exposure requires a
-readiness probe, checked by blueprint against the component contract.
+readiness probe. Blueprint checks it against the component contract when a node
+exposes an endpoint ([blueprint §4.3](../../blueprint/v1/spec.md#node-compute)).
 
 ### <a id="volumes"></a>5.5 Volumes
 
 Each volume requires `mountPath` and a positive integer `minSizeGiB`, the
 smallest allocation the component can run with. Names use core's label grammar.
-`readOnly` defaults to false. `shared` defaults to false.
+`readOnly` and `shared` both default to false.
+
+```yaml
+volumes:
+  data:
+    mountPath: /var/lib/postgresql/data
+    minSizeGiB: 10
+```
 
 v1 defines no replica count, so `shared` is stated as what an installation can
 observe. With `shared: false` the volume is mounted into at most one running
@@ -386,7 +446,8 @@ instance at a time, including while it is replaced. With `shared: true` every
 running instance mounts the same storage concurrently, which requires storage
 that supports concurrent read-write mounts.
 
-The blueprint MUST allocate each volume at or above its minimum.
+The blueprint MUST allocate each volume at or above its minimum
+([blueprint §4.3](../../blueprint/v1/spec.md#node-compute)).
 
 Paths MUST be canonical absolute POSIX paths: no dot segments, duplicate
 separators or trailing slash except root. Duplicate and ancestor/descendant
@@ -395,9 +456,9 @@ policy, separate from intrinsic validity.
 
 ### <a id="external"></a>5.6 External components
 
-<a id="COMP-EXT-002"></a>**`COMP-EXT-002`**: `type: EXTERNAL` declares a node the
-platform does not run, addressed elsewhere: a managed database, for example,
-whose address and credentials another node consumes. It has no workload
+<a id="COMP-EXT-002"></a>**`COMP-EXT-002`**: `type: EXTERNAL` declares a
+component the platform does not run, addressed elsewhere: a managed database,
+for example, whose address and credentials another node consumes. It has no workload
 ([`COMP-EXT-001`](#COMP-EXT-001)), and its inputs have no environment `target`,
 because nothing runs to receive one. A target on one is `ERR_INVALID_VALUE` at
 its `target`, structural.
@@ -410,11 +471,26 @@ node consumes, so one publishing nothing is a node nothing can need. An absent
 
 <a id="COMP-EXT-004"></a>**`COMP-EXT-004`**: An `EXTERNAL` component has no
 endpoints, so an `endpoint` origin, or a template reading one, fails with
-`ERR_UNKNOWN_ENDPOINT`, semantic. External nodes may publish literals or
-republish inputs.
+`ERR_UNKNOWN_ENDPOINT`, semantic. An external component may still publish
+literals or republish its own inputs.
 
-There is no `resourceType` at node or value scope; what an external node is does
-not select how it is supplied. A language model or other API reached with an
+```yaml
+spec:
+  type: EXTERNAL
+  contract:
+    inputs:
+      host:
+        description: Hostname of the managed database server.
+        schema: { type: string }
+    outputs:
+      host:
+        description: Hostname a client connects to.
+        schema: { type: string }
+        from: { input: host }
+```
+
+There is no `resourceType` at node or value scope; what an external component
+is does not select how it is supplied. A language model or other API reached with an
 endpoint, a credential and a model together is a connection
 ([§6.4](#connection-requirements)), not an external node.
 
@@ -430,6 +506,17 @@ failed run is not started again until the next rollout. A failed run neither
 blocks nor fails the rollout of any other node, which is what ordering against
 nothing means.
 
+```yaml
+spec:
+  type: JOB
+  workload:
+    source:
+      image: ghcr.io/musher-dev/backup:1.0.2
+    command: [/bin/backup, --verify]
+    schedule:
+      cron: "0 3 * * *"
+```
+
 <a id="COMP-JOB-002"></a>**`COMP-JOB-002`**: `schedule.cron` makes a `JOB` recur.
 It is a cron expression of exactly five fields separated by one or more spaces
 or tabs: minute, hour, day of month, month and day of week. Any other field
@@ -442,7 +529,8 @@ a number `n` or a range `a-b` with `a` not greater than `b`, each optionally
 followed by a step `/s` where `s` is a positive number. A step keeps the first
 value of what it follows and every value `s` apart after it: `*/15` in the
 minute field is 0, 15, 30 and 45, and `n/s` means `n-max/s`, where `max` is the
-top of the field's range. Fields take numbers only, never month or day names. The ranges are:
+top of the field's range. Fields take numbers only, never month or day names.
+The ranges are:
 
 | Field | Range |
 |---|---|
@@ -453,8 +541,8 @@ top of the field's range. Fields take numbers only, never month or day names. Th
 | Day of week | 0–6, where 0 is Sunday |
 
 A run falls due at every minute whose five values each match their field. When
-both day of month and day of week are restricted, that is when neither is `*`,
-a day matches when either of them matches, as POSIX `crontab` defines. A field
+both day of month and day of week are restricted (neither is `*`), a day
+matches when either of them matches, as POSIX `crontab` defines. A field
 outside this grammar, or a number outside its field's range, is
 `ERR_INVALID_SCHEDULE` at `/spec/workload/schedule/cron`, semantic.
 
@@ -480,12 +568,25 @@ non-empty description and a logical schema.
 
 ### <a id="inputs"></a>6.1 Inputs
 
-Inputs declare `schema`, `description`, optional `required` (default true),
-`default`, `sensitive` (default false), `presentationHint`, and `target`.
-Workload inputs require `target.envVarKey`; external inputs forbid targets.
-An absent binding selects the input default, then optional absence, otherwise
-fails. A present binding owns supply and cannot fall back after failure.
-Defaults are logical values, including null only when their schema permits it.
+Inputs declare `schema` and `description`, and optionally `required` (default
+true), `default`, `sensitive` (default false), `presentationHint` and `target`.
+An input of a workload component requires `target.envVarKey`, the environment
+variable its value is written to; an input of an `EXTERNAL` component forbids a
+target ([`COMP-EXT-002`](#COMP-EXT-002)).
+
+```yaml
+inputs:
+  postgresPassword:
+    description: Password the database superuser is created with.
+    schema: { type: string }
+    sensitive: true
+    target: { envVarKey: POSTGRES_PASSWORD }
+```
+
+When a blueprint binds nothing to an input, the input takes its default; with no
+default, an optional input is absent and a required one fails. A present binding
+owns supply and cannot fall back to the default after failure. Defaults are
+logical values, and are null only when their schema permits it.
 
 ### <a id="outputs"></a>6.2 Outputs
 
@@ -505,12 +606,21 @@ its `endpoint` or an `endpoint` without its `property`: the two keys are one
 origin, and each half requires the other. A `from` naming two origins is
 `ERR_INVALID_VALUE`. These are structural rules.
 
+```yaml
+outputs:
+  address:
+    description: Internal host and port clients reach the database at.
+    schema: { type: string }
+    from: { endpoint: primary, property: privateAddress }
+```
+
 <a id="COMP-OUT-002"></a>**`COMP-OUT-002`**: An `input` origin names an existing
 own input; otherwise `ERR_UNKNOWN_INPUT_REFERENCE` at `from/input`. Its logical
-type must fit the output.
-Inputs supplied by another output may be forwarded; blueprint rejects cycles.
-Every declared output must be produced; an absent optional input cannot supply
-an `input` origin.
+type must fit the output. An input the blueprint binds to another node's output
+may be forwarded, and blueprint rejects the cycles that can form
+([blueprint `BP-CONN-002`](../../blueprint/v1/spec.md#BP-CONN-002)). Every
+declared output must be produced, so an absent optional input cannot supply an
+`input` origin.
 
 <a id="COMP-REF-001"></a>**`COMP-REF-001`**: A `template` admits only core's
 `self` namespace, and a `self` path is exactly
@@ -521,11 +631,13 @@ shape names no endpoint explicitly, and fails with `ERR_UNKNOWN_ENDPOINT` at
 property-first order, `${{ self.publicHostname.web }}`. There is no implicit
 endpoint selection. A declared endpoint followed by a property outside
 [§5.2](#endpoints)'s table fails with `ERR_UNKNOWN_ADDRESS_PROPERTY` at
-`from/template`. Escapes and non-recursive substitution follow
-core. A template produces a string. An `endpoint` origin reading `privatePort`
-or `publicPort` produces an integer, and one reading any other property a
-string. Values are checked against output schemas.
-Runtime job-produced values are unsupported.
+`from/template`.
+
+Escapes and non-recursive substitution follow
+[core](../../core/v1/spec.md#reference-grammar). A template produces a string.
+An `endpoint` origin reading `privatePort` or `publicPort` produces an integer,
+and one reading any other property produces a string. Values are checked
+against output schemas. Values produced by a job at run time are unsupported.
 
 ### <a id="value-schema"></a>6.3 Logical schemas
 
@@ -581,8 +693,23 @@ Unsupported numeric values are rejected, never silently rounded.
 ### <a id="connection-requirements"></a>6.4 Connection requirements
 
 `contract.connectionRequirements` is an optional map of named atomic connection
-requirements. Names use the input-name grammar. Each requires `protocol` and
-`inputs`, mapping exactly `baseURL`, `apiKey` and `model` to existing inputs.
+requirements: an endpoint, a credential and a model the component needs
+together. A blueprint satisfies each one with a connection parameter
+([blueprint §5.3](../../blueprint/v1/spec.md#atomic-connections)). Names use the
+input-name grammar. Each requirement requires `protocol` and `inputs`, which
+maps exactly the three roles `baseURL`, `apiKey` and `model` to existing inputs.
+
+```yaml
+connectionRequirements:
+  llm:
+    protocol: OPENAI_CHAT_COMPLETIONS
+    capabilities: [STREAMING]
+    inputs:
+      baseURL: llmBaseURL
+      apiKey: llmAPIKey
+      model: llmModel
+```
+
 Protocols are OPENAI_CHAT_COMPLETIONS and ANTHROPIC_MESSAGES: client request and
 response contracts, independent of upstream vendor. Optional `capabilities` is a
 unique list of STREAMING and TOOL_CALLS. Unknown terms are rejected, not ignored.
@@ -591,12 +718,15 @@ TOOL_CALLS requires protocol-native tool requests and tool-result continuation.
 Omitting capabilities requests only ordinary non-streaming text conversation.
 
 <a id="COMP-CONNECTION-001"></a>**`COMP-CONNECTION-001`**: Every role MUST name a
-required string input with no default. A member belongs to exactly one requirement;
-roles cannot reuse an input. The apiKey role MUST name a sensitive input.
-Failure: `ERR_INVALID_CONNECTION_REQUIREMENT`. The inputs retain their schemas,
-descriptions and environment targets; the group does not duplicate them.
-Credentials are whole values, never templates or concatenated strings. Existing
-sensitivity propagation and secret-publication prohibitions apply.
+required string input with no default. An input named by a role belongs to
+exactly one requirement, and two roles cannot name the same input. The `apiKey`
+role MUST name a sensitive input. Failure:
+`ERR_INVALID_CONNECTION_REQUIREMENT`.
+
+The inputs keep their own schemas, descriptions and environment targets; the
+requirement groups them and does not duplicate them. Credentials are whole
+values, never templates or concatenated strings. Existing sensitivity
+propagation and secret-publication prohibitions apply.
 
 ## <a id="validation-layers"></a>7. Validation layers
 

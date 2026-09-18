@@ -400,7 +400,7 @@
       "type": "object"
     },
     "BlueprintPlacement": {
-      "$comment": "Every term pin is a lowercase token rather than a member of a closed set: the grammar is fixed by this contract, the vocabularies are not published anywhere yet, and spec.md §4.4 records that as a gap. cpuDedication is the exception: two values are the whole concept.",
+      "$comment": "Every term pin is a lowercase token rather than a member of a closed set: the grammar is fixed by this contract, the vocabularies are versioned catalog context, not part of this contract (spec.md §4.4). cpuDedication is the exception: two values are the whole concept.",
       "additionalProperties": false,
       "description": "Optional pins that narrow the hosts eligible for the node’s compute profile. A pin never changes the compute the profile names. See spec.md §4.4.",
       "properties": {

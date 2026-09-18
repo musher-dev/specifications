@@ -1,12 +1,13 @@
 # Blueprint specification
 
 A blueprint document describes a composition of components into one deployable
-application: which components participate, which values supply their inputs, how compute,
-storage and public exposure are allocated, and what the installation takes from
-outside the documents as parameters. The blueprint is the unit of deployment.
+application: which components participate, which values supply their inputs,
+how compute, storage and public exposure are allocated, and what the
+installation takes from outside the documents as parameters. The blueprint is the unit of deployment.
 
 A blueprint is an [item document](../core/v1/spec.md#item-directory),
-`blueprint.yaml`, at the root of its catalog item. The component documents it references sit inside the same item.
+`blueprint.yaml`, at the root of its catalog item. The component documents it
+references sit inside the same item.
 
 ## Versions
 
@@ -41,7 +42,7 @@ dependencies" table in [§2](v1/spec.md#envelope).
 | Prefix | Covers | Section |
 |---|---|---|
 | `BP-ID` | Item identity and description particular to a blueprint | [§3](v1/spec.md#identity) |
-| `BP-REF` | Component references and parameter sources | [§4.1](v1/spec.md#component-reference), [§5.2](v1/spec.md#value-sources) |
+| `BP-REF` | Component references and a parameter's `from` | [§4.1](v1/spec.md#component-reference), [§5.2](v1/spec.md#value-sources) |
 | `BP-CONN` | Explicit bindings and the value-dependency graph | [§4.2](v1/spec.md#bindings) |
 | `BP-NODE` | Node compute, storage and exposure | [§4.3](v1/spec.md#node-compute) |
 | `BP-PARAM` | Installation parameters, their recipients and supply | [§5](v1/spec.md#parameters) |

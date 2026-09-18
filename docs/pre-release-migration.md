@@ -46,7 +46,7 @@ a bare noun. The generated resolution record keeps its `source` tag.
 | `accessMode: READ_WRITE_ONCE \| READ_WRITE_MANY` | `shared: false \| true` |
 | output `source: {type: LITERAL \| INPUT \| ENDPOINT \| TEMPLATE, …}` | output `from: {value}`, `{input}`, `{endpoint, property}` or `{template}` |
 | `${{ self.publicHostname.web }}` | `${{ self.endpoints.web.publicHostname }}` |
-| `publicURL`, `baseURL`, `permittedBaseURLs` | `publicURL`, `baseURL`, `permittedBaseURLs` |
+| `publicUrl`, `baseUrl`, `permittedBaseUrls` | `publicURL`, `baseURL`, `permittedBaseURLs` |
 | a `WORKER` declares no endpoint | a `WORKER` may declare private endpoints, so it can carry health probes; exposing one `PUBLIC` is `ERR_ENDPOINT_NOT_EXPOSABLE` |
 | node `size` (`null` on an external node) | node `compute.profile`; `compute` is required on a workload node and forbidden on an `EXTERNAL` one |
 | `placement` | `compute.placement` |
@@ -142,7 +142,7 @@ examples.
 Write logical integers, booleans, arrays and objects as values, rather than
 string encodings. Validate defaults and literal outputs at definition time.
 Validate every resolved value against all receiving contracts before environment
-encoding. A failed explicit source never falls back to an input default.
+encoding. A failed explicit binding never falls back to an input default.
 Sensitive values retain their classification across bindings, forwarding and
 environment encoding; published artifacts cannot contain secret plaintext.
 
