@@ -1,6 +1,6 @@
 # Musher Document Core Specification — Specification v1
 
-**Status:** Draft (pre-stable)
+**Status:** Stable
 **Family:** `core`
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",

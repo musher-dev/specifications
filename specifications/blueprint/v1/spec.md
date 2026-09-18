@@ -1,6 +1,6 @@
 # Musher Blueprint Document — Specification v1
 
-**Status:** Draft (pre-stable)
+**Status:** Stable
 **Family:** `blueprint`
 **Schema:** `https://specifications.musher.dev/blueprint/v1/blueprint.schema.json`
 
@@ -275,8 +275,8 @@ outputs depend on allocated addresses, not running processes, so discovery
 cycles are permitted. A value cycle fails with `ERR_VALUE_CYCLE`. Traversal MUST
 terminate.
 
-The draft's `connections`, `toNode`, `toInput` and name-based coverage are
-rejected. Adding an unrelated node MUST NOT change existing recipients.
+A `connections` member, a `toNode` or `toInput` binding, and coverage by
+matching names are rejected. Adding an unrelated node MUST NOT change existing recipients.
 
 ### <a id="node-compute"></a>4.3 Compute, storage and exposure
 
@@ -478,7 +478,7 @@ component or fall back. A `from` that breaks this fails with:
 - `ERR_INVALID_PARAMETER_SOURCE` when its references are well formed but it is
   not exactly one whole reference;
 - `ERR_UNKNOWN_REFERENCE_NAMESPACE` when the namespace is one core does not
-  reserve, such as the withdrawn `config`;
+  reserve, such as `config`;
 - `ERR_REFERENCE_NOT_IN_SCOPE` when the namespace is reserved but is neither
   `variables` nor `connections`
   ([core v1 §5.2](../../core/v1/spec.md#reference-grammar)).
