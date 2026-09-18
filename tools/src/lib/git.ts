@@ -26,11 +26,49 @@ import { resolve } from 'node:path'
  * that reads git failed there while passing in CI. So the one repository the
  * call names is trusted in command scope, which git accepts for
  * `safe.directory`. Nothing else is trusted, and an inherited
- * `GIT_CONFIG_COUNT` is replaced rather than extended.
+ * `GIT_CONFIG_COUNT` is replaced rather than extended. Repository-local hook
+ * variables are removed before spawning Git, so only repoRoot selects the
+ * repository, index, object store and local configuration.
  */
-export function gitEnvironment(repoRoot: string): NodeJS.ProcessEnv {
+// Git hooks export repository-local variables. An explicit cwd does not override
+// these: carrying GIT_DIR into a fixture can mutate the caller's real repository.
+// Include Git's repository-local variables plus discovery/template/configuration overrides
+// that can redirect init, object storage, config writes, or reference lookup.
+const REPOSITORY_ENVIRONMENT = new Set([
+  'GIT_DIR',
+  'GIT_WORK_TREE',
+  'GIT_COMMON_DIR',
+  'GIT_INDEX_FILE',
+  'GIT_OBJECT_DIRECTORY',
+  'GIT_ALTERNATE_OBJECT_DIRECTORIES',
+  'GIT_QUARANTINE_PATH',
+  'GIT_NAMESPACE',
+  'GIT_PREFIX',
+  'GIT_INTERNAL_SUPER_PREFIX',
+  'GIT_IMPLICIT_WORK_TREE',
+  'GIT_GRAFT_FILE',
+  'GIT_SHALLOW_FILE',
+  'GIT_REPLACE_REF_BASE',
+  'GIT_NO_REPLACE_OBJECTS',
+  'GIT_CEILING_DIRECTORIES',
+  'GIT_DISCOVERY_ACROSS_FILESYSTEM',
+  'GIT_TEMPLATE_DIR',
+  'GIT_CONFIG',
+  'GIT_CONFIG_PARAMETERS',
+  'GIT_CONFIG_COUNT',
+])
+
+export function gitEnvironment(
+  repoRoot: string,
+  inherited: NodeJS.ProcessEnv = process.env,
+): NodeJS.ProcessEnv {
+  const neutral = Object.fromEntries(
+    Object.entries(inherited).filter(
+      ([key]) => !REPOSITORY_ENVIRONMENT.has(key) && !/^GIT_CONFIG_(KEY|VALUE)_/.test(key),
+    ),
+  )
   return {
-    ...process.env,
+    ...neutral,
     GIT_CONFIG_GLOBAL: '/dev/null',
     GIT_CONFIG_SYSTEM: '/dev/null',
     GIT_CONFIG_COUNT: '1',
