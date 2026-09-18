@@ -14,7 +14,7 @@ spec:
         protocol: HTTP
   contract:
     inputs:
-      databaseUrl:
+      databaseURL:
         description: Connection URL of the database the service reads and writes.
         schema:
           type: string
@@ -38,7 +38,7 @@ spec:
         sensitive: true
         target:
           envVarKey: SESSION_SECRET
-      publicUrl:
+      publicURL:
         description: Public URL the service is reached at.
         schema:
           type: string

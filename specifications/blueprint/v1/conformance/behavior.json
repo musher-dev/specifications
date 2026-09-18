@@ -8,13 +8,13 @@
       "BP-PARAM-009"
     ],
     "tree": {
-      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"}}}}}}",
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"url\":{\"from\":\"${{ variables.errors.reportingURL }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"}}}}}}",
       "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Synthetic fixture input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"VALUE\"}}},\"outputs\":{\"forward\":{\"description\":\"Synthetic fixture output\",\"schema\":{\"type\":\"string\"},\"from\":{\"input\":\"url\"}}}}}}"
     },
     "document": "app/blueprint.yaml",
     "context": {
       "variables": {
-        "errors.reportingUrl": {
+        "errors.reportingURL": {
           "value": "https://synthetic.invalid",
           "sensitive": true,
           "identity": "variable-1",
@@ -41,13 +41,13 @@
       "BP-PARAM-009"
     ],
     "tree": {
-      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"}}}}}}",
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"url\":{\"from\":\"${{ variables.errors.reportingURL }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"}}}}}}",
       "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Synthetic fixture input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"VALUE\"}}},\"outputs\":{\"forward\":{\"description\":\"Synthetic fixture output\",\"schema\":{\"type\":\"string\"},\"from\":{\"input\":\"url\"}}}}}}"
     },
     "document": "app/blueprint.yaml",
     "context": {
       "variables": {
-        "errors.reportingUrl": {
+        "errors.reportingURL": {
           "value": "https://synthetic.invalid",
           "sensitive": true,
           "identity": "variable-1",
@@ -84,7 +84,7 @@
       "BP-PARAM-009"
     ],
     "tree": {
-      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"}}}}}}",
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"url\":{\"from\":\"${{ variables.errors.reportingURL }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"}}}}}}",
       "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Synthetic fixture input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"VALUE\"}}},\"outputs\":{\"forward\":{\"description\":\"Synthetic fixture output\",\"schema\":{\"type\":\"string\"},\"from\":{\"input\":\"url\"}}}}}}"
     },
     "document": "app/blueprint.yaml",
@@ -95,7 +95,7 @@
         {
           "rule": "BP-PARAM-009",
           "path": "/spec/parameters/url/from",
-          "missing": "variable:errors.reportingUrl"
+          "missing": "variable:errors.reportingURL"
         }
       ]
     }
@@ -109,13 +109,13 @@
       "BP-PARAM-009"
     ],
     "tree": {
-      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"}}}}}}",
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"url\":{\"from\":\"${{ variables.errors.reportingURL }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"}}}}}}",
       "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Synthetic fixture input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"VALUE\"}}},\"outputs\":{\"forward\":{\"description\":\"Synthetic fixture output\",\"schema\":{\"type\":\"string\"},\"from\":{\"input\":\"url\"}}}}}}"
     },
     "document": "app/blueprint.yaml",
     "context": {
       "variables": {
-        "errors.reportingUrl": {
+        "errors.reportingURL": {
           "value": "https://synthetic.invalid",
           "sensitive": true,
           "identity": "variable-1",
@@ -145,13 +145,13 @@
       "BP-PARAM-009"
     ],
     "tree": {
-      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"}}}}}}",
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"url\":{\"from\":\"${{ variables.errors.reportingURL }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"}}}}}}",
       "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Synthetic fixture input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"VALUE\"}}},\"outputs\":{\"forward\":{\"description\":\"Synthetic fixture output\",\"schema\":{\"type\":\"string\"},\"from\":{\"input\":\"url\"}}}}}}"
     },
     "document": "app/blueprint.yaml",
     "context": {
       "variables": {
-        "errors.reportingUrl": {
+        "errors.reportingURL": {
           "value": "https://synthetic.invalid",
           "sensitive": true,
           "identity": "variable-1",
@@ -181,13 +181,13 @@
       "BP-PARAM-009"
     ],
     "tree": {
-      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"}}}}}}",
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"url\":{\"from\":\"${{ variables.errors.reportingURL }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"}}}}}}",
       "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Synthetic fixture input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"VALUE\"}}},\"outputs\":{\"forward\":{\"description\":\"Synthetic fixture output\",\"schema\":{\"type\":\"string\"},\"from\":{\"input\":\"url\"}}}}}}"
     },
     "document": "app/blueprint.yaml",
     "context": {
       "variables": {
-        "errors.reportingUrl": {
+        "errors.reportingURL": {
           "value": 5432,
           "sensitive": true,
           "identity": "variable-1",
@@ -430,7 +430,7 @@
     ],
     "tree": {
       "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"llm\":{\"from\":\"${{ connections.llm.default }}\",\"ui\":{\"label\":\"Language model\"}},\"region\":{\"from\":\"${{ variables.cloud.region }}\",\"ui\":{\"label\":\"Region\"}},\"title\":{\"ui\":{\"label\":\"Title\",\"order\":1}}},\"components\":{\"app\":{\"componentRef\":\"./app.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"title\":{\"parameter\":\"title\"},\"region\":{\"parameter\":\"region\"}},\"connectionBindings\":{\"llm\":{\"parameter\":\"llm\"}}}}}}",
-      "app/app.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"title\":{\"description\":\"Title\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"TITLE\"}},\"region\":{\"description\":\"Region\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"REGION\"}},\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"inputs\":{\"baseUrl\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
+      "app/app.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"title\":{\"description\":\"Title\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"TITLE\"}},\"region\":{\"description\":\"Region\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"REGION\"}},\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"inputs\":{\"baseURL\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
     },
     "document": "app/blueprint.yaml",
     "context": {},
@@ -462,7 +462,7 @@
     ],
     "tree": {
       "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"llm\":{\"from\":\"${{ connections.llm.default }}\"},\"region\":{\"from\":\"${{ variables.cloud.region }}\",\"ui\":{\"label\":\"Region\"}},\"title\":{\"ui\":{\"label\":\"Title\",\"order\":1}}},\"components\":{\"app\":{\"componentRef\":\"./app.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"title\":{\"parameter\":\"title\"},\"region\":{\"parameter\":\"region\"}},\"connectionBindings\":{\"llm\":{\"parameter\":\"llm\"}}}}}}",
-      "app/app.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"title\":{\"description\":\"Title\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"TITLE\"}},\"region\":{\"description\":\"Region\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"REGION\"}},\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"inputs\":{\"baseUrl\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
+      "app/app.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"title\":{\"description\":\"Title\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"TITLE\"}},\"region\":{\"description\":\"Region\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"REGION\"}},\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"inputs\":{\"baseURL\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
     },
     "document": "app/blueprint.yaml",
     "context": {},
@@ -520,7 +520,7 @@
       "BP-RESOLVE-001"
     ],
     "input": {
-      "blueprint": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
+      "blueprint": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.errors.reportingURL }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
       "specifications": {
         "core": "1.0.0",
         "component": "1.0.0",
@@ -542,7 +542,7 @@
         }
       },
       "variables": {
-        "errors.reportingUrl": {
+        "errors.reportingURL": {
           "identity": "variable-1",
           "version": "3",
           "value": "synthetic-secret"
@@ -561,7 +561,7 @@
           "version": "1",
           "parameters": {},
           "variables": {
-            "errors.reportingUrl": {
+            "errors.reportingURL": {
               "identity": "variable-1",
               "version": "3",
               "authorized": true,
@@ -594,7 +594,7 @@
     "expect": {
       "/status": "VALID",
       "/record/variables": {
-        "errors.reportingUrl": {
+        "errors.reportingURL": {
           "identity": "variable-1",
           "version": "3"
         }
@@ -611,7 +611,7 @@
       }
     },
     "tree": {
-      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.errors.reportingURL }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
       "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Endpoint\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Credential\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}}},\"outputs\":{}}}}"
     },
     "document": "app/blueprint.yaml"
@@ -624,7 +624,7 @@
       "BP-RESOLVE-001"
     ],
     "input": {
-      "blueprint": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
+      "blueprint": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.errors.reportingURL }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
       "specifications": {
         "core": "1.0.0",
         "component": "1.0.0",
@@ -645,7 +645,7 @@
         }
       },
       "variables": {
-        "errors.reportingUrl": {
+        "errors.reportingURL": {
           "identity": "variable-1",
           "version": "3",
           "value": "synthetic-secret"
@@ -664,7 +664,7 @@
           "version": "1",
           "parameters": {},
           "variables": {
-            "errors.reportingUrl": {
+            "errors.reportingURL": {
               "identity": "variable-1",
               "version": "3",
               "authorized": true,
@@ -703,7 +703,7 @@
       }
     ],
     "tree": {
-      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.errors.reportingURL }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
       "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Endpoint\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Credential\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}}},\"outputs\":{}}}}"
     },
     "document": "app/blueprint.yaml"
@@ -851,7 +851,7 @@
         }
       },
       "variables": {
-        "errors.reportingUrl": {
+        "errors.reportingURL": {
           "identity": "variable-1",
           "version": "3",
           "value": "synthetic-secret"
@@ -870,7 +870,7 @@
           "version": "1",
           "parameters": {},
           "variables": {
-            "errors.reportingUrl": {
+            "errors.reportingURL": {
               "identity": "variable-1",
               "version": "3",
               "authorized": true,
@@ -904,7 +904,7 @@
       "/status": "INVALID"
     },
     "tree": {
-      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.errors.reportingURL }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
       "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Endpoint\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Credential\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}}},\"outputs\":{}}}}"
     },
     "document": "app/blueprint.yaml",
@@ -924,7 +924,7 @@
       "BP-RESOLVE-001"
     ],
     "input": {
-      "blueprint": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
+      "blueprint": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.errors.reportingURL }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
       "specifications": {
         "core": "1.0.0",
         "component": "1.0.0",
@@ -946,7 +946,7 @@
         }
       },
       "variables": {
-        "errors.reportingUrl": {
+        "errors.reportingURL": {
           "identity": "variable-1",
           "version": "3",
           "value": "synthetic-secret"
@@ -965,7 +965,7 @@
           "version": "1",
           "parameters": {},
           "variables": {
-            "errors.reportingUrl": {
+            "errors.reportingURL": {
               "identity": "variable-1",
               "version": "3",
               "authorized": true,
@@ -999,7 +999,7 @@
       "/status": "INVALID"
     },
     "tree": {
-      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.errors.reportingURL }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
       "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Endpoint\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Credential\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}}},\"outputs\":{}}}}"
     },
     "document": "app/blueprint.yaml",
@@ -1019,7 +1019,7 @@
       "BP-RESOLVE-001"
     ],
     "input": {
-      "blueprint": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
+      "blueprint": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.errors.reportingURL }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
       "specifications": {
         "core": "1.0.0",
         "component": "1.0.0",
@@ -1041,7 +1041,7 @@
         }
       },
       "variables": {
-        "errors.reportingUrl": {
+        "errors.reportingURL": {
           "identity": "variable-1",
           "version": "3",
           "value": "synthetic-secret"
@@ -1060,7 +1060,7 @@
           "version": "1",
           "parameters": {},
           "variables": {
-            "errors.reportingUrl": {
+            "errors.reportingURL": {
               "identity": "variable-1",
               "version": "3",
               "authorized": true,
@@ -1094,7 +1094,7 @@
       "/status": "INVALID"
     },
     "tree": {
-      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.errors.reportingURL }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
       "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Endpoint\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Credential\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}}},\"outputs\":{}}}}"
     },
     "document": "app/blueprint.yaml",
@@ -1114,7 +1114,7 @@
       "BP-RESOLVE-001"
     ],
     "input": {
-      "blueprint": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
+      "blueprint": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.errors.reportingURL }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
       "specifications": {
         "core": "1.0.0",
         "component": "1.0.0",
@@ -1136,7 +1136,7 @@
         }
       },
       "variables": {
-        "errors.reportingUrl": {
+        "errors.reportingURL": {
           "identity": "variable-1",
           "version": "3",
           "value": "synthetic-secret"
@@ -1155,7 +1155,7 @@
           "version": "1",
           "parameters": {},
           "variables": {
-            "errors.reportingUrl": {
+            "errors.reportingURL": {
               "identity": "variable-1",
               "version": "3",
               "authorized": true,
@@ -1189,7 +1189,7 @@
       "/status": "INVALID"
     },
     "tree": {
-      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.errors.reportingURL }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
       "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Endpoint\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Credential\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}}},\"outputs\":{}}}}"
     },
     "document": "app/blueprint.yaml",
@@ -1210,7 +1210,7 @@
       "BP-PARAM-009"
     ],
     "input": {
-      "blueprint": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
+      "blueprint": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.errors.reportingURL }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
       "specifications": {
         "core": "1.0.0",
         "component": "1.0.0",
@@ -1232,7 +1232,7 @@
         }
       },
       "variables": {
-        "errors.reportingUrl": {
+        "errors.reportingURL": {
           "identity": "variable-1",
           "version": "3",
           "value": "synthetic-secret"
@@ -1251,7 +1251,7 @@
           "version": "1",
           "parameters": {},
           "variables": {
-            "errors.reportingUrl": {
+            "errors.reportingURL": {
               "identity": "variable-1",
               "version": "4",
               "authorized": true,
@@ -1285,7 +1285,7 @@
       "/status": "INVALID"
     },
     "tree": {
-      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.errors.reportingURL }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
       "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Endpoint\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Credential\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}}},\"outputs\":{}}}}"
     },
     "document": "app/blueprint.yaml",
@@ -1305,7 +1305,7 @@
     ],
     "tree": {
       "connection-app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"connection-app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"primary\":{\"from\":\"${{ connections.llm.default }}\"}},\"components\":{\"app\":{\"componentRef\":\"./component.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"connectionBindings\":{\"llm\":{\"parameter\":\"primary\"}}}}}}",
-      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseUrl\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
+      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseURL\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
     },
     "document": "connection-app/blueprint.yaml",
     "context": {
@@ -1331,13 +1331,13 @@
                 "identity": "credential-1",
                 "rotation": 0,
                 "value": "synthetic-only",
-                "permittedBaseUrls": [
+                "permittedBaseURLs": [
                   "https://gateway.example/openai/v1"
                 ]
               },
               "views": {
                 "OPENAI_CHAT_COMPLETIONS": {
-                  "baseUrl": "https://gateway.example/openai/v1",
+                  "baseURL": "https://gateway.example/openai/v1",
                   "model": "model-a",
                   "capabilities": [
                     "STREAMING",
@@ -1369,7 +1369,7 @@
     ],
     "tree": {
       "connection-app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"connection-app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"primary\":{\"from\":\"${{ connections.llm.default }}\"}},\"components\":{\"app\":{\"componentRef\":\"./component.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"connectionBindings\":{\"llm\":{\"parameter\":\"primary\"}}}}}}",
-      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseUrl\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
+      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseURL\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
     },
     "document": "connection-app/blueprint.yaml",
     "context": {
@@ -1395,13 +1395,13 @@
                 "identity": "credential-1",
                 "rotation": 0,
                 "value": "synthetic-only",
-                "permittedBaseUrls": [
+                "permittedBaseURLs": [
                   "https://gateway.example/openai/v1"
                 ]
               },
               "views": {
                 "OPENAI_CHAT_COMPLETIONS": {
-                  "baseUrl": "https://gateway.example/openai/v1",
+                  "baseURL": "https://gateway.example/openai/v1",
                   "model": "model-a",
                   "capabilities": [
                     "STREAMING",
@@ -1442,7 +1442,7 @@
     ],
     "tree": {
       "connection-app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"connection-app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"primary\":{\"from\":\"${{ connections.llm.default }}\"}},\"components\":{\"app\":{\"componentRef\":\"./component.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"connectionBindings\":{\"llm\":{\"parameter\":\"primary\"}}}}}}",
-      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseUrl\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
+      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseURL\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
     },
     "document": "connection-app/blueprint.yaml",
     "context": {},
@@ -1460,7 +1460,7 @@
     ],
     "tree": {
       "connection-app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"connection-app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"primary\":{\"from\":\"${{ connections.llm.default }}\"}},\"components\":{\"app\":{\"componentRef\":\"./component.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"connectionBindings\":{\"llm\":{\"parameter\":\"primary\"}}}}}}",
-      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseUrl\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
+      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseURL\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
     },
     "document": "connection-app/blueprint.yaml",
     "context": {
@@ -1493,7 +1493,7 @@
     ],
     "tree": {
       "connection-app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"connection-app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"primary\":{\"from\":\"${{ connections.llm.default }}\"}},\"components\":{\"app\":{\"componentRef\":\"./component.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"connectionBindings\":{\"llm\":{\"parameter\":\"primary\"}}}}}}",
-      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseUrl\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
+      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseURL\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
     },
     "document": "connection-app/blueprint.yaml",
     "context": {
@@ -1526,7 +1526,7 @@
     ],
     "tree": {
       "connection-app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"connection-app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"primary\":{\"from\":\"${{ connections.llm.default }}\"}},\"components\":{\"app\":{\"componentRef\":\"./component.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"connectionBindings\":{\"llm\":{\"parameter\":\"primary\"}}}}}}",
-      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseUrl\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
+      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseURL\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
     },
     "document": "connection-app/blueprint.yaml",
     "context": {
@@ -1559,7 +1559,7 @@
     ],
     "tree": {
       "connection-app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"connection-app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"primary\":{\"from\":\"${{ connections.llm.default }}\"}},\"components\":{\"app\":{\"componentRef\":\"./component.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"connectionBindings\":{\"llm\":{\"parameter\":\"primary\"}}}}}}",
-      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseUrl\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
+      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseURL\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
     },
     "document": "connection-app/blueprint.yaml",
     "context": {
@@ -1585,13 +1585,13 @@
                 "identity": "credential-1",
                 "rotation": 0,
                 "value": "synthetic-only",
-                "permittedBaseUrls": [
+                "permittedBaseURLs": [
                   "https://gateway.example/openai/v1"
                 ]
               },
               "views": {
                 "OPENAI_CHAT_COMPLETIONS": {
-                  "baseUrl": "https://gateway.example/openai/v1",
+                  "baseURL": "https://gateway.example/openai/v1",
                   "model": "model-a",
                   "capabilities": []
                 }
@@ -1620,7 +1620,7 @@
     ],
     "tree": {
       "connection-app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"connection-app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"primary\":{\"from\":\"${{ connections.llm.default }}\"}},\"components\":{\"app\":{\"componentRef\":\"./component.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"connectionBindings\":{\"llm\":{\"parameter\":\"primary\"}}}}}}",
-      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseUrl\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
+      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseURL\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
     },
     "document": "connection-app/blueprint.yaml",
     "context": {
@@ -1646,13 +1646,13 @@
                 "identity": "credential-1",
                 "rotation": 0,
                 "value": "synthetic-only",
-                "permittedBaseUrls": [
+                "permittedBaseURLs": [
                   "https://gateway.example/openai/v1"
                 ]
               },
               "views": {
                 "OPENAI_CHAT_COMPLETIONS": {
-                  "baseUrl": "https://other.example",
+                  "baseURL": "https://other.example",
                   "model": "model-a",
                   "capabilities": [
                     "STREAMING",
@@ -1684,7 +1684,7 @@
     ],
     "tree": {
       "connection-app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"connection-app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"primary\":{\"from\":\"${{ connections.llm.default }}\"}},\"components\":{\"app\":{\"componentRef\":\"./component.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"connectionBindings\":{\"llm\":{\"parameter\":\"primary\"}}}}}}",
-      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseUrl\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
+      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseURL\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
     },
     "document": "connection-app/blueprint.yaml",
     "context": {
@@ -1707,7 +1707,7 @@
               "costOwner": "org-1",
               "views": {
                 "OPENAI_CHAT_COMPLETIONS": {
-                  "baseUrl": "https://gateway.example/openai/v1",
+                  "baseURL": "https://gateway.example/openai/v1",
                   "model": "model-a",
                   "capabilities": [
                     "STREAMING",
@@ -1739,7 +1739,7 @@
     ],
     "tree": {
       "connection-app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"connection-app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"primary\":{\"from\":\"${{ connections.llm.default }}\"}},\"components\":{\"app\":{\"componentRef\":\"./component.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"connectionBindings\":{\"llm\":{\"parameter\":\"primary\"}}}}}}",
-      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseUrl\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
+      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseURL\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
     },
     "document": "connection-app/blueprint.yaml",
     "context": {
@@ -1765,13 +1765,13 @@
                 "identity": "credential-1",
                 "rotation": 0,
                 "value": "synthetic-only",
-                "permittedBaseUrls": [
+                "permittedBaseURLs": [
                   "https://gateway.example/openai/v1"
                 ]
               },
               "views": {
                 "OPENAI_CHAT_COMPLETIONS": {
-                  "baseUrl": "https://gateway.example/openai/v1",
+                  "baseURL": "https://gateway.example/openai/v1",
                   "model": "model-a",
                   "capabilities": [
                     "STREAMING",
@@ -1803,7 +1803,7 @@
     ],
     "tree": {
       "connection-app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"connection-app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"primary\":{\"from\":\"${{ connections.llm.default }}\"}},\"components\":{\"app\":{\"componentRef\":\"./component.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"connectionBindings\":{\"llm\":{\"parameter\":\"primary\"}}}}}}",
-      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"ANTHROPIC_MESSAGES\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseUrl\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
+      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"ANTHROPIC_MESSAGES\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseURL\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
     },
     "document": "connection-app/blueprint.yaml",
     "context": {
@@ -1829,13 +1829,13 @@
                 "identity": "credential-1",
                 "rotation": 0,
                 "value": "synthetic-only",
-                "permittedBaseUrls": [
+                "permittedBaseURLs": [
                   "https://gateway.example/anthropic"
                 ]
               },
               "views": {
                 "ANTHROPIC_MESSAGES": {
-                  "baseUrl": "https://gateway.example/anthropic",
+                  "baseURL": "https://gateway.example/anthropic",
                   "model": "model-a",
                   "capabilities": [
                     "STREAMING",
@@ -2208,7 +2208,7 @@
     ],
     "tree": {
       "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"exposure\":{\"web\":\"PUBLIC\"},\"bindings\":{}}}}}",
-      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/service:1\"},\"endpoints\":{\"web\":{\"targetPort\":8080,\"protocol\":\"HTTP\"}},\"health\":{\"readiness\":{\"http\":{\"endpoint\":\"web\",\"path\":\"/\"}}}},\"contract\":{\"inputs\":{},\"outputs\":{\"url\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"endpoint\":\"web\",\"property\":\"publicUrl\"}}}}}}"
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/service:1\"},\"endpoints\":{\"web\":{\"targetPort\":8080,\"protocol\":\"HTTP\"}},\"health\":{\"readiness\":{\"http\":{\"endpoint\":\"web\",\"path\":\"/\"}}}},\"contract\":{\"inputs\":{},\"outputs\":{\"url\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"endpoint\":\"web\",\"property\":\"publicURL\"}}}}}}"
     },
     "document": "app/blueprint.yaml",
     "context": {
@@ -2241,7 +2241,7 @@
     ],
     "tree": {
       "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"exposure\":{\"web\":\"PUBLIC\"},\"bindings\":{}}}}}",
-      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/service:1\"},\"endpoints\":{\"web\":{\"targetPort\":8080,\"protocol\":\"HTTP\"}},\"health\":{\"readiness\":{\"http\":{\"endpoint\":\"web\",\"path\":\"/\"}}}},\"contract\":{\"inputs\":{},\"outputs\":{\"url\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"endpoint\":\"web\",\"property\":\"publicUrl\"}}}}}}"
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/service:1\"},\"endpoints\":{\"web\":{\"targetPort\":8080,\"protocol\":\"HTTP\"}},\"health\":{\"readiness\":{\"http\":{\"endpoint\":\"web\",\"path\":\"/\"}}}},\"contract\":{\"inputs\":{},\"outputs\":{\"url\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"endpoint\":\"web\",\"property\":\"publicURL\"}}}}}}"
     },
     "document": "app/blueprint.yaml",
     "context": {
@@ -2255,7 +2255,7 @@
               "scheme": "https",
               "port": 8443,
               "path": "/api/",
-              "publicUrl": "https://different.invalid"
+              "publicURL": "https://different.invalid"
             }
           }
         }
@@ -2321,7 +2321,7 @@
       "BP-RESOLVE-001"
     ],
     "input": {
-      "blueprint": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"logLevel\":{\"default\":\"info\"},\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"},\"logLevel\":{\"parameter\":\"logLevel\"}}}}}}",
+      "blueprint": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"logLevel\":{\"default\":\"info\"},\"url\":{\"from\":\"${{ variables.errors.reportingURL }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"},\"logLevel\":{\"parameter\":\"logLevel\"}}}}}}",
       "specifications": {
         "core": "1.0.0",
         "component": "1.0.0",
@@ -2343,7 +2343,7 @@
         }
       },
       "variables": {
-        "errors.reportingUrl": {
+        "errors.reportingURL": {
           "identity": "variable-1",
           "version": "3",
           "value": "synthetic-secret"
@@ -2367,7 +2367,7 @@
             }
           },
           "variables": {
-            "errors.reportingUrl": {
+            "errors.reportingURL": {
               "identity": "variable-1",
               "version": "3",
               "authorized": true,
@@ -2400,7 +2400,7 @@
     "expect": {
       "/status": "VALID",
       "/record/variables": {
-        "errors.reportingUrl": {
+        "errors.reportingURL": {
           "identity": "variable-1",
           "version": "3"
         }
@@ -2417,7 +2417,7 @@
       }
     },
     "tree": {
-      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"logLevel\":{\"default\":\"info\"},\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"},\"logLevel\":{\"parameter\":\"logLevel\"}}}}}}",
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"logLevel\":{\"default\":\"info\"},\"url\":{\"from\":\"${{ variables.errors.reportingURL }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"},\"logLevel\":{\"parameter\":\"logLevel\"}}}}}}",
       "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Endpoint\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Credential\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"logLevel\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"LOG_LEVEL\"}}},\"outputs\":{}}}}"
     },
     "document": "app/blueprint.yaml"
@@ -2430,7 +2430,7 @@
       "BP-RESOLVE-001"
     ],
     "input": {
-      "blueprint": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"logLevel\":{\"default\":\"info\"},\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"},\"logLevel\":{\"parameter\":\"logLevel\"}}}}}}",
+      "blueprint": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"logLevel\":{\"default\":\"info\"},\"url\":{\"from\":\"${{ variables.errors.reportingURL }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"},\"logLevel\":{\"parameter\":\"logLevel\"}}}}}}",
       "specifications": {
         "core": "1.0.0",
         "component": "1.0.0",
@@ -2452,7 +2452,7 @@
         }
       },
       "variables": {
-        "errors.reportingUrl": {
+        "errors.reportingURL": {
           "identity": "variable-1",
           "version": "3",
           "value": "synthetic-secret"
@@ -2476,7 +2476,7 @@
             }
           },
           "variables": {
-            "errors.reportingUrl": {
+            "errors.reportingURL": {
               "identity": "variable-1",
               "version": "3",
               "authorized": true,
@@ -2509,7 +2509,7 @@
     "expect": {
       "/status": "VALID",
       "/record/variables": {
-        "errors.reportingUrl": {
+        "errors.reportingURL": {
           "identity": "variable-1",
           "version": "3"
         }
@@ -2526,7 +2526,7 @@
       }
     },
     "tree": {
-      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"logLevel\":{\"default\":\"info\"},\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"},\"logLevel\":{\"parameter\":\"logLevel\"}}}}}}",
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"logLevel\":{\"default\":\"info\"},\"url\":{\"from\":\"${{ variables.errors.reportingURL }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"},\"logLevel\":{\"parameter\":\"logLevel\"}}}}}}",
       "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Endpoint\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Credential\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"logLevel\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"LOG_LEVEL\"}}},\"outputs\":{}}}}"
     },
     "document": "app/blueprint.yaml"
@@ -2539,7 +2539,7 @@
     ],
     "tree": {
       "connection-app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"connection-app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"primary\":{\"from\":\"${{ connections.llm.default }}\"}},\"components\":{\"app\":{\"componentRef\":\"./component.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"connectionBindings\":{\"llm\":{\"parameter\":\"primary\"}}}}}}",
-      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseUrl\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
+      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseURL\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
     },
     "document": "connection-app/blueprint.yaml",
     "context": {
@@ -2565,13 +2565,13 @@
                 "identity": "credential-1",
                 "rotation": 0,
                 "value": "synthetic-only",
-                "permittedBaseUrls": [
+                "permittedBaseURLs": [
                   "https://gateway.example/openai/v1"
                 ]
               },
               "views": {
                 "OPENAI_CHAT_COMPLETIONS": {
-                  "baseUrl": "https://gateway.example/openai/v1",
+                  "baseURL": "https://gateway.example/openai/v1",
                   "model": "model-a",
                   "capabilities": [
                     "STREAMING",
@@ -2603,7 +2603,7 @@
     ],
     "tree": {
       "connection-app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"connection-app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"primary\":{\"from\":\"${{ connections.llm.default }}\"}},\"components\":{\"app\":{\"componentRef\":\"./component.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"connectionBindings\":{\"llm\":{\"parameter\":\"primary\"}}}}}}",
-      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseUrl\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
+      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseURL\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
     },
     "document": "connection-app/blueprint.yaml",
     "context": {
@@ -2629,13 +2629,13 @@
                 "identity": "user-credential",
                 "rotation": 0,
                 "value": "synthetic-user",
-                "permittedBaseUrls": [
+                "permittedBaseURLs": [
                   "https://user.example/v1"
                 ]
               },
               "views": {
                 "OPENAI_CHAT_COMPLETIONS": {
-                  "baseUrl": "https://user.example/v1",
+                  "baseURL": "https://user.example/v1",
                   "model": "user-model",
                   "capabilities": [
                     "STREAMING",
@@ -2666,7 +2666,7 @@
     ],
     "tree": {
       "connection-app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"connection-app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"primary\":{\"from\":\"${{ connections.llm.default }}\"}},\"components\":{\"app\":{\"componentRef\":\"./component.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"connectionBindings\":{\"llm\":{\"parameter\":\"primary\"}}}}}}",
-      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\",\"enum\":[\"different-model\"]},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseUrl\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
+      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\",\"enum\":[\"different-model\"]},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseURL\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
     },
     "document": "connection-app/blueprint.yaml",
     "context": {
@@ -2692,13 +2692,13 @@
                 "identity": "credential-1",
                 "rotation": 0,
                 "value": "synthetic-only",
-                "permittedBaseUrls": [
+                "permittedBaseURLs": [
                   "https://gateway.example/openai/v1"
                 ]
               },
               "views": {
                 "OPENAI_CHAT_COMPLETIONS": {
-                  "baseUrl": "https://gateway.example/openai/v1",
+                  "baseURL": "https://gateway.example/openai/v1",
                   "model": "model-a",
                   "capabilities": [
                     "STREAMING",
@@ -2730,7 +2730,7 @@
     ],
     "tree": {
       "connection-app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"connection-app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"primary\":{\"from\":\"${{ connections.llm.default }}\"},\"second\":{\"from\":\"${{ connections.llm.secondary }}\"}},\"components\":{\"app\":{\"componentRef\":\"./component.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"connectionBindings\":{\"llm\":{\"parameter\":\"primary\"}}},\"worker\":{\"componentRef\":\"./component.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"connectionBindings\":{\"llm\":{\"parameter\":\"second\"}}}}}}",
-      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseUrl\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
+      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseURL\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
     },
     "document": "connection-app/blueprint.yaml",
     "context": {
@@ -2756,13 +2756,13 @@
                 "identity": "credential-1",
                 "rotation": 0,
                 "value": "synthetic-only",
-                "permittedBaseUrls": [
+                "permittedBaseURLs": [
                   "https://gateway.example/openai/v1"
                 ]
               },
               "views": {
                 "OPENAI_CHAT_COMPLETIONS": {
-                  "baseUrl": "https://gateway.example/openai/v1",
+                  "baseURL": "https://gateway.example/openai/v1",
                   "model": "model-a",
                   "capabilities": [
                     "STREAMING",
@@ -2791,13 +2791,13 @@
                 "identity": "credential-2",
                 "rotation": 0,
                 "value": "synthetic-only",
-                "permittedBaseUrls": [
+                "permittedBaseURLs": [
                   "https://gateway.example/openai/v1"
                 ]
               },
               "views": {
                 "OPENAI_CHAT_COMPLETIONS": {
-                  "baseUrl": "https://gateway.example/openai/v1",
+                  "baseURL": "https://gateway.example/openai/v1",
                   "model": "model-b",
                   "capabilities": [
                     "STREAMING",
@@ -2826,7 +2826,7 @@
     ],
     "tree": {
       "connection-app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"connection-app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"primary\":{\"from\":\"${{ connections.llm.default }}\"}},\"components\":{\"app\":{\"componentRef\":\"./component.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"connectionBindings\":{\"llm\":{\"parameter\":\"primary\"}}},\"worker\":{\"componentRef\":\"./component.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"connectionBindings\":{\"llm\":{\"parameter\":\"primary\"}}}}}}",
-      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseUrl\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
+      "connection-app/component.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":false,\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"capabilities\":[\"STREAMING\",\"TOOL_CALLS\"],\"inputs\":{\"baseURL\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
     },
     "document": "connection-app/blueprint.yaml",
     "context": {
@@ -2852,13 +2852,13 @@
                 "identity": "credential-1",
                 "rotation": 0,
                 "value": "synthetic-only",
-                "permittedBaseUrls": [
+                "permittedBaseURLs": [
                   "https://gateway.example/openai/v1"
                 ]
               },
               "views": {
                 "OPENAI_CHAT_COMPLETIONS": {
-                  "baseUrl": "https://gateway.example/openai/v1",
+                  "baseURL": "https://gateway.example/openai/v1",
                   "model": "model-a",
                   "capabilities": [
                     "STREAMING",

@@ -46,7 +46,7 @@ a bare noun. The generated resolution record keeps its `source` tag.
 | `accessMode: READ_WRITE_ONCE \| READ_WRITE_MANY` | `shared: false \| true` |
 | output `source: {type: LITERAL \| INPUT \| ENDPOINT \| TEMPLATE, …}` | output `from: {value}`, `{input}`, `{endpoint, property}` or `{template}` |
 | `${{ self.publicHostname.web }}` | `${{ self.endpoints.web.publicHostname }}` |
-| `publicUrl`, `baseUrl`, `permittedBaseUrls` | `publicURL`, `baseURL`, `permittedBaseURLs` |
+| `publicURL`, `baseURL`, `permittedBaseURLs` | `publicURL`, `baseURL`, `permittedBaseURLs` |
 | a `WORKER` declares no endpoint | a `WORKER` may declare private endpoints, so it can carry health probes; exposing one `PUBLIC` is `ERR_ENDPOINT_NOT_EXPOSABLE` |
 | node `size` (`null` on an external node) | node `compute.profile`; `compute` is required on a workload node and forbidden on an `EXTERNAL` one |
 | `placement` | `compute.placement` |

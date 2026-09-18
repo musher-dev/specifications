@@ -14,9 +14,9 @@ spec:
         protocol: HTTP
   contract:
     outputs:
-      baseUrl:
+      baseURL:
         description: Address this service answers on.
         schema:
           type: string
         from:
-          template: "${{ self.endpoints.web.internalUrl }}"
+          template: "${{ self.endpoints.web.internalURL }}"

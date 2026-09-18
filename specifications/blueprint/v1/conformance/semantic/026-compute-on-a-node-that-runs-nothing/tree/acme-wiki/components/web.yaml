@@ -19,7 +19,7 @@ spec:
           path: /healthz
   contract:
     inputs:
-      llmBaseUrl:
+      llmBaseURL:
         schema:
           type: string
         target:

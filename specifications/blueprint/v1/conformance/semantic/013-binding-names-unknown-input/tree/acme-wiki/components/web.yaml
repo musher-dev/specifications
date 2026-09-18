@@ -14,7 +14,7 @@ spec:
         protocol: HTTP
   contract:
     inputs:
-      databaseUrl:
+      databaseURL:
         schema:
           type: string
         required: false

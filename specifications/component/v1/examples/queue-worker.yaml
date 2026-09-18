@@ -28,7 +28,7 @@ spec:
         failureThreshold: 5
   contract:
     inputs:
-      queueUrl:
+      queueURL:
         description: Address of the queue the worker consumes.
         schema:
           type: string

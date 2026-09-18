@@ -21,7 +21,7 @@ spec:
       bindings:
         apiKey:
           parameter: stripeKey
-        databaseUrl:
+        databaseURL:
           node: db
           output: connectionString
         mode:

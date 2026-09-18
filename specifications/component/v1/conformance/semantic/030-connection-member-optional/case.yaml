@@ -55,7 +55,7 @@
             "TOOL_CALLS"
           ],
           "inputs": {
-            "baseUrl": "url",
+            "baseURL": "url",
             "apiKey": "key",
             "model": "model"
           }

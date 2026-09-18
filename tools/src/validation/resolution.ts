@@ -254,7 +254,7 @@ export function resolveInstallation(
     else if (property === 'publicPort') value = allocation?.public?.port
     else if (property === 'publicAddress' && allocation?.public?.port)
       value = `${addressHost(allocation.public.hostname)}:${allocation.public.port}`
-    else if (property === 'publicUrl' && allocation?.public?.scheme) {
+    else if (property === 'publicURL' && allocation?.public?.scheme) {
       const p = allocation.public
       value = `${p.scheme}://${addressHost(p.hostname)}${p.port === undefined ? '' : ':' + p.port}${(p.path ?? '').replace(/\/+$/, '')}`
     }

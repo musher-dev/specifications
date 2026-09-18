@@ -290,13 +290,13 @@ workloads start; they do not assert readiness.
 | privateHostname | string | Allocated internal DNS hostname of the named endpoint |
 | privatePort | integer | Named endpoint's target port |
 | privateAddress | string | Internal hostname, colon, decimal target port |
-| publicUrl | string | Allocated URL, without a trailing slash, for HTTP/HTTPS/WS/GRPC |
+| publicURL | string | Allocated URL, without a trailing slash, for HTTP/HTTPS/WS/GRPC |
 | publicHostname | string | Hostname portion of that URL |
 | publicAddress | string | Allocated TCP/UDP host:port, with IPv6 hosts bracketed |
 | publicPort | integer | Allocated TCP/UDP edge port |
 
 <a id="COMP-EP-004"></a>**`COMP-EP-004`**: A public property is read only from an
-endpoint whose protocol has that address family. `publicUrl` and
+endpoint whose protocol has that address family. `publicURL` and
 `publicHostname` require HTTP, HTTPS, WS or GRPC, and otherwise fail with
 `ERR_ENDPOINT_NOT_HTTP`; `publicAddress` and `publicPort` require TCP or UDP,
 and otherwise fail with `ERR_ENDPOINT_NOT_L4`. The private properties apply to
@@ -582,7 +582,7 @@ Unsupported numeric values are rejected, never silently rounded.
 
 `contract.connectionRequirements` is an optional map of named atomic connection
 requirements. Names use the input-name grammar. Each requires `protocol` and
-`inputs`, mapping exactly `baseUrl`, `apiKey` and `model` to existing inputs.
+`inputs`, mapping exactly `baseURL`, `apiKey` and `model` to existing inputs.
 Protocols are OPENAI_CHAT_COMPLETIONS and ANTHROPIC_MESSAGES: client request and
 response contracts, independent of upstream vendor. Optional `capabilities` is a
 unique list of STREAMING and TOOL_CALLS. Unknown terms are rejected, not ignored.

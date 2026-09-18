@@ -54,7 +54,7 @@
             "TOOL_CALLS"
           ],
           "inputs": {
-            "baseUrl": "url",
+            "baseURL": "url",
             "model": "model"
           }
         }

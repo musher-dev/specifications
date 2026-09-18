@@ -1,6 +1,6 @@
 [
   {
     "code": "ERR_UNKNOWN_ENDPOINT",
-    "path": "/spec/contract/outputs/baseUrl/from/template"
+    "path": "/spec/contract/outputs/baseURL/from/template"
   }
 ]

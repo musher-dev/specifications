@@ -22,13 +22,13 @@ export interface ConnectionSelection {
     readonly identity: string
     readonly rotation: number
     readonly value: string
-    readonly permittedBaseUrls: readonly string[]
+    readonly permittedBaseURLs: readonly string[]
   }
   readonly views: Partial<
     Record<
       ConnectionProtocol,
       {
-        readonly baseUrl: string
+        readonly baseURL: string
         readonly model: string
         readonly capabilities: readonly ConnectionCapability[]
       }
@@ -196,7 +196,7 @@ function validSelection(
     !text(credential.value) ||
     !Number.isSafeInteger(credential.rotation) ||
     Number(credential.rotation) < 0 ||
-    !Array.isArray(credential.permittedBaseUrls) ||
+    !Array.isArray(credential.permittedBaseURLs) ||
     !Object.keys(views).length
   )
     return false
@@ -204,16 +204,16 @@ function validSelection(
     const v = record(view)
     if (
       !protocols.includes(protocol) ||
-      !text(v.baseUrl) ||
+      !text(v.baseURL) ||
       !text(v.model) ||
       !Array.isArray(v.capabilities) ||
       !v.capabilities.every((c) => capabilities.includes(String(c))) ||
       new Set(v.capabilities).size !== v.capabilities.length ||
-      !(credential.permittedBaseUrls as Json[]).includes(v.baseUrl!)
+      !(credential.permittedBaseURLs as Json[]).includes(v.baseURL!)
     )
       return false
     try {
-      const url = new URL(String(v.baseUrl))
+      const url = new URL(String(v.baseURL))
       return url.protocol === 'https:' && !url.username && !url.password && !url.hash && !url.search
     } catch {
       return false
@@ -295,7 +295,7 @@ export function resolveConnections(
         continue
       }
       const values = {
-        baseUrl: view.baseUrl,
+        baseURL: view.baseURL,
         model: view.model,
         apiKey: selection.credential.value,
       }

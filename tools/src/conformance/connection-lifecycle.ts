@@ -51,11 +51,11 @@ export function observeConnectionLifecycle(input: Json): Json {
                 identity: 'credential-' + id,
                 rotation: generation,
                 value: 'synthetic-' + id,
-                permittedBaseUrls: ['https://gateway.example/openai/v1'],
+                permittedBaseURLs: ['https://gateway.example/openai/v1'],
               },
               views: {
                 OPENAI_CHAT_COMPLETIONS: {
-                  baseUrl: 'https://gateway.example/openai/v1',
+                  baseURL: 'https://gateway.example/openai/v1',
                   model: 'model-' + version,
                   capabilities: ['STREAMING', 'TOOL_CALLS'],
                 },

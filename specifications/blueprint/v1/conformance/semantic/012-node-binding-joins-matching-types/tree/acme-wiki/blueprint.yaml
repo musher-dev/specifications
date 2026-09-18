@@ -23,6 +23,6 @@ spec:
       exposure:
         web: PRIVATE
       bindings:
-        databaseUrl:
+        databaseURL:
           node: db
           output: connectionString

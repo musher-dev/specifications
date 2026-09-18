@@ -98,11 +98,11 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "baseUrl": {
+        "baseURL": {
           "type": "string",
           "pattern": "^[a-z][a-zA-Z0-9]{0,63}$",
           "maxLength": 64,
-          "description": "Existing input receiving the connection baseUrl role."
+          "description": "Existing input receiving the connection baseURL role."
         },
         "apiKey": {
           "type": "string",
@@ -118,7 +118,7 @@
         }
       },
       "required": [
-        "baseUrl",
+        "baseURL",
         "apiKey",
         "model"
       ]
@@ -523,7 +523,7 @@
         "property": {
           "description": "Address property of the named endpoint.",
           "enum": [
-            "publicUrl",
+            "publicURL",
             "publicHostname",
             "publicAddress",
             "publicPort",

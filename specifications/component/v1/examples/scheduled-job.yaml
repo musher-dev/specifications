@@ -19,7 +19,7 @@ spec:
         minSizeGiB: 20
   contract:
     inputs:
-      databaseUrl:
+      databaseURL:
         description: Connection URL of the database to back up.
         schema:
           type: string

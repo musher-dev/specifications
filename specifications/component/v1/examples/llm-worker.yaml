@@ -10,7 +10,7 @@ spec:
       image: ghcr.io/musher-dev/assistant-worker:2.3.0
   contract:
     inputs:
-      baseUrl:
+      baseURL:
         description: Base URL of the language-model API.
         schema:
           type: string
@@ -38,6 +38,6 @@ spec:
           - STREAMING
           - TOOL_CALLS
         inputs:
-          baseUrl: baseUrl
+          baseURL: baseURL
           apiKey: apiKey
           model: model

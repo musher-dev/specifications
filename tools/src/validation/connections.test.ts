@@ -23,7 +23,7 @@ const component: Json = {
         llm: {
           protocol: 'OPENAI_CHAT_COMPLETIONS',
           capabilities: ['STREAMING'],
-          inputs: { baseUrl: 'url', apiKey: 'key', model: 'model' },
+          inputs: { baseURL: 'url', apiKey: 'key', model: 'model' },
         },
       },
     },
@@ -50,11 +50,11 @@ const selection = (parameter = 'primary'): ConnectionSelection => ({
     identity: 'credential-1',
     rotation: 0,
     value: 'synthetic-only',
-    permittedBaseUrls: ['https://gateway.example/openai/v1'],
+    permittedBaseURLs: ['https://gateway.example/openai/v1'],
   },
   views: {
     OPENAI_CHAT_COMPLETIONS: {
-      baseUrl: 'https://gateway.example/openai/v1',
+      baseURL: 'https://gateway.example/openai/v1',
       model: 'model-a',
       capabilities: ['STREAMING', 'TOOL_CALLS'],
     },
@@ -114,7 +114,7 @@ describe('atomic named connections', () => {
     const wrong = selection() as any
     wrong.views = {
       ANTHROPIC_MESSAGES: {
-        baseUrl: 'https://gateway.example/openai/v1',
+        baseURL: 'https://gateway.example/openai/v1',
         model: 'model-a',
         capabilities: ['STREAMING'],
       },
@@ -123,7 +123,7 @@ describe('atomic named connections', () => {
   })
   test('a destination change cannot keep a scoped managed credential', () => {
     const s = selection()
-    ;(s.views.OPENAI_CHAT_COMPLETIONS as any).baseUrl = 'https://arbitrary.example/v1'
+    ;(s.views.OPENAI_CHAT_COMPLETIONS as any).baseURL = 'https://arbitrary.example/v1'
     expect(run(s).diagnostics[0]?.code).toBe('ERR_INVALID_RESOLUTION_CONTEXT')
     expect(JSON.stringify(run(s))).not.toContain('synthetic-only')
   })
@@ -177,9 +177,9 @@ describe('atomic named connections', () => {
     const c = structuredClone(component) as any
     c.spec.contract.connectionRequirements.llm.protocol = 'ANTHROPIC_MESSAGES'
     const s = selection() as any
-    s.credential.permittedBaseUrls.push('https://gateway.example/anthropic')
+    s.credential.permittedBaseURLs.push('https://gateway.example/anthropic')
     s.views.ANTHROPIC_MESSAGES = {
-      baseUrl: 'https://gateway.example/anthropic',
+      baseURL: 'https://gateway.example/anthropic',
       model: 'model-a',
       capabilities: ['STREAMING'],
     }
@@ -297,11 +297,11 @@ test('a complete user replacement supplies its own endpoint, credential and mode
       identity: 'user-credential',
       rotation: 0,
       value: 'synthetic-user-key',
-      permittedBaseUrls: ['https://provider.example/v1'],
+      permittedBaseURLs: ['https://provider.example/v1'],
     },
     views: {
       OPENAI_CHAT_COMPLETIONS: {
-        baseUrl: 'https://provider.example/v1',
+        baseURL: 'https://provider.example/v1',
         model: 'user-model',
         capabilities: ['STREAMING'],
       },
@@ -344,7 +344,7 @@ test('a parameter source is one whole variables or connections reference', () =>
     ['https://${{ variables.cloud.host }}', 'ERR_INVALID_PARAMETER_SOURCE'],
     ['${{ variables.a }}${{ variables.b }}', 'ERR_INVALID_PARAMETER_SOURCE'],
     ['${{ config.cloud.region }}', 'ERR_UNKNOWN_REFERENCE_NAMESPACE'],
-    ['${{ self.endpoints.web.publicUrl }}', 'ERR_REFERENCE_NOT_IN_SCOPE'],
+    ['${{ self.endpoints.web.publicURL }}', 'ERR_REFERENCE_NOT_IN_SCOPE'],
     ['${{ variables', 'ERR_MALFORMED_REFERENCE'],
   ] as const) {
     expect(parameterSource({ from })).toBeUndefined()

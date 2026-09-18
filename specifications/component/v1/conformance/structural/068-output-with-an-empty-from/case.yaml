@@ -7,13 +7,13 @@ spec:
   type: EXTERNAL
   contract:
     inputs:
-      baseUrl:
+      baseURL:
         description: Base URL of the service this node addresses.
         schema:
           type: string
         presentationHint: ENDPOINT_URL
     outputs:
-      baseUrl:
+      baseURL:
         description: Base URL of the addressed service, for a consumer to call.
         schema:
           type: string

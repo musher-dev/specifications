@@ -16,7 +16,7 @@ spec:
       DATABASE_URL: postgres://localhost/app
   contract:
     inputs:
-      databaseUrl:
+      databaseURL:
         description: Connection URL of the database the service reads and writes.
         schema:
           type: string

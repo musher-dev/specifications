@@ -6,7 +6,7 @@ metadata:
   description: Synthetic conformance fixture blueprint.
 spec:
   parameters:
-    baseUrl:
+    baseURL:
       ui:
         label: API base URL
         order: 1
@@ -20,8 +20,8 @@ spec:
       compute:
         profile: general.standard.small
       bindings:
-        baseUrl:
-          parameter: baseUrl
+        baseURL:
+          parameter: baseURL
         apiKey:
           parameter: apiKey
     web:
@@ -32,9 +32,9 @@ spec:
       exposure:
         web: PUBLIC
       bindings:
-        llmBaseUrl:
+        llmBaseURL:
           node: models
-          output: baseUrl
+          output: baseURL
         llmApiKey:
           node: models
           output: apiKey

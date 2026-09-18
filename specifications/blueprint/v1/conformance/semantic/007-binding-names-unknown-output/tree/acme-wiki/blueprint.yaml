@@ -23,6 +23,6 @@ spec:
       exposure:
         primary: PRIVATE
       bindings:
-        databaseUrl:
+        databaseURL:
           node: db
           output: connectionUri

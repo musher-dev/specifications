@@ -53,7 +53,7 @@
             "MAGIC"
           ],
           "inputs": {
-            "baseUrl": "url",
+            "baseURL": "url",
             "apiKey": "key",
             "model": "model"
           }

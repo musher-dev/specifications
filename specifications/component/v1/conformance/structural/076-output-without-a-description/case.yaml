@@ -15,10 +15,10 @@ spec:
   contract:
     inputs: {}
     outputs:
-      baseUrl:
+      baseURL:
         schema:
           type: string
         presentationHint: ENDPOINT_URL
         from:
           endpoint: web
-          property: publicUrl
+          property: publicURL

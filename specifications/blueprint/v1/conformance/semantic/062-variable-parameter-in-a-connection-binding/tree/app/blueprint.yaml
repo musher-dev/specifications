@@ -6,8 +6,8 @@ metadata:
   description: Synthetic conformance fixture blueprint.
 spec:
   parameters:
-    baseUrl:
-      from: "${{ variables.errors.reportingUrl }}"
+    baseURL:
+      from: "${{ variables.errors.reportingURL }}"
   components:
     app:
       componentRef: ./app.yaml
@@ -15,4 +15,4 @@ spec:
         profile: general.standard.small
       connectionBindings:
         llm:
-          parameter: baseUrl
+          parameter: baseURL

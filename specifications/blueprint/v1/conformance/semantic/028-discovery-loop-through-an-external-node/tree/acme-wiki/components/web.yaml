@@ -19,7 +19,7 @@ spec:
           path: /healthz
   contract:
     inputs:
-      llmBaseUrl:
+      llmBaseURL:
         schema:
           type: string
         target:
@@ -27,11 +27,11 @@ spec:
         description: Base URL of the chat-completions service the application calls.
         presentationHint: ENDPOINT_URL
     outputs:
-      publicUrl:
+      publicURL:
         schema:
           type: string
         description: Public URL the application answers at.
         presentationHint: ENDPOINT_URL
         from:
           endpoint: web
-          property: publicUrl
+          property: publicURL

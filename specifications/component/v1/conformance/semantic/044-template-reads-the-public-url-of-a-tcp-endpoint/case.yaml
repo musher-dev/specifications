@@ -19,4 +19,4 @@ spec:
         schema:
           type: string
         from:
-          template: "${{ self.endpoints.primary.publicUrl }}/"
+          template: "${{ self.endpoints.primary.publicURL }}/"

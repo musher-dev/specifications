@@ -15,10 +15,10 @@ spec:
   contract:
     inputs: {}
     outputs:
-      publicUrl:
+      publicURL:
         schema:
           type: string
         description: Public URL the application answers at.
         from:
           endpoint: internal
-          property: publicUrl
+          property: publicURL

@@ -1,6 +1,6 @@
 [
   {
     "code": "ERR_UNKNOWN_NODE",
-    "path": "/spec/components/web/bindings/databaseUrl/node"
+    "path": "/spec/components/web/bindings/databaseURL/node"
   }
 ]

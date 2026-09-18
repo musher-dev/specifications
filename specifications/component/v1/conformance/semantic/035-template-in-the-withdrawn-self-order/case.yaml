@@ -14,7 +14,7 @@ spec:
         protocol: HTTP
   contract:
     outputs:
-      baseUrl:
+      baseURL:
         description: Address this service answers on.
         schema:
           type: string

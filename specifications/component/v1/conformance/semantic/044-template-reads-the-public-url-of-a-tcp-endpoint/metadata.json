@@ -6,5 +6,5 @@
   "requirements": [
     "COMP-EP-004"
   ],
-  "summary": "A template reading publicUrl from a TCP endpoint is rejected; a URL belongs to an HTTP-family endpoint."
+  "summary": "A template reading publicURL from a TCP endpoint is rejected; a URL belongs to an HTTP-family endpoint."
 }

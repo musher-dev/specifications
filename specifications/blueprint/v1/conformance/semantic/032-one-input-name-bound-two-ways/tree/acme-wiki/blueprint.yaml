@@ -9,7 +9,7 @@ spec:
     apiKey:
       ui:
         label: API key
-    baseUrl:
+    baseURL:
       ui:
         label: API base URL
   components:
@@ -27,8 +27,8 @@ spec:
       bindings:
         apiKey:
           parameter: apiKey
-        baseUrl:
-          parameter: baseUrl
+        baseURL:
+          parameter: baseURL
     web:
       componentRef: ./components/web.yaml
       compute:

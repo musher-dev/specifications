@@ -14,10 +14,10 @@ spec:
         protocol: HTTP
   contract:
     outputs:
-      metricsUrl:
+      metricsURL:
         description: Address metrics are scraped from.
         schema:
           type: string
         from:
           endpoint: metrics
-          property: publicUrl
+          property: publicURL

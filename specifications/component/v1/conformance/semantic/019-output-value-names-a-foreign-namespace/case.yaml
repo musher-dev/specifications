@@ -20,9 +20,9 @@ spec:
   contract:
     inputs: {}
     outputs:
-      baseUrl:
+      baseURL:
         description: Address this service answers on.
         schema:
           type: string
         from:
-          template: "${{ variables.baseUrl }}"
+          template: "${{ variables.baseURL }}"

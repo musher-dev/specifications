@@ -62,7 +62,7 @@ const FLOATING_TAGS = new Set([
   'rolling',
 ])
 export const ADDRESS_PROPERTIES = [
-  'publicUrl',
+  'publicURL',
   'publicHostname',
   'publicAddress',
   'publicPort',
@@ -81,7 +81,7 @@ export function endpointProblem(
   if (!ADDRESS_PROPERTIES.includes(property)) return 'ERR_UNKNOWN_ADDRESS_PROPERTY'
   // COMP-EP-004: a public property exists only in its endpoint's address family.
   const http = ['HTTP', 'HTTPS', 'WS', 'GRPC'].includes(String(at(declared, 'protocol')))
-  if (['publicUrl', 'publicHostname'].includes(property) && !http) return 'ERR_ENDPOINT_NOT_HTTP'
+  if (['publicURL', 'publicHostname'].includes(property) && !http) return 'ERR_ENDPOINT_NOT_HTTP'
   if (['publicAddress', 'publicPort'].includes(property) && http) return 'ERR_ENDPOINT_NOT_L4'
   // COMP-TYPE-003: a WORKER endpoint is never PUBLIC, so its public address never exists.
   if (property.startsWith('public') && at(component, 'spec', 'type') === 'WORKER')

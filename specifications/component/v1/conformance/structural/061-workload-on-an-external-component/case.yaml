@@ -15,7 +15,7 @@ spec:
   contract:
     inputs: {}
     outputs:
-      baseUrl:
+      baseURL:
         description: Base URL of the addressed service, for a consumer to call.
         schema:
           type: string

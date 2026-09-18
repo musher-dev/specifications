@@ -46,15 +46,15 @@ spec:
         target:
           envVarKey: RABBITMQ_DEFAULT_PASS
     outputs:
-      consoleUrl:
+      consoleURL:
         description: Public URL of the management console, for an operator to sign in at.
         schema:
           type: string
         presentationHint: ENDPOINT_URL
         from:
           endpoint: console
-          property: publicUrl
-      apiUrl:
+          property: publicURL
+      apiURL:
         description: Base URL of the management HTTP API, for sibling nodes that declare queues.
         schema:
           type: string

@@ -8,8 +8,8 @@ spec:
   parameters:
     region:
       from: "${{ variables.cloud.region }}"
-    errorReportingUrl:
-      from: "${{ variables.observability.errorReportingUrl }}"
+    errorReportingURL:
+      from: "${{ variables.observability.errorReportingURL }}"
   components:
     web:
       componentRef: ./components/web.yaml
@@ -20,5 +20,5 @@ spec:
       bindings:
         region:
           parameter: region
-        errorReportingUrl:
-          parameter: errorReportingUrl
+        errorReportingURL:
+          parameter: errorReportingURL

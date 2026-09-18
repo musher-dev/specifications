@@ -13,9 +13,9 @@ spec:
     models:
       componentRef: ./components/models.yaml
       bindings:
-        baseUrl:
+        baseURL:
           node: web
-          output: publicUrl
+          output: publicURL
         apiKey:
           parameter: apiKey
     web:
@@ -26,6 +26,6 @@ spec:
       exposure:
         web: PUBLIC
       bindings:
-        llmBaseUrl:
+        llmBaseURL:
           node: models
-          output: baseUrl
+          output: baseURL

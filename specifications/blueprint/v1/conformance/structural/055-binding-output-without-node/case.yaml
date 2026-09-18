@@ -15,5 +15,5 @@ spec:
       compute:
         profile: general.standard.small
       bindings:
-        databaseUrl:
+        databaseURL:
           output: connectionString

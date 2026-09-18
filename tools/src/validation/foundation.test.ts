@@ -141,8 +141,8 @@ test('unrelated nodes never inherit existing parameter bindings', () => {
 test('a variable is authorized, typed, sensitive and never submitted', () => {
   const setup = item(
     { web: component({ url: input() }) },
-    { web: { url: { parameter: 'baseUrl' } } },
-    { baseUrl: { from: '${{ variables.errors.reportingUrl }}' } },
+    { web: { url: { parameter: 'baseURL' } } },
+    { baseURL: { from: '${{ variables.errors.reportingURL }}' } },
   )
   const variable = {
     value: 'https://synthetic.invalid',
@@ -153,7 +153,7 @@ test('a variable is authorized, typed, sensitive and never submitted', () => {
   }
   const resolved = resolveInstallation(setup.document, {
     ...setup.context,
-    variables: { 'errors.reportingUrl': variable },
+    variables: { 'errors.reportingURL': variable },
   })
   expect(resolved.status).toBe('VALID')
   expect(resolved.inputs['web:in:url']?.sensitive).toBe(true)
@@ -162,20 +162,20 @@ test('a variable is authorized, typed, sensitive and never submitted', () => {
   expect(
     resolveInstallation(setup.document, {
       ...setup.context,
-      variables: { 'errors.reportingUrl': { ...variable, authorized: false } },
+      variables: { 'errors.reportingURL': { ...variable, authorized: false } },
     }).diagnostics,
   ).toContainEqual(expect.objectContaining({ code: 'ERR_VARIABLE_NOT_AUTHORIZED' }))
   expect(
     resolveInstallation(setup.document, {
       ...setup.context,
-      variables: { 'errors.reportingUrl': { ...variable, value: 123 } },
+      variables: { 'errors.reportingURL': { ...variable, value: 123 } },
     }).diagnostics,
   ).toContainEqual(expect.objectContaining({ code: 'ERR_VALUE_CONSTRAINT' }))
   expect(
     resolveInstallation(setup.document, {
       ...setup.context,
-      variables: { 'errors.reportingUrl': variable },
-      parameters: { baseUrl: { value: 'https://other.invalid', sensitive: false } },
+      variables: { 'errors.reportingURL': variable },
+      parameters: { baseURL: { value: 'https://other.invalid', sensitive: false } },
     }),
   ).toMatchObject({
     status: 'INVALID',
@@ -183,7 +183,7 @@ test('a variable is authorized, typed, sensitive and never submitted', () => {
     diagnostics: [
       expect.objectContaining({
         code: 'ERR_PARAMETER_NOT_SUBMITTABLE',
-        path: '/spec/parameters/baseUrl',
+        path: '/spec/parameters/baseURL',
         stage: 'parameters',
       }),
     ],
@@ -192,8 +192,8 @@ test('a variable is authorized, typed, sensitive and never submitted', () => {
 test('a variable failure is reported once per parameter, at its from', () => {
   const setup = item(
     { api: component({ url: input() }), web: component({ url: input() }) },
-    { api: { url: { parameter: 'reportingUrl' } }, web: { url: { parameter: 'reportingUrl' } } },
-    { reportingUrl: { from: '${{ variables.errors.reportingUrl }}' } },
+    { api: { url: { parameter: 'reportingURL' } }, web: { url: { parameter: 'reportingURL' } } },
+    { reportingURL: { from: '${{ variables.errors.reportingURL }}' } },
   )
   const variable = {
     value: 'https://synthetic.invalid',
@@ -204,12 +204,12 @@ test('a variable failure is reported once per parameter, at its from', () => {
   }
   const denied = resolveInstallation(setup.document, {
     ...setup.context,
-    variables: { 'errors.reportingUrl': variable },
+    variables: { 'errors.reportingURL': variable },
   })
   expect(denied.diagnostics).toEqual([
     expect.objectContaining({
       code: 'ERR_VARIABLE_NOT_AUTHORIZED',
-      path: '/spec/parameters/reportingUrl/from',
+      path: '/spec/parameters/reportingURL/from',
       phase: 'resolution',
       stage: 'parameters',
     }),
@@ -217,8 +217,8 @@ test('a variable failure is reported once per parameter, at its from', () => {
   expect(resolveInstallation(setup.document, setup.context).deferred).toEqual([
     {
       rule: 'BP-PARAM-009',
-      path: '/spec/parameters/reportingUrl/from',
-      missing: 'variable:errors.reportingUrl',
+      path: '/spec/parameters/reportingURL/from',
+      missing: 'variable:errors.reportingURL',
     },
   ])
 })

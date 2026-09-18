@@ -192,7 +192,7 @@ components:
       uploads: { sizeGiB: 20, storageClass: local-nvme }
     exposure: { web: PUBLIC }
     bindings:
-      databaseUrl: { node: db, output: connectionString }
+      databaseURL: { node: db, output: connectionString }
       siteTitle: { parameter: siteTitle }
     connectionBindings:
       llm: { parameter: llm }
@@ -251,7 +251,7 @@ is no override priority between suppliers.
 bindings:
   region:
     parameter: region
-  databaseUrl:
+  databaseURL:
     node: database
     output: connectionString
   mode:
@@ -334,7 +334,7 @@ platform and sibling nodes
 endpoint of a `SERVICE` requires the component to declare a readiness
 probe ([component §5.4](../../component/v1/spec.md#health)), otherwise
 `ERR_READINESS_REQUIRED`. An output the component derives from a public property
-of an endpoint (`publicHostname`, `publicPort`, `publicAddress` or `publicUrl`,
+of an endpoint (`publicHostname`, `publicPort`, `publicAddress` or `publicURL`,
 [component §5.2](../../component/v1/spec.md#endpoints)) requires that endpoint to
 be `PUBLIC`, otherwise `ERR_ENDPOINT_NOT_PUBLIC`. Each diagnostic anchors at
 `exposure/<endpoint>`, except that `ERR_ENDPOINT_NOT_PUBLIC` for an endpoint left
@@ -603,14 +603,14 @@ Acquisition distinguishes NOT_ACQUIRED (INCOMPLETE), authoritative NOT_FOUND
 (ERR_CONNECTION_INCOMPATIBLE), and SELECTED. The synthetic context represents a
 SELECTED result with persisted: true and a selection containing identity,
 version, installation, parameter, source reference/identity/version, kind
-MANAGED or USER, costOwner, credential identity/rotation/value/permittedBaseUrls,
+MANAGED or USER, costOwner, credential identity/rotation/value/permittedBaseURLs,
 and protocol-keyed views. The source reference MUST equal the connection
 parameter's `from`, including for a complete USER replacement. It identifies the
 acquisition request, not the selected provider. Managed credential identities
-MUST NOT be reused across distinct connection parameters. Each view has baseUrl,
+MUST NOT be reused across distinct connection parameters. Each view has baseURL,
 model and capabilities. Endpoints are absolute HTTPS URLs without user
 information, query or fragment. Every view URL must belong to the credential's
-permittedBaseUrls. Context is trusted acquisition evidence, not an authored
+permittedBaseURLs. Context is trusted acquisition evidence, not an authored
 mechanism for granting permission. Offline evaluation performs no network or
 credential issuance. Malformed evidence is ERR_INVALID_RESOLUTION_CONTEXT.
 

@@ -6,7 +6,7 @@ metadata:
   description: Synthetic conformance fixture blueprint.
 spec:
   parameters:
-    publicUrl:
+    publicURL:
       platformDefault:
         type: SELF_ADDRESS
         source: PUBLIC_URL
@@ -18,5 +18,5 @@ spec:
       compute:
         profile: general.standard.small
       bindings:
-        publicUrl:
-          parameter: publicUrl
+        publicURL:
+          parameter: publicURL
