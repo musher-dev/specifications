@@ -8,8 +8,5 @@
     "COMP-EXT-002",
     "COMP-EXT-003"
   ],
-  "summary": "A component declaring external instead of workload, publishing its own inputs, validates.",
-  "effective": {
-    "/spec/contract/inputs/model/required": false
-  }
+  "summary": "An EXTERNAL component with no workload, forwarding its own inputs as outputs, validates."
 }

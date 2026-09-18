@@ -6,9 +6,9 @@ specVersion: v1
 kind: COMPONENT
 metadata:
   revision: 1
+  description: Static web server.
 spec:
+  type: SERVICE
   workload:
-    type: SERVICE
     source:
-      type: IMAGE
-      ref: !!str nginx:1.29.4-alpine
+      image: !!str nginx:1.29.4-alpine

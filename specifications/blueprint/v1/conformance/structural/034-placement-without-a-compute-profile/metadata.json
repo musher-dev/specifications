@@ -1,0 +1,10 @@
+{
+  "id": "structural-034-placement-without-a-compute-profile",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#components",
+  "requirements": [
+    "BP-NODE-003"
+  ],
+  "summary": "Placement narrows the profile beside it, so compute carrying placement and no profile is rejected."
+}

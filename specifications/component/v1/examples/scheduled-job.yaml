@@ -1,0 +1,30 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Nightly database backup that runs at 03:00 UTC and writes to a persistent volume.
+spec:
+  type: JOB
+  workload:
+    source:
+      image: ghcr.io/musher-dev/backup:1.0.2
+    command:
+      - /bin/backup
+      - --verify
+    schedule:
+      cron: "0 3 * * *"
+    volumes:
+      archive:
+        mountPath: /var/backups
+        minSizeGiB: 20
+  contract:
+    inputs:
+      databaseURL:
+        description: Connection URL of the database to back up.
+        schema:
+          type: string
+        presentationHint: CONNECTION_STRING
+        sensitive: true
+        target:
+          envVarKey: DATABASE_URL
+    outputs: {}

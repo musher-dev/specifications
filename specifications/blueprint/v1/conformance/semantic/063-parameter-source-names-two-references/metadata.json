@@ -1,0 +1,11 @@
+{
+  "id": "semantic-063-parameter-source-names-two-references",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#value-sources",
+  "requirements": [
+    "BP-REF-001"
+  ],
+  "summary": "A parameter whose from concatenates two references is rejected.",
+  "document": "app/blueprint.yaml"
+}

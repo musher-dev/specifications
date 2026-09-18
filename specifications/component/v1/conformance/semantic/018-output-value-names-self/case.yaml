@@ -2,29 +2,28 @@ specVersion: v1
 kind: COMPONENT
 metadata:
   revision: 1
+  description: Synthetic conformance fixture component.
 spec:
+  type: SERVICE
   workload:
-    type: SERVICE
     source:
-      type: IMAGE
-      ref: nginx:1.29.4-alpine
+      image: nginx:1.29.4-alpine
     endpoints:
       web:
-        containerPort: 8080
+        targetPort: 8080
         protocol: HTTP
     health:
       readiness:
-        path: /healthz
-        endpoint: web
-        type: HTTP
+        http:
+          endpoint: web
+          path: /healthz
   contract:
     inputs: {}
     outputs:
-      baseUrl:
+      baseURL:
         description: Address this service answers on.
         schema:
           type: string
         presentationHint: ENDPOINT_URL
-        source:
-          type: TEMPLATE
-          template: https://${{ self.publicHostname.web }}/v1
+        from:
+          template: "https://${{ self.endpoints.web.publicHostname }}/v1"

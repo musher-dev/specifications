@@ -1,0 +1,11 @@
+{
+  "id": "semantic-061-connection-parameter-in-a-binding",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#atomic-connections",
+  "requirements": [
+    "BP-CONNECTION-001"
+  ],
+  "summary": "A connection parameter bound to an ordinary input is rejected: a connection enters only through connectionBindings.",
+  "document": "app/blueprint.yaml"
+}

@@ -7,7 +7,7 @@
     "BP-UI-001",
     "BP-UI-002"
   ],
-  "summary": "A parameter carries the ui block §5.3 defines.",
+  "summary": "A parameter carries the ui block §5.4 defines.",
   "effective": {
     "/spec/parameters/backend/ui/prominence": "PRIMARY"
   }

@@ -16,6 +16,8 @@ import {
   connectionBindingDiagnostics,
   connectionOwnedInputs,
   connectionRequirementDiagnostics,
+  parameterSource,
+  parameterSourceDiagnostics,
 } from './connections.ts'
 import { type Diagnostic, parseDocument, parseDocumentBytes } from './document.ts'
 import { MEDIA_PATH, schemeIsPermitted } from './listing-policy.ts'
@@ -60,7 +62,7 @@ const FLOATING_TAGS = new Set([
   'rolling',
 ])
 export const ADDRESS_PROPERTIES = [
-  'publicUrl',
+  'publicURL',
   'publicHostname',
   'publicAddress',
   'publicPort',
@@ -75,45 +77,83 @@ export function endpointProblem(
 ): string | undefined {
   const declared = at(component, 'spec', 'workload', 'endpoints', endpoint)
   if (!declared) return 'ERR_UNKNOWN_ENDPOINT'
-  if (!ADDRESS_PROPERTIES.includes(property)) return 'ERR_REFERENCE_NOT_IN_SCOPE'
+  // COMP-REF-001: a declared endpoint, then a property §5.2 does not define.
+  if (!ADDRESS_PROPERTIES.includes(property)) return 'ERR_UNKNOWN_ADDRESS_PROPERTY'
+  // COMP-EP-004: a public property exists only in its endpoint's address family.
   const http = ['HTTP', 'HTTPS', 'WS', 'GRPC'].includes(String(at(declared, 'protocol')))
-  if (['publicUrl', 'publicHostname'].includes(property) && !http) return 'ERR_ENDPOINT_NOT_HTTP'
+  if (['publicURL', 'publicHostname'].includes(property) && !http) return 'ERR_ENDPOINT_NOT_HTTP'
   if (['publicAddress', 'publicPort'].includes(property) && http) return 'ERR_ENDPOINT_NOT_L4'
+  // COMP-TYPE-003: a WORKER endpoint is never PUBLIC, so its public address never exists.
+  if (property.startsWith('public') && at(component, 'spec', 'type') === 'WORKER')
+    return 'ERR_ENDPOINT_NOT_EXPOSABLE'
   return undefined
 }
-export function sourceEndpoints(source: Json): { endpoint: string; property: string }[] {
-  const s = record(source)
-  if (s.type === 'ENDPOINT') return [{ endpoint: String(s.endpoint), property: String(s.property) }]
-  if (s.type !== 'TEMPLATE' || typeof s.template !== 'string') return []
+const CRON_FIELDS: readonly (readonly [number, number])[] = [
+  [0, 59],
+  [0, 23],
+  [1, 31],
+  [1, 12],
+  [0, 6],
+]
+/** COMP-JOB-002: every field of a five-field cron expression, against §5.7's grammar. */
+export function cronIsValid(cron: string): boolean {
+  const fields = cron.split(/[ \t]+/)
+  if (fields.length !== CRON_FIELDS.length) return true // the field count is structural
+  const number = (text: string, [min, max]: readonly [number, number]) =>
+    /^[0-9]+$/.test(text) && Number(text) >= min && Number(text) <= max
+  return fields.every((field, i) => {
+    const range = CRON_FIELDS[i]!
+    return field.split(',').every((element) => {
+      const [base = '', step, ...rest] = element.split('/')
+      if (rest.length || (step !== undefined && !(/^[0-9]+$/.test(step) && Number(step) > 0)))
+        return false
+      if (base === '*') return true
+      const [from = '', to, ...more] = base.split('-')
+      if (more.length || !number(from, range)) return false
+      return to === undefined || (number(to, range) && Number(from) <= Number(to))
+    })
+  })
+}
+export function sourceEndpoints(from: Json): { endpoint: string; property: string }[] {
+  const s = record(from)
+  if (typeof s.endpoint === 'string')
+    return [{ endpoint: s.endpoint, property: String(s.property) }]
+  if (typeof s.template !== 'string') return []
+  // Component §6.2: a self path is exactly `endpoints.<endpoint>.<property>`.
   return scanReferences(s.template, ['self']).references.map((ref) => ({
-    endpoint: ref.path[1] ?? '',
-    property: ref.path.length === 2 ? (ref.path[0] ?? '') : '',
+    endpoint: ref.path[0] === 'endpoints' && ref.path.length === 3 ? (ref.path[1] ?? '') : '',
+    property: ref.path[0] === 'endpoints' && ref.path.length === 3 ? (ref.path[2] ?? '') : '',
   }))
 }
 /** A template without references is a statically known logical string. */
-export function constantTemplate(source: Json | undefined): string | undefined {
-  if (at(source, 'type') !== 'TEMPLATE' || typeof at(source, 'template') !== 'string') return
-  const text = String(at(source, 'template'))
-  const scanned = scanReferences(text, ['self'])
-  if (!scanned.failures.length && !scanned.references.length) return text.replaceAll('$${{', '${{')
+export function constantTemplate(from: Json | undefined): string | undefined {
+  const template = at(from, 'template')
+  if (typeof template !== 'string') return
+  const scanned = scanReferences(template, ['self'])
+  if (!scanned.failures.length && !scanned.references.length)
+    return template.replaceAll('$${{', '${{')
 }
 export function componentDiagnostics(document: Json): Diagnostic[] {
   const out: Diagnostic[] = [...connectionRequirementDiagnostics(document)]
   const workload = record(at(document, 'spec', 'workload'))
   const contract = record(at(document, 'spec', 'contract'))
-  const image = record(workload.source)
-  if (image.type === 'IMAGE' && typeof image.ref === 'string' && !image.ref.includes('@sha256:')) {
-    const tag = image.ref.slice(image.ref.lastIndexOf('/') + 1).split(':')[1]
+  const image = at(workload, 'source', 'image')
+  if (typeof image === 'string' && !image.includes('@sha256:')) {
+    const tag = image.slice(image.lastIndexOf('/') + 1).split(':')[1]
     if (tag && FLOATING_TAGS.has(tag.toLowerCase()))
-      issue(out, 'ERR_UNPINNED_IMAGE', '/spec/workload/source/ref')
+      issue(out, 'ERR_UNPINNED_IMAGE', '/spec/workload/source/image')
   }
+  const cron = at(workload, 'schedule', 'cron')
+  if (typeof cron === 'string' && !cronIsValid(cron))
+    issue(out, 'ERR_INVALID_SCHEDULE', '/spec/workload/schedule/cron')
   for (const [name, probe] of Object.entries(record(workload.health))) {
-    const p = record(probe),
-      endpoint = at(workload, 'endpoints', String(p.endpoint))
-    if (!endpoint)
-      issue(out, 'ERR_UNKNOWN_ENDPOINT', `/spec/workload/health/${token(name)}/endpoint`)
+    const http = at(probe, 'http')
+    if (!isObject(http)) continue
+    const endpoint = at(workload, 'endpoints', String(at(http, 'endpoint'))),
+      path = `/spec/workload/health/${token(name)}/http/endpoint`
+    if (!endpoint) issue(out, 'ERR_UNKNOWN_ENDPOINT', path)
     else if (!['HTTP', 'HTTPS'].includes(String(at(endpoint, 'protocol'))))
-      issue(out, 'ERR_ENDPOINT_NOT_HTTP', `/spec/workload/health/${token(name)}/endpoint`)
+      issue(out, 'ERR_ENDPOINT_NOT_HTTP', path)
   }
   const mounts: string[] = []
   for (const [name, volume] of Object.entries(record(workload.volumes))) {
@@ -132,15 +172,9 @@ export function componentDiagnostics(document: Json): Diagnostic[] {
       issue(out, 'ERR_INVALID_MOUNT', `/spec/workload/volumes/${token(name)}/mountPath`)
     mounts.push(path)
   }
-  const env = new Set<string>()
-  for (const [index, value] of (Array.isArray(workload.envVars)
-    ? workload.envVars
-    : []
-  ).entries()) {
-    const key = String(at(value, 'key'))
-    if (env.has(key)) issue(out, 'ERR_DUPLICATE_ENV_KEY', `/spec/workload/envVars/${index}/key`)
-    env.add(key)
-  }
+  // Component §5.3: the envVars keys are unique already (the parser rejects a
+  // repeated mapping key), and every one of them is claimed before any input.
+  const env = new Set<string>(keysOf(workload.envVars))
   for (const direction of ['inputs', 'outputs']) {
     for (const [name, value] of Object.entries(record(contract[direction])).sort(([a], [b]) =>
       Buffer.compare(Buffer.from(a), Buffer.from(b)),
@@ -149,43 +183,37 @@ export function componentDiagnostics(document: Json): Diagnostic[] {
         path = `/spec/contract/${direction}/${token(name)}`
       if (v.schema === undefined || schemaProblem(v.schema))
         issue(out, 'ERR_INVALID_VALUE_SCHEMA', path + '/schema')
+      // Component §6.2: the key present in `from` is the output's origin.
+      const from = record(v.from)
       const literal =
         direction === 'inputs'
           ? v.default
-          : at(v.source, 'type') === 'LITERAL'
-            ? at(v.source, 'value')
-            : constantTemplate(v.source)
+          : Object.hasOwn(from, 'value')
+            ? from.value
+            : constantTemplate(from)
+      const literalPath =
+        direction === 'inputs'
+          ? path + '/default'
+          : path + (Object.hasOwn(from, 'value') ? '/from/value' : '/from/template')
       if (literal !== undefined && v.schema !== undefined && !valueFits(v.schema, literal))
-        issue(
-          out,
-          'ERR_VALUE_CONSTRAINT',
-          direction === 'inputs'
-            ? path + '/default'
-            : path + (at(v.source, 'type') === 'TEMPLATE' ? '/source/template' : '/source/value'),
-        )
+        issue(out, 'ERR_VALUE_CONSTRAINT', literalPath)
       if (literal !== undefined && v.sensitive === true)
-        issue(
-          out,
-          'ERR_SECRET_LITERAL',
-          direction === 'inputs'
-            ? path + '/default'
-            : path + (at(v.source, 'type') === 'TEMPLATE' ? '/source/template' : '/source/value'),
-        )
+        issue(out, 'ERR_SECRET_LITERAL', literalPath)
       const target = at(v.target, 'envVarKey')
       if (typeof target === 'string') {
         if (env.has(target)) issue(out, 'ERR_CONFLICTING_ENV_KEY', path + '/target/envVarKey')
         env.add(target)
       }
       if (direction !== 'outputs') continue
-      const source = record(v.source)
-      if (source.type === 'INPUT') {
-        const input = at(contract, 'inputs', String(source.input))
-        if (!input) issue(out, 'ERR_UNKNOWN_INPUT_REFERENCE', path + '/source/input')
+      if (typeof from.input === 'string') {
+        const input = at(contract, 'inputs', from.input)
+        if (!input) issue(out, 'ERR_UNKNOWN_INPUT_REFERENCE', path + '/from/input')
         else if (!compatible(record(input), v))
-          issue(out, 'ERR_VALUE_CONSTRAINT', path + '/source/input')
+          issue(out, 'ERR_VALUE_CONSTRAINT', path + '/from/input')
       }
-      if (source.type === 'TEMPLATE' && typeof source.template === 'string') {
-        const scanned = scanReferences(source.template, ['self'])
+      const template = typeof from.template === 'string' ? from.template : undefined
+      if (template !== undefined) {
+        const scanned = scanReferences(template, ['self'])
         for (const failure of scanned.failures)
           issue(
             out,
@@ -194,17 +222,21 @@ export function componentDiagnostics(document: Json): Diagnostic[] {
               : failure.kind === 'unknown-namespace'
                 ? 'ERR_UNKNOWN_REFERENCE_NAMESPACE'
                 : 'ERR_REFERENCE_NOT_IN_SCOPE',
-            path + '/source/template',
+            path + '/from/template',
           )
       }
-      for (const ref of sourceEndpoints(source)) {
+      // COMP-REF-001: a `self` path of any shape but `endpoints.<endpoint>.<property>`
+      // names no endpoint explicitly, so `sourceEndpoints` gives it none and it is
+      // ERR_UNKNOWN_ENDPOINT, as the withdrawn `self.<property>.<endpoint>` is.
+      for (const ref of sourceEndpoints(from)) {
         const problem = endpointProblem(document, ref.endpoint, ref.property)
-        if (problem) issue(out, problem, path + '/source')
+        if (problem)
+          issue(out, problem, path + (template === undefined ? '/from' : '/from/template'))
       }
-      if (source.type === 'TEMPLATE' && at(v.schema, 'type') !== 'string')
+      if (template !== undefined && at(v.schema, 'type') !== 'string')
         issue(out, 'ERR_VALUE_CONSTRAINT', path + '/schema')
-      if (source.type === 'ENDPOINT') {
-        const type = String(source.property).endsWith('Port') ? 'integer' : 'string'
+      if (typeof from.endpoint === 'string') {
+        const type = String(from.property).endsWith('Port') ? 'integer' : 'string'
         if (
           at(v.schema, 'type') !== type &&
           !(type === 'integer' && at(v.schema, 'type') === 'number')
@@ -602,9 +634,13 @@ export function semanticReport(
       component = resolved.get(name)
     const inputs = record(at(component, 'spec', 'contract', 'inputs')),
       outputs = record(at(component, 'spec', 'contract', 'outputs'))
-    const workload = at(component, 'spec', 'workload')
-    if (component && (workload === undefined) !== (n.size === null))
-      issue(out, 'ERR_CONFLICTING_NODE_COMPUTE', base + '/size')
+    const workload = at(component, 'spec', 'workload'),
+      category = at(component, 'spec', 'type')
+    // BP-NODE-001..002: compute agrees with whether the component runs.
+    if (component && category === 'EXTERNAL' && n.compute !== undefined)
+      issue(out, 'ERR_CONFLICTING_NODE_COMPUTE', base + '/compute')
+    if (component && category !== 'EXTERNAL' && n.compute === undefined)
+      issue(out, 'ERR_CONFLICTING_NODE_COMPUTE', base)
     if (component) {
       const declared = record(at(workload, 'volumes')),
         allocated = record(n.volumes)
@@ -612,27 +648,29 @@ export function semanticReport(
         if (
           !declared[volume] ||
           !allocated[volume] ||
-          Number(at(allocated[volume], 'sizeGiB')) < Number(at(declared[volume], 'minimumSizeGiB'))
+          Number(at(allocated[volume], 'sizeGiB')) < Number(at(declared[volume], 'minSizeGiB'))
         )
           issue(out, 'ERR_INVALID_VOLUME_ALLOCATION', base + '/volumes/' + token(volume))
       }
       for (const [endpoint, exposure] of Object.entries(record(n.exposure))) {
         const e = at(workload, 'endpoints', endpoint)
         if (!e) issue(out, 'ERR_UNKNOWN_ENDPOINT', base + '/exposure/' + token(endpoint))
+        else if (exposure === 'PUBLIC' && category === 'WORKER')
+          issue(out, 'ERR_ENDPOINT_NOT_EXPOSABLE', base + '/exposure/' + token(endpoint))
         else if (
           exposure === 'PUBLIC' &&
           ['HTTP', 'HTTPS', 'WS', 'GRPC'].includes(String(at(e, 'protocol'))) &&
-          !at(workload, 'health', 'readiness')
+          !at(workload, 'health', 'readiness', 'http')
         )
           issue(out, 'ERR_READINESS_REQUIRED', base + '/exposure/' + token(endpoint))
       }
       for (const [output, v] of Object.entries(outputs)) {
-        const source = record(at(v, 'source'))
+        const from = record(at(v, 'from'))
         dependencies.set(
           `${name}:out:${output}`,
-          source.type === 'INPUT' ? [`${name}:in:${source.input}`] : [],
+          typeof from.input === 'string' ? [`${name}:in:${from.input}`] : [],
         )
-        for (const ref of sourceEndpoints(source))
+        for (const ref of sourceEndpoints(from))
           if (ref.property.startsWith('public') && at(n.exposure, ref.endpoint) !== 'PUBLIC')
             out.push({
               code: 'ERR_ENDPOINT_NOT_PUBLIC',
@@ -675,12 +713,17 @@ export function semanticReport(
       if (component && !inputs[input]) issue(out, 'ERR_UNKNOWN_INPUT', path)
       dependencies.set(
         `${name}:in:${input}`,
-        s.type === 'OUTPUT' ? [`${s.node}:out:${s.output}`] : [],
+        typeof s.node === 'string' ? [`${s.node}:out:${s.output}`] : [],
       )
-      if (s.type === 'PARAMETER') {
-        const p = parameters[String(s.parameter)]
+      if (typeof s.parameter === 'string') {
+        const p = parameters[s.parameter]
         if (!p) {
           issue(out, 'ERR_UNKNOWN_PARAMETER', path + '/parameter')
+          continue
+        }
+        // BP-CONNECTION-001: a connection enters only through connectionBindings.
+        if (parameterSource(p)?.namespace === 'connections') {
+          issue(out, 'ERR_INVALID_CONNECTION_BINDING', path + '/parameter')
           continue
         }
         if (inputs[input]) {
@@ -705,32 +748,24 @@ export function semanticReport(
               '/spec/parameters/' + token(String(s.parameter)) + '/default',
             )
         }
-      } else if (s.type === 'OUTPUT') {
-        if (!nodes[String(s.node)]) issue(out, 'ERR_UNKNOWN_NODE', path + '/node')
-        const producer = resolved.get(String(s.node)),
+      } else if (typeof s.node === 'string') {
+        if (!nodes[s.node]) issue(out, 'ERR_UNKNOWN_NODE', path + '/node')
+        const producer = resolved.get(s.node),
           output = at(producer, 'spec', 'contract', 'outputs', String(s.output))
         if (producer && !output) issue(out, 'ERR_UNKNOWN_OUTPUT', path + '/output')
         if (output && inputs[input] && !compatible(record(output), consumer))
           issue(out, 'ERR_INCOMPATIBLE_TYPE', path + '/output')
         const literal =
-          at(output, 'source', 'type') === 'LITERAL'
-            ? at(output, 'source', 'value')
-            : constantTemplate(at(output, 'source'))
+          at(output, 'from', 'value') !== undefined
+            ? at(output, 'from', 'value')
+            : constantTemplate(at(output, 'from'))
         if (
           literal !== undefined &&
           consumer.schema !== undefined &&
           !valueFits(consumer.schema, literal)
         )
           issue(out, 'ERR_VALUE_CONSTRAINT', path)
-      } else if (s.type === 'CONFIG_REF') {
-        const scan = scanReferences(String(s.source), ['config'])
-        if (
-          scan.failures.length ||
-          scan.references.length !== 1 ||
-          scan.references[0]?.raw !== s.source
-        )
-          issue(out, 'ERR_INVALID_CONFIG_REFERENCE', path + '/source')
-      } else if (s.type === 'LITERAL' && inputs[input]) {
+      } else if (Object.hasOwn(s, 'value') && inputs[input]) {
         if (
           consumer.schema !== undefined &&
           s.value !== undefined &&
@@ -745,11 +780,13 @@ export function semanticReport(
     const receivers = consumers.get(name) ?? [],
       path = '/spec/parameters/' + token(name)
     const used = Object.values(nodes).some((n) =>
-      Object.values(record(at(n, 'bindings'))).some(
-        (b) => at(b, 'type') === 'PARAMETER' && at(b, 'parameter') === name,
-      ),
+      [
+        ...Object.values(record(at(n, 'bindings'))),
+        ...Object.values(record(at(n, 'connectionBindings'))),
+      ].some((b) => at(b, 'parameter') === name),
     )
     if (!used) issue(out, 'ERR_UNBOUND_PARAMETER', path)
+    out.push(...parameterSourceDiagnostics(name, p))
     if (
       receivers.length > 1 &&
       receivers.some(
@@ -810,13 +847,13 @@ export function semanticReport(
       at(resolved.get(node), 'spec', 'contract', direction === 'in' ? 'inputs' : 'outputs', name),
     )
     const binding =
-      direction === 'in' ? record(at(nodes[node], 'bindings', name)) : record(definition.source)
+      direction === 'in' ? record(at(nodes[node], 'bindings', name)) : record(definition.from)
     let value: Json | undefined
-    if (binding.type === 'LITERAL') value = binding.value
-    else if (binding.type === 'TEMPLATE') value = constantTemplate(binding)
-    else if (binding.type === 'PARAMETER')
-      value = at(parameters, String(binding.parameter), 'default')
-    else if (!binding.type && direction === 'in') value = definition.default
+    if (Object.hasOwn(binding, 'value')) value = binding.value
+    else if (typeof binding.template === 'string') value = constantTemplate(binding)
+    else if (typeof binding.parameter === 'string')
+      value = at(parameters, binding.parameter, 'default')
+    else if (!Object.keys(binding).length && direction === 'in') value = definition.default
     else {
       const dependency = dependencies.get(key)?.[0]
       if (dependency) value = known.get(dependency)
@@ -848,7 +885,10 @@ export function semanticReport(
             }
           : {}),
       })
-    if (definition.sensitive === true && (binding.type === 'OUTPUT' || binding.type === 'INPUT'))
+    if (
+      definition.sensitive === true &&
+      (typeof binding.node === 'string' || typeof binding.input === 'string')
+    )
       out.push({
         code: 'ERR_SECRET_LITERAL',
         path,

@@ -1,0 +1,26 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: SERVICE
+  workload:
+    source:
+      image: n8nio/n8n:2.31.6
+    endpoints:
+      web:
+        targetPort: 5678
+        protocol: HTTP
+  contract:
+    inputs:
+      timezone:
+        description: Time zone the scheduler evaluates times in.
+        schema:
+          type: string
+        required: false
+        target:
+          envVarKey: GENERIC_TIMEZONE
+        default: UTC
+        presentationHint: TIMEZONE
+    outputs: {}

@@ -1,0 +1,10 @@
+{
+  "id": "structural-084-schedule-on-a-worker",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#workload",
+  "requirements": [
+    "COMP-TYPE-005"
+  ],
+  "summary": "A schedule on a WORKER is rejected; only a JOB recurs."
+}

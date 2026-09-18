@@ -1,0 +1,12 @@
+specVersion: v1
+kind: BLUEPRINT
+metadata:
+  slug: app
+  revision: 1
+  description: "Synthetic conformance fixture blueprint whose description is exactly two hundred and eighty characters long, the limit a listing summary shares, so the bound is inclusive and a validator counting it must accept this one. xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx."
+spec:
+  components:
+    web:
+      componentRef: ./components/web.yaml
+      compute:
+        profile: general.standard.small

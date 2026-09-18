@@ -1,0 +1,10 @@
+{
+  "id": "structural-062-component-without-a-type",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#workload",
+  "requirements": [
+    "COMP-TYPE-001"
+  ],
+  "summary": "A component declaring no spec.type is rejected; nothing says what it is."
+}

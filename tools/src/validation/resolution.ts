@@ -15,7 +15,7 @@ import {
 import { scanReferences } from '../lib/references.ts'
 import { familyBundle } from '../schema/bundle.ts'
 import { strictAjv } from '../schema/lint.ts'
-import { type ConnectionsContext, resolveConnections } from './connections.ts'
+import { type ConnectionsContext, parameterSource, resolveConnections } from './connections.ts'
 import { type Diagnostic, type Phase, parseDocumentBytes } from './document.ts'
 import { at, record, type SemanticContext, semanticReport, token } from './semantic.ts'
 import { compileFamily } from './validator.ts'
@@ -52,8 +52,11 @@ export interface EndpointAllocation {
 export interface InstallationContext extends SemanticContext {
   readonly connections?: ConnectionsContext['connections']
   readonly parameters?: Readonly<Record<string, ResolvedValue>>
-  /** Exact dotted config paths, already authorized by the acquisition boundary. */
-  readonly configuration?: Readonly<
+  /**
+   * Organization variables keyed by exact dotted path, as the acquisition
+   * boundary read them for the environment the installation deploys into.
+   */
+  readonly variables?: Readonly<
     Record<string, ResolvedValue & { identity: string; version: string; authorized: boolean }>
   >
   readonly allocations?: Readonly<Record<string, Readonly<Record<string, EndpointAllocation>>>>
@@ -124,7 +127,7 @@ export function resolveInstallation(
   for (const [node, n] of Object.entries(nodes))
     for (const [name, b] of Object.entries(record(at(n, 'bindings'))))
       if (
-        at(b, 'type') === 'PARAMETER' &&
+        typeof at(b, 'parameter') === 'string' &&
         at(report.components.get(node), 'spec', 'contract', 'inputs', name, 'sensitive') === true
       )
         parameterSensitivity.add(String(at(b, 'parameter')))
@@ -140,6 +143,13 @@ export function resolveInstallation(
   for (const name of Object.keys(context.parameters ?? {}))
     if (!Object.hasOwn(parameters, name))
       fail('ERR_UNKNOWN_PARAMETER', '/spec/parameters', 'parameters')
+    else if (
+      at(parameters[name], 'generator') !== undefined ||
+      at(parameters[name], 'from') !== undefined
+    )
+      // BP-PARAM-004 and BP-PARAM-009: generated values, variables and connections are
+      // never submitted. A connection is replaced whole through acquisition instead.
+      fail('ERR_PARAMETER_NOT_SUBMITTABLE', '/spec/parameters/' + token(name), 'parameters')
   if (context.allocations !== undefined && !isObject(context.allocations as unknown as Json)) {
     fail('ERR_INVALID_RESOLUTION_CONTEXT', '/spec/components', 'allocation')
     return result()
@@ -196,6 +206,30 @@ export function resolveInstallation(
     }
   }
   if (diagnostics.length || deferred.length) return result()
+  // BP-PARAM-009: a variable is acquired once per parameter, however many
+  // bindings name it, and its failures anchor at that parameter's `from`.
+  const variables = new Map<string, ResolvedValue>()
+  for (const [name, p] of Object.entries(parameters)) {
+    const source = parameterSource(p)
+    // A submitted value was already rejected with ERR_PARAMETER_NOT_SUBMITTABLE.
+    if (source?.namespace !== 'variables' || Object.hasOwn(context.parameters ?? {}, name)) continue
+    const path = '/spec/parameters/' + token(name) + '/from',
+      variable =
+        context.variables && Object.hasOwn(context.variables, source.key)
+          ? context.variables[source.key]
+          : undefined
+    if (!variable) deferred.push({ rule: 'BP-PARAM-009', path, missing: `variable:${source.key}` })
+    else if (variable.authorized !== true) fail('ERR_VARIABLE_NOT_AUTHORIZED', path, 'parameters')
+    else if (!variable.identity || !variable.version)
+      fail('ERR_INVALID_RESOLUTION_CONTEXT', path, 'parameters')
+    else
+      variables.set(name, {
+        value: variable.value,
+        sensitive: variable.sensitive,
+        identity: variable.identity,
+        version: variable.version,
+      })
+  }
   function endpoint(
     node: string,
     name: string,
@@ -209,7 +243,7 @@ export function resolveInstallation(
       'workload',
       'endpoints',
       name,
-      'containerPort',
+      'targetPort',
     )
     let value: Json | undefined
     if (property === 'privatePort') value = port
@@ -220,7 +254,7 @@ export function resolveInstallation(
     else if (property === 'publicPort') value = allocation?.public?.port
     else if (property === 'publicAddress' && allocation?.public?.port)
       value = `${addressHost(allocation.public.hostname)}:${allocation.public.port}`
-    else if (property === 'publicUrl' && allocation?.public?.scheme) {
+    else if (property === 'publicURL' && allocation?.public?.scheme) {
       const p = allocation.public
       value = `${p.scheme}://${addressHost(p.hostname)}${p.port === undefined ? '' : ':' + p.port}${(p.path ?? '').replace(/\/+$/, '')}`
     }
@@ -241,16 +275,16 @@ export function resolveInstallation(
     }
     active.add(id)
     const definition = record(at(report.components.get(node), 'spec', 'contract', 'outputs', name)),
-      s = record(definition.source)
+      s = record(definition.from)
     let value: ResolvedValue | undefined
-    if (s.type === 'LITERAL') value = { value: s.value!, sensitive: false }
-    if (s.type === 'INPUT') {
+    if (Object.hasOwn(s, 'value')) value = { value: s.value!, sensitive: false }
+    if (typeof s.input === 'string') {
       value = input(node, String(s.input))
       if (!value && !diagnostics.length && !deferred.length)
         fail('ERR_UNSATISFIED_REQUIRED_INPUT', path)
     }
-    if (s.type === 'ENDPOINT') value = endpoint(node, String(s.endpoint), String(s.property), path)
-    if (s.type === 'TEMPLATE') {
+    if (typeof s.endpoint === 'string') value = endpoint(node, s.endpoint, String(s.property), path)
+    if (typeof s.template === 'string') {
       const text = String(s.template),
         scan = scanReferences(text, ['self'])
       let atIndex = 0,
@@ -258,7 +292,8 @@ export function resolveInstallation(
         complete = true
       for (const ref of scan.references) {
         rendered += text.slice(atIndex, ref.offset).replaceAll('$${{', '${{')
-        const part = endpoint(node, ref.path[1]!, ref.path[0]!, path)
+        // Component §6.2: a self path is `endpoints.<endpoint>.<property>`.
+        const part = endpoint(node, ref.path[1]!, ref.path[2]!, path)
         if (!part) {
           complete = false
           break
@@ -314,55 +349,36 @@ export function resolveInstallation(
     let value: ResolvedValue | undefined = connectionResult.inputs[id]
     if (value) {
       /* The grouped connection owns this input. */
-    } else if (!s.type) {
+    } else if (!Object.keys(s).length) {
       if (Object.hasOwn(definition, 'default'))
         value = { value: definition.default!, sensitive: false }
       else if (definition.required !== false) fail('ERR_UNSATISFIED_REQUIRED_INPUT', path)
-    } else if (s.type === 'LITERAL') value = { value: s.value!, sensitive: false }
-    else if (s.type === 'OUTPUT') value = output(String(s.node), String(s.output))
-    else if (s.type === 'PARAMETER') {
-      const key = String(s.parameter),
-        p = record(parameters[key])
-      if (p.generator) {
-        if (
-          (context.parameters && Object.hasOwn(context.parameters, key)
-            ? context.parameters[key]
-            : undefined) !== undefined
-        )
-          fail('ERR_GENERATED_OVERRIDE', path)
-        else {
-          value =
-            context.credentials && Object.hasOwn(context.credentials, key)
-              ? context.credentials[key]
-              : undefined
-          if (value) value = { ...value, sensitive: true }
-          else missing(path, `credential:${key}`)
-        }
-      } else {
-        value =
+    } else if (Object.hasOwn(s, 'value')) value = { value: s.value!, sensitive: false }
+    else if (typeof s.node === 'string') value = output(s.node, String(s.output))
+    else if (typeof s.parameter === 'string') {
+      const key = s.parameter,
+        p = record(parameters[key]),
+        source = parameterSource(p),
+        submitted =
           context.parameters && Object.hasOwn(context.parameters, key)
             ? context.parameters[key]
             : undefined
+      if (p.generator) {
+        // A submitted value was already rejected with ERR_PARAMETER_NOT_SUBMITTABLE.
+        value =
+          context.credentials && Object.hasOwn(context.credentials, key)
+            ? context.credentials[key]
+            : undefined
+        if (value) value = { ...value, sensitive: true }
+        else if (submitted === undefined) missing(path, `credential:${key}`)
+      } else if (source?.namespace === 'variables') {
+        // Reported once for the parameter above; a binding only takes the value.
+        value = variables.get(key)
+      } else {
+        value = submitted
         if (!value && Object.hasOwn(p, 'default')) value = { value: p.default!, sensitive: false }
         if (!value) fail('ERR_MISSING_PARAMETER_VALUE', path)
       }
-    } else if (s.type === 'CONFIG_REF') {
-      const ref = scanReferences(String(s.source), ['config']).references[0]
-      const key = ref?.path.join('.') ?? '',
-        config =
-          context.configuration && Object.hasOwn(context.configuration, key)
-            ? context.configuration[key]
-            : undefined
-      if (!config) missing(path, `config:${key}`)
-      else if (config.authorized !== true) fail('ERR_CONFIG_NOT_AUTHORIZED', path)
-      else if (!config.identity || !config.version) fail('ERR_INVALID_RESOLUTION_CONTEXT', path)
-      else
-        value = {
-          value: config.value,
-          sensitive: config.sensitive,
-          identity: config.identity,
-          version: config.version,
-        }
     }
     if (value && (typeof value.sensitive !== 'boolean' || !boundedValue(value.value))) {
       fail('ERR_INVALID_RESOLUTION_CONTEXT', path)
@@ -374,7 +390,7 @@ export function resolveInstallation(
         sensitive:
           value.sensitive ||
           definition.sensitive === true ||
-          (s.type === 'PARAMETER' && parameterSensitivity.has(String(s.parameter))),
+          (typeof s.parameter === 'string' && parameterSensitivity.has(s.parameter)),
       }
       if (!valueFits(definition.schema!, value.value)) fail('ERR_VALUE_CONSTRAINT', path)
       else inputs[id] = value
@@ -418,13 +434,9 @@ export function resolveInstallation(
         }
       }
     }
-    for (const constant of Array.isArray(
-      at(report.components.get(node), 'spec', 'workload', 'envVars'),
-    )
-      ? (at(report.components.get(node), 'spec', 'workload', 'envVars') as Json[])
-      : []) {
-      const key = String(at(constant, 'key')),
-        value = at(constant, 'value', 'value')!
+    for (const [key, value] of Object.entries(
+      record(at(report.components.get(node), 'spec', 'workload', 'envVars')),
+    )) {
       try {
         environment[node]![key] = { value: encodeEnvironment(value), sensitive: false }
       } catch {
@@ -484,7 +496,7 @@ export interface ResolutionRecord {
       }
     >
   >
-  readonly configuration: Readonly<Record<string, { identity: string; version: string }>>
+  readonly variables: Readonly<Record<string, { identity: string; version: string }>>
 }
 /** Private, immutable platform state. Version changes whenever any selected fact changes. */
 export interface InstallationSnapshot {
@@ -492,7 +504,7 @@ export interface InstallationSnapshot {
   readonly identity: string
   readonly version: string
   readonly parameters: NonNullable<InstallationContext['parameters']>
-  readonly configuration: NonNullable<InstallationContext['configuration']>
+  readonly variables: NonNullable<InstallationContext['variables']>
   readonly credentials: Readonly<
     Record<string, ResolvedValue & { identity: string; rotation: number }>
   >
@@ -509,7 +521,7 @@ export function resolutionRecord(
   blueprint: Uint8Array,
   specifications: Record<string, string>,
   components: ResolutionRecord['components'],
-  configuration: ResolutionRecord['configuration'],
+  variables: ResolutionRecord['variables'],
   credentials: ResolutionRecord['credentials'],
   context: RecordContext,
 ): ResolutionRecord {
@@ -524,7 +536,7 @@ export function resolutionRecord(
     !snapshot.identity ||
     !snapshot.version ||
     !snapshot.parameters ||
-    !snapshot.configuration ||
+    !snapshot.variables ||
     !snapshot.credentials ||
     !snapshot.allocations
   )
@@ -535,13 +547,18 @@ export function resolutionRecord(
   const equal = (a: unknown, b: unknown) => canonicalJson(a as Json) === canonicalJson(b as Json)
   const sameKeys = (a: object, b: object) => equal(Object.keys(a).sort(), Object.keys(b).sort())
   if (!sameKeys(nodes, components)) throw new Error('component node set mismatch')
-  const expectedConfig = new Set<string>(),
+  const expectedVariables = new Set<string>(),
     expectedCredentials = new Set<string>()
   for (const [node, authored] of Object.entries(nodes)) {
     const c = components[node]!,
       contract = report.components.get(node)!
     const source = record(at(contract, 'spec', 'workload', 'source'))
-    const kind = at(contract, 'spec', 'workload') === undefined ? 'EXTERNAL' : source.type
+    const kind =
+      at(contract, 'spec', 'type') === 'EXTERNAL'
+        ? 'EXTERNAL'
+        : typeof source.image === 'string'
+          ? 'IMAGE'
+          : 'GIT'
     if (
       c.identity !== at(authored, 'componentRef') ||
       c.revision !== at(contract, 'metadata', 'revision') ||
@@ -549,20 +566,20 @@ export function resolutionRecord(
       c.source !== kind ||
       !equal(c.volumes, at(authored, 'volumes') ?? {}) ||
       !equal(c.exposure, at(authored, 'exposure') ?? {}) ||
-      (kind !== 'EXTERNAL' && c.compute?.identity !== at(authored, 'size'))
+      (kind !== 'EXTERNAL' && c.compute?.identity !== at(authored, 'compute', 'profile'))
     )
       throw new Error('component record disagrees with blueprint')
     if (
       kind === 'IMAGE' &&
-      typeof source.ref === 'string' &&
-      source.ref.includes('@sha256:') &&
-      c.imageDigest !== source.ref.slice(source.ref.indexOf('@') + 1)
+      typeof source.image === 'string' &&
+      source.image.includes('@sha256:') &&
+      c.imageDigest !== source.image.slice(source.image.indexOf('@') + 1)
     )
       throw new Error('image digest mismatch')
     if (
       kind === 'GIT' &&
-      at(source, 'ref', 'type') === 'COMMIT' &&
-      c.gitCommit !== at(source, 'ref', 'name')
+      typeof at(source, 'git', 'ref', 'commit') === 'string' &&
+      c.gitCommit !== at(source, 'git', 'ref', 'commit')
     )
       throw new Error('git commit mismatch')
     for (const endpoint of Object.keys(record(at(contract, 'spec', 'workload', 'endpoints'))))
@@ -572,30 +589,27 @@ export function resolutionRecord(
       )
         throw new Error('missing endpoint allocation snapshot')
     for (const binding of Object.values(record(at(authored, 'bindings')))) {
-      if (at(binding, 'type') === 'CONFIG_REF')
-        expectedConfig.add(
-          scanReferences(String(at(binding, 'source')), ['config']).references[0]!.path.join('.'),
-        )
-      if (
-        at(binding, 'type') === 'PARAMETER' &&
-        at(parsed.value, 'spec', 'parameters', String(at(binding, 'parameter')), 'generator')
-      )
-        expectedCredentials.add(String(at(binding, 'parameter')))
+      const name = at(binding, 'parameter')
+      if (typeof name !== 'string') continue
+      const parameter = at(parsed.value, 'spec', 'parameters', name),
+        source = parameterSource(parameter)
+      if (source?.namespace === 'variables') expectedVariables.add(source.key)
+      if (at(parameter, 'generator') !== undefined) expectedCredentials.add(name)
     }
   }
   if (
-    !equal([...expectedConfig].sort(), Object.keys(configuration).sort()) ||
-    !equal([...expectedConfig].sort(), Object.keys(snapshot.configuration).sort()) ||
+    !equal([...expectedVariables].sort(), Object.keys(variables).sort()) ||
+    !equal([...expectedVariables].sort(), Object.keys(snapshot.variables).sort()) ||
     !equal([...expectedCredentials].sort(), Object.keys(credentials).sort()) ||
     !equal([...expectedCredentials].sort(), Object.keys(snapshot.credentials).sort())
   )
     throw new Error('selected source set mismatch')
-  for (const [key, selected] of Object.entries(configuration))
+  for (const [key, selected] of Object.entries(variables))
     if (
-      selected.identity !== snapshot.configuration[key]?.identity ||
-      selected.version !== snapshot.configuration[key]?.version
+      selected.identity !== snapshot.variables[key]?.identity ||
+      selected.version !== snapshot.variables[key]?.version
     )
-      throw new Error('configuration snapshot mismatch')
+      throw new Error('variable snapshot mismatch')
   for (const [key, selected] of Object.entries(credentials))
     if (
       selected.identity !== snapshot.credentials[key]?.identity ||
@@ -640,7 +654,7 @@ export function resolutionRecord(
       connections: snapshot.connections,
     }).status !== 'VALID'
   )
-    throw new Error('snapshot cannot reproduce configuration')
+    throw new Error('snapshot cannot reproduce the resolution')
   const digest = /^[0-9a-f]{64}$/
   for (const c of Object.values(components)) {
     if (
@@ -660,8 +674,8 @@ export function resolutionRecord(
     Object.values(specifications).some((v) => !/^\d+\.\d+\.\d+$/.test(v))
   )
     throw new Error('unresolved specification')
-  if (Object.values(configuration).some((v) => !v.identity || !v.version))
-    throw new Error('unresolved configuration')
+  if (Object.values(variables).some((v) => !v.identity || !v.version))
+    throw new Error('unresolved variable')
   // Explicit projection prevents unknown context fields (including plaintext) escaping.
   const projected = Object.fromEntries(
     Object.entries(components).map(([name, c]) => [
@@ -687,8 +701,8 @@ export function resolutionRecord(
     blueprintDigest: createHash('sha256').update(blueprint).digest('hex'),
     specifications: { ...specifications },
     components: projected,
-    configuration: Object.fromEntries(
-      Object.entries(configuration).map(([name, c]) => [
+    variables: Object.fromEntries(
+      Object.entries(variables).map(([name, c]) => [
         name,
         { identity: c.identity, version: c.version },
       ]),

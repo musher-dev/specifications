@@ -1,0 +1,13 @@
+{
+  "id": "structural-040-integer-and-number-schemas",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v1/spec.md#value-schema",
+  "requirements": [
+    "COMP-VAL-001"
+  ],
+  "summary": "An integer input bounded by minimum and maximum, and a number output with a literal value, validate.",
+  "effective": {
+    "/spec/contract/inputs/port/sensitive": false
+  }
+}

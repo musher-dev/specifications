@@ -3,5 +3,8 @@
   "phase": "structural",
   "expected": "pass",
   "clause": "specifications/component/v1/spec.md#source",
+  "requirements": [
+    "COMP-SRC-002"
+  ],
   "summary": "A digest pin validates, including behind a registry host carrying a port."
 }

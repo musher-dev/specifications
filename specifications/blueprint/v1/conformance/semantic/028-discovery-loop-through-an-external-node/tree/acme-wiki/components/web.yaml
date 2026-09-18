@@ -1,0 +1,37 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: SERVICE
+  workload:
+    source:
+      image: ghcr.io/example/app:1.4.2
+    endpoints:
+      web:
+        targetPort: 8080
+        protocol: HTTP
+    health:
+      readiness:
+        http:
+          endpoint: web
+          path: /healthz
+  contract:
+    inputs:
+      llmBaseURL:
+        schema:
+          type: string
+        target:
+          envVarKey: OPENAI_API_BASE_URL
+        description: Base URL of the chat-completions service the application calls.
+        presentationHint: ENDPOINT_URL
+    outputs:
+      publicURL:
+        schema:
+          type: string
+        description: Public URL the application answers at.
+        presentationHint: ENDPOINT_URL
+        from:
+          endpoint: web
+          property: publicURL

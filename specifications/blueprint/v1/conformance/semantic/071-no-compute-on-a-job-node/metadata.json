@@ -1,0 +1,11 @@
+{
+  "id": "semantic-071-no-compute-on-a-job-node",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#node-compute",
+  "requirements": [
+    "BP-NODE-001"
+  ],
+  "summary": "A node deploying a JOB without compute is rejected at the node.",
+  "document": "app/blueprint.yaml"
+}

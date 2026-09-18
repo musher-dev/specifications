@@ -6,6 +6,6 @@
   "requirements": [
     "BP-CONNECTION-001"
   ],
-  "summary": "connection missing binding",
+  "summary": "A connection requirement with no connection binding is rejected.",
   "document": "connection-app/blueprint.yaml"
 }

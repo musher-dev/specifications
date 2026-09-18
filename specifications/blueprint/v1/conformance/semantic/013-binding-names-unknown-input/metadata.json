@@ -1,0 +1,11 @@
+{
+  "id": "semantic-013-binding-names-unknown-input",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#recipients",
+  "requirements": [
+    "BP-PARAM-007"
+  ],
+  "summary": "A binding whose key names no input of the consuming component is rejected.",
+  "document": "acme-wiki/blueprint.yaml"
+}

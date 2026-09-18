@@ -2,46 +2,33 @@ specVersion: v1
 kind: COMPONENT
 metadata:
   revision: 1
+  description: Synthetic conformance fixture component.
 spec:
-  external: {}
+  type: EXTERNAL
   contract:
     inputs:
-      baseUrl:
-        description: Base URL of the service this node addresses.
+      host:
+        description: Hostname of the managed database server.
         schema:
           type: string
-        presentationHint: ENDPOINT_URL
-      apiKey:
-        description: Bearer credential presented to the service above.
+        presentationHint: HOSTNAME
+      password:
+        description: Password of the application role.
         schema:
           type: string
         sensitive: true
-      model:
-        description: Name the service uses to select what answers.
-        schema:
-          type: string
-        required: false
     outputs:
-      baseUrl:
-        description: Base URL of the addressed service, for a consumer to call.
+      host:
+        description: Hostname of the managed database server, for a client to connect to.
         schema:
           type: string
-        presentationHint: ENDPOINT_URL
-        source:
-          type: INPUT
-          input: baseUrl
-      apiKey:
-        description: Bearer credential for the addressed service.
+        presentationHint: HOSTNAME
+        from:
+          input: host
+      password:
+        description: Password of the application role.
         schema:
           type: string
         sensitive: true
-        source:
-          type: INPUT
-          input: apiKey
-      model:
-        description: Model name the addressed service answers with.
-        schema:
-          type: string
-        source:
-          type: INPUT
-          input: model
+        from:
+          input: password

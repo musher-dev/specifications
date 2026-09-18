@@ -8,13 +8,19 @@ specVersion: v1
 kind: COMPONENT
 metadata:
   revision: 1
+  description: Static web server.
 spec:
+  type: SERVICE
   workload:
-    type: SERVICE
     source:
-      type: IMAGE
-      ref: nginx:1.29.4-alpine
+      image: nginx:1.29.4-alpine
+    endpoints:
+      web:
+        targetPort: 8080
+        protocol: HTTP
     health:
       readiness: &probe
-        path: /healthz
+        http:
+          endpoint: web
+          path: /healthz
       liveness: *probe

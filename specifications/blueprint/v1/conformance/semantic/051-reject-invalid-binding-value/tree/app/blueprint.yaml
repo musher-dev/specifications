@@ -3,16 +3,18 @@
   "kind": "BLUEPRINT",
   "metadata": {
     "slug": "app",
-    "revision": 1
+    "revision": 1,
+    "description": "Synthetic conformance fixture blueprint."
   },
   "spec": {
     "components": {
       "web": {
         "componentRef": "./web.yaml",
-        "size": "general.standard.small",
+        "compute": {
+          "profile": "general.standard.small"
+        },
         "bindings": {
           "value": {
-            "type": "LITERAL",
             "value": 17
           }
         }

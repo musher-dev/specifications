@@ -109,7 +109,7 @@ directory without indexing it is a no-op — index entries are the contract.
 
 ### <a id="requirements"></a>Requirement IDs
 
-`clause` names a section; a section states several rules. Thirteen cases cite
+`clause` names a section; a section states several rules. Many cases cite
 core's `#envelope`, which covers `specVersion`, `kind`, unknown fields, and an
 unsupported version — so the citation says where to look and not what is being
 pinned. `requirements` says which rule.
@@ -351,10 +351,10 @@ without imposing diagnostic order or forbidding additional diagnostics.
 An entry supplies either logical `input`, or `tree` (item-relative path to
 UTF-8 document text) plus `document` naming the document within that tree.
 The document's parent is its item root. Paths must remain within the fixture.
-Optional `context` supplies synthetic catalog contracts, configuration,
-parameters, allocated addresses and persisted credentials. No operation uses
-a live account or fetches document-selected URLs. Fixtures use synthetic values,
-including when testing sensitivity.
+Optional `context` supplies synthetic catalog contracts, organization
+variables, parameters, allocated addresses, acquired connections and persisted
+credentials. No operation uses a live account or fetches document-selected
+URLs. Fixtures use synthetic values, including when testing sensitivity.
 
 | Profile | Operation | Observation |
 |---|---|---|
@@ -366,25 +366,30 @@ including when testing sensitivity.
 | rendering | form | Ordered array of `name`, `label`, `control`, `order` (null when omitted), and effective `prominence` |
 | lifecycle | revision | VALID when input.revision exceeds input.highestPublishedRevision; otherwise INVALID with ERR_VERSION_NOT_MONOTONIC at /metadata/revision |
 | lifecycle | credential | Count `generated` and ordered `values` for installation/parameter/rotation `input.steps` |
+| lifecycle | connection | Counts `issued` and `persisted`, and ordered `observations` (`status`, and for a selection its `identity`, `version`, `credential` and `rotation`) for installation/parameter/generation `input.steps` |
 
 The resolution context's `contracts` map uses `identity@revision` keys and
-`{source, digest}` values. Configuration uses exact dotted paths and entries
+`{source, digest}` values. Variables use exact dotted paths and entries
 `{value, sensitive, identity, version, authorized}`. Parameters and stored
-credentials use `{value, sensitive}`. Addresses map node, endpoint and property
-to logical values. An unavailable entry is absent, never a fabricated empty
+credentials use `{value, sensitive}`. `allocations` maps node and endpoint to
+`{identity, version, privateHostname?, public?}`. `connections` holds the
+`installation` and, per connection parameter, an acquisition `status` and, when
+`SELECTED`, the persisted `selection` of blueprint §5.3. An unavailable entry is absent, never a fabricated empty
 value. The complete meaning of each source belongs to blueprint and component.
 
 Private resolved keys are `node:in:input` and `node:out:output`; environment
 maps node to environment key. Each private entry has `value` and `sensitive`,
-and may retain configuration identity/version. Public inspection maps input
+and may retain variable identity/version. Public inspection maps input
 keys to `{sensitive: true, redacted: true}` for sensitive values and
 `{sensitive: false, value}` otherwise. No materialization is released for
 INVALID or INCOMPLETE resolution.
 
 The record operation supplies `blueprint` text, `specifications`,
-`components`, `configuration` and `credentials` in `input`. It generates
-the shape defined in blueprint §5.2 and projects configuration and credential
-identities without resolved plaintext.
+`components`, `variables`, `credentials` and `recordContext` in `input`.
+`recordContext` holds the private installation `snapshot` and the
+`specificationDependencies` acquired with the pinned specifications. It
+generates the shape defined in blueprint §5.2 and projects variable and
+credential identities without resolved plaintext.
 
 A lifecycle adapter substitutes a deterministic synthetic generator: successive
 new identities receive `synthetic-1`, `synthetic-2`, and so on. Repeated

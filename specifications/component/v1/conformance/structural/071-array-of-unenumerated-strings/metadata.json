@@ -1,0 +1,10 @@
+{
+  "id": "structural-071-array-of-unenumerated-strings",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v1/spec.md#value-schema",
+  "requirements": [
+    "COMP-VAL-006"
+  ],
+  "summary": "An array of strings whose items declare no enum validates; an item enum is optional."
+}

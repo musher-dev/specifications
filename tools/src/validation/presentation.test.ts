@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
-import { renderListing } from './presentation.ts'
+import type { Json } from '../lib/layout.ts'
+import { formControls, renderListing } from './presentation.ts'
 
 describe('listing rendering without prior validation', () => {
   for (const destination of [
@@ -37,5 +38,37 @@ describe('listing rendering without prior validation', () => {
   test('suppresses raw HTML while preserving escaped code', () => {
     expect(renderListing('<script>alert(1)</script>')).not.toContain('<script>')
     expect(renderListing('`<script>`')).toContain('&lt;script&gt;')
+  })
+})
+
+describe('install-form controls', () => {
+  test('variables are never fields and a connection is offered whole', () => {
+    const blueprint = {
+      spec: {
+        parameters: {
+          region: { from: '${{ variables.cloud.region }}', ui: { label: 'Region' } },
+          llm: { from: '${{ connections.llm.default }}', ui: { label: 'Language model' } },
+          key: { generator: {}, ui: { label: 'Key' } },
+          title: { ui: { label: 'Title', order: 1 } },
+        },
+        components: { web: { bindings: { title: { parameter: 'title' } } } },
+      },
+    }
+    const components = new Map([
+      [
+        'web',
+        { spec: { contract: { inputs: { title: { schema: { type: 'string' } } } } } } as Json,
+      ],
+    ])
+    expect(formControls(blueprint as Json, components)).toEqual([
+      { name: 'title', label: 'Title', control: 'text', order: 1, prominence: 'PRIMARY' },
+      {
+        name: 'llm',
+        label: 'Language model',
+        control: 'connection',
+        order: null,
+        prominence: 'PRIMARY',
+      },
+    ])
   })
 })

@@ -44,6 +44,7 @@ function toDiagnostic(error: ErrorObject): Diagnostic {
 
   switch (error.keyword) {
     case 'required':
+    case 'dependentRequired':
       return { code: 'ERR_MISSING_FIELD', path, message }
     case 'additionalProperties':
     case 'unevaluatedProperties':

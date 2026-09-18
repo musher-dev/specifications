@@ -4,7 +4,7 @@
   "expected": "fail",
   "clause": "specifications/component/v1/spec.md#health",
   "requirements": [
-    "COMP-EP-003"
+    "COMP-EP-002"
   ],
-  "summary": "A probe naming an endpoint outside the HTTP family is rejected."
+  "summary": "A readiness probe naming a TCP endpoint is rejected; an HTTP probe needs an HTTP or HTTPS endpoint."
 }

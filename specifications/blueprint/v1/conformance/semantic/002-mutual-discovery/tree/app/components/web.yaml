@@ -1,0 +1,30 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: WORKER
+  workload:
+    source:
+      image: ghcr.io/example/peer:1.0.0
+    endpoints:
+      peer:
+        targetPort: 7000
+        protocol: TCP
+  contract:
+    inputs:
+      peerAddress:
+        schema:
+          type: string
+        description: Internal address of the peer this node talks to.
+        target:
+          envVarKey: PEER_ADDRESS
+    outputs:
+      address:
+        schema:
+          type: string
+        description: Internal address other nodes reach this one at.
+        from:
+          endpoint: peer
+          property: privateAddress

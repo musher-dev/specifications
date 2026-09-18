@@ -1,0 +1,10 @@
+{
+  "id": "structural-049-binding-node-without-output",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#bindings",
+  "requirements": [
+    "BP-CONN-003"
+  ],
+  "summary": "A binding naming a node and no output of it is rejected."
+}

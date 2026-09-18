@@ -1,0 +1,10 @@
+{
+  "id": "structural-086-worker-without-endpoints",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v1/spec.md#workload",
+  "requirements": [
+    "COMP-TYPE-003"
+  ],
+  "summary": "A WORKER declaring no endpoint validates; endpoints are optional on a WORKER."
+}

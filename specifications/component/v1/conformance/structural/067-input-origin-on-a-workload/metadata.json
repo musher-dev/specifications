@@ -1,0 +1,11 @@
+{
+  "id": "structural-067-input-origin-on-a-workload",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v1/spec.md#outputs",
+  "requirements": [
+    "COMP-OUT-001",
+    "COMP-OUT-002"
+  ],
+  "summary": "An output forwarding one of its own inputs is permitted on a workload component, not only on an external one."
+}

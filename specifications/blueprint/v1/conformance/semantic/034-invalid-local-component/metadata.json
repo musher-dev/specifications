@@ -1,0 +1,11 @@
+{
+  "id": "semantic-034-invalid-local-component",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#component-reference",
+  "requirements": [
+    "BP-REF-002"
+  ],
+  "summary": "A repo-local component that is itself invalid is ERR_INVALID_DEPENDENCY.",
+  "document": "app/blueprint.yaml"
+}

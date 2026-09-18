@@ -2,11 +2,12 @@ specVersion: v1
 kind: COMPONENT
 metadata:
   revision: 1
+  description: Synthetic conformance fixture component.
 spec:
-  external: {}
+  type: EXTERNAL
   contract:
     inputs:
-      baseUrl:
+      baseURL:
         schema:
           type: string
         description: Base URL of the service this node addresses.
@@ -17,19 +18,17 @@ spec:
         description: Bearer credential presented to the service.
         sensitive: true
     outputs:
-      baseUrl:
+      baseURL:
         schema:
           type: string
         description: Base URL of the service this node addresses.
         presentationHint: ENDPOINT_URL
-        source:
-          type: INPUT
-          input: baseUrl
+        from:
+          input: baseURL
       apiKey:
         schema:
           type: string
         description: Bearer credential presented to the service.
         sensitive: true
-        source:
-          type: INPUT
+        from:
           input: apiKey

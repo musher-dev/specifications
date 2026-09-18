@@ -1,6 +1,6 @@
 # Musher Document Core Specification — Specification v1
 
-**Status:** Draft (pre-stable)
+**Status:** Stable
 **Family:** `core`
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
@@ -61,7 +61,7 @@ headed "Core parameter":
 | Core parameter | What the family states | Read by |
 |---|---|---|
 | `kind` | The constant its documents declare. | [`CORE-ENV-002`](#CORE-ENV-002) |
-| `metadata` | The section defining its `metadata` object. | [`CORE-ENV-003`](#CORE-ENV-003) |
+| `metadata` | The section defining its `metadata` object: its identity fields and any description it requires. | [`CORE-ENV-003`](#CORE-ENV-003) |
 | Fields accepting `null` | Each field that accepts `null`, with the section that justifies it, or that there are none. | [`CORE-ENV-007`](#CORE-ENV-007) |
 | Item document | The file name its document takes at an item root, or that its documents sit inside an item rather than naming one. | [§4.1](#item-directory) |
 
@@ -113,7 +113,7 @@ spec: { … }
 |---|---|---|
 | <a id="CORE-ENV-001"></a>`CORE-ENV-001` | `specVersion` | REQUIRED. Declares the document-format compatibility family, independent of any API URL version. |
 | <a id="CORE-ENV-002"></a>`CORE-ENV-002` | `kind` | REQUIRED. MUST be the constant the family specification binds ([§1.1](#bindings)). |
-| <a id="CORE-ENV-003"></a>`CORE-ENV-003` | `metadata` | REQUIRED. Identity. |
+| <a id="CORE-ENV-003"></a>`CORE-ENV-003` | `metadata` | REQUIRED. Identity, and any description the family binds. |
 | <a id="CORE-ENV-004"></a>`CORE-ENV-004` | `spec` | REQUIRED. The definition itself. |
 
 <a id="CORE-ENV-005"></a>**`CORE-ENV-005`** — Unknown properties MUST be
@@ -281,7 +281,7 @@ A **reference** names a fact this document cannot contain. It is written
 `${{ <namespace>.<path> }}`, and it stands where a value would stand:
 
 ```yaml
-template: "https://${{ self.publicHostname.web }}/oauth/cb"
+template: "https://${{ self.endpoints.web.publicHostname }}/oauth/cb"
 ```
 
 A document is sealed before the thing it describes exists. The address that
@@ -344,8 +344,9 @@ a family admits names from it rather than adding to it.
 | Namespace | Names | v1 |
 |---|---|---|
 | `self` | The addressing of the thing the value is bound to. | Defined by the family that admits it. |
-| `params` | A value supplied when a composition is installed. | Reserved. |
-| `config` | Organization configuration authorized for an installation. | Defined by blueprint CONFIG_REF bindings. |
+| `parameters` | A value supplied when a composition is installed. | Reserved. |
+| `variables` | An organization variable, as visible to the environment an installation deploys into. | Defined by blueprint parameters' `from`. |
+| `connections` | An atomic connection: endpoint, credential and model selected together. | Defined by blueprint parameters' `from`. |
 | `deployment` | Facts about a deployment. | Reserved. |
 | `environment` | Facts about a target environment. | Reserved. |
 | `organization` | Facts about an owning organization. | Reserved. |
@@ -685,11 +686,12 @@ never precedes parser/profile checks.
 `x-musher-grammar: label`. Bundles inline its constraints from §5.1; published
 bundles are self-contained. Source copies do not independently author the pattern.
 
-**Endpoint semantics.** Component defines self endpoint paths. Blueprint consumes
-that definition. Core defines syntax only.
+**Endpoint semantics.** Component defines self endpoint paths, as
+`self.endpoints.<name>.<property>`. Blueprint consumes that definition. Core
+defines syntax only.
 
-**Reserved namespaces.** params, deployment, environment, organization and output
-are reserved and unsupported in v1 reference strings.
+**Reserved namespaces.** `parameters`, `deployment`, `environment`, `organization`
+and `output` are reserved and unsupported in v1 reference strings.
 
 ## <a id="security"></a>11. Security considerations
 

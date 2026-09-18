@@ -1,0 +1,10 @@
+{
+  "id": "structural-023-missing-spec",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/core/v1/spec.md#envelope",
+  "requirements": [
+    "CORE-ENV-004"
+  ],
+  "summary": "A document without spec is rejected at the root."
+}

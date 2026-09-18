@@ -1,0 +1,10 @@
+{
+  "id": "structural-102-empty-metadata-description",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#metadata",
+  "requirements": [
+    "COMP-DESC-002"
+  ],
+  "summary": "A metadata description written as an empty string is rejected."
+}

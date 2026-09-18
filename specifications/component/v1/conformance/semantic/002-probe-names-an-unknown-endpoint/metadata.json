@@ -1,0 +1,11 @@
+{
+  "id": "semantic-002-probe-names-an-unknown-endpoint",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#workload",
+  "requirements": [
+    "COMP-EP-001",
+    "COMP-EP-002"
+  ],
+  "summary": "A readiness probe naming an endpoint the workload does not declare is rejected."
+}

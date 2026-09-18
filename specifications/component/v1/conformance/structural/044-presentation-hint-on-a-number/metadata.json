@@ -1,0 +1,10 @@
+{
+  "id": "structural-044-presentation-hint-on-a-number",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v1/spec.md#value-schema",
+  "requirements": [
+    "COMP-VAL-004"
+  ],
+  "summary": "A presentationHint on a number input validates; a hint is a UI annotation and makes no assertion."
+}

@@ -2,67 +2,84 @@ specVersion: v1
 kind: COMPONENT
 metadata:
   revision: 1
+  description: RabbitMQ message broker with an AMQP listener, a management console and HTTP API, and a Prometheus metrics endpoint.
 spec:
+  type: SERVICE
   workload:
-    type: SERVICE
     source:
-      type: IMAGE
-      ref: nginx:1.29.4-alpine
+      image: rabbitmq:4.1.4-management-alpine
     endpoints:
-      api:
-        containerPort: 8080
-        protocol: HTTP
-      console:
-        containerPort: 8081
-        protocol: HTTP
-      wire:
-        containerPort: 5671
+      amqp:
+        targetPort: 5672
         protocol: TCP
+      console:
+        targetPort: 15672
+        protocol: HTTP
       metrics:
-        containerPort: 9090
+        targetPort: 15692
         protocol: HTTP
     health:
       readiness:
-        path: /healthz
-        endpoint: api
-        type: HTTP
+        http:
+          endpoint: metrics
+          path: /metrics
+    volumes:
+      data:
+        mountPath: /var/lib/rabbitmq
+        minSizeGiB: 5
   contract:
     inputs:
-      consoleUrl:
-        description: Public URL the admin console is served at.
+      username:
+        description: Name of the user the broker creates on first start.
         schema:
           type: string
+          minLength: 1
+        default: app
         target:
-          envVarKey: CONSOLE_URL
-      wireAddress:
-        description: Edge address clients use to reach the wire protocol.
+          envVarKey: RABBITMQ_DEFAULT_USER
+      password:
+        description: Password of the user the broker creates on first start.
         schema:
           type: string
+          minLength: 12
+        sensitive: true
         target:
-          envVarKey: WIRE_ADDRESS
-      telemetry:
-        description: Telemetry signals the service exports.
-        schema:
-          type: array
-          items:
-            type: string
-            enum:
-              - logs
-              - metrics
-              - traces
-          uniqueItems: true
-        required: false
-        target:
-          envVarKey: TELEMETRY_EXPORTERS
-        default:
-          - logs
-          - metrics
+          envVarKey: RABBITMQ_DEFAULT_PASS
     outputs:
-      consoleEndpoint:
-        description: Address the admin console answers on.
+      consoleURL:
+        description: Public URL of the management console, for an operator to sign in at.
         schema:
           type: string
         presentationHint: ENDPOINT_URL
-        source:
-          type: TEMPLATE
-          template: https://${{ self.publicHostname.console }}/admin
+        from:
+          endpoint: console
+          property: publicURL
+      apiURL:
+        description: Base URL of the management HTTP API, for sibling nodes that declare queues.
+        schema:
+          type: string
+        presentationHint: ENDPOINT_URL
+        from:
+          template: "http://${{ self.endpoints.console.privateAddress }}/api"
+      wireAddress:
+        description: Internal host and port of the AMQP listener, for sibling nodes that publish or consume.
+        schema:
+          type: string
+        from:
+          endpoint: amqp
+          property: privateAddress
+      username:
+        description: Name of the broker user a client authenticates as.
+        schema:
+          type: string
+          minLength: 1
+        from:
+          input: username
+      password:
+        description: Password of the broker user a client authenticates as.
+        schema:
+          type: string
+          minLength: 12
+        sensitive: true
+        from:
+          input: password

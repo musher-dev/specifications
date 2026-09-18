@@ -6,5 +6,5 @@
   "requirements": [
     "COMP-REF-001"
   ],
-  "summary": "A DECLARED output value may compose text around a self reference."
+  "summary": "A template output may compose text around a self reference."
 }

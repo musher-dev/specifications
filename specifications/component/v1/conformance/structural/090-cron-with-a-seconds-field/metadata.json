@@ -1,0 +1,10 @@
+{
+  "id": "structural-090-cron-with-a-seconds-field",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#jobs",
+  "requirements": [
+    "COMP-JOB-002"
+  ],
+  "summary": "A six-field cron expression is rejected rather than read as seconds or as years."
+}

@@ -1,0 +1,7 @@
+{
+  "id": "structural-031-binding-key-outside-the-grammar",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#bindings",
+  "summary": "A binding key outside the input grammar is rejected."
+}

@@ -1,6 +1,6 @@
 [
   {
     "code": "ERR_INVALID_VALUE",
-    "path": "/spec/workload/envVars/0/key"
+    "path": "/spec/workload/envVars"
   }
 ]

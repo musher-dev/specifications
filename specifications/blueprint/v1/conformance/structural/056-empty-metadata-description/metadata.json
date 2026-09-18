@@ -1,0 +1,10 @@
+{
+  "id": "structural-056-empty-metadata-description",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#identity",
+  "requirements": [
+    "BP-ID-004"
+  ],
+  "summary": "An empty description is rejected: a description is 1 to 280 characters."
+}

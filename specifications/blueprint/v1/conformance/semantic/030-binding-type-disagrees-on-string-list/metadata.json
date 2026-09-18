@@ -1,0 +1,11 @@
+{
+  "id": "semantic-030-binding-type-disagrees-on-string-list",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#value-sources",
+  "requirements": [
+    "BP-PARAM-008"
+  ],
+  "summary": "A string output bound to a string-array input is rejected by the type rule that already exists.",
+  "document": "acme-wiki/blueprint.yaml"
+}

@@ -1,0 +1,10 @@
+{
+  "id": "structural-101-external-input-with-a-target",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#external",
+  "requirements": [
+    "COMP-EXT-002"
+  ],
+  "summary": "An input of an EXTERNAL component declaring an environment target is rejected; nothing runs to receive it."
+}

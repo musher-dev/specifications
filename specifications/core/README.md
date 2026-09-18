@@ -49,6 +49,8 @@ apply core v1 and say so in their own §2.
 |---|---|---|
 | `CORE-ENV` | The document envelope | [§2](v1/spec.md#envelope) |
 | `CORE-ITEM` | Item identity | [§4.2](v1/spec.md#item-identity) |
+| `CORE-REF` | The reference grammar and its reserved namespaces | [§5.2](v1/spec.md#reference-grammar) |
+| `CORE-ADMISSION` | Completing deferred obligations before admission | [§6.0](v1/spec.md#coverage) |
 | `CORE-YAML` | The Musher YAML profile | [§6.1](v1/spec.md#yaml-profile) |
 
 Every ID, the clause stating it, and the cases pinning it:

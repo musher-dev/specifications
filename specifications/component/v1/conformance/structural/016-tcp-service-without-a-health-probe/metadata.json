@@ -1,0 +1,7 @@
+{
+  "id": "structural-016-tcp-service-without-a-health-probe",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v1/spec.md#health",
+  "summary": "A SERVICE whose only endpoint is TCP validates without any health probe."
+}

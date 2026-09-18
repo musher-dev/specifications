@@ -1,0 +1,23 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: WORKER
+  workload:
+    source:
+      image: ghcr.io/musher-dev/worker:1.4.0
+    endpoints:
+      metrics:
+        targetPort: 9090
+        protocol: HTTP
+  contract:
+    outputs:
+      metricsURL:
+        description: Address metrics are scraped from.
+        schema:
+          type: string
+        from:
+          endpoint: metrics
+          property: publicURL

@@ -2,47 +2,72 @@ specVersion: v1
 kind: COMPONENT
 metadata:
   revision: 1
+  description: Managed PostgreSQL database run by a provider outside this platform and addressed by its host.
 spec:
-  external: {}
+  type: EXTERNAL
   contract:
     inputs:
-      baseUrl:
+      host:
+        description: Hostname of the managed database server.
         schema:
           type: string
-        description: Base URL of the service this node addresses. Anything speaking the same wire will do;
-          nothing here resolves it or connects to it.
-        presentationHint: ENDPOINT_URL
-      apiKey:
+        presentationHint: HOSTNAME
+      port:
+        description: Port the managed database server listens on.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 65535
+        default: 5432
+      database:
+        description: Name of the database the application uses.
         schema:
           type: string
-        description: Bearer credential presented to the service above.
+      username:
+        description: Role the application connects as.
+        schema:
+          type: string
+      password:
+        description: Password of the application role.
+        schema:
+          type: string
         sensitive: true
-      model:
-        schema:
-          type: string
-        required: false
-        description: Name the service uses to select what answers.
     outputs:
-      baseUrl:
-        description: Base URL of the addressed service, for a consumer to call.
+      host:
+        description: Hostname of the managed database server, for a client to connect to.
         schema:
           type: string
-        presentationHint: ENDPOINT_URL
-        source:
-          type: INPUT
-          input: baseUrl
-      apiKey:
-        description: Bearer credential for the addressed service.
+        presentationHint: HOSTNAME
+        from:
+          input: host
+      port:
+        description: Port the managed database server listens on.
+        schema:
+          type: integer
+        from:
+          input: port
+      database:
+        description: Name of the database the application uses.
+        schema:
+          type: string
+        from:
+          input: database
+      username:
+        description: Role the application connects as.
+        schema:
+          type: string
+        from:
+          input: username
+      password:
+        description: Password of the application role.
         schema:
           type: string
         sensitive: true
-        source:
-          type: INPUT
-          input: apiKey
-      model:
-        description: Model name the addressed service answers with.
+        from:
+          input: password
+      sslMode:
+        description: TLS mode a client uses; the provider accepts only verified connections.
         schema:
           type: string
-        source:
-          type: INPUT
-          input: model
+        from:
+          value: verify-full

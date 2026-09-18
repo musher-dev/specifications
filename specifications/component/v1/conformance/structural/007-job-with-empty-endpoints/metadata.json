@@ -1,0 +1,10 @@
+{
+  "id": "structural-007-job-with-empty-endpoints",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#workload",
+  "requirements": [
+    "COMP-TYPE-004"
+  ],
+  "summary": "A forbidden endpoints mapping is rejected even when written empty; forbidden means absent."
+}

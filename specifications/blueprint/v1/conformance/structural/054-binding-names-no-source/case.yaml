@@ -1,0 +1,14 @@
+specVersion: v1
+kind: BLUEPRINT
+metadata:
+  slug: app
+  revision: 1
+  description: Synthetic conformance fixture blueprint.
+spec:
+  components:
+    web:
+      componentRef: ./components/web.yaml
+      compute:
+        profile: general.standard.small
+      bindings:
+        mode: {}

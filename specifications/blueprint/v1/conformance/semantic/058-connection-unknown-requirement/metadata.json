@@ -6,6 +6,6 @@
   "requirements": [
     "BP-CONNECTION-001"
   ],
-  "summary": "connection unknown requirement",
+  "summary": "A connection binding naming no requirement of the component is rejected.",
   "document": "connection-app/blueprint.yaml"
 }

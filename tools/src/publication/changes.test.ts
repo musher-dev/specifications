@@ -202,4 +202,23 @@ describe('reportFamily for a kind family', () => {
     expect(text).not.toContain('Tooling-only')
     expect(text).toContain('Fields and constraints')
   })
+
+  test('a key one form of a key-selected union requires is not reported as required', () => {
+    const fx = base()
+    fx.writeSources(
+      'component',
+      'v1',
+      fx.bundleDoc('component', 'v1', {
+        properties: { image: { type: 'string' }, git: { type: 'object' } },
+        oneOf: [
+          { properties: { image: true }, required: ['image'] },
+          { properties: { git: true }, required: ['git'] },
+        ],
+      }),
+    )
+    const text = reportFamily(component(fx), 'HEAD', fx.root).lines.join('\n')
+    expect(text).toContain('`image` — **added** (optional)')
+    expect(text).toContain('`git` — **added** (optional)')
+    expect(text).not.toContain('REQUIRED')
+  })
 })

@@ -109,34 +109,46 @@ function factsOf(schema: Json): Record<string, Json> {
 /**
  * Every field path the schema defines, with the constraints at each.
  *
- * A path is written the way an author reads a document — `spec.workload.command`,
- * `spec.workload.endpoints.*.containerPort`, `spec.workload.envVars[].key` —
+ * A path is written the way an author reads a document (`spec.workload.command`,
+ * `spec.workload.endpoints.*.targetPort`, `spec.workload.envVars.*`),
  * because a reviewer is deciding whether a *document* still validates, not
  * where a keyword sits in a bundle.
  */
 function fieldMap(bundle: Json): FieldMap {
   const out: FieldMap = new Map()
 
-  const walk = (schema: Json, path: string, seen: ReadonlySet<string>, depth: number): void => {
+  const walk = (
+    schema: Json,
+    path: string,
+    seen: ReadonlySet<string>,
+    depth: number,
+    alternative = false,
+  ): void => {
     if (depth > 24) return
     const { schema: here, seen: nowSeen } = deref(bundle, schema, seen)
     if (!isObject(here)) return
 
     // A nullable field is `anyOf: [{…}, {"type": "null"}]`, and the branch that
     // is not null is the one carrying the shape. Two live branches are a real
-    // union; both are walked, and a field defined in either is defined.
+    // union; both are walked, and a field defined in either is defined. A key
+    // one alternative requires is not required of the document: a union
+    // selected by key requires `image` in one branch and `git` in the other,
+    // and neither is required on its own (ADR 0031 §1).
     for (const key of ['anyOf', 'oneOf', 'allOf'] as const) {
       const branches = here[key]
-      if (Array.isArray(branches)) {
-        for (const branch of branches) walk(branch, path, nowSeen, depth + 1)
-      }
+      if (!Array.isArray(branches)) continue
+      const live = branches.filter(
+        (b) => !(isObject(b) && b.type === 'null' && Object.keys(b).length === 1),
+      )
+      const alternatives = key !== 'allOf' && live.length > 1
+      for (const branch of branches) walk(branch, path, nowSeen, depth + 1, alternatives)
     }
     for (const key of ['then', 'else'] as const) {
       if (here[key] !== undefined) walk(here[key] as Json, path, nowSeen, depth + 1)
     }
 
     const required = new Set(
-      Array.isArray(here.required)
+      !alternative && Array.isArray(here.required)
         ? here.required.filter((r): r is string => typeof r === 'string')
         : [],
     )

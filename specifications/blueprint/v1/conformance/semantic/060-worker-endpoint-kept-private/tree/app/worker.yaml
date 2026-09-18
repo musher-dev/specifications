@@ -1,0 +1,20 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: WORKER
+  workload:
+    source:
+      image: example/worker:1
+    endpoints:
+      metrics:
+        targetPort: 9090
+        protocol: HTTP
+      admin:
+        targetPort: 9091
+        protocol: HTTP
+  contract:
+    inputs: {}
+    outputs: {}

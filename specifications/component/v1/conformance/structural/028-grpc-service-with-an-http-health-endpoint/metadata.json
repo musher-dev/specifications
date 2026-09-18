@@ -1,0 +1,10 @@
+{
+  "id": "structural-028-grpc-service-with-an-http-health-endpoint",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v1/spec.md#workload",
+  "requirements": [
+    "COMP-EP-002"
+  ],
+  "summary": "A GRPC service validates when its readiness probe names a separate HTTP endpoint."
+}

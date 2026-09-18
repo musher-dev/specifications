@@ -42,3 +42,13 @@ describe('enclosingSections', () => {
     expect(enclosingSections(outline, 'CORE-TOP-001')).toEqual([])
   })
 })
+
+describe('readOutline', () => {
+  test('a heading with several anchors keeps its number and a clean title', () => {
+    const outline = readOutline('## <a id="coverage"></a><a id="merge"></a>5.1 Recipients')
+    expect(outline.sections).toEqual([
+      { id: 'coverage', number: '5.1', title: 'Recipients', level: 2 },
+    ])
+    expect(outline.byNumber.get('5.1')).toBe('coverage')
+  })
+})

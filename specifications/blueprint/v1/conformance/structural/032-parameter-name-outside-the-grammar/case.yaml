@@ -3,16 +3,17 @@ kind: BLUEPRINT
 metadata:
   slug: web
   revision: 1
+  description: Synthetic conformance fixture blueprint.
 spec:
-  components:
-    web:
-      componentRef: ./components/web.yaml
-      size: general.standard.small
-      bindings:
-        Site_Title:
-          type: PARAMETER
-          parameter: Site_Title
   parameters:
     Site_Title:
       ui:
         label: Site title
+  components:
+    web:
+      componentRef: ./components/web.yaml
+      compute:
+        profile: general.standard.small
+      bindings:
+        Site_Title:
+          parameter: Site_Title

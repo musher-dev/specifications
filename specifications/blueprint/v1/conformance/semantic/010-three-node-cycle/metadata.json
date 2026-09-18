@@ -1,7 +1,0 @@
-{
-  "id": "semantic-010-three-node-cycle",
-  "phase": "semantic",
-  "expected": "incomplete",
-  "clause": "specifications/blueprint/v1/spec.md#connections",
-  "summary": "A cycle longer than two nodes validates, and no traversal order is imposed on it."
-}

@@ -3,5 +3,8 @@
   "phase": "structural",
   "expected": "fail",
   "clause": "specifications/component/v1/spec.md#workload",
+  "requirements": [
+    "COMP-TYPE-002"
+  ],
   "summary": "A SERVICE declaring an empty endpoints mapping is rejected."
 }

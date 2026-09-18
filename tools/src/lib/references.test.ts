@@ -14,25 +14,26 @@ function kinds(value: string, admitted: readonly string[] = SELF): string[] {
 
 describe('a well-formed reference', () => {
   test('is found on its own, and yields its namespace and path', () => {
-    const { references, failures } = scan('${{ self.publicUrl }}', SELF)
+    const { references, failures } = scan('${{ self.publicURL }}', SELF)
     expect(failures).toEqual([])
     expect(references).toHaveLength(1)
     expect(references[0]?.namespace).toBe('self')
-    expect(references[0]?.path).toEqual(['publicUrl'])
-    expect(references[0]?.raw).toBe('${{ self.publicUrl }}')
+    expect(references[0]?.path).toEqual(['publicURL'])
+    expect(references[0]?.raw).toBe('${{ self.publicURL }}')
   })
 
   test('tolerates inner whitespace, including none', () => {
-    for (const written of ['${{self.publicUrl}}', '${{   self.publicUrl   }}']) {
+    for (const written of ['${{self.publicURL}}', '${{   self.publicURL   }}']) {
       expect(scan(written, SELF).failures).toEqual([])
-      expect(scan(written, SELF).references[0]?.path).toEqual(['publicUrl'])
+      expect(scan(written, SELF).references[0]?.path).toEqual(['publicURL'])
     }
   })
 
-  test('carries an endpoint segment through as a second path element', () => {
-    expect(scan('${{ self.publicUrl.web }}', SELF).references[0]?.path).toEqual([
-      'publicUrl',
+  test('carries every segment of a dotted path through, in order', () => {
+    expect(scan('${{ self.endpoints.web.publicURL }}', SELF).references[0]?.path).toEqual([
+      'endpoints',
       'web',
+      'publicURL',
     ])
   })
 
@@ -46,7 +47,7 @@ describe('a well-formed reference', () => {
 
 describe('whole-value versus embedded', () => {
   test('a reference filling the string is the whole value', () => {
-    const value = '${{ self.publicUrl }}'
+    const value = '${{ self.publicURL }}'
     const reference = scan(value, SELF).references[0]
     expect(reference && isWholeValueReference(value, reference)).toBe(true)
   })
@@ -72,7 +73,7 @@ describe('the escape', () => {
   })
 
   test('does not swallow a real reference later in the string', () => {
-    const { references, failures } = scan('$${{ literal }} ${{ self.publicUrl }}', SELF)
+    const { references, failures } = scan('$${{ literal }} ${{ self.publicURL }}', SELF)
     expect(failures).toEqual([])
     expect(references).toHaveLength(1)
   })
@@ -84,22 +85,22 @@ describe('the escape', () => {
 
 describe('CORE-REF-001 — an unescaped ${{ must open a well-formed reference', () => {
   test('rejects an unclosed opener', () => {
-    expect(kinds('${{ self.publicUrl }')).toEqual(['malformed'])
+    expect(kinds('${{ self.publicURL }')).toEqual(['malformed'])
   })
 
   test('rejects a namespace with no path', () => {
     // The typo shape that ships as literal text when a scanner passes it
     // through: one dot away from correct.
-    expect(kinds('${{ publicUrl }}')).toEqual(['malformed'])
+    expect(kinds('${{ publicURL }}')).toEqual(['malformed'])
   })
 
   test('rejects an empty reference and an empty segment', () => {
     expect(kinds('${{ }}')).toEqual(['malformed'])
-    expect(kinds('${{ self..publicUrl }}')).toEqual(['malformed'])
+    expect(kinds('${{ self..publicURL }}')).toEqual(['malformed'])
   })
 
   test('rejects a segment outside the grammar', () => {
-    for (const written of ['${{ self.public-url }}', '${{ Self.publicUrl }}', '${{ self.0 }}']) {
+    for (const written of ['${{ self.public-url }}', '${{ Self.publicURL }}', '${{ self.0 }}']) {
       expect(kinds(written)).toEqual(['malformed'])
     }
   })
@@ -119,23 +120,23 @@ describe('CORE-REF-002 and CORE-REF-003 — the closed set, and what a position 
   test('a namespace outside the reserved set is unknown, never a pass-through', () => {
     // A misspelling lands here too: the set is closed precisely so a typo in it
     // is reportable rather than shipped as literal text.
-    expect(kinds('${{ vault.publicUrl }}')).toEqual(['unknown-namespace'])
+    expect(kinds('${{ vault.publicURL }}')).toEqual(['unknown-namespace'])
   })
 
   test('a reserved namespace the position does not admit is out of scope', () => {
     // The distinction matters: "core reserves no such name" and "this field
     // does not take that one" send an author to two different places.
-    for (const namespace of ['params', 'config', 'deployment', 'output']) {
+    for (const namespace of ['parameters', 'variables', 'connections', 'deployment', 'output']) {
       expect(kinds(`\${{ ${namespace}.thing }}`)).toEqual(['not-in-scope'])
     }
   })
 
   test('admitting a namespace is what makes it resolvable', () => {
-    expect(kinds('${{ params.siteTitle }}', ['self', 'params'])).toEqual([])
+    expect(kinds('${{ parameters.siteTitle }}', ['self', 'parameters'])).toEqual([])
   })
 
   test('reports each bad reference in a string separately', () => {
-    expect(kinds('${{ vault.a }} and ${{ params.b }} and ${{ c }}')).toEqual([
+    expect(kinds('${{ vault.a }} and ${{ parameters.b }} and ${{ c }}')).toEqual([
       'unknown-namespace',
       'not-in-scope',
       'malformed',
