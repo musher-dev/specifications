@@ -7,6 +7,6 @@ metadata:
 spec:
   parameters: {}
   components:
-    models:
-      componentRef: ./components/models.yaml
+    web:
+      componentRef: ./components/web.yaml
       bindings: {}

@@ -25,7 +25,7 @@ patterns [editors bind](../../docs/using-schemas.md#in-your-editor).
    [§5.6 External components](v1/spec.md#external) and
    [§5.7 Jobs and schedules](v1/spec.md#jobs)
 4. [§6 Configuration contract](v1/spec.md#contract), including
-   [§6.3 Value schemas](v1/spec.md#value-schema)
+   [§6.3 Logical schemas](v1/spec.md#value-schema)
 5. [§8 Diagnostics](v1/spec.md#diagnostics)
 
 An implementation implements every section of this specification and of each
@@ -54,7 +54,7 @@ authoritative list is the "Normative dependencies" table in
 | `COMP-DESC` | Component, input and output descriptions | [§4](v1/spec.md#metadata), [§6](v1/spec.md#contract) |
 | `COMP-OUT` | Outputs | [§6.2](v1/spec.md#outputs) |
 | `COMP-REF` | References in output templates | [§6.2](v1/spec.md#outputs) |
-| `COMP-VAL` | Value schemas | [§6.3](v1/spec.md#value-schema) |
+| `COMP-VAL` | Logical schemas | [§6.3](v1/spec.md#value-schema) |
 | `COMP-CONNECTION` | Atomic connection requirements | [§6.4](v1/spec.md#connection-requirements) |
 
 Every ID, the clause stating it, and the cases pinning it:

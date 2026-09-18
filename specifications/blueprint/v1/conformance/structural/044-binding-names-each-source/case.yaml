@@ -1,0 +1,28 @@
+specVersion: v1
+kind: BLUEPRINT
+metadata:
+  slug: acme-wiki
+  revision: 1
+  description: Synthetic conformance fixture blueprint.
+spec:
+  parameters:
+    stripeKey:
+      ui:
+        label: Stripe API key
+  components:
+    db:
+      componentRef: ./components/postgres.yaml
+      compute:
+        profile: general.standard.small
+    payments:
+      componentRef: ./components/payments.yaml
+      compute:
+        profile: general.standard.small
+      bindings:
+        apiKey:
+          parameter: stripeKey
+        databaseUrl:
+          node: db
+          output: connectionString
+        mode:
+          value: production

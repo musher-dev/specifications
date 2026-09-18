@@ -6,5 +6,5 @@
   "requirements": [
     "BP-PARAM-010"
   ],
-  "summary": "A parameter carrying both from and a default is rejected: it is supplied one way."
+  "summary": "A parameter carrying both from and a default is rejected at the default: it is supplied one way."
 }

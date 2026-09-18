@@ -128,6 +128,7 @@ have liveness probes.
 | `placement.storageClass`, `placement.minStorageIOPS` | `volumes.<name>.storageClass`, `volumes.<name>.minIOPS` | They describe a volume, not a host |
 | output `source` | output `from` | `source` now means only the workload source |
 | `${{ self.publicHostname.web }}` | `${{ self.endpoints.web.publicHostname }}` | The same order as `{endpoint, property}` |
+| `publicUrl`, `baseUrl`, `permittedBaseUrls` | `publicURL`, `baseURL`, `permittedBaseURLs` | ADR 0007 §2 keeps an acronym's conventional case, as `repositoryURL` and `homepageURL` already do |
 
 `compute` holds `profile` and `placement`, because placement narrows exactly the
 profile it sits beside. A workload node requires it and an `EXTERNAL` node

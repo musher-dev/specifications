@@ -1,0 +1,10 @@
+{
+  "id": "semantic-024-endpoint-origin-in-the-wrong-address-family",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#endpoints",
+  "requirements": [
+    "COMP-EP-004"
+  ],
+  "summary": "An endpoint origin reading publicAddress from an HTTP endpoint is rejected; an edge address belongs to a TCP or UDP endpoint."
+}

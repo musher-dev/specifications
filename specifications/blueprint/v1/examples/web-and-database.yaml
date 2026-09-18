@@ -38,20 +38,19 @@ spec:
         postgresPassword:
           parameter: postgresPassword
     web:
-      componentRef: ./component-web-server.yaml
+      componentRef: ./components/web.yaml
       compute:
         profile: general.standard.small
       exposure:
         web: PUBLIC
       bindings:
-        databaseUrl:
+        databaseAddress:
           node: db
-          output: connectionString
+          output: address
+        databasePassword:
+          parameter: postgresPassword
         siteTitle:
           parameter: siteTitle
-        callbackUrl:
-          node: web
-          output: callbackUrl
         telemetry:
           parameter: telemetry
         mode:

@@ -26,4 +26,4 @@ spec:
           type: string
         presentationHint: ENDPOINT_URL
         from:
-          template: https://${{ self.endpoints.web.publicHostname }}/v1
+          template: "https://${{ self.endpoints.web.publicHostname }}/v1"

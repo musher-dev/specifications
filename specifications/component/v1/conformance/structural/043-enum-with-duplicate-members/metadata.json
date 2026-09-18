@@ -1,0 +1,10 @@
+{
+  "id": "structural-043-enum-with-duplicate-members",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#value-schema",
+  "requirements": [
+    "COMP-VAL-002"
+  ],
+  "summary": "An enum repeating a member is rejected; enum members are unique."
+}

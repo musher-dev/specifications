@@ -1,0 +1,10 @@
+{
+  "id": "semantic-040-cron-day-of-week-seven",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#jobs",
+  "requirements": [
+    "COMP-JOB-002"
+  ],
+  "summary": "A day of week of 7 is rejected; the field ranges from 0 to 6, with 0 as Sunday."
+}

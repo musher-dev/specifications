@@ -212,7 +212,7 @@
           "type": "string"
         },
         "targetPort": {
-          "description": "Port the workload listens on, where traffic for this endpoint is forwarded. Never the public port, which the platform allocates. Below 1024 needs a capability the runtime grants.",
+          "description": "Port the workload listens on, where traffic for this endpoint is forwarded. Never the public port, which the platform allocates. A port below 1024 is structurally valid; admission may reject it as a capability check.",
           "maximum": 65535,
           "minimum": 1,
           "type": "integer"
@@ -461,9 +461,12 @@
       "x-additionalPropertiesName": "outputName"
     },
     "ComponentOutputFrom": {
-      "$comment": "spec.md §6.2 / ADR 0031 §1. Where the output value comes from is the key that is present: a literal value, one of this component’s own inputs, a property of one of its endpoints, or a template over its own endpoints. Exactly one; `property` belongs to `endpoint`.",
+      "$comment": "spec.md §6.2 / ADR 0031 §1. Where the output value comes from is the key that is present: a literal value, one of this component’s own inputs, a property of one of its endpoints, or a template over its own endpoints. Exactly one; `endpoint` and `property` are one origin, and each requires the other.",
       "additionalProperties": false,
       "dependentRequired": {
+        "endpoint": [
+          "property"
+        ],
         "property": [
           "endpoint"
         ]
@@ -588,7 +591,7 @@
       "additionalProperties": false,
       "properties": {
         "cron": {
-          "$comment": "spec.md §5. Five whitespace-separated fields (minute, hour, day of month, month, day of week), evaluated in UTC. The field count is structural so a seconds field or an @-macro is rejected rather than read two ways; the field grammar is the platform scheduler’s.",
+          "$comment": "spec.md §5.7. Five fields (minute, hour, day of month, month, day of week) separated by one or more spaces or tabs, evaluated in UTC. The field count is structural so a seconds field or an @-macro is rejected rather than read two ways. The grammar and range of each field are a semantic rule of spec.md §5.7 (ERR_INVALID_SCHEDULE).",
           "description": "Five-field cron expression, evaluated in UTC, on which the JOB recurs.",
           "maxLength": 128,
           "pattern": "^[^ \\t]+(?:[ \\t]+[^ \\t]+){4}$",
@@ -1180,7 +1183,7 @@
             "pattern": "^[A-Z_][A-Z0-9_]*$"
           },
           "type": "object",
-          "x-additionalPropertiesName": "variableName"
+          "x-additionalPropertiesName": "envVarName"
         },
         "health": {
           "$ref": "#/$defs/ComponentHealthProbes",

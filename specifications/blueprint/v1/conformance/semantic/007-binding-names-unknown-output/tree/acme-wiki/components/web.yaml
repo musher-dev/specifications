@@ -12,3 +12,13 @@ spec:
       primary:
         targetPort: 5432
         protocol: TCP
+  contract:
+    inputs:
+      databaseUrl:
+        schema:
+          type: string
+        description: Connection string of the database the application stores its data in.
+        sensitive: true
+        target:
+          envVarKey: DATABASE_URL
+    outputs: {}

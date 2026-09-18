@@ -2,6 +2,6 @@
   "id": "structural-043-binding-with-a-from-role",
   "phase": "structural",
   "expected": "fail",
-  "clause": "specifications/blueprint/v1/spec.md#connections",
+  "clause": "specifications/blueprint/v1/spec.md#bindings",
   "summary": "A binding carrying the retired fromRole is rejected as an unknown field."
 }

@@ -1,0 +1,10 @@
+{
+  "id": "semantic-042-worker-output-reads-a-public-address",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#workload",
+  "requirements": [
+    "COMP-TYPE-003"
+  ],
+  "summary": "A WORKER output reading the public URL of its own endpoint is rejected; a WORKER endpoint is never public."
+}

@@ -202,9 +202,13 @@ nothing.
 
 <a id="COMP-TYPE-003"></a>**`COMP-TYPE-003`**: A `WORKER` MAY declare endpoints
 and health probes. Its endpoints serve the platform and sibling nodes, for
-example a health check, metrics or an internal API, and never the public: a
-blueprint that exposes one `PUBLIC` is rejected
-([blueprint §4.3](../../blueprint/v1/spec.md#node-compute)).
+example a health check, metrics or an internal API, and never the public. A
+blueprint that exposes one `PUBLIC` fails with `ERR_ENDPOINT_NOT_EXPOSABLE`
+([blueprint §4.3](../../blueprint/v1/spec.md#node-compute)). Because a `WORKER`
+endpoint is never public, an output of a `WORKER` that reads a `public*`
+property of one of its own endpoints, through an `endpoint` origin or a
+`template`, could never resolve. It fails with `ERR_ENDPOINT_NOT_EXPOSABLE` at
+the output's `from` or `from/template`, semantic.
 
 <a id="COMP-TYPE-004"></a>**`COMP-TYPE-004`**: A `JOB` MUST declare `command`,
 and MUST NOT declare `endpoints` or `health`. It runs to completion and serves
@@ -225,7 +229,7 @@ them. It replaces the image's `CMD` and keeps its `ENTRYPOINT`, which is what
 `command` means in Docker and Compose. A string is `ERR_INVALID_TYPE` and an
 empty list `ERR_INVALID_VALUE`. A workload that needs a shell names one, as in
 `["/bin/sh", "-c", "…"]`. Where `command` is omitted, the image's own `CMD`
-runs.
+runs. These are structural rules.
 
 ### <a id="source"></a>5.1 Source
 
@@ -233,14 +237,14 @@ runs.
 says which: `image` for an image that already exists, `git` for a repository the
 platform builds into one.
 
-<a id="COMP-SRC-002"></a>**`COMP-SRC-002`**: `source` MUST hold exactly one of
+<a id="COMP-SRC-001"></a>**`COMP-SRC-001`**: `source` MUST hold exactly one of
 `image` and `git`. A Git source requires `repositoryURL` and `build`; its `ref`,
 when present, holds exactly one of `branch` and `commit`, and its `build` holds
 exactly one of `dockerfile` and `buildpacks`. In each of these, naming neither
 is `ERR_MISSING_FIELD` and naming both is `ERR_INVALID_VALUE`. These are
 structural rules.
 
-<a id="COMP-SRC-003"></a>**`COMP-SRC-003`**: `image` is an OCI image reference
+<a id="COMP-SRC-002"></a>**`COMP-SRC-002`**: `image` is an OCI image reference
 and MUST carry a tag or a SHA-256 digest. A bare name is an implicit `latest`
 and is `ERR_INVALID_VALUE`, structural. A tag is an author request; only a
 resolved digest identifies immutable content.
@@ -255,7 +259,7 @@ build input or the resulting image.
 using the environment-variable grammar of [§5.3](#env-vars). They configure the
 build only; runtime configuration rides on `envVars` and inputs.
 
-<a id="COMP-SRC-001"></a>**`COMP-SRC-001`**: Without a digest, image tags MUST NOT
+<a id="COMP-SRC-003"></a>**`COMP-SRC-003`**: Without a digest, image tags MUST NOT
 be latest, main, main-stable, master, stable, edge, nightly, dev or rolling,
 compared case-insensitively. Failure: `ERR_UNPINNED_IMAGE` at
 `/spec/workload/source/image`, semantic.
@@ -267,11 +271,12 @@ is breaking regardless of validation phase. Other tags are still mutable.
 Each named endpoint requires `targetPort` (integer 1–65535) and `protocol`
 (HTTP, HTTPS, WS, GRPC, TCP or UDP). `targetPort` is the port the workload
 listens on, where traffic for the endpoint is forwarded. It is never the public
-port, which the platform allocates, and a port below 1024 needs a capability the
-runtime grants. Endpoint names match `^[a-z][a-z0-9]{0,19}$`. Components declare
-capabilities, never exposure. Blueprint nodes select public exposure; otherwise
-endpoints are private. A `WORKER`'s endpoints are never public
-([`COMP-TYPE-003`](#COMP-TYPE-003)).
+port, which the platform allocates. A `targetPort` below 1024 is structurally
+valid; admission MAY reject it as a capability check, because binding a
+privileged port needs a capability the runtime may not grant. Endpoint names
+match `^[a-z][a-z0-9]{0,19}$`. Components declare capabilities, never exposure.
+Blueprint nodes select public exposure; otherwise endpoints are private. A
+`WORKER`'s endpoints are never public ([`COMP-TYPE-003`](#COMP-TYPE-003)).
 
 <a id="COMP-EP-001"></a>**`COMP-EP-001`**: Every endpoint reference MUST name its
 endpoint, including on a single-endpoint workload. There is no primary endpoint.
@@ -290,11 +295,18 @@ workloads start; they do not assert readiness.
 | publicAddress | string | Allocated TCP/UDP host:port, with IPv6 hosts bracketed |
 | publicPort | integer | Allocated TCP/UDP edge port |
 
-Public properties require explicit PUBLIC exposure at composition time.
-Wrong address families fail with `ERR_ENDPOINT_NOT_HTTP` or
-`ERR_ENDPOINT_NOT_L4`. Public addresses for private endpoints fail with
-`ERR_ENDPOINT_NOT_PUBLIC` in blueprint. The allocation context supplies the
-public URL scheme and routing address; a validator MUST NOT invent them.
+<a id="COMP-EP-004"></a>**`COMP-EP-004`**: A public property is read only from an
+endpoint whose protocol has that address family. `publicUrl` and
+`publicHostname` require HTTP, HTTPS, WS or GRPC, and otherwise fail with
+`ERR_ENDPOINT_NOT_HTTP`; `publicAddress` and `publicPort` require TCP or UDP,
+and otherwise fail with `ERR_ENDPOINT_NOT_L4`. The private properties apply to
+every protocol. Each diagnostic anchors at the reading output's `from`, or at
+`from/template` for a template, and these are semantic rules.
+
+Public properties require explicit PUBLIC exposure at composition time. Public
+addresses for private endpoints fail with `ERR_ENDPOINT_NOT_PUBLIC` in
+blueprint. The allocation context supplies the public URL scheme and routing
+address; a validator MUST NOT invent them.
 
 An authoritative endpoint allocation has opaque `identity` and `version`, an
 optional `privateHostname`, and optional public routing facts: `hostname`,
@@ -356,6 +368,7 @@ failure threshold restarts the workload.
 Defaults: initialDelaySeconds 10, periodSeconds 10, timeoutSeconds 5,
 successThreshold 1, failureThreshold 3. Initial delay is non-negative; every
 other numeric probe field is a positive integer.
+
 <a id="COMP-EP-003"></a>**`COMP-EP-003`**: Public HTTP-family exposure requires a
 readiness probe, checked by blueprint against the component contract.
 
@@ -363,10 +376,17 @@ readiness probe, checked by blueprint against the component contract.
 
 Each volume requires `mountPath` and a positive integer `minSizeGiB`, the
 smallest allocation the component can run with. Names use core's label grammar.
-`shared` defaults to false, and the volume attaches to one replica at a time.
-When `shared` is true, every replica mounts the same volume at once. `readOnly`
-defaults to false. The blueprint MUST allocate each volume at or above its
-minimum.
+`readOnly` defaults to false. `shared` defaults to false.
+
+v1 defines no replica count, so `shared` is stated as what an installation can
+observe. With `shared: false` the volume is mounted into at most one running
+instance of the workload at a time, and an implementation MUST NOT mount it into
+two instances concurrently: a workload with a non-shared volume runs one
+instance at a time, including while it is replaced. With `shared: true` every
+running instance mounts the same storage concurrently, which requires storage
+that supports concurrent read-write mounts.
+
+The blueprint MUST allocate each volume at or above its minimum.
 
 Paths MUST be canonical absolute POSIX paths: no dot segments, duplicate
 separators or trailing slash except root. Duplicate and ancestor/descendant
@@ -379,13 +399,20 @@ policy, separate from intrinsic validity.
 platform does not run, addressed elsewhere: a managed database, for example,
 whose address and credentials another node consumes. It has no workload
 ([`COMP-EXT-001`](#COMP-EXT-001)), and its inputs have no environment `target`,
-because nothing runs to receive one. A target on one is `ERR_INVALID_VALUE`.
-<a id="COMP-EXT-003"></a>**`COMP-EXT-003`**: It requires a non-empty outputs map.
-It exists to publish values another node consumes, so one publishing nothing is
-a node nothing can need.
-<a id="COMP-EXT-004"></a>**`COMP-EXT-004`**: It has no endpoints, so an
-`endpoint` origin, or a template reading one, fails with `ERR_UNKNOWN_ENDPOINT`.
-External nodes may publish literals or republish inputs.
+because nothing runs to receive one. A target on one is `ERR_INVALID_VALUE` at
+its `target`, structural.
+
+<a id="COMP-EXT-003"></a>**`COMP-EXT-003`**: An `EXTERNAL` component requires a
+`contract` with a non-empty `outputs` map. It exists to publish values another
+node consumes, so one publishing nothing is a node nothing can need. An absent
+`contract` or `outputs` is `ERR_MISSING_FIELD`, and an empty `outputs` is
+`ERR_INVALID_VALUE`. These are structural rules.
+
+<a id="COMP-EXT-004"></a>**`COMP-EXT-004`**: An `EXTERNAL` component has no
+endpoints, so an `endpoint` origin, or a template reading one, fails with
+`ERR_UNKNOWN_ENDPOINT`, semantic. External nodes may publish literals or
+republish inputs.
+
 There is no `resourceType` at node or value scope; what an external node is does
 not select how it is supplied. A language model or other API reached with an
 endpoint, a credential and a model together is a connection
@@ -397,14 +424,39 @@ endpoint, a credential and a model together is a connection
 completion once per rollout of the installation that deploys it: at
 installation, at each update and at each redeploy. v1 orders it against nothing.
 It may run before, after or beside any other node's rollout, so a job that needs
-another node ready waits for it itself.
+another node ready waits for it itself. The outcome of each run, success or
+failure, is recorded for the installation. v1 defines no automatic retry: a
+failed run is not started again until the next rollout. A failed run neither
+blocks nor fails the rollout of any other node, which is what ordering against
+nothing means.
 
 <a id="COMP-JOB-002"></a>**`COMP-JOB-002`**: `schedule.cron` makes a `JOB` recur.
-It is a cron expression of exactly five whitespace-separated fields: minute,
-hour, day of month, month and day of week. A seconds or year field, or a macro
-such as `@daily`, is `ERR_INVALID_VALUE`, structural, rather than read two
-ways. Each field takes the conventional cron syntax: a value, `*`, a range, a
-list or a step. The field count is the whole of what is checked offline.
+It is a cron expression of exactly five fields separated by one or more spaces
+or tabs: minute, hour, day of month, month and day of week. Any other field
+count, such as a seconds or year field, or a macro such as `@daily`, is
+`ERR_INVALID_VALUE` at `/spec/workload/schedule/cron`, structural, rather than
+read two ways.
+
+Each field is a comma-separated list of one or more elements. An element is `*`,
+a number `n` or a range `a-b` with `a` not greater than `b`, each optionally
+followed by a step `/s` where `s` is a positive number. A step keeps the first
+value of what it follows and every value `s` apart after it: `*/15` in the
+minute field is 0, 15, 30 and 45, and `n/s` means `n-max/s`, where `max` is the
+top of the field's range. Fields take numbers only, never month or day names. The ranges are:
+
+| Field | Range |
+|---|---|
+| Minute | 0–59 |
+| Hour | 0–23 |
+| Day of month | 1–31 |
+| Month | 1–12 |
+| Day of week | 0–6, where 0 is Sunday |
+
+A run falls due at every minute whose five values each match their field. When
+both day of month and day of week are restricted, that is when neither is `*`,
+a day matches when either of them matches, as POSIX `crontab` defines. A field
+outside this grammar, or a number outside its field's range, is
+`ERR_INVALID_SCHEDULE` at `/spec/workload/schedule/cron`, semantic.
 
 <a id="COMP-JOB-003"></a>**`COMP-JOB-003`**: A schedule is evaluated in UTC. There
 is no time-zone field, so `0 3 * * *` runs at 03:00 UTC wherever the
@@ -422,6 +474,7 @@ start one.
 
 `contract.inputs` and `contract.outputs` are named maps. Keys match
 `^[a-z][a-zA-Z0-9]{0,63}$`.
+
 <a id="COMP-DESC-001"></a>**`COMP-DESC-001`**: Every input and output requires a
 non-empty description and a logical schema.
 
@@ -448,8 +501,10 @@ origin:
 | `template` | Single-pass string substitution over own endpoints |
 
 A `from` naming no origin is `ERR_MISSING_FIELD`, and so is a `property` without
-its `endpoint`. A `from` naming two origins is `ERR_INVALID_VALUE`. These are
-structural rules.
+its `endpoint` or an `endpoint` without its `property`: the two keys are one
+origin, and each half requires the other. A `from` naming two origins is
+`ERR_INVALID_VALUE`. These are structural rules.
+
 <a id="COMP-OUT-002"></a>**`COMP-OUT-002`**: An `input` origin names an existing
 own input; otherwise `ERR_UNKNOWN_INPUT_REFERENCE` at `from/input`. Its logical
 type must fit the output.
@@ -464,8 +519,9 @@ in the same order as an `endpoint` and `property` origin. A path of any other
 shape names no endpoint explicitly, and fails with `ERR_UNKNOWN_ENDPOINT` at
 `from/template`, as an undeclared endpoint does. That includes the withdrawn
 property-first order, `${{ self.publicHostname.web }}`. There is no implicit
-endpoint selection. A property outside [§5.2](#endpoints)'s table fails with
-`ERR_REFERENCE_NOT_IN_SCOPE`. Escapes and non-recursive substitution follow
+endpoint selection. A declared endpoint followed by a property outside
+[§5.2](#endpoints)'s table fails with `ERR_UNKNOWN_ADDRESS_PROPERTY` at
+`from/template`. Escapes and non-recursive substitution follow
 core. A template produces a string. An `endpoint` origin reading `privatePort`
 or `publicPort` produces an integer, and one reading any other property a
 string. Values are checked against output schemas.
@@ -475,6 +531,7 @@ Runtime job-produced values are unsupported.
 
 <a id="COMP-VAL-001"></a>**`COMP-VAL-001`**: `schema.type` is one of string,
 integer, number, boolean, null, array or object.
+
 <a id="COMP-VAL-002"></a>**`COMP-VAL-002`**: The bounded JSON Schema 2020-12
 profile admits only the following assertions:
 
@@ -485,6 +542,9 @@ profile admits only the following assertions:
 | boolean, null | none |
 | array | items (required), minItems, maxItems, uniqueItems |
 | object | properties (required), required, additionalProperties (required false) |
+
+An `enum`, at any level, is non-empty and its members are unique; an empty or
+repeating one is `ERR_INVALID_VALUE`, structural.
 
 <a id="COMP-VAL-003"></a>**`COMP-VAL-003`**: Unknown or inapplicable keywords,
 remote or local schema references, composition and conditional schemas are
@@ -502,6 +562,7 @@ value defects fail with `ERR_VALUE_CONSTRAINT`. Resolved dynamic values are
 checked before encoding or workload execution. A reference-free `template` is a
 statically known string after escape processing and follows the same constraint
 and authored-secret rules as a literal.
+
 <a id="COMP-VAL-006"></a>**`COMP-VAL-006`**: Arrays validate every item. An item
 enumeration constrains members; an array enumeration constrains whole arrays.
 There is no special string-list transport type.
@@ -554,6 +615,9 @@ Core diagnostics also apply.
 | `ERR_UNKNOWN_ENDPOINT` | `semantic` | Endpoint absent or not explicitly named. |
 | `ERR_ENDPOINT_NOT_HTTP` | `semantic` | Endpoint cannot supply this HTTP operation. |
 | `ERR_ENDPOINT_NOT_L4` | `semantic` | Endpoint cannot supply an edge address. |
+| `ERR_UNKNOWN_ADDRESS_PROPERTY` | `semantic` | Template reads a property §5.2 does not define. |
+| `ERR_ENDPOINT_NOT_EXPOSABLE` | `semantic` | A `WORKER` endpoint is exposed `PUBLIC`, or a `WORKER` output reads a public property. |
+| `ERR_INVALID_SCHEDULE` | `semantic` | A cron field is outside §5.7's grammar or range. |
 | `ERR_UNKNOWN_INPUT_REFERENCE` | `semantic` | Output names no own input. |
 | `ERR_INVALID_MOUNT` | `semantic` | Mount is not canonical or overlaps another. |
 | `ERR_INVALID_VALUE_SCHEMA` | `semantic` | Unsupported or invalid logical schema. |

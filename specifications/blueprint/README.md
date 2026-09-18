@@ -21,8 +21,8 @@ A blueprint is an [item document](../core/v1/spec.md#item-directory),
 2. [§2 Document envelope](v1/spec.md#envelope), for what this family binds
 3. [§3 Identity](v1/spec.md#identity)
 4. [§4 Component graph](v1/spec.md#components), including
-   [§4.2 Explicit bindings](v1/spec.md#connections)
-5. [§5 Parameters](v1/spec.md#parameters), including
+   [§4.2 Explicit bindings](v1/spec.md#bindings)
+5. [§5 Installation parameters](v1/spec.md#parameters), including
    [§5.3 Atomic connections](v1/spec.md#atomic-connections), and
    [§7 Diagnostics](v1/spec.md#diagnostics)
 
@@ -42,7 +42,7 @@ dependencies" table in [§2](v1/spec.md#envelope).
 |---|---|---|
 | `BP-ID` | Item identity and description particular to a blueprint | [§3](v1/spec.md#identity) |
 | `BP-REF` | Component references and parameter sources | [§4.1](v1/spec.md#component-reference), [§5.2](v1/spec.md#value-sources) |
-| `BP-CONN` | Explicit bindings and the value-dependency graph | [§4.2](v1/spec.md#connections) |
+| `BP-CONN` | Explicit bindings and the value-dependency graph | [§4.2](v1/spec.md#bindings) |
 | `BP-NODE` | Node compute, storage and exposure | [§4.3](v1/spec.md#node-compute) |
 | `BP-PARAM` | Installation parameters, their recipients and supply | [§5](v1/spec.md#parameters) |
 | `BP-RESOLVE` | Installation resolution | [§5.2](v1/spec.md#value-sources) |

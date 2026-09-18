@@ -1,0 +1,10 @@
+{
+  "id": "structural-100-endpoint-without-a-property",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#outputs",
+  "requirements": [
+    "COMP-OUT-001"
+  ],
+  "summary": "An output whose from names an endpoint but no property is rejected; an endpoint origin needs both halves."
+}

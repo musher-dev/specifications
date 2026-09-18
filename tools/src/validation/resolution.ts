@@ -206,6 +206,30 @@ export function resolveInstallation(
     }
   }
   if (diagnostics.length || deferred.length) return result()
+  // BP-PARAM-009: a variable is acquired once per parameter, however many
+  // bindings name it, and its failures anchor at that parameter's `from`.
+  const variables = new Map<string, ResolvedValue>()
+  for (const [name, p] of Object.entries(parameters)) {
+    const source = parameterSource(p)
+    // A submitted value was already rejected with ERR_PARAMETER_NOT_SUBMITTABLE.
+    if (source?.namespace !== 'variables' || Object.hasOwn(context.parameters ?? {}, name)) continue
+    const path = '/spec/parameters/' + token(name) + '/from',
+      variable =
+        context.variables && Object.hasOwn(context.variables, source.key)
+          ? context.variables[source.key]
+          : undefined
+    if (!variable) deferred.push({ rule: 'BP-PARAM-009', path, missing: `variable:${source.key}` })
+    else if (variable.authorized !== true) fail('ERR_VARIABLE_NOT_AUTHORIZED', path, 'parameters')
+    else if (!variable.identity || !variable.version)
+      fail('ERR_INVALID_RESOLUTION_CONTEXT', path, 'parameters')
+    else
+      variables.set(name, {
+        value: variable.value,
+        sensitive: variable.sensitive,
+        identity: variable.identity,
+        version: variable.version,
+      })
+  }
   function endpoint(
     node: string,
     name: string,
@@ -348,23 +372,8 @@ export function resolveInstallation(
         if (value) value = { ...value, sensitive: true }
         else if (submitted === undefined) missing(path, `credential:${key}`)
       } else if (source?.namespace === 'variables') {
-        const variable =
-          context.variables && Object.hasOwn(context.variables, source.key)
-            ? context.variables[source.key]
-            : undefined
-        if (submitted !== undefined) {
-          /* Rejected with ERR_PARAMETER_NOT_SUBMITTABLE. */
-        } else if (!variable) missing(path, `variable:${source.key}`)
-        else if (variable.authorized !== true) fail('ERR_VARIABLE_NOT_AUTHORIZED', path)
-        else if (!variable.identity || !variable.version)
-          fail('ERR_INVALID_RESOLUTION_CONTEXT', path)
-        else
-          value = {
-            value: variable.value,
-            sensitive: variable.sensitive,
-            identity: variable.identity,
-            version: variable.version,
-          }
+        // Reported once for the parameter above; a binding only takes the value.
+        value = variables.get(key)
       } else {
         value = submitted
         if (!value && Object.hasOwn(p, 'default')) value = { value: p.default!, sensitive: false }

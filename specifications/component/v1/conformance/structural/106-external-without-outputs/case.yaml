@@ -1,0 +1,13 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: EXTERNAL
+  contract:
+    inputs:
+      baseUrl:
+        description: Base URL of the service this node addresses.
+        schema:
+          type: string

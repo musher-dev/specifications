@@ -1,0 +1,24 @@
+specVersion: v1
+kind: BLUEPRINT
+metadata:
+  slug: organization-variables
+  revision: 1
+  description: A web application that reads its region and error-reporting endpoint from organization variables.
+spec:
+  parameters:
+    region:
+      from: "${{ variables.cloud.region }}"
+    errorReportingUrl:
+      from: "${{ variables.observability.errorReportingUrl }}"
+  components:
+    web:
+      componentRef: ./components/web.yaml
+      compute:
+        profile: general.standard.small
+      exposure:
+        web: PUBLIC
+      bindings:
+        region:
+          parameter: region
+        errorReportingUrl:
+          parameter: errorReportingUrl

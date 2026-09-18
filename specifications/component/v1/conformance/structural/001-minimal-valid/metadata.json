@@ -2,6 +2,9 @@
   "id": "structural-001-minimal-valid",
   "phase": "structural",
   "expected": "pass",
-  "clause": "specifications/component/v1/spec.md#envelope",
+  "clause": "specifications/component/v1/spec.md#workload",
+  "requirements": [
+    "COMP-TYPE-001"
+  ],
   "summary": "The smallest document carrying every required field validates."
 }

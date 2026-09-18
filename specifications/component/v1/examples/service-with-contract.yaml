@@ -29,4 +29,11 @@ spec:
         target:
           envVarKey: POSTGRES_PASSWORD
         sensitive: true
-    outputs: {}
+    outputs:
+      address:
+        description: Internal host and port clients reach the database at.
+        schema:
+          type: string
+        from:
+          endpoint: primary
+          property: privateAddress

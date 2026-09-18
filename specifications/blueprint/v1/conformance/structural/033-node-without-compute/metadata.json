@@ -4,7 +4,7 @@
   "expected": "pass",
   "clause": "specifications/blueprint/v1/spec.md#node-compute",
   "requirements": [
-    "BP-NODE-002"
+    "BP-NODE-001"
   ],
   "summary": "A node carrying no compute is structurally valid; whether its component may run without one is semantic."
 }

@@ -12,6 +12,9 @@ spec:
       metrics:
         targetPort: 9090
         protocol: HTTP
+      admin:
+        targetPort: 9091
+        protocol: HTTP
   contract:
     inputs: {}
     outputs: {}

@@ -1,0 +1,10 @@
+{
+  "id": "structural-041-object-schemas-with-object-values",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v1/spec.md#value-schema",
+  "requirements": [
+    "COMP-VAL-001"
+  ],
+  "summary": "An object input with an object default and an object output with an object literal validate."
+}

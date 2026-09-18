@@ -1,0 +1,7 @@
+{
+  "id": "structural-015-service-without-a-readiness-probe",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v1/spec.md#health",
+  "summary": "A SERVICE declaring no readiness probe validates; whether it needs one depends on the exposure a blueprint selects."
+}

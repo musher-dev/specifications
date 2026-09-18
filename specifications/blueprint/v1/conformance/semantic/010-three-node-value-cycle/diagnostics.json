@@ -1,0 +1,6 @@
+[
+  {
+    "code": "ERR_VALUE_CYCLE",
+    "path": "/spec/components"
+  }
+]

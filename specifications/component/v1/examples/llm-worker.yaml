@@ -7,29 +7,29 @@ spec:
   type: WORKER
   workload:
     source:
-      image: example/worker:1
+      image: ghcr.io/musher-dev/assistant-worker:2.3.0
   contract:
     inputs:
-      url:
+      baseUrl:
         description: Base URL of the language-model API.
         schema:
           type: string
         presentationHint: ENDPOINT_URL
         target:
-          envVarKey: URL
-      key:
+          envVarKey: OPENAI_BASE_URL
+      apiKey:
         description: Credential presented to the language-model API.
         schema:
           type: string
         sensitive: true
         target:
-          envVarKey: KEY
+          envVarKey: OPENAI_API_KEY
       model:
         description: Model the language-model API answers with.
         schema:
           type: string
         target:
-          envVarKey: MODEL
+          envVarKey: OPENAI_MODEL
     outputs: {}
     connectionRequirements:
       llm:
@@ -38,6 +38,6 @@ spec:
           - STREAMING
           - TOOL_CALLS
         inputs:
-          baseUrl: url
-          apiKey: key
+          baseUrl: baseUrl
+          apiKey: apiKey
           model: model

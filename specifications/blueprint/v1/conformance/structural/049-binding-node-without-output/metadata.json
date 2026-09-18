@@ -2,7 +2,7 @@
   "id": "structural-049-binding-node-without-output",
   "phase": "structural",
   "expected": "fail",
-  "clause": "specifications/blueprint/v1/spec.md#connections",
+  "clause": "specifications/blueprint/v1/spec.md#bindings",
   "requirements": [
     "BP-CONN-003"
   ],

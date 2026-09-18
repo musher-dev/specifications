@@ -4,7 +4,7 @@
   "expected": "fail",
   "clause": "specifications/component/v1/spec.md#source",
   "requirements": [
-    "COMP-SRC-002"
+    "COMP-SRC-001"
   ],
   "summary": "A source naming both an image and a Git repository is rejected."
 }

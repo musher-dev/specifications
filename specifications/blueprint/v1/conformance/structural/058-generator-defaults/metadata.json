@@ -1,0 +1,15 @@
+{
+  "id": "structural-058-generator-defaults",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/blueprint/v1/spec.md#parameters",
+  "requirements": [
+    "BP-PARAM-004",
+    "BP-PARAM-010"
+  ],
+  "summary": "An empty generator validates and generates 32 bytes encoded as lowercase HEX.",
+  "effective": {
+    "/spec/parameters/sessionKey/generator/byteLength": 32,
+    "/spec/parameters/sessionKey/generator/encoding": "HEX"
+  }
+}

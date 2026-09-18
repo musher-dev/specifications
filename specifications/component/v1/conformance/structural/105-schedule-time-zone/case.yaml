@@ -1,0 +1,15 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: JOB
+  workload:
+    source:
+      image: ghcr.io/musher-dev/backup:1.0.2
+    command:
+      - /bin/backup
+    schedule:
+      cron: "0 3 * * *"
+      timeZone: Europe/Paris

@@ -108,6 +108,21 @@
       "path": "structural/020-too-many-screenshots"
     },
     {
+      "id": "structural-021-missing-spec-version",
+      "phase": "structural",
+      "path": "structural/021-missing-spec-version"
+    },
+    {
+      "id": "structural-022-missing-metadata",
+      "phase": "structural",
+      "path": "structural/022-missing-metadata"
+    },
+    {
+      "id": "structural-023-missing-spec",
+      "phase": "structural",
+      "path": "structural/023-missing-spec"
+    },
+    {
       "id": "semantic-001-duplicate-screenshot-basename",
       "phase": "semantic",
       "path": "semantic/001-duplicate-screenshot-basename"

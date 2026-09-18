@@ -77,11 +77,42 @@ export function endpointProblem(
 ): string | undefined {
   const declared = at(component, 'spec', 'workload', 'endpoints', endpoint)
   if (!declared) return 'ERR_UNKNOWN_ENDPOINT'
-  if (!ADDRESS_PROPERTIES.includes(property)) return 'ERR_REFERENCE_NOT_IN_SCOPE'
+  // COMP-REF-001: a declared endpoint, then a property §5.2 does not define.
+  if (!ADDRESS_PROPERTIES.includes(property)) return 'ERR_UNKNOWN_ADDRESS_PROPERTY'
+  // COMP-EP-004: a public property exists only in its endpoint's address family.
   const http = ['HTTP', 'HTTPS', 'WS', 'GRPC'].includes(String(at(declared, 'protocol')))
   if (['publicUrl', 'publicHostname'].includes(property) && !http) return 'ERR_ENDPOINT_NOT_HTTP'
   if (['publicAddress', 'publicPort'].includes(property) && http) return 'ERR_ENDPOINT_NOT_L4'
+  // COMP-TYPE-003: a WORKER endpoint is never PUBLIC, so its public address never exists.
+  if (property.startsWith('public') && at(component, 'spec', 'type') === 'WORKER')
+    return 'ERR_ENDPOINT_NOT_EXPOSABLE'
   return undefined
+}
+const CRON_FIELDS: readonly (readonly [number, number])[] = [
+  [0, 59],
+  [0, 23],
+  [1, 31],
+  [1, 12],
+  [0, 6],
+]
+/** COMP-JOB-002: every field of a five-field cron expression, against §5.7's grammar. */
+export function cronIsValid(cron: string): boolean {
+  const fields = cron.split(/[ \t]+/)
+  if (fields.length !== CRON_FIELDS.length) return true // the field count is structural
+  const number = (text: string, [min, max]: readonly [number, number]) =>
+    /^[0-9]+$/.test(text) && Number(text) >= min && Number(text) <= max
+  return fields.every((field, i) => {
+    const range = CRON_FIELDS[i]!
+    return field.split(',').every((element) => {
+      const [base = '', step, ...rest] = element.split('/')
+      if (rest.length || (step !== undefined && !(/^[0-9]+$/.test(step) && Number(step) > 0)))
+        return false
+      if (base === '*') return true
+      const [from = '', to, ...more] = base.split('-')
+      if (more.length || !number(from, range)) return false
+      return to === undefined || (number(to, range) && Number(from) <= Number(to))
+    })
+  })
 }
 export function sourceEndpoints(from: Json): { endpoint: string; property: string }[] {
   const s = record(from)
@@ -112,6 +143,9 @@ export function componentDiagnostics(document: Json): Diagnostic[] {
     if (tag && FLOATING_TAGS.has(tag.toLowerCase()))
       issue(out, 'ERR_UNPINNED_IMAGE', '/spec/workload/source/image')
   }
+  const cron = at(workload, 'schedule', 'cron')
+  if (typeof cron === 'string' && !cronIsValid(cron))
+    issue(out, 'ERR_INVALID_SCHEDULE', '/spec/workload/schedule/cron')
   for (const [name, probe] of Object.entries(record(workload.health))) {
     const http = at(probe, 'http')
     if (!isObject(http)) continue

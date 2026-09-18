@@ -1,0 +1,10 @@
+{
+  "id": "structural-072-empty-item-enum",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#value-schema",
+  "requirements": [
+    "COMP-VAL-006"
+  ],
+  "summary": "An item schema whose enum is written empty is rejected."
+}

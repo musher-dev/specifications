@@ -3,7 +3,7 @@
   "$id": "https://specifications.musher.dev/blueprint/v1/blueprint",
   "title": "Musher Blueprint Document",
   "description": "A composition of one or more components into a single deployable application.",
-  "$comment": "Structural and type validation only — cross-document reference resolution, slug/directory agreement, and platform capability checks are separate validation layers. See spec.md.",
+  "$comment": "Structural and type validation only: cross-document reference resolution, slug/directory agreement, and platform capability checks are separate validation layers. See spec.md.",
   "additionalProperties": false,
   "properties": {
     "kind": {
@@ -34,11 +34,14 @@
   "type": "object",
   "$defs": {
     "BlueprintBinding": {
-      "$comment": "spec.md §4.2 / ADR 0031 §1. The key that is present says where the input’s value comes from: a parameter, another node’s output, or a literal value. Exactly one; `node` belongs to `output`. Values from outside the documents enter only through parameters.",
+      "$comment": "spec.md §4.2 / ADR 0031 §1. The key that is present says where the input’s value comes from: a parameter, another node’s output, or a literal value. Exactly one; `node` goes with `output`. Values from outside the documents enter only through parameters.",
       "additionalProperties": false,
       "dependentRequired": {
         "node": [
           "output"
+        ],
+        "output": [
+          "node"
         ]
       },
       "description": "Where one receiving input’s value comes from.",
@@ -144,12 +147,12 @@
           "type": "string"
         },
         "revision": {
-          "description": "Item revision — the position of this release in the catalog item's lineage. Orders releases and nothing more.",
+          "description": "Item revision: the position of this release in the catalog item's lineage. Orders releases and nothing more.",
           "minimum": 1,
           "type": "integer"
         },
         "slug": {
-          "description": "Item slug — must equal the item's directory name.",
+          "description": "Item slug, which must equal the item's directory name.",
           "type": "string",
           "x-musher-grammar": "label"
         }
@@ -210,7 +213,7 @@
             }
           ],
           "$comment": "Both patterns are lookahead-free so they compile under RE2 as well as ECMA-262. A path segment must begin with a letter or digit, which is how `.` and `..` are excluded as interior segments without a negative lookahead; that leaves one spelling per target and keeps the containment check in the semantic phase from having to normalise first.",
-          "description": "Reference to the component document this node deploys, in one of two forms. A repo-local reference begins ./ or ../ and ends .yaml or .yml, and resolves relative to the directory holding this blueprint document; its version is the referenced document's metadata.revision. A published reference is the component's UUID, which names the component across all its revisions, and requires revision to select the one deployed. The relative-path prefix is what tells the two apart — a bare slug is not distinguishable from a UUID.",
+          "description": "Reference to the component document this node deploys, in one of two forms. A repo-local reference begins ./ or ../ and ends .yaml or .yml, and resolves relative to the directory holding this blueprint document; its version is the referenced document's metadata.revision. A published reference is the component's UUID, which names the component across all its revisions, and requires revision to select the one deployed. The relative-path prefix is what tells the two apart: a bare slug is not distinguishable from a UUID.",
           "maxLength": 256,
           "type": "string"
         },
@@ -313,7 +316,7 @@
           "description": "Logical default, replaced by a submitted value. No interpolation."
         },
         "from": {
-          "description": "One whole reference to a value outside the documents: ${{ variables.<path> }} for an organization variable, or ${{ connections.<path> }} for an atomic connection. Not submittable, except that a connection may be replaced whole.",
+          "description": "One whole reference to a value outside the documents: ${{ variables.<path> }} for an organization variable, or ${{ connections.<path> }} for an atomic connection. Never submitted; a connection is replaced whole through acquisition instead.",
           "maxLength": 512,
           "minLength": 1,
           "type": "string"
@@ -354,7 +357,7 @@
       "type": "object"
     },
     "BlueprintParameterUi": {
-      "$comment": "spec.md §5.3. The control is derived from the covered inputs' schema rather than declared, so this carries only what a derivation cannot supply.",
+      "$comment": "spec.md §5.4. The control is derived from the logical schema of the inputs the parameter is bound to rather than declared, so this carries only what a derivation cannot supply.",
       "additionalProperties": false,
       "description": "Presentation metadata for an install-form parameter.",
       "properties": {
@@ -367,7 +370,7 @@
           "x-additionalPropertiesName": "enumMember"
         },
         "examples": {
-          "description": "Example values illustrating the form a value takes. Never submitted — parameter.default supplies an omitted submission.",
+          "description": "Example values illustrating the form a value takes. Never submitted; parameter.default supplies an omitted submission.",
           "items": {
             "type": "string"
           },
@@ -397,18 +400,18 @@
       "type": "object"
     },
     "BlueprintPlacement": {
-      "$comment": "Every term pin is a lowercase token rather than a member of a closed set: the grammar is fixed by this contract, the vocabularies are not published anywhere yet, and spec.md §4.4 records that as a gap. cpuDedication is the exception — two values are the whole concept.",
+      "$comment": "Every term pin is a lowercase token rather than a member of a closed set: the grammar is fixed by this contract, the vocabularies are not published anywhere yet, and spec.md §4.4 records that as a gap. cpuDedication is the exception: two values are the whole concept.",
       "additionalProperties": false,
       "description": "Optional pins that narrow the hosts eligible for the node’s compute profile. A pin never changes the compute the profile names. See spec.md §4.4.",
       "properties": {
         "acceleratorInterconnect": {
-          "description": "Required accelerator interconnect, such as nvlink or pcie. Omit to pin nothing. The permitted terms are not a vocabulary this contract defines — see spec.md §4.4.",
+          "description": "Required accelerator interconnect, such as nvlink or pcie. Omit to pin nothing. The permitted terms are not a vocabulary this contract defines; see spec.md §4.4.",
           "maxLength": 64,
           "pattern": "^[a-z0-9][a-z0-9_-]*$",
           "type": "string"
         },
         "acceleratorRuntimes": {
-          "description": "Required accelerator runtimes, such as cuda. An empty array pins nothing, and a term may not repeat. The permitted terms are not a vocabulary this contract defines — see spec.md §4.4.",
+          "description": "Required accelerator runtimes, such as cuda. An empty array pins nothing, and a term may not repeat. The permitted terms are not a vocabulary this contract defines; see spec.md §4.4.",
           "items": {
             "maxLength": 64,
             "pattern": "^[a-z0-9][a-z0-9_-]*$",
@@ -418,13 +421,13 @@
           "uniqueItems": true
         },
         "acceleratorSKUClass": {
-          "description": "Exact accelerator SKU class to pin. Omit to pin nothing. The permitted terms are not a vocabulary this contract defines — see spec.md §4.4.",
+          "description": "Exact accelerator SKU class to pin. Omit to pin nothing. The permitted terms are not a vocabulary this contract defines; see spec.md §4.4.",
           "maxLength": 64,
           "pattern": "^[a-z0-9][a-z0-9_-]*$",
           "type": "string"
         },
         "cpuArchitectures": {
-          "description": "Permitted CPU architectures, such as x86_64 or arm64. An empty array pins nothing, and a term may not repeat. The permitted terms are not a vocabulary this contract defines — see spec.md §4.4.",
+          "description": "Permitted CPU architectures, such as x86_64 or arm64. An empty array pins nothing, and a term may not repeat. The permitted terms are not a vocabulary this contract defines; see spec.md §4.4.",
           "items": {
             "maxLength": 64,
             "pattern": "^[a-z0-9][a-z0-9_-]*$",
@@ -434,7 +437,7 @@
           "uniqueItems": true
         },
         "cpuDedication": {
-          "description": "Whether the node's vCPU must be dedicated rather than shared. Omit to pin nothing. This is the one pin whose vocabulary this contract closes — see spec.md §4.4.",
+          "description": "Whether the node's vCPU must be dedicated rather than shared. Omit to pin nothing. This is the one pin whose vocabulary this contract closes; see spec.md §4.4.",
           "enum": [
             "shared",
             "dedicated"
@@ -447,7 +450,7 @@
           "type": "integer"
         },
         "networkClass": {
-          "description": "Required network class. Omit to pin nothing. The permitted terms are not a vocabulary this contract defines — see spec.md §4.4.",
+          "description": "Required network class. Omit to pin nothing. The permitted terms are not a vocabulary this contract defines; see spec.md §4.4.",
           "maxLength": 64,
           "pattern": "^[a-z0-9][a-z0-9_-]*$",
           "type": "string"

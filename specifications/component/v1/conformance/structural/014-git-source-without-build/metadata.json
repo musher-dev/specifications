@@ -4,7 +4,7 @@
   "expected": "fail",
   "clause": "specifications/component/v1/spec.md#source",
   "requirements": [
-    "COMP-SRC-002"
+    "COMP-SRC-001"
   ],
   "summary": "A Git source omitting build is rejected; nothing says how the image is made."
 }

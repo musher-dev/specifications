@@ -10,7 +10,7 @@ spec:
       generator:
         byteLength: 32
         encoding: HEX
-      default: "${{ self.publicUrl }}"
+      default: not-a-generated-value
       ui:
         label: Secret key
   components:

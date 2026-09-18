@@ -8,13 +8,13 @@
       "BP-PARAM-009"
     ],
     "tree": {
-      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"url\":{\"from\":\"${{ variables.llm.baseUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"}}}}}}",
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"}}}}}}",
       "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Synthetic fixture input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"VALUE\"}}},\"outputs\":{\"forward\":{\"description\":\"Synthetic fixture output\",\"schema\":{\"type\":\"string\"},\"from\":{\"input\":\"url\"}}}}}}"
     },
     "document": "app/blueprint.yaml",
     "context": {
       "variables": {
-        "llm.baseUrl": {
+        "errors.reportingUrl": {
           "value": "https://synthetic.invalid",
           "sensitive": true,
           "identity": "variable-1",
@@ -41,13 +41,13 @@
       "BP-PARAM-009"
     ],
     "tree": {
-      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"url\":{\"from\":\"${{ variables.llm.baseUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"}}}}}}",
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"}}}}}}",
       "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Synthetic fixture input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"VALUE\"}}},\"outputs\":{\"forward\":{\"description\":\"Synthetic fixture output\",\"schema\":{\"type\":\"string\"},\"from\":{\"input\":\"url\"}}}}}}"
     },
     "document": "app/blueprint.yaml",
     "context": {
       "variables": {
-        "llm.baseUrl": {
+        "errors.reportingUrl": {
           "value": "https://synthetic.invalid",
           "sensitive": true,
           "identity": "variable-1",
@@ -84,13 +84,20 @@
       "BP-PARAM-009"
     ],
     "tree": {
-      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"url\":{\"from\":\"${{ variables.llm.baseUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"}}}}}}",
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"}}}}}}",
       "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Synthetic fixture input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"VALUE\"}}},\"outputs\":{\"forward\":{\"description\":\"Synthetic fixture output\",\"schema\":{\"type\":\"string\"},\"from\":{\"input\":\"url\"}}}}}}"
     },
     "document": "app/blueprint.yaml",
     "context": {},
     "expect": {
-      "/status": "INCOMPLETE"
+      "/status": "INCOMPLETE",
+      "/deferred": [
+        {
+          "rule": "BP-PARAM-009",
+          "path": "/spec/parameters/url/from",
+          "missing": "variable:errors.reportingUrl"
+        }
+      ]
     }
   },
   {
@@ -102,13 +109,13 @@
       "BP-PARAM-009"
     ],
     "tree": {
-      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"url\":{\"from\":\"${{ variables.llm.baseUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"}}}}}}",
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"}}}}}}",
       "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Synthetic fixture input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"VALUE\"}}},\"outputs\":{\"forward\":{\"description\":\"Synthetic fixture output\",\"schema\":{\"type\":\"string\"},\"from\":{\"input\":\"url\"}}}}}}"
     },
     "document": "app/blueprint.yaml",
     "context": {
       "variables": {
-        "llm.baseUrl": {
+        "errors.reportingUrl": {
           "value": "https://synthetic.invalid",
           "sensitive": true,
           "identity": "variable-1",
@@ -122,7 +129,10 @@
     },
     "diagnostics": [
       {
-        "code": "ERR_VARIABLE_NOT_AUTHORIZED"
+        "code": "ERR_VARIABLE_NOT_AUTHORIZED",
+        "path": "/spec/parameters/url/from",
+        "phase": "resolution",
+        "stage": "parameters"
       }
     ]
   },
@@ -135,13 +145,13 @@
       "BP-PARAM-009"
     ],
     "tree": {
-      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"url\":{\"from\":\"${{ variables.llm.baseUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"}}}}}}",
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"}}}}}}",
       "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Synthetic fixture input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"VALUE\"}}},\"outputs\":{\"forward\":{\"description\":\"Synthetic fixture output\",\"schema\":{\"type\":\"string\"},\"from\":{\"input\":\"url\"}}}}}}"
     },
     "document": "app/blueprint.yaml",
     "context": {
       "variables": {
-        "llm.baseUrl": {
+        "errors.reportingUrl": {
           "value": "https://synthetic.invalid",
           "sensitive": true,
           "identity": "variable-1",
@@ -155,7 +165,10 @@
     },
     "diagnostics": [
       {
-        "code": "ERR_INVALID_RESOLUTION_CONTEXT"
+        "code": "ERR_INVALID_RESOLUTION_CONTEXT",
+        "path": "/spec/parameters/url/from",
+        "phase": "resolution",
+        "stage": "parameters"
       }
     ]
   },
@@ -168,13 +181,13 @@
       "BP-PARAM-009"
     ],
     "tree": {
-      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"url\":{\"from\":\"${{ variables.llm.baseUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"}}}}}}",
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"}}}}}}",
       "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Synthetic fixture input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"VALUE\"}}},\"outputs\":{\"forward\":{\"description\":\"Synthetic fixture output\",\"schema\":{\"type\":\"string\"},\"from\":{\"input\":\"url\"}}}}}}"
     },
     "document": "app/blueprint.yaml",
     "context": {
       "variables": {
-        "llm.baseUrl": {
+        "errors.reportingUrl": {
           "value": 5432,
           "sensitive": true,
           "identity": "variable-1",
@@ -441,6 +454,31 @@
     }
   },
   {
+    "id": "rendering-connection-without-ui-form",
+    "profile": "rendering",
+    "operation": "form",
+    "requirements": [
+      "BP-UI-004"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"llm\":{\"from\":\"${{ connections.llm.default }}\"},\"region\":{\"from\":\"${{ variables.cloud.region }}\",\"ui\":{\"label\":\"Region\"}},\"title\":{\"ui\":{\"label\":\"Title\",\"order\":1}}},\"components\":{\"app\":{\"componentRef\":\"./app.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"title\":{\"parameter\":\"title\"},\"region\":{\"parameter\":\"region\"}},\"connectionBindings\":{\"llm\":{\"parameter\":\"llm\"}}}}}}",
+      "app/app.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"title\":{\"description\":\"Title\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"TITLE\"}},\"region\":{\"description\":\"Region\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"REGION\"}},\"url\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"model\":{\"description\":\"Connection input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"MODEL\"}}},\"outputs\":{},\"connectionRequirements\":{\"llm\":{\"protocol\":\"OPENAI_CHAT_COMPLETIONS\",\"inputs\":{\"baseUrl\":\"url\",\"apiKey\":\"key\",\"model\":\"model\"}}}}}}"
+    },
+    "document": "app/blueprint.yaml",
+    "context": {},
+    "expect": {
+      "": [
+        {
+          "name": "title",
+          "label": "Title",
+          "control": "text",
+          "order": 1,
+          "prominence": "PRIMARY"
+        }
+      ]
+    }
+  },
+  {
     "id": "lifecycle-retry-and-rotation",
     "profile": "lifecycle",
     "operation": "credential",
@@ -482,7 +520,7 @@
       "BP-RESOLVE-001"
     ],
     "input": {
-      "blueprint": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.llm.baseUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
+      "blueprint": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
       "specifications": {
         "core": "1.0.0",
         "component": "1.0.0",
@@ -504,7 +542,7 @@
         }
       },
       "variables": {
-        "llm.baseUrl": {
+        "errors.reportingUrl": {
           "identity": "variable-1",
           "version": "3",
           "value": "synthetic-secret"
@@ -523,7 +561,7 @@
           "version": "1",
           "parameters": {},
           "variables": {
-            "llm.baseUrl": {
+            "errors.reportingUrl": {
               "identity": "variable-1",
               "version": "3",
               "authorized": true,
@@ -556,7 +594,7 @@
     "expect": {
       "/status": "VALID",
       "/record/variables": {
-        "llm.baseUrl": {
+        "errors.reportingUrl": {
           "identity": "variable-1",
           "version": "3"
         }
@@ -573,7 +611,7 @@
       }
     },
     "tree": {
-      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.llm.baseUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
       "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Endpoint\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Credential\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}}},\"outputs\":{}}}}"
     },
     "document": "app/blueprint.yaml"
@@ -586,7 +624,7 @@
       "BP-RESOLVE-001"
     ],
     "input": {
-      "blueprint": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.llm.baseUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
+      "blueprint": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
       "specifications": {
         "core": "1.0.0",
         "component": "1.0.0",
@@ -607,7 +645,7 @@
         }
       },
       "variables": {
-        "llm.baseUrl": {
+        "errors.reportingUrl": {
           "identity": "variable-1",
           "version": "3",
           "value": "synthetic-secret"
@@ -626,7 +664,7 @@
           "version": "1",
           "parameters": {},
           "variables": {
-            "llm.baseUrl": {
+            "errors.reportingUrl": {
               "identity": "variable-1",
               "version": "3",
               "authorized": true,
@@ -665,7 +703,7 @@
       }
     ],
     "tree": {
-      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.llm.baseUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
       "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Endpoint\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Credential\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}}},\"outputs\":{}}}}"
     },
     "document": "app/blueprint.yaml"
@@ -813,7 +851,7 @@
         }
       },
       "variables": {
-        "llm.baseUrl": {
+        "errors.reportingUrl": {
           "identity": "variable-1",
           "version": "3",
           "value": "synthetic-secret"
@@ -832,7 +870,7 @@
           "version": "1",
           "parameters": {},
           "variables": {
-            "llm.baseUrl": {
+            "errors.reportingUrl": {
               "identity": "variable-1",
               "version": "3",
               "authorized": true,
@@ -866,7 +904,7 @@
       "/status": "INVALID"
     },
     "tree": {
-      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{\"type\":\"RANDOM_STRING\"}},\"url\":{\"from\":\"${{ variables.llm.baseUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
       "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Endpoint\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Credential\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}}},\"outputs\":{}}}}"
     },
     "document": "app/blueprint.yaml",
@@ -886,7 +924,7 @@
       "BP-RESOLVE-001"
     ],
     "input": {
-      "blueprint": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.llm.baseUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
+      "blueprint": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
       "specifications": {
         "core": "1.0.0",
         "component": "1.0.0",
@@ -908,7 +946,7 @@
         }
       },
       "variables": {
-        "llm.baseUrl": {
+        "errors.reportingUrl": {
           "identity": "variable-1",
           "version": "3",
           "value": "synthetic-secret"
@@ -927,7 +965,7 @@
           "version": "1",
           "parameters": {},
           "variables": {
-            "llm.baseUrl": {
+            "errors.reportingUrl": {
               "identity": "variable-1",
               "version": "3",
               "authorized": true,
@@ -961,7 +999,7 @@
       "/status": "INVALID"
     },
     "tree": {
-      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.llm.baseUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
       "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Endpoint\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Credential\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}}},\"outputs\":{}}}}"
     },
     "document": "app/blueprint.yaml",
@@ -981,7 +1019,7 @@
       "BP-RESOLVE-001"
     ],
     "input": {
-      "blueprint": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.llm.baseUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
+      "blueprint": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
       "specifications": {
         "core": "1.0.0",
         "component": "1.0.0",
@@ -1003,7 +1041,7 @@
         }
       },
       "variables": {
-        "llm.baseUrl": {
+        "errors.reportingUrl": {
           "identity": "variable-1",
           "version": "3",
           "value": "synthetic-secret"
@@ -1022,7 +1060,7 @@
           "version": "1",
           "parameters": {},
           "variables": {
-            "llm.baseUrl": {
+            "errors.reportingUrl": {
               "identity": "variable-1",
               "version": "3",
               "authorized": true,
@@ -1056,7 +1094,7 @@
       "/status": "INVALID"
     },
     "tree": {
-      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.llm.baseUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
       "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Endpoint\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Credential\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}}},\"outputs\":{}}}}"
     },
     "document": "app/blueprint.yaml",
@@ -1076,7 +1114,7 @@
       "BP-RESOLVE-001"
     ],
     "input": {
-      "blueprint": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.llm.baseUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
+      "blueprint": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
       "specifications": {
         "core": "1.0.0",
         "component": "1.0.0",
@@ -1098,7 +1136,7 @@
         }
       },
       "variables": {
-        "llm.baseUrl": {
+        "errors.reportingUrl": {
           "identity": "variable-1",
           "version": "3",
           "value": "synthetic-secret"
@@ -1117,7 +1155,7 @@
           "version": "1",
           "parameters": {},
           "variables": {
-            "llm.baseUrl": {
+            "errors.reportingUrl": {
               "identity": "variable-1",
               "version": "3",
               "authorized": true,
@@ -1151,7 +1189,7 @@
       "/status": "INVALID"
     },
     "tree": {
-      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.llm.baseUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
       "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Endpoint\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Credential\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}}},\"outputs\":{}}}}"
     },
     "document": "app/blueprint.yaml",
@@ -1172,7 +1210,7 @@
       "BP-PARAM-009"
     ],
     "input": {
-      "blueprint": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.llm.baseUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
+      "blueprint": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
       "specifications": {
         "core": "1.0.0",
         "component": "1.0.0",
@@ -1194,7 +1232,7 @@
         }
       },
       "variables": {
-        "llm.baseUrl": {
+        "errors.reportingUrl": {
           "identity": "variable-1",
           "version": "3",
           "value": "synthetic-secret"
@@ -1213,7 +1251,7 @@
           "version": "1",
           "parameters": {},
           "variables": {
-            "llm.baseUrl": {
+            "errors.reportingUrl": {
               "identity": "variable-1",
               "version": "4",
               "authorized": true,
@@ -1247,7 +1285,7 @@
       "/status": "INVALID"
     },
     "tree": {
-      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.llm.baseUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"}}}}}}",
       "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Endpoint\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Credential\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}}},\"outputs\":{}}}}"
     },
     "document": "app/blueprint.yaml",
@@ -2034,6 +2072,7 @@
     "profile": "resolution",
     "operation": "resolve",
     "requirements": [
+      "BP-PARAM-005",
       "BP-RESOLVE-001"
     ],
     "tree": {
@@ -2282,7 +2321,7 @@
       "BP-RESOLVE-001"
     ],
     "input": {
-      "blueprint": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"logLevel\":{\"default\":\"info\"},\"url\":{\"from\":\"${{ variables.llm.baseUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"},\"logLevel\":{\"parameter\":\"logLevel\"}}}}}}",
+      "blueprint": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"logLevel\":{\"default\":\"info\"},\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"},\"logLevel\":{\"parameter\":\"logLevel\"}}}}}}",
       "specifications": {
         "core": "1.0.0",
         "component": "1.0.0",
@@ -2304,7 +2343,7 @@
         }
       },
       "variables": {
-        "llm.baseUrl": {
+        "errors.reportingUrl": {
           "identity": "variable-1",
           "version": "3",
           "value": "synthetic-secret"
@@ -2328,7 +2367,7 @@
             }
           },
           "variables": {
-            "llm.baseUrl": {
+            "errors.reportingUrl": {
               "identity": "variable-1",
               "version": "3",
               "authorized": true,
@@ -2361,7 +2400,7 @@
     "expect": {
       "/status": "VALID",
       "/record/variables": {
-        "llm.baseUrl": {
+        "errors.reportingUrl": {
           "identity": "variable-1",
           "version": "3"
         }
@@ -2378,7 +2417,7 @@
       }
     },
     "tree": {
-      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"logLevel\":{\"default\":\"info\"},\"url\":{\"from\":\"${{ variables.llm.baseUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"},\"logLevel\":{\"parameter\":\"logLevel\"}}}}}}",
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"logLevel\":{\"default\":\"info\"},\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"},\"logLevel\":{\"parameter\":\"logLevel\"}}}}}}",
       "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Endpoint\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Credential\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"logLevel\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"LOG_LEVEL\"}}},\"outputs\":{}}}}"
     },
     "document": "app/blueprint.yaml"
@@ -2391,7 +2430,7 @@
       "BP-RESOLVE-001"
     ],
     "input": {
-      "blueprint": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"logLevel\":{\"default\":\"info\"},\"url\":{\"from\":\"${{ variables.llm.baseUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"},\"logLevel\":{\"parameter\":\"logLevel\"}}}}}}",
+      "blueprint": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"logLevel\":{\"default\":\"info\"},\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"},\"logLevel\":{\"parameter\":\"logLevel\"}}}}}}",
       "specifications": {
         "core": "1.0.0",
         "component": "1.0.0",
@@ -2413,7 +2452,7 @@
         }
       },
       "variables": {
-        "llm.baseUrl": {
+        "errors.reportingUrl": {
           "identity": "variable-1",
           "version": "3",
           "value": "synthetic-secret"
@@ -2437,7 +2476,7 @@
             }
           },
           "variables": {
-            "llm.baseUrl": {
+            "errors.reportingUrl": {
               "identity": "variable-1",
               "version": "3",
               "authorized": true,
@@ -2470,7 +2509,7 @@
     "expect": {
       "/status": "VALID",
       "/record/variables": {
-        "llm.baseUrl": {
+        "errors.reportingUrl": {
           "identity": "variable-1",
           "version": "3"
         }
@@ -2487,7 +2526,7 @@
       }
     },
     "tree": {
-      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"logLevel\":{\"default\":\"info\"},\"url\":{\"from\":\"${{ variables.llm.baseUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"},\"logLevel\":{\"parameter\":\"logLevel\"}}}}}}",
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"apiKey\":{\"generator\":{}},\"logLevel\":{\"default\":\"info\"},\"url\":{\"from\":\"${{ variables.errors.reportingUrl }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"parameter\":\"url\"},\"key\":{\"parameter\":\"apiKey\"},\"logLevel\":{\"parameter\":\"logLevel\"}}}}}}",
       "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Endpoint\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"URL\"}},\"key\":{\"description\":\"Credential\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"KEY\"}},\"logLevel\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"LOG_LEVEL\"}}},\"outputs\":{}}}}"
     },
     "document": "app/blueprint.yaml"

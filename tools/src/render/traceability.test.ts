@@ -5,7 +5,7 @@
 import { afterEach, describe, expect, test } from 'bun:test'
 import { CORE_FAMILY, familyPaths } from '../lib/layout.ts'
 import { FixtureRepo } from '../testing/fixture.ts'
-import { buildMatrix } from './traceability.ts'
+import { buildMatrix, clauseTitle } from './traceability.ts'
 
 let repo: FixtureRepo | null = null
 
@@ -46,5 +46,32 @@ describe('buildMatrix', () => {
       '## <a id="identity"></a>3. Identity\n\n<a id="LIST-ID-003"></a>rule\n',
     )
     expect(buildMatrix(fx.root)).not.toContain('## core/')
+  })
+
+  test('renders a heading with several anchors as plain text', () => {
+    const fx = new FixtureRepo()
+    repo = fx
+    fx.writeFile(
+      familyPaths('component', 'v1').spec,
+      '## <a id="workload"></a><a id="type"></a>5. The shape\n\n<a id="COMP-TYPE-001"></a>rule\n',
+    )
+    const matrix = buildMatrix(fx.root)
+    expect(matrix).toContain('[§The shape](../specifications/component/v1/spec.md#workload)')
+    expect(matrix).not.toContain('<a id="type">')
+  })
+})
+
+describe('clauseTitle', () => {
+  test('leaves a plain title alone', () => {
+    expect(clauseTitle('Document envelope')).toBe('Document envelope')
+  })
+
+  test('drops trailing anchors and the number behind them', () => {
+    expect(clauseTitle('<a id="type"></a>5. The shape')).toBe('The shape')
+    expect(clauseTitle('<a id="a"></a><a id="b"></a>5.1 Recipients')).toBe('Recipients')
+  })
+
+  test('keeps a number that is part of the title', () => {
+    expect(clauseTitle('Version 2 names')).toBe('Version 2 names')
   })
 })

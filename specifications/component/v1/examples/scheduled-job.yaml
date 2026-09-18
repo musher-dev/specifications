@@ -12,7 +12,7 @@ spec:
       - /bin/backup
       - --verify
     schedule:
-      cron: 0 3 * * *
+      cron: "0 3 * * *"
     volumes:
       archive:
         mountPath: /var/backups

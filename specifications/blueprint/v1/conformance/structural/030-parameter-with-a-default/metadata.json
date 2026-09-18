@@ -2,6 +2,9 @@
   "id": "structural-030-parameter-with-a-default",
   "phase": "structural",
   "expected": "pass",
-  "clause": "specifications/blueprint/v1/spec.md#value-sources",
-  "summary": "A parameter may carry a default."
+  "clause": "specifications/blueprint/v1/spec.md#parameters",
+  "requirements": [
+    "BP-PARAM-010"
+  ],
+  "summary": "A parameter carrying only a default validates: its value is submitted, and the default stands in for an omitted one."
 }

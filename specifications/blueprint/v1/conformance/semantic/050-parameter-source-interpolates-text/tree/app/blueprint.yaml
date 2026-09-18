@@ -9,7 +9,7 @@
   "spec": {
     "parameters": {
       "value": {
-        "from": "prefix-${{ variables.llm.baseUrl }}"
+        "from": "prefix-${{ variables.errors.reportingUrl }}"
       }
     },
     "components": {

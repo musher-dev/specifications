@@ -4,7 +4,7 @@
   "expected": "fail",
   "clause": "specifications/component/v1/spec.md#source",
   "requirements": [
-    "COMP-SRC-003"
+    "COMP-SRC-002"
   ],
   "summary": "An image reference carrying neither tag nor digest is rejected."
 }

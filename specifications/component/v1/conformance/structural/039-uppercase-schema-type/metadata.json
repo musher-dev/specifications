@@ -1,0 +1,10 @@
+{
+  "id": "structural-039-uppercase-schema-type",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#value-schema",
+  "requirements": [
+    "COMP-VAL-001"
+  ],
+  "summary": "A logical schema type written in the withdrawn uppercase spelling INTEGER is rejected; types are lowercase JSON Schema names."
+}

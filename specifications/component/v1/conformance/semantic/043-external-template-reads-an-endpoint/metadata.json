@@ -1,0 +1,10 @@
+{
+  "id": "semantic-043-external-template-reads-an-endpoint",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#external",
+  "requirements": [
+    "COMP-EXT-004"
+  ],
+  "summary": "An EXTERNAL output whose template reads an endpoint is rejected; an EXTERNAL component declares no endpoint."
+}

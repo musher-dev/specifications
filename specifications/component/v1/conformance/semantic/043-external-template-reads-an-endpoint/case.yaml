@@ -1,0 +1,15 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: EXTERNAL
+  contract:
+    outputs:
+      address:
+        description: Address of the managed database server.
+        schema:
+          type: string
+        from:
+          template: "postgres://${{ self.endpoints.primary.privateAddress }}/app"

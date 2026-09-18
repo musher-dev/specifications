@@ -50,6 +50,22 @@ interface Requirement {
   readonly specPath: string
 }
 
+/**
+ * A section title as a clause cell shows it: plain text, with no anchor markup.
+ *
+ * A heading carrying more than one anchor, as
+ * `## <a id="type"></a><a id="workload"></a>5. The component's shape`, reaches
+ * here with every anchor after the first, and its number, still in the title.
+ * The cell links to the section already, so the anchors are noise, and the
+ * number is dropped to match the headings with one anchor.
+ */
+export function clauseTitle(title: string): string {
+  return title
+    .replace(/<a id="[^"]*"><\/a>/g, '')
+    .trim()
+    .replace(/^[0-9]+(?:\.[0-9]+)*\.?\s+/, '')
+}
+
 function requirementsIn(family: Family): Requirement[] {
   if (!existsSync(family.specPath)) return []
   const outline = readOutline(readFileSync(family.specPath, 'utf8'))
@@ -58,7 +74,7 @@ function requirementsIn(family: Family): Requirement[] {
     id,
     family: family.name,
     section,
-    sectionTitle: titles.get(section) ?? '',
+    sectionTitle: clauseTitle(titles.get(section) ?? ''),
     specPath: familyPaths(family.name, family.major).spec,
   }))
 }

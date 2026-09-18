@@ -1,0 +1,25 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: WORKER
+  workload:
+    source:
+      image: ghcr.io/example/relay:1.0.0
+  contract:
+    inputs:
+      upstream:
+        schema:
+          type: string
+        description: Value this node receives from the node before it.
+        target:
+          envVarKey: UPSTREAM
+    outputs:
+      forwarded:
+        schema:
+          type: string
+        description: The received value, passed on unchanged.
+        from:
+          input: upstream

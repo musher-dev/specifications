@@ -68,7 +68,7 @@ every rule of core v1 applies to it. This family binds the parameters
 |---|---|
 | `kind` ([`CORE-ENV-002`](../../core/v1/spec.md#CORE-ENV-002)) | `BLUEPRINT` |
 | `metadata` ([`CORE-ENV-003`](../../core/v1/spec.md#CORE-ENV-003)) | [§3](#identity) |
-| Fields accepting `null` ([`CORE-ENV-007`](../../core/v1/spec.md#CORE-ENV-007)) | `spec.parameters.*.default`; `spec.components.*.bindings.*.value` and descendants permitted by receiving schemas ([§5.2](#value-sources)) |
+| Fields accepting `null` ([`CORE-ENV-007`](../../core/v1/spec.md#CORE-ENV-007)) | `spec.parameters.*.default`; `spec.components.*.bindings.*.value` and descendants permitted by receiving schemas ([§4.2](#bindings)) |
 | Item document ([core v1 §4.1](../../core/v1/spec.md#item-directory)) | `blueprint.yaml` |
 
 This specification narrows core v1 where it says so and relaxes it nowhere. It
@@ -104,18 +104,6 @@ sibling listing carries none, and component §4 says why the component documents
 beneath the item count something else. An item holding no blueprint therefore
 has no item revision at all, and is ordered by the components it publishes.
 
-<a id="description"></a><a id="BP-ID-004"></a>**`BP-ID-004`**: `description` is
-REQUIRED. It says what the deployable application is, in one or two sentences of
-plain text, 1 to 280 characters, the limit of a
-[listing summary](../../listing/v1/spec.md#presentation). A consumer MUST NOT
-render it as Markdown. An absent description is `ERR_MISSING_FIELD` at
-`/metadata`, and an empty or longer one is `ERR_INVALID_VALUE`. These are
-structural rules.
-
-The description is for the people who install and operate the application. It
-is not storefront copy: that is the sibling listing's `summary`, and neither is
-derived from the other.
-
 Two rules bind the item together. Both are `semantic`, and both are measured
 against the item root [§3.1](#item-directory) locates. The first is stated once
 for every family in
@@ -145,6 +133,18 @@ orders one item's revisions against another's either, and nothing checks a
 blueprint revision against the lineage it extends: `minimum: 1` is the whole of
 the offline rule. Component §4 carries a `capability` rule for a component's
 lineage, and this family has no analogue of it.
+
+<a id="description"></a><a id="BP-ID-004"></a>**`BP-ID-004`**: `description` is
+REQUIRED. It says what the deployable application is, in one or two sentences of
+plain text, 1 to 280 characters, the limit of a
+[listing summary](../../listing/v1/spec.md#presentation). A consumer MUST NOT
+render it as Markdown. An absent description is `ERR_MISSING_FIELD` at
+`/metadata`, and an empty one or one longer than 280 characters is
+`ERR_INVALID_VALUE` at `/metadata/description`. These are structural rules.
+
+The description is for the people who install and operate the application. It
+is not storefront copy: that is the sibling listing's `summary`, and neither is
+derived from the other.
 
 ### <a id="item-directory"></a>3.1 The item directory
 
@@ -201,7 +201,7 @@ components:
 | Member | Holds | Section |
 |---|---|---|
 | `componentRef`, `revision` | The component document the node deploys | [§4.1](#component-reference) |
-| `bindings` | The supplier of each input | [§4.2](#connections) |
+| `bindings` | The supplier of each input | [§4.2](#bindings) |
 | `compute` | The compute profile and its placement pins | [§4.3](#node-compute), [§4.4](#placement-constraints) |
 | `volumes` | The storage allocated to each volume | [§4.3](#node-compute) |
 | `exposure` | The exposure of each endpoint | [§4.3](#node-compute) |
@@ -227,7 +227,7 @@ that component is unavailable.
 All component documents in an item MUST be referenced. A standalone document
 without an item root cannot complete item-scoped checks.
 
-### <a id="connections"></a><a id="bindings"></a>4.2 Explicit bindings
+### <a id="bindings"></a><a id="connections"></a>4.2 Explicit bindings
 
 Each input supplier lives at `components.<node>.bindings.<input>`. The map key
 MUST name an input of the consuming component. The key present in a binding
@@ -240,11 +240,12 @@ says where the value comes from:
 | `value` | `value` | A non-secret logical JSON value |
 
 <a id="BP-CONN-003"></a>**`BP-CONN-003`**: A binding names exactly one source:
-`parameter`, `node` with `output`, or `value`. A binding carrying members of two
-sources, or of none, is `ERR_INVALID_VALUE` at the binding, and `node` without
-`output` is `ERR_MISSING_FIELD` there. These are structural rules. Duplicate
-input keys fail during parsing, and there is no override priority between
-suppliers.
+`parameter`, `node` with `output`, or `value`. A binding naming no source key is
+`ERR_MISSING_FIELD` at the binding, and one carrying members of two sources is
+`ERR_INVALID_VALUE` there. `node` and `output` go together: `node` without
+`output` and `output` without `node` are both `ERR_MISSING_FIELD` at the binding.
+These are structural rules. Duplicate input keys fail during parsing, and there
+is no override priority between suppliers.
 
 ```yaml
 bindings:
@@ -330,10 +331,14 @@ MUST NOT be `PUBLIC`: a worker is not request-driven, and its endpoints serve th
 platform and sibling nodes
 ([component `COMP-TYPE-003`](../../component/v1/spec.md#COMP-TYPE-003)).
 `PUBLIC` on one fails with `ERR_ENDPOINT_NOT_EXPOSABLE`. A `PUBLIC` HTTP-family
-endpoint of any other component requires the component to declare a readiness
+endpoint of a `SERVICE` requires the component to declare a readiness
 probe ([component §5.4](../../component/v1/spec.md#health)), otherwise
-`ERR_READINESS_REQUIRED`. Each diagnostic anchors at
-`exposure/<endpoint>`, and these are semantic rules.
+`ERR_READINESS_REQUIRED`. An output the component derives from a public property
+of an endpoint (`publicHostname`, `publicPort`, `publicAddress` or `publicUrl`,
+[component §5.2](../../component/v1/spec.md#endpoints)) requires that endpoint to
+be `PUBLIC`, otherwise `ERR_ENDPOINT_NOT_PUBLIC`. Each diagnostic anchors at
+`exposure/<endpoint>`, except that `ERR_ENDPOINT_NOT_PUBLIC` for an endpoint left
+out of `exposure` anchors at the node's `componentRef`. These are semantic rules.
 
 ### <a id="placement-constraints"></a><a id="advanced-constraints"></a>4.4 Placement constraints
 
@@ -367,11 +372,12 @@ even if its spelling still passes structural validation.
 
 `spec.parameters` lists everything an installation takes from outside the
 documents. Node bindings only wire what the documents contain
-([§4.2](#connections)), so a value that comes from outside enters as a
+([§4.2](#bindings)), so a value that comes from outside enters as a
 parameter, and a node reaches it by naming the parameter. Parameters are named
 installation values, independent of form presentation.
 
-A parameter is supplied in exactly one way, and the key present says which:
+A parameter is supplied in exactly one way, and the keys present say which;
+none, or only `default`, means the value is submitted:
 
 | Supply | Declared by | Value |
 |---|---|---|
@@ -389,14 +395,15 @@ parameters:
 ```
 
 <a id="BP-PARAM-010"></a>**`BP-PARAM-010`**: A parameter carries at most one of
-`default`, `generator` and `from`. A second one is `ERR_INVALID_VALUE`, a
-structural rule.
+`default`, `generator` and `from`. A `default` beside `generator` or `from` is
+`ERR_INVALID_VALUE` at `default`, and a `from` beside `generator` is
+`ERR_INVALID_VALUE` at `from`. These are structural rules.
 
 A parameter MAY also carry `ui` ([§5.4](#install-form)). Parameters declare no
 independent schema; their explicitly bound receiving inputs own the value
 contract.
 
-### <a id="coverage"></a><a id="derivation"></a><a id="merge"></a><a id="authored-parameters"></a>5.1 Recipients
+### <a id="recipients"></a><a id="coverage"></a><a id="derivation"></a><a id="merge"></a><a id="authored-parameters"></a>5.1 Recipients
 
 <a id="BP-PARAM-001"></a>**`BP-PARAM-001`**: Every parameter MUST be named by at
 least one `parameter` binding or, for a connection parameter, one connection
@@ -448,10 +455,14 @@ under [core's grammar](../../core/v1/spec.md#reference-grammar), in the
 `variables` or the `connections` namespace. The namespace says what kind of entry
 the reference names: `variables` one value, `connections` one atomic connection.
 It cannot concatenate, interpolate other text, hold two references, select a
-component or fall back. A `from` that is not one whole reference is
-`ERR_INVALID_PARAMETER_SOURCE`. A namespace core does not reserve, such as the
-withdrawn `config`, is `ERR_UNKNOWN_REFERENCE_NAMESPACE`, and any reserved
-namespace other than these two is `ERR_REFERENCE_NOT_IN_SCOPE`
+component or fall back. A `${{` that does not begin a well-formed reference is
+`ERR_MALFORMED_REFERENCE`
+([`CORE-REF-001`](../../core/v1/spec.md#CORE-REF-001)). A `from` whose references
+are well formed but that is not exactly one whole reference is
+`ERR_INVALID_PARAMETER_SOURCE`. The namespace keeps core's codes: a namespace
+core does not reserve, such as the withdrawn `config`, is
+`ERR_UNKNOWN_REFERENCE_NAMESPACE`, and any reserved namespace other than these
+two is `ERR_REFERENCE_NOT_IN_SCOPE`
 ([core v1 §5.2](../../core/v1/spec.md#reference-grammar)). All anchor at the
 parameter's `from` and are semantic rules. Component endpoint references are
 defined by component and consumed through explicitly named outputs.
@@ -464,7 +475,10 @@ organization values, which an environment MAY override. Acquisition supplies
 its identity, version, logical value and sensitivity. An unavailable variable
 is INCOMPLETE; a variable the installation may not read is
 `ERR_VARIABLE_NOT_AUTHORIZED`; a variable without identity or version is
-`ERR_INVALID_RESOLUTION_CONTEXT`. A parameter carrying `from` is never
+`ERR_INVALID_RESOLUTION_CONTEXT`. Each is reported once per parameter, however
+many bindings name it, at `/spec/parameters/<name>/from` in the `parameters`
+stage of the `resolution` phase, and an unavailable variable is deferred there
+under this rule. A parameter carrying `from` is never
 submitted: a submitted value for one is `ERR_PARAMETER_NOT_SUBMITTABLE` at
 `/spec/parameters/<name>`, in the `resolution` phase, and so is one for a
 generated parameter. A connection is replaced whole through acquisition instead
@@ -502,8 +516,8 @@ pins the snapshot identity/version.
 Record acceptance parses and validates its blueprint, resolves its pinned
 component artifacts, and verifies exact node sets, identities, revisions,
 artifact digests, source kinds, compute identities, volumes and exposure choices.
-Pinned image digests and authored Git commits must agree. The `variables` and
-generated-credential maps must match the variable and generated parameters the
+Pinned image digests and authored Git commits must agree. The `variables` map
+and the `credentials` map must match the variable and generated parameters the
 blueprint binds, and the private snapshot. Required endpoint allocation
 identities must be present. Replaying the snapshot must successfully resolve the
 blueprint without unpersisted selections. Exact specification dependency
@@ -517,8 +531,8 @@ people, so it keeps its `source` tag where an authored document names a source
 by the key present.
 It contains blueprint digest; exact specification releases and dependency
 editions; node component identity, revision and artifact digest; image digest
-for every running node; resolved Git commit for Git builds; compute identity,
-the profile slug, and version; allocated volumes and exposure; variable
+for every running node; resolved Git commit for Git builds; compute identity
+(the profile slug) and version; allocated volumes and exposure; variable
 identity/version pairs, keyed by variable path in `variables`; and credential
 identity/rotation references. Each component records source IMAGE, GIT or
 EXTERNAL. External nodes forbid image/commit/compute fields and have empty
@@ -553,7 +567,10 @@ credential and a model acquired together, not a scalar lookup. Each node's
 `connectionBindings` maps the name of a component connection requirement
 ([component §6.4](../../component/v1/spec.md#connection-requirements)) to
 `{ parameter: <name> }`, naming the connection parameter that satisfies it.
-Requirement names use the input-name grammar.
+Requirement names use the input-name grammar. The dotted path after
+`connections.` is an exact key naming one connection the organization has
+configured, for example `llm.default`; it is not object traversal and not a
+selector.
 
 <a id="BP-CONNECTION-001"></a>**`BP-CONNECTION-001`**: Every component connection
 requirement MUST have exactly one connection binding, and it MUST name a
@@ -633,8 +650,10 @@ Arrays/objects in a whole-value enum have no enumLabels keys.
 
 <a id="BP-UI-004"></a>**`BP-UI-004`**: A form offers each parameter that declares
 `ui`, except a generated parameter and a variable parameter: neither is ever an
-editable field. A connection parameter is offered as one control choosing a
-whole selection, never as its endpoint, credential or model.
+editable field. A connection parameter with `ui` is offered as one control
+choosing a whole selection, never as its endpoint, credential or model. A
+connection parameter without `ui` is not offered: installation acquires its
+default selection without a form field.
 
 For any other parameter, conceal sensitive values first; then offer enum
 choices, string-array item choices, boolean controls, structured JSON editing,
@@ -665,7 +684,6 @@ Core and component diagnostics apply, with these additions:
 | `ERR_REFERENCE_ESCAPE` | `semantic` | Component reference escapes the item. |
 | `ERR_INVALID_DEPENDENCY` | `semantic` | Supplied contract is invalid or fails identity/digest verification. |
 | `ERR_CONFLICTING_NODE_COMPUTE` | `semantic` | A node whose component runs carries no compute, or an external node carries some. |
-| `ERR_ENDPOINT_NOT_EXPOSABLE` | `semantic` | A `WORKER` endpoint is exposed `PUBLIC`. |
 | `ERR_UNKNOWN_NODE` | `semantic` | Binding names no node. |
 | `ERR_UNKNOWN_OUTPUT` | `semantic` | Binding names no producer output. |
 | `ERR_UNKNOWN_INPUT` | `semantic` | Binding names no receiver input. |

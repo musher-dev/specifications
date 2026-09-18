@@ -1,0 +1,11 @@
+{
+  "id": "semantic-035-public-property-of-a-private-endpoint",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#node-compute",
+  "requirements": [
+    "BP-NODE-005"
+  ],
+  "summary": "An output reading a public property of an endpoint the node exposes PRIVATE is rejected at that exposure.",
+  "document": "acme-wiki/blueprint.yaml"
+}

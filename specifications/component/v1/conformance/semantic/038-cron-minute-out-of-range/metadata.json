@@ -1,0 +1,10 @@
+{
+  "id": "semantic-038-cron-minute-out-of-range",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#jobs",
+  "requirements": [
+    "COMP-JOB-002"
+  ],
+  "summary": "A cron minute of 99 is rejected; the minute field ranges from 0 to 59."
+}

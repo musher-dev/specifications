@@ -6,6 +6,6 @@
   "requirements": [
     "BP-UI-003"
   ],
-  "summary": "A parameter enumLabels key naming no member of the covered input's enum is rejected.",
+  "summary": "A parameter enumLabels key naming no member of the bound input's enum is rejected.",
   "document": "acme-wiki/blueprint.yaml"
 }

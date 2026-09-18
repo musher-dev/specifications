@@ -6,5 +6,5 @@
   "requirements": [
     "BP-PARAM-010"
   ],
-  "summary": "A parameter carrying both a generator and from is rejected."
+  "summary": "A parameter carrying both a generator and from is rejected at from."
 }

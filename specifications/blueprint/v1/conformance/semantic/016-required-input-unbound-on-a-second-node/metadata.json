@@ -1,0 +1,11 @@
+{
+  "id": "semantic-016-required-input-unbound-on-a-second-node",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#recipients",
+  "requirements": [
+    "BP-PARAM-003"
+  ],
+  "summary": "A required input without a default that no binding names is rejected at its node, although another node's input is bound.",
+  "document": "acme-wiki/blueprint.yaml"
+}

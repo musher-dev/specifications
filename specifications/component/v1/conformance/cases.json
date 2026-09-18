@@ -68,14 +68,14 @@
       "path": "structural/014-git-source-without-build"
     },
     {
-      "id": "structural-015-public-service-without-readiness",
+      "id": "structural-015-service-without-a-readiness-probe",
       "phase": "structural",
-      "path": "structural/015-public-service-without-readiness"
+      "path": "structural/015-service-without-a-readiness-probe"
     },
     {
-      "id": "structural-016-private-service-without-readiness",
+      "id": "structural-016-tcp-service-without-a-health-probe",
       "phase": "structural",
-      "path": "structural/016-private-service-without-readiness"
+      "path": "structural/016-tcp-service-without-a-health-probe"
     },
     {
       "id": "structural-017-relative-mount-path",
@@ -113,24 +113,14 @@
       "path": "structural/026-privileged-target-port"
     },
     {
-      "id": "structural-027-public-tcp-endpoint",
+      "id": "structural-028-grpc-service-with-an-http-health-endpoint",
       "phase": "structural",
-      "path": "structural/027-public-tcp-endpoint"
-    },
-    {
-      "id": "structural-028-public-grpc-endpoint",
-      "phase": "structural",
-      "path": "structural/028-public-grpc-endpoint"
+      "path": "structural/028-grpc-service-with-an-http-health-endpoint"
     },
     {
       "id": "structural-029-endpoint-name-not-a-slug",
       "phase": "structural",
       "path": "structural/029-endpoint-name-not-a-slug"
-    },
-    {
-      "id": "structural-030-two-public-endpoints",
-      "phase": "structural",
-      "path": "structural/030-two-public-endpoints"
     },
     {
       "id": "structural-031-endpoint-name-with-a-hyphen",
@@ -158,44 +148,44 @@
       "path": "structural/038-probe-defaults-are-effective"
     },
     {
-      "id": "structural-039-integer-value-type",
+      "id": "structural-039-uppercase-schema-type",
       "phase": "structural",
-      "path": "structural/039-integer-value-type"
+      "path": "structural/039-uppercase-schema-type"
     },
     {
-      "id": "structural-040-number-value-type",
+      "id": "structural-040-integer-and-number-schemas",
       "phase": "structural",
-      "path": "structural/040-number-value-type"
+      "path": "structural/040-integer-and-number-schemas"
     },
     {
-      "id": "structural-041-json-value-type",
+      "id": "structural-041-object-schemas-with-object-values",
       "phase": "structural",
-      "path": "structural/041-json-value-type"
+      "path": "structural/041-object-schemas-with-object-values"
     },
     {
-      "id": "structural-042-json-value-with-pattern",
+      "id": "structural-042-pattern-on-an-object-schema",
       "phase": "structural",
-      "path": "structural/042-json-value-with-pattern"
+      "path": "structural/042-pattern-on-an-object-schema"
     },
     {
-      "id": "structural-043-json-value-with-enum",
+      "id": "structural-043-enum-with-duplicate-members",
       "phase": "structural",
-      "path": "structural/043-json-value-with-enum"
+      "path": "structural/043-enum-with-duplicate-members"
     },
     {
-      "id": "structural-044-format-on-a-non-string-value",
+      "id": "structural-044-presentation-hint-on-a-number",
       "phase": "structural",
-      "path": "structural/044-format-on-a-non-string-value"
+      "path": "structural/044-presentation-hint-on-a-number"
     },
     {
-      "id": "structural-045-timezone-format-value",
+      "id": "structural-045-timezone-presentation-hint",
       "phase": "structural",
-      "path": "structural/045-timezone-format-value"
+      "path": "structural/045-timezone-presentation-hint"
     },
     {
-      "id": "structural-046-format-outside-the-vocabulary",
+      "id": "structural-046-presentation-hint-outside-the-vocabulary",
       "phase": "structural",
-      "path": "structural/046-format-outside-the-vocabulary"
+      "path": "structural/046-presentation-hint-outside-the-vocabulary"
     },
     {
       "id": "structural-053-input-name-outside-the-grammar",
@@ -258,9 +248,9 @@
       "path": "structural/064-external-publishing-nothing"
     },
     {
-      "id": "structural-067-input-output-on-a-workload",
+      "id": "structural-067-input-origin-on-a-workload",
       "phase": "structural",
-      "path": "structural/067-input-output-on-a-workload"
+      "path": "structural/067-input-origin-on-a-workload"
     },
     {
       "id": "structural-068-output-with-an-empty-from",
@@ -273,29 +263,29 @@
       "path": "structural/069-value-and-input-in-one-from"
     },
     {
-      "id": "structural-070-string-list-value",
+      "id": "structural-070-array-of-enumerated-strings",
       "phase": "structural",
-      "path": "structural/070-string-list-value"
+      "path": "structural/070-array-of-enumerated-strings"
     },
     {
-      "id": "structural-071-string-list-without-an-enum",
+      "id": "structural-071-array-of-unenumerated-strings",
       "phase": "structural",
-      "path": "structural/071-string-list-without-an-enum"
+      "path": "structural/071-array-of-unenumerated-strings"
     },
     {
-      "id": "structural-072-string-list-with-an-empty-enum",
+      "id": "structural-072-empty-item-enum",
       "phase": "structural",
-      "path": "structural/072-string-list-with-an-empty-enum"
+      "path": "structural/072-empty-item-enum"
     },
     {
-      "id": "structural-073-string-list-with-a-pattern",
+      "id": "structural-073-pattern-on-an-array-schema",
       "phase": "structural",
-      "path": "structural/073-string-list-with-a-pattern"
+      "path": "structural/073-pattern-on-an-array-schema"
     },
     {
-      "id": "structural-074-string-list-with-a-format",
+      "id": "structural-074-presentation-hint-on-an-array",
       "phase": "structural",
-      "path": "structural/074-string-list-with-a-format"
+      "path": "structural/074-presentation-hint-on-an-array"
     },
     {
       "id": "structural-075-input-without-a-description",
@@ -423,29 +413,54 @@
       "path": "structural/099-volume-defaults-are-effective"
     },
     {
+      "id": "structural-100-endpoint-without-a-property",
+      "phase": "structural",
+      "path": "structural/100-endpoint-without-a-property"
+    },
+    {
+      "id": "structural-101-external-input-with-a-target",
+      "phase": "structural",
+      "path": "structural/101-external-input-with-a-target"
+    },
+    {
+      "id": "structural-102-empty-metadata-description",
+      "phase": "structural",
+      "path": "structural/102-empty-metadata-description"
+    },
+    {
+      "id": "structural-103-metadata-description-at-the-limit",
+      "phase": "structural",
+      "path": "structural/103-metadata-description-at-the-limit"
+    },
+    {
+      "id": "structural-104-withdrawn-cron-type",
+      "phase": "structural",
+      "path": "structural/104-withdrawn-cron-type"
+    },
+    {
+      "id": "structural-105-schedule-time-zone",
+      "phase": "structural",
+      "path": "structural/105-schedule-time-zone"
+    },
+    {
+      "id": "structural-106-external-without-outputs",
+      "phase": "structural",
+      "path": "structural/106-external-without-outputs"
+    },
+    {
       "id": "semantic-001-floating-tag-image-reference",
       "phase": "semantic",
       "path": "semantic/001-floating-tag-image-reference"
     },
     {
-      "id": "semantic-002-probe-names-unknown-endpoint",
+      "id": "semantic-002-probe-names-an-unknown-endpoint",
       "phase": "semantic",
-      "path": "semantic/002-probe-names-unknown-endpoint"
+      "path": "semantic/002-probe-names-an-unknown-endpoint"
     },
     {
-      "id": "semantic-005-no-primary-endpoint-elected",
+      "id": "semantic-006-probe-names-one-of-several-endpoints",
       "phase": "semantic",
-      "path": "semantic/005-no-primary-endpoint-elected"
-    },
-    {
-      "id": "semantic-006-primary-endpoint-elected",
-      "phase": "semantic",
-      "path": "semantic/006-primary-endpoint-elected"
-    },
-    {
-      "id": "semantic-007-probe-on-endpointless-workload",
-      "phase": "semantic",
-      "path": "semantic/007-probe-on-endpointless-workload"
+      "path": "semantic/006-probe-names-one-of-several-endpoints"
     },
     {
       "id": "semantic-008-probe-on-tcp-endpoint",
@@ -498,9 +513,9 @@
       "path": "semantic/023-reject-overlapping-mounts"
     },
     {
-      "id": "semantic-024-reject-wrong-address-family",
+      "id": "semantic-024-endpoint-origin-in-the-wrong-address-family",
       "phase": "semantic",
-      "path": "semantic/024-reject-wrong-address-family"
+      "path": "semantic/024-endpoint-origin-in-the-wrong-address-family"
     },
     {
       "id": "semantic-025-reject-malformed-reference",
@@ -561,6 +576,46 @@
       "id": "semantic-036-external-output-reads-an-endpoint",
       "phase": "semantic",
       "path": "semantic/036-external-output-reads-an-endpoint"
+    },
+    {
+      "id": "semantic-037-template-reads-an-unknown-address-property",
+      "phase": "semantic",
+      "path": "semantic/037-template-reads-an-unknown-address-property"
+    },
+    {
+      "id": "semantic-038-cron-minute-out-of-range",
+      "phase": "semantic",
+      "path": "semantic/038-cron-minute-out-of-range"
+    },
+    {
+      "id": "semantic-039-cron-month-name",
+      "phase": "semantic",
+      "path": "semantic/039-cron-month-name"
+    },
+    {
+      "id": "semantic-040-cron-day-of-week-seven",
+      "phase": "semantic",
+      "path": "semantic/040-cron-day-of-week-seven"
+    },
+    {
+      "id": "semantic-041-cron-lists-ranges-and-steps",
+      "phase": "semantic",
+      "path": "semantic/041-cron-lists-ranges-and-steps"
+    },
+    {
+      "id": "semantic-042-worker-output-reads-a-public-address",
+      "phase": "semantic",
+      "path": "semantic/042-worker-output-reads-a-public-address"
+    },
+    {
+      "id": "semantic-043-external-template-reads-an-endpoint",
+      "phase": "semantic",
+      "path": "semantic/043-external-template-reads-an-endpoint"
+    },
+    {
+      "id": "semantic-044-template-reads-the-public-url-of-a-tcp-endpoint",
+      "phase": "semantic",
+      "path": "semantic/044-template-reads-the-public-url-of-a-tcp-endpoint"
     }
   ]
 }

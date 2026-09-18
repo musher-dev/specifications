@@ -1,0 +1,8 @@
+specVersion: v1
+kind: LISTING
+spec:
+  itemType: COMPONENT
+  displayName: PostgreSQL
+  summary: The open-source relational database
+  category: INFRASTRUCTURE
+  lifecycleStage: STABLE
