@@ -12,7 +12,7 @@ spec:
     inputs:
       signingKey:
         schema:
-          type: STRING
+          type: string
         target:
           envVarKey: SIGNING_KEY
         description: Key the API signs session cookies with.

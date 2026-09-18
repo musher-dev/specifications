@@ -1,6 +1,3 @@
-# The tag satisfies the structural grammar — it is a tag, not a bare name —
-# but it floats. The blocklist is held in the semantic phase rather than in a
-# pattern so it can be extended without a major version.
 specVersion: v1
 kind: COMPONENT
 metadata:
@@ -15,4 +12,3 @@ spec:
       api:
         containerPort: 8080
         protocol: HTTP
-        visibility: PRIVATE

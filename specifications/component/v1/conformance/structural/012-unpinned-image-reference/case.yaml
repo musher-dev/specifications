@@ -1,5 +1,3 @@
-# A bare name is an implicit :latest. The deployed image would then change
-# whenever the registry moved the tag, with no change to any document here.
 specVersion: v1
 kind: COMPONENT
 metadata:
@@ -11,7 +9,6 @@ spec:
       web:
         containerPort: 8080
         protocol: HTTP
-        visibility: PRIVATE
     source:
       type: IMAGE
       ref: nginx

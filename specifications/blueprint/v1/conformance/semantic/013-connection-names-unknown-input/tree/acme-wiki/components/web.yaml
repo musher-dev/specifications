@@ -12,15 +12,15 @@ spec:
       web:
         containerPort: 8080
         protocol: HTTP
-        visibility: PRIVATE
   contract:
     inputs:
       databaseUrl:
         schema:
-          type: STRING
-          format: CONNECTION_STRING
-          resourceType: dev.musher.postgresql.connection-string
-          sensitive: true
+          type: string
         required: false
         description: Connection string of the database the application stores its data in.
+        sensitive: true
+        presentationHint: CONNECTION_STRING
+        target:
+          envVarKey: DATABASE_URL
     outputs: {}

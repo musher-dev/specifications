@@ -1,5 +1,3 @@
-# A DERIVED output is resolved from the running workload. A static value here
-# contradicts that, and nothing says which of the two a consumer would read.
 specVersion: v1
 kind: COMPONENT
 metadata:
@@ -11,7 +9,6 @@ spec:
       web:
         containerPort: 8080
         protocol: HTTP
-        visibility: PRIVATE
     source:
       type: IMAGE
       ref: postgres:17.10-alpine
@@ -20,6 +17,9 @@ spec:
       connectionString:
         description: Connection string a client uses to reach this database.
         schema:
-          type: STRING
-        valueFrom: DERIVED
-        value: postgres://localhost:5432/app
+          type: string
+        source:
+          type: ENDPOINT
+          endpoint: web
+          property: privateAddress
+          value: forbidden

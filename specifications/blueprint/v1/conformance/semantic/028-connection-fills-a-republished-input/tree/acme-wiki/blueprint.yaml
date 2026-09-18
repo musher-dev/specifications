@@ -1,10 +1,3 @@
-# `models` publishes `baseUrl` by reading its own `baseUrl` input, and this
-# blueprint wires that input from `web`, which in turn consumes `models`'
-# output. The cycle itself is legal. What is not is the output underneath it:
-# `models.baseUrl` now resolves only after an edge is bound, so the graph has an
-# output that depends on an inbound wire, and the cycle stops being resolvable.
-# Every output has to be resolvable before any edge is bound, and only the
-# blueprint knows which inputs are wired, so this is where that is decided.
 specVersion: v1
 kind: BLUEPRINT
 metadata:
@@ -15,17 +8,25 @@ spec:
     models:
       componentRef: ./components/models.yaml
       size: null
-      connections:
+      bindings:
         baseUrl:
-          fromNode: web
-          fromOutput: publicUrl
+          type: OUTPUT
+          node: web
+          output: publicUrl
+        apiKey:
+          type: PARAMETER
+          parameter: apiKey
     web:
       componentRef: ./components/web.yaml
       size: general.standard.small
-      connections:
+      bindings:
         llmBaseUrl:
-          fromNode: models
-          fromOutput: baseUrl
+          type: OUTPUT
+          node: models
+          output: baseUrl
+      exposure:
+        web: PUBLIC
+      volumes: {}
   parameters:
     apiKey:
       ui:

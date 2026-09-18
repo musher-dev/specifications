@@ -1,6 +1,3 @@
-# `Web_Server` is not a node name. The grammar is the one `metadata.slug`
-# uses, so a name that reads as an identifier in one language and not in
-# another cannot be what a connection's `fromNode` refers to.
 specVersion: v1
 kind: BLUEPRINT
 metadata:
@@ -11,5 +8,5 @@ spec:
     Web_Server:
       componentRef: ./components/web.yaml
       size: general.standard.small
-      connections: {}
+      bindings: {}
   parameters: {}

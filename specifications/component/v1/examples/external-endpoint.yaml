@@ -1,67 +1,48 @@
-# yaml-language-server: $schema=https://specifications.musher.dev/component/v1/component.schema.json
-#
-# A node this platform does not run. §5.6 gives it `spec.external` instead of
-# `spec.workload`: there is no image, no compute and no address of its own, and
-# `resourceType` is what says which kind of service it addresses.
-#
-# The three values an application needs in order to reach that service arrive as
-# inputs and leave as INPUT outputs. Publishing them from one node is the
-# point: they are only meaningful as a set, and a consumer wiring two of them
-# from this node is wiring them from one source by construction.
-#
-# §6.2's invariant holds as long as the blueprint does not wire these inputs:
-# an unwired input resolves before any edge is bound, and blueprint §4.2
-# rejects a connection into an input an INPUT output reads.
 specVersion: v1
 kind: COMPONENT
 metadata:
   revision: 1
 spec:
-  external:
-    resourceType: dev.musher.llm.chat-completions
+  external: {}
   contract:
     inputs:
       baseUrl:
         schema:
-          type: STRING
-          format: ENDPOINT_URL
-          resourceType: dev.musher.llm.base-url
-        description: >-
-          Base URL of the service this node addresses. Anything speaking the
-          same wire will do; nothing here resolves it or connects to it.
+          type: string
+        description: Base URL of the service this node addresses. Anything speaking the same wire will do;
+          nothing here resolves it or connects to it.
+        presentationHint: ENDPOINT_URL
       apiKey:
         schema:
-          type: STRING
-          sensitive: true
-          resourceType: dev.musher.llm.api-key
+          type: string
         description: Bearer credential presented to the service above.
+        sensitive: true
       model:
         schema:
-          type: STRING
-          resourceType: dev.musher.llm.model-name
+          type: string
         required: false
         description: Name the service uses to select what answers.
     outputs:
       baseUrl:
         description: Base URL of the addressed service, for a consumer to call.
         schema:
-          type: STRING
-          format: ENDPOINT_URL
-          resourceType: dev.musher.llm.base-url
-        valueFrom: INPUT
-        input: baseUrl
+          type: string
+        presentationHint: ENDPOINT_URL
+        source:
+          type: INPUT
+          input: baseUrl
       apiKey:
         description: Bearer credential for the addressed service.
         schema:
-          type: STRING
-          sensitive: true
-          resourceType: dev.musher.llm.api-key
-        valueFrom: INPUT
-        input: apiKey
+          type: string
+        sensitive: true
+        source:
+          type: INPUT
+          input: apiKey
       model:
         description: Model name the addressed service answers with.
         schema:
-          type: STRING
-          resourceType: dev.musher.llm.model-name
-        valueFrom: INPUT
-        input: model
+          type: string
+        source:
+          type: INPUT
+          input: model

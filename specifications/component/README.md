@@ -28,11 +28,8 @@ patterns [editors bind](../../docs/using-schemas.md#in-your-editor).
 
 An implementation implements every section of this specification and of each
 specification it builds on, together with the external specifications they cite.
-This one cites [RFC 5321](https://www.rfc-editor.org/rfc/rfc5321), [RFC
-3986](https://www.rfc-editor.org/rfc/rfc3986), [RFC
-1123](https://www.rfc-editor.org/rfc/rfc1123) and the [IANA Time Zone
-Database](https://www.iana.org/time-zones). The list above is where to begin,
-not what to implement.
+Logical values use the bounded JSON Schema profile in §6.3. The list above is
+where to begin, not what to implement.
 
 ## Builds on
 

@@ -1,7 +1,7 @@
 {
   "id": "structural-074-string-list-with-a-format",
   "phase": "structural",
-  "expected": "fail",
+  "expected": "pass",
   "clause": "specifications/component/v1/spec.md#value-schema",
   "requirements": [
     "COMP-VAL-003"

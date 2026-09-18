@@ -1,10 +1,3 @@
-# Mutual discovery: `api` reads `web`'s address and `web` reads `api`'s. This
-# is the composition §4.2 exists to permit, and the regression pin for it.
-#
-# Every output here is a function of its own node — component §6.2 — so both
-# are resolvable before either edge is bound, and the cycle costs an
-# implementation nothing. Reintroducing an acyclicity rule rejects this
-# document, which is why doing so after publication is a major version.
 specVersion: v1
 kind: BLUEPRINT
 metadata:
@@ -15,15 +8,17 @@ spec:
     api:
       componentRef: ./components/api.yaml
       size: general.standard.small
-      connections:
+      bindings:
         webUrl:
-          fromNode: web
-          fromOutput: publicUrl
+          type: OUTPUT
+          node: web
+          output: publicUrl
     web:
       componentRef: ./components/web.yaml
       size: general.standard.small
-      connections:
+      bindings:
         apiUrl:
-          fromNode: api
-          fromOutput: privateAddress
+          type: OUTPUT
+          node: api
+          output: privateAddress
   parameters: {}

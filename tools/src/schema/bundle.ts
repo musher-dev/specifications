@@ -27,6 +27,7 @@ import { dirname } from 'node:path'
 import {
   bundleUrl,
   CATALOG_FILE,
+  CORE_FAMILY,
   canonicalJson,
   discoverKinds,
   familyPaths,
@@ -136,6 +137,17 @@ export function buildBundle(family: FamilyRef, options: BuildOptions = {}): stri
   bundle.$id = options.id ?? bundleUrl(family.name, family.major)
   if (Object.keys(defs).length > 0) bundle.$defs = defs
 
+  for (const { node } of walkObjects(bundle)) {
+    if (node['x-musher-grammar'] === undefined) continue
+    if (node['x-musher-grammar'] !== 'label') throw new Error('unknown core grammar')
+    const core = reader.read(familyPaths(CORE_FAMILY, 'v1').spec)?.toString('utf8')
+    const section = core?.split('<a id="label-grammar"></a>')[1]?.split('### ')[0]
+    const pattern = section?.match(/\x60(\^\[a-z\][^\x60]+\$)\x60/)?.[1]
+    if (!pattern) throw new Error('core label grammar is missing')
+    node.pattern = pattern
+    node.maxLength = 63
+    delete node['x-musher-grammar']
+  }
   assertSelfContained(bundle, family)
   return canonicalJson(bundle)
 }
@@ -191,6 +203,8 @@ export function familyBundle(family: FamilyRef): string | null {
     hash.update(bytes)
     hash.update('\0')
   }
+  const coreBytes = disk.read(familyPaths(CORE_FAMILY, 'v1').spec)
+  if (coreBytes) hash.update(coreBytes)
   const key = hash.digest('hex')
   const cached = memo.get(key)
   if (cached !== undefined) return cached
@@ -199,7 +213,9 @@ export function familyBundle(family: FamilyRef): string | null {
     read: (path) =>
       path.startsWith(`${src}/`) && !path.slice(src.length + 1).includes('/')
         ? (snapshot.get(path.slice(src.length + 1)) ?? null)
-        : disk.read(path),
+        : path === familyPaths(CORE_FAMILY, 'v1').spec
+          ? coreBytes
+          : disk.read(path),
   }
   const built = buildBundle(family, { reader })
   memo.set(key, built)

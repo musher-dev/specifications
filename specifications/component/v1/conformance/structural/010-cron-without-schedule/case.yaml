@@ -1,5 +1,3 @@
-# A CRON with no schedule names no time to run at. Defaulting one would be
-# the platform choosing when someone else's job fires.
 specVersion: v1
 kind: COMPONENT
 metadata:

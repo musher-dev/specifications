@@ -2,8 +2,10 @@
   "id": "semantic-035-self-reference-names-private-endpoint",
   "phase": "semantic",
   "expected": "fail",
-  "clause": "specifications/blueprint/v1/spec.md#value-sources",
-  "requirements": ["BP-PARAM-005"],
+  "clause": "specifications/blueprint/v1/spec.md#components",
+  "requirements": [
+    "BP-CONN-002"
+  ],
   "summary": "A `self` reference reading a public address from a PRIVATE endpoint is rejected.",
   "document": "acme-wiki/blueprint.yaml"
 }

@@ -8,6 +8,6 @@
   ],
   "summary": "A NUMBER value constrained to whole numbers by a pattern validates.",
   "effective": {
-    "/spec/contract/inputs/port/schema/sensitive": false
+    "/spec/contract/inputs/port/sensitive": false
   }
 }

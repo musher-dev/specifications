@@ -1,0 +1,11 @@
+{
+  "id": "semantic-052-reject-small-volume",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#node-compute",
+  "requirements": [
+    "BP-NODE-001"
+  ],
+  "summary": "reject small volume",
+  "document": "app/blueprint.yaml"
+}

@@ -1,6 +1,3 @@
-# An endpoint name is referenced by probes and by blueprint `self` references, and is
-# composed into a DNS label beside the names identifying the deployment. A dot
-# in one is a hazard rather than a matter of taste.
 specVersion: v1
 kind: COMPONENT
 metadata:
@@ -15,4 +12,3 @@ spec:
       web.api:
         containerPort: 8080
         protocol: HTTP
-        visibility: PRIVATE

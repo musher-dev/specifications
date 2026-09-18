@@ -1,8 +1,3 @@
-# A parameter carries the ui block §5.3 defines, and nothing about the value it
-# collects: the shape, the enum the labels name and the description all belong
-# to the inputs the parameter covers. This case has no item root, so it pins the
-# block's structure alone; whether `S3` and `GCS` are members of a covered
-# input's enum is semantic/022's question.
 specVersion: v1
 kind: BLUEPRINT
 metadata:
@@ -13,7 +8,13 @@ spec:
     db:
       componentRef: ./components/postgres.yaml
       size: general.standard.small
-      connections: {}
+      bindings:
+        backend:
+          type: PARAMETER
+          parameter: backend
+        hostname:
+          type: PARAMETER
+          parameter: hostname
   parameters:
     backend:
       ui:

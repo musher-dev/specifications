@@ -3,7 +3,9 @@
   "phase": "semantic",
   "expected": "fail",
   "clause": "specifications/blueprint/v1/spec.md#coverage",
-  "requirements": ["BP-PARAM-001"],
+  "requirements": [
+    "BP-PARAM-001"
+  ],
   "summary": "A parameter whose key names no unwired input of any node is rejected.",
   "document": "acme-wiki/blueprint.yaml"
 }

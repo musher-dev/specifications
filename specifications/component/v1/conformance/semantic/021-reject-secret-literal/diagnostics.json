@@ -1,0 +1,6 @@
+[
+  {
+    "code": "ERR_SECRET_LITERAL",
+    "path": "/spec/contract/inputs/value/default"
+  }
+]

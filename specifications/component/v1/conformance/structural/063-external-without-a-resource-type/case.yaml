@@ -1,6 +1,3 @@
-# The identifier is what the node *is*, so a block without one describes
-# nothing. It is REQUIRED rather than defaulted: an identifier a document may
-# leave out is one two implementations may read differently.
 specVersion: v1
 kind: COMPONENT
 metadata:
@@ -13,6 +10,7 @@ spec:
       baseUrl:
         description: Base URL of the addressed service, for a consumer to call.
         schema:
-          type: STRING
-        valueFrom: DECLARED
-        value: https://api.example.com/v1
+          type: string
+        source:
+          type: LITERAL
+          value: https://api.example.com/v1

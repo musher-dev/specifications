@@ -1,8 +1,3 @@
-# §5.1 makes the parameter key the whole of the correspondence between a
-# parameter and the inputs it covers, so a key outside the input grammar could
-# cover nothing — there is no input it could ever equal. Rejecting it
-# structurally is cheaper than the `ERR_UNBOUND_PARAMETER` it would otherwise
-# earn in the semantic phase, and it says why rather than only that.
 specVersion: v1
 kind: BLUEPRINT
 metadata:
@@ -13,7 +8,10 @@ spec:
     web:
       componentRef: ./components/web.yaml
       size: general.standard.small
-      connections: {}
+      bindings:
+        Site_Title:
+          type: PARAMETER
+          parameter: Site_Title
   parameters:
     Site_Title:
       ui:

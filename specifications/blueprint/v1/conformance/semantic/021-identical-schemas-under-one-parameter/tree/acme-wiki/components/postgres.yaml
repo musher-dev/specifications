@@ -1,6 +1,3 @@
-# The same schema, written differently. `sensitive` comes first here and second
-# in `api.yaml`, so a comparison of the blocks as written calls these different.
-# By the test BP-PARAM-002 states, they are the same.
 specVersion: v1
 kind: COMPONENT
 metadata:
@@ -15,13 +12,14 @@ spec:
       primary:
         containerPort: 5432
         protocol: TCP
-        visibility: PRIVATE
   contract:
     inputs:
       adminPassword:
         schema:
-          sensitive: true
-          type: STRING
+          type: string
         required: false
         description: Superuser password for the database cluster.
+        sensitive: true
+        target:
+          envVarKey: ADMIN_PASSWORD
     outputs: {}

@@ -3,36 +3,40 @@ kind: COMPONENT
 metadata:
   revision: 1
 spec:
-  external:
-    resourceType: dev.musher.llm.chat-completions
+  external: {}
   contract:
     inputs:
       baseUrl:
         schema:
-          type: STRING
-          format: ENDPOINT_URL
-          resourceType: dev.musher.llm.base-url
+          type: string
         description: Base URL of the service this node addresses.
+        presentationHint: ENDPOINT_URL
       apiKey:
         schema:
-          type: STRING
-          sensitive: true
-          resourceType: dev.musher.llm.api-key
+          type: string
         description: Bearer credential presented to the service.
+        sensitive: true
     outputs:
       baseUrl:
         schema:
-          type: STRING
-          format: ENDPOINT_URL
-          resourceType: dev.musher.llm.base-url
-        valueFrom: INPUT
-        input: baseUrl
+          type: string
         description: Base URL of the service this node addresses.
+        presentationHint: ENDPOINT_URL
+        source:
+          type: INPUT
+          input: baseUrl
       apiKey:
         schema:
-          type: STRING
-          sensitive: true
-          resourceType: dev.musher.llm.api-key
-        valueFrom: INPUT
-        input: apiKey
+          type: string
         description: Bearer credential presented to the service.
+        sensitive: true
+        source:
+          type: INPUT
+          input: apiKey
+      installDefault:
+        description: Node-specific default address
+        schema:
+          type: string
+        source:
+          type: TEMPLATE
+          template: ${{ self.publicUrl }}

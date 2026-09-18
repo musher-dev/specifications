@@ -1,7 +1,3 @@
-# The mirror of semantic-036. PUBLIC_ADDRESS derives the host:port a TCP or UDP
-# endpoint publishes on an allocated edge port; an HTTP-family endpoint is
-# published through the shared ingress as a URL, so there is no such port to
-# name.
 specVersion: v1
 kind: BLUEPRINT
 metadata:
@@ -12,9 +8,11 @@ spec:
     app:
       componentRef: ./components/app.yaml
       size: general.standard.small
-      connections: {}
-  parameters:
-    apiAddress:
-      default: "${{ self.publicAddress.api }}"
-      ui:
-        label: API address
+      bindings:
+        apiAddress:
+          type: OUTPUT
+          node: app
+          output: installDefault
+      exposure:
+        api: PUBLIC
+      volumes: {}

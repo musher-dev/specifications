@@ -12,4 +12,3 @@ spec:
       db:
         containerPort: 5432
         protocol: TCP
-        visibility: PRIVATE

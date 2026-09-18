@@ -1,0 +1,613 @@
+[
+  {
+    "id": "resolution-authorized-config",
+    "profile": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-RESOLVE-001"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"BLUEPRINT\",\n  \"metadata\": {\n    \"slug\": \"app\",\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"components\": {\n      \"web\": {\n        \"componentRef\": \"./web.yaml\",\n        \"size\": \"general.standard.small\",\n        \"bindings\": {\n          \"url\": {\n            \"type\": \"CONFIG_REF\",\n            \"source\": \"${{ config.llm.baseUrl }}\"\n          }\n        }\n      }\n    },\n    \"parameters\": {}\n  }\n}\n",
+      "app/web.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"COMPONENT\",\n  \"metadata\": {\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"workload\": {\n      \"type\": \"WORKER\",\n      \"source\": {\n        \"type\": \"IMAGE\",\n        \"ref\": \"example/worker:1\"\n      }\n    },\n    \"contract\": {\n      \"inputs\": {\n        \"url\": {\n          \"description\": \"Synthetic fixture input\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"target\": {\n            \"envVarKey\": \"VALUE\"\n          }\n        }\n      },\n      \"outputs\": {\n        \"forward\": {\n          \"description\": \"Synthetic fixture output\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"source\": {\n            \"type\": \"INPUT\",\n            \"input\": \"url\"\n          }\n        }\n      }\n    }\n  }\n}\n"
+    },
+    "document": "app/blueprint.yaml",
+    "context": {
+      "configuration": {
+        "llm.baseUrl": {
+          "value": "https://synthetic.invalid",
+          "sensitive": true,
+          "identity": "configuration-1",
+          "version": "7",
+          "authorized": true
+        }
+      }
+    },
+    "expect": {
+      "/status": "VALID",
+      "/inputs/web:in:url/sensitive": true,
+      "/outputs/web:out:forward/sensitive": true,
+      "/inspection/web:in:url": {
+        "sensitive": true,
+        "redacted": true
+      }
+    }
+  },
+  {
+    "id": "resolution-missing-config",
+    "profile": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-RESOLVE-001"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"BLUEPRINT\",\n  \"metadata\": {\n    \"slug\": \"app\",\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"components\": {\n      \"web\": {\n        \"componentRef\": \"./web.yaml\",\n        \"size\": \"general.standard.small\",\n        \"bindings\": {\n          \"url\": {\n            \"type\": \"CONFIG_REF\",\n            \"source\": \"${{ config.llm.baseUrl }}\"\n          }\n        }\n      }\n    },\n    \"parameters\": {}\n  }\n}\n",
+      "app/web.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"COMPONENT\",\n  \"metadata\": {\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"workload\": {\n      \"type\": \"WORKER\",\n      \"source\": {\n        \"type\": \"IMAGE\",\n        \"ref\": \"example/worker:1\"\n      }\n    },\n    \"contract\": {\n      \"inputs\": {\n        \"url\": {\n          \"description\": \"Synthetic fixture input\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"target\": {\n            \"envVarKey\": \"VALUE\"\n          }\n        }\n      },\n      \"outputs\": {\n        \"forward\": {\n          \"description\": \"Synthetic fixture output\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"source\": {\n            \"type\": \"INPUT\",\n            \"input\": \"url\"\n          }\n        }\n      }\n    }\n  }\n}\n"
+    },
+    "document": "app/blueprint.yaml",
+    "context": {},
+    "expect": {
+      "/status": "INCOMPLETE"
+    }
+  },
+  {
+    "id": "resolution-denied-config",
+    "profile": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-RESOLVE-001"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"BLUEPRINT\",\n  \"metadata\": {\n    \"slug\": \"app\",\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"components\": {\n      \"web\": {\n        \"componentRef\": \"./web.yaml\",\n        \"size\": \"general.standard.small\",\n        \"bindings\": {\n          \"url\": {\n            \"type\": \"CONFIG_REF\",\n            \"source\": \"${{ config.llm.baseUrl }}\"\n          }\n        }\n      }\n    },\n    \"parameters\": {}\n  }\n}\n",
+      "app/web.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"COMPONENT\",\n  \"metadata\": {\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"workload\": {\n      \"type\": \"WORKER\",\n      \"source\": {\n        \"type\": \"IMAGE\",\n        \"ref\": \"example/worker:1\"\n      }\n    },\n    \"contract\": {\n      \"inputs\": {\n        \"url\": {\n          \"description\": \"Synthetic fixture input\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"target\": {\n            \"envVarKey\": \"VALUE\"\n          }\n        }\n      },\n      \"outputs\": {\n        \"forward\": {\n          \"description\": \"Synthetic fixture output\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"source\": {\n            \"type\": \"INPUT\",\n            \"input\": \"url\"\n          }\n        }\n      }\n    }\n  }\n}\n"
+    },
+    "document": "app/blueprint.yaml",
+    "context": {
+      "configuration": {
+        "llm.baseUrl": {
+          "value": "https://synthetic.invalid",
+          "sensitive": true,
+          "identity": "configuration-1",
+          "version": "7",
+          "authorized": false
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_CONFIG_NOT_AUTHORIZED"
+      }
+    ]
+  },
+  {
+    "id": "resolution-unversioned-config",
+    "profile": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-RESOLVE-001"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"BLUEPRINT\",\n  \"metadata\": {\n    \"slug\": \"app\",\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"components\": {\n      \"web\": {\n        \"componentRef\": \"./web.yaml\",\n        \"size\": \"general.standard.small\",\n        \"bindings\": {\n          \"url\": {\n            \"type\": \"CONFIG_REF\",\n            \"source\": \"${{ config.llm.baseUrl }}\"\n          }\n        }\n      }\n    },\n    \"parameters\": {}\n  }\n}\n",
+      "app/web.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"COMPONENT\",\n  \"metadata\": {\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"workload\": {\n      \"type\": \"WORKER\",\n      \"source\": {\n        \"type\": \"IMAGE\",\n        \"ref\": \"example/worker:1\"\n      }\n    },\n    \"contract\": {\n      \"inputs\": {\n        \"url\": {\n          \"description\": \"Synthetic fixture input\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"target\": {\n            \"envVarKey\": \"VALUE\"\n          }\n        }\n      },\n      \"outputs\": {\n        \"forward\": {\n          \"description\": \"Synthetic fixture output\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"source\": {\n            \"type\": \"INPUT\",\n            \"input\": \"url\"\n          }\n        }\n      }\n    }\n  }\n}\n"
+    },
+    "document": "app/blueprint.yaml",
+    "context": {
+      "configuration": {
+        "llm.baseUrl": {
+          "value": "https://synthetic.invalid",
+          "sensitive": true,
+          "identity": "configuration-1",
+          "version": "",
+          "authorized": true
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_INVALID_RESOLUTION_CONTEXT"
+      }
+    ]
+  },
+  {
+    "id": "resolution-wrong-config-type",
+    "profile": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-RESOLVE-001"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"BLUEPRINT\",\n  \"metadata\": {\n    \"slug\": \"app\",\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"components\": {\n      \"web\": {\n        \"componentRef\": \"./web.yaml\",\n        \"size\": \"general.standard.small\",\n        \"bindings\": {\n          \"url\": {\n            \"type\": \"CONFIG_REF\",\n            \"source\": \"${{ config.llm.baseUrl }}\"\n          }\n        }\n      }\n    },\n    \"parameters\": {}\n  }\n}\n",
+      "app/web.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"COMPONENT\",\n  \"metadata\": {\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"workload\": {\n      \"type\": \"WORKER\",\n      \"source\": {\n        \"type\": \"IMAGE\",\n        \"ref\": \"example/worker:1\"\n      }\n    },\n    \"contract\": {\n      \"inputs\": {\n        \"url\": {\n          \"description\": \"Synthetic fixture input\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"target\": {\n            \"envVarKey\": \"VALUE\"\n          }\n        }\n      },\n      \"outputs\": {\n        \"forward\": {\n          \"description\": \"Synthetic fixture output\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"source\": {\n            \"type\": \"INPUT\",\n            \"input\": \"url\"\n          }\n        }\n      }\n    }\n  }\n}\n"
+    },
+    "document": "app/blueprint.yaml",
+    "context": {
+      "configuration": {
+        "llm.baseUrl": {
+          "value": 5432,
+          "sensitive": true,
+          "identity": "configuration-1",
+          "version": "7",
+          "authorized": true
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_VALUE_CONSTRAINT"
+      }
+    ]
+  },
+  {
+    "id": "resolution-generated-override",
+    "profile": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-RESOLVE-001"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"BLUEPRINT\",\n  \"metadata\": {\n    \"slug\": \"app\",\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"components\": {\n      \"web\": {\n        \"componentRef\": \"./web.yaml\",\n        \"size\": \"general.standard.small\",\n        \"bindings\": {\n          \"url\": {\n            \"type\": \"PARAMETER\",\n            \"parameter\": \"key\"\n          }\n        }\n      }\n    },\n    \"parameters\": {\n      \"key\": {\n        \"generator\": {\n          \"byteLength\": 32,\n          \"encoding\": \"HEX\"\n        }\n      }\n    }\n  }\n}\n",
+      "app/web.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"COMPONENT\",\n  \"metadata\": {\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"workload\": {\n      \"type\": \"WORKER\",\n      \"source\": {\n        \"type\": \"IMAGE\",\n        \"ref\": \"example/worker:1\"\n      }\n    },\n    \"contract\": {\n      \"inputs\": {\n        \"url\": {\n          \"description\": \"Synthetic fixture input\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"target\": {\n            \"envVarKey\": \"VALUE\"\n          }\n        }\n      },\n      \"outputs\": {\n        \"forward\": {\n          \"description\": \"Synthetic fixture output\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"source\": {\n            \"type\": \"INPUT\",\n            \"input\": \"url\"\n          }\n        }\n      }\n    }\n  }\n}\n"
+    },
+    "document": "app/blueprint.yaml",
+    "context": {
+      "parameters": {
+        "key": {
+          "value": "synthetic",
+          "sensitive": true
+        }
+      },
+      "credentials": {
+        "key": {
+          "value": "synthetic-generated",
+          "sensitive": true
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_GENERATED_OVERRIDE"
+      }
+    ]
+  },
+  {
+    "id": "resolution-missing-parameter",
+    "profile": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-PARAM-005",
+      "BP-RESOLVE-001"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"BLUEPRINT\",\n  \"metadata\": {\n    \"slug\": \"app\",\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"components\": {\n      \"web\": {\n        \"componentRef\": \"./web.yaml\",\n        \"size\": \"general.standard.small\",\n        \"bindings\": {\n          \"url\": {\n            \"type\": \"PARAMETER\",\n            \"parameter\": \"key\"\n          }\n        }\n      }\n    },\n    \"parameters\": {\n      \"key\": {}\n    }\n  }\n}\n",
+      "app/web.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"COMPONENT\",\n  \"metadata\": {\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"workload\": {\n      \"type\": \"WORKER\",\n      \"source\": {\n        \"type\": \"IMAGE\",\n        \"ref\": \"example/worker:1\"\n      }\n    },\n    \"contract\": {\n      \"inputs\": {\n        \"url\": {\n          \"description\": \"Synthetic fixture input\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"target\": {\n            \"envVarKey\": \"VALUE\"\n          }\n        }\n      },\n      \"outputs\": {\n        \"forward\": {\n          \"description\": \"Synthetic fixture output\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"source\": {\n            \"type\": \"INPUT\",\n            \"input\": \"url\"\n          }\n        }\n      }\n    }\n  }\n}\n"
+    },
+    "document": "app/blueprint.yaml",
+    "context": {},
+    "expect": {
+      "/status": "INVALID"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_MISSING_PARAMETER_VALUE"
+      }
+    ]
+  },
+  {
+    "id": "resolution-nul-environment",
+    "profile": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-RESOLVE-001"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"BLUEPRINT\",\n  \"metadata\": {\n    \"slug\": \"app\",\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"components\": {\n      \"web\": {\n        \"componentRef\": \"./web.yaml\",\n        \"size\": \"general.standard.small\",\n        \"bindings\": {\n          \"url\": {\n            \"type\": \"PARAMETER\",\n            \"parameter\": \"key\"\n          }\n        }\n      }\n    },\n    \"parameters\": {\n      \"key\": {}\n    }\n  }\n}\n",
+      "app/web.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"COMPONENT\",\n  \"metadata\": {\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"workload\": {\n      \"type\": \"WORKER\",\n      \"source\": {\n        \"type\": \"IMAGE\",\n        \"ref\": \"example/worker:1\"\n      }\n    },\n    \"contract\": {\n      \"inputs\": {\n        \"url\": {\n          \"description\": \"Synthetic fixture input\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"target\": {\n            \"envVarKey\": \"VALUE\"\n          }\n        }\n      },\n      \"outputs\": {\n        \"forward\": {\n          \"description\": \"Synthetic fixture output\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"source\": {\n            \"type\": \"INPUT\",\n            \"input\": \"url\"\n          }\n        }\n      }\n    }\n  }\n}\n"
+    },
+    "document": "app/blueprint.yaml",
+    "context": {
+      "parameters": {
+        "key": {
+          "value": "synthetic\u0000value",
+          "sensitive": false
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_ENV_ENCODING"
+      }
+    ]
+  },
+  {
+    "id": "resolution-unrelated-node",
+    "profile": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-RESOLVE-001"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"BLUEPRINT\",\n  \"metadata\": {\n    \"slug\": \"app\",\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"components\": {\n      \"web\": {\n        \"componentRef\": \"./web.yaml\",\n        \"size\": \"general.standard.small\",\n        \"bindings\": {\n          \"url\": {\n            \"type\": \"PARAMETER\",\n            \"parameter\": \"key\"\n          }\n        }\n      },\n      \"other\": {\n        \"componentRef\": \"./other.yaml\",\n        \"size\": \"general.standard.small\",\n        \"bindings\": {}\n      }\n    },\n    \"parameters\": {\n      \"key\": {}\n    }\n  }\n}\n",
+      "app/web.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"COMPONENT\",\n  \"metadata\": {\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"workload\": {\n      \"type\": \"WORKER\",\n      \"source\": {\n        \"type\": \"IMAGE\",\n        \"ref\": \"example/worker:1\"\n      }\n    },\n    \"contract\": {\n      \"inputs\": {\n        \"url\": {\n          \"description\": \"Synthetic fixture input\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"target\": {\n            \"envVarKey\": \"VALUE\"\n          },\n          \"required\": false\n        }\n      },\n      \"outputs\": {}\n    }\n  }\n}\n",
+      "app/other.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"COMPONENT\",\n  \"metadata\": {\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"workload\": {\n      \"type\": \"WORKER\",\n      \"source\": {\n        \"type\": \"IMAGE\",\n        \"ref\": \"example/worker:1\"\n      }\n    },\n    \"contract\": {\n      \"inputs\": {\n        \"url\": {\n          \"description\": \"Synthetic fixture input\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"target\": {\n            \"envVarKey\": \"VALUE\"\n          },\n          \"required\": false\n        }\n      },\n      \"outputs\": {}\n    }\n  }\n}\n"
+    },
+    "document": "app/blueprint.yaml",
+    "context": {
+      "parameters": {
+        "key": {
+          "value": "synthetic",
+          "sensitive": true
+        }
+      }
+    },
+    "expect": {
+      "/status": "VALID",
+      "/environment/other": {},
+      "/inputs/web:in:url/value": "synthetic"
+    }
+  },
+  {
+    "id": "resolution-mutual-discovery",
+    "profile": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-RESOLVE-001"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"BLUEPRINT\",\n  \"metadata\": {\n    \"slug\": \"app\",\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"components\": {\n      \"web\": {\n        \"componentRef\": \"./web.yaml\",\n        \"size\": \"general.standard.small\",\n        \"bindings\": {\n          \"url\": {\n            \"type\": \"OUTPUT\",\n            \"node\": \"other\",\n            \"output\": \"address\"\n          }\n        }\n      },\n      \"other\": {\n        \"componentRef\": \"./other.yaml\",\n        \"size\": \"general.standard.small\",\n        \"bindings\": {\n          \"url\": {\n            \"type\": \"OUTPUT\",\n            \"node\": \"web\",\n            \"output\": \"address\"\n          }\n        }\n      }\n    },\n    \"parameters\": {}\n  }\n}\n",
+      "app/web.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"COMPONENT\",\n  \"metadata\": {\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"workload\": {\n      \"type\": \"SERVICE\",\n      \"source\": {\n        \"type\": \"IMAGE\",\n        \"ref\": \"example/service:1\"\n      },\n      \"endpoints\": {\n        \"web\": {\n          \"containerPort\": 8080,\n          \"protocol\": \"HTTP\"\n        }\n      }\n    },\n    \"contract\": {\n      \"inputs\": {\n        \"url\": {\n          \"description\": \"Synthetic fixture input\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"target\": {\n            \"envVarKey\": \"VALUE\"\n          }\n        }\n      },\n      \"outputs\": {\n        \"address\": {\n          \"description\": \"Synthetic fixture output\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"source\": {\n            \"type\": \"ENDPOINT\",\n            \"endpoint\": \"web\",\n            \"property\": \"privateHostname\"\n          }\n        }\n      }\n    }\n  }\n}\n",
+      "app/other.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"COMPONENT\",\n  \"metadata\": {\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"workload\": {\n      \"type\": \"SERVICE\",\n      \"source\": {\n        \"type\": \"IMAGE\",\n        \"ref\": \"example/service:1\"\n      },\n      \"endpoints\": {\n        \"web\": {\n          \"containerPort\": 8080,\n          \"protocol\": \"HTTP\"\n        }\n      }\n    },\n    \"contract\": {\n      \"inputs\": {\n        \"url\": {\n          \"description\": \"Synthetic fixture input\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"target\": {\n            \"envVarKey\": \"VALUE\"\n          }\n        }\n      },\n      \"outputs\": {\n        \"address\": {\n          \"description\": \"Synthetic fixture output\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"source\": {\n            \"type\": \"ENDPOINT\",\n            \"endpoint\": \"web\",\n            \"property\": \"privateHostname\"\n          }\n        }\n      }\n    }\n  }\n}\n"
+    },
+    "document": "app/blueprint.yaml",
+    "context": {
+      "addresses": {
+        "web": {
+          "web": {
+            "privateHostname": "web.internal"
+          }
+        },
+        "other": {
+          "web": {
+            "privateHostname": "other.internal"
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "VALID",
+      "/inputs/web:in:url/value": "other.internal",
+      "/inputs/other:in:url/value": "web.internal"
+    }
+  },
+  {
+    "id": "resolution-value-cycle",
+    "profile": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-CONN-002"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"BLUEPRINT\",\n  \"metadata\": {\n    \"slug\": \"app\",\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"components\": {\n      \"web\": {\n        \"componentRef\": \"./web.yaml\",\n        \"size\": \"general.standard.small\",\n        \"bindings\": {\n          \"url\": {\n            \"type\": \"OUTPUT\",\n            \"node\": \"other\",\n            \"output\": \"forward\"\n          }\n        }\n      },\n      \"other\": {\n        \"componentRef\": \"./other.yaml\",\n        \"size\": \"general.standard.small\",\n        \"bindings\": {\n          \"url\": {\n            \"type\": \"OUTPUT\",\n            \"node\": \"web\",\n            \"output\": \"forward\"\n          }\n        }\n      }\n    },\n    \"parameters\": {}\n  }\n}\n",
+      "app/web.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"COMPONENT\",\n  \"metadata\": {\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"workload\": {\n      \"type\": \"WORKER\",\n      \"source\": {\n        \"type\": \"IMAGE\",\n        \"ref\": \"example/worker:1\"\n      }\n    },\n    \"contract\": {\n      \"inputs\": {\n        \"url\": {\n          \"description\": \"Synthetic fixture input\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"target\": {\n            \"envVarKey\": \"VALUE\"\n          }\n        }\n      },\n      \"outputs\": {\n        \"forward\": {\n          \"description\": \"Synthetic fixture output\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"source\": {\n            \"type\": \"INPUT\",\n            \"input\": \"url\"\n          }\n        }\n      }\n    }\n  }\n}\n",
+      "app/other.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"COMPONENT\",\n  \"metadata\": {\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"workload\": {\n      \"type\": \"WORKER\",\n      \"source\": {\n        \"type\": \"IMAGE\",\n        \"ref\": \"example/worker:1\"\n      }\n    },\n    \"contract\": {\n      \"inputs\": {\n        \"url\": {\n          \"description\": \"Synthetic fixture input\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"target\": {\n            \"envVarKey\": \"VALUE\"\n          }\n        }\n      },\n      \"outputs\": {\n        \"forward\": {\n          \"description\": \"Synthetic fixture output\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"source\": {\n            \"type\": \"INPUT\",\n            \"input\": \"url\"\n          }\n        }\n      }\n    }\n  }\n}\n"
+    },
+    "document": "app/blueprint.yaml",
+    "context": {},
+    "expect": {
+      "/status": "INVALID"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_VALUE_CYCLE"
+      }
+    ]
+  },
+  {
+    "id": "publication-needs-admission",
+    "profile": "resolution",
+    "operation": "validate",
+    "requirements": [
+      "CORE-ADMISSION-001"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"BLUEPRINT\",\n  \"metadata\": {\n    \"slug\": \"app\",\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"components\": {\n      \"web\": {\n        \"componentRef\": \"./web.yaml\",\n        \"size\": \"general.standard.small\",\n        \"bindings\": {}\n      }\n    },\n    \"parameters\": {}\n  }\n}\n",
+      "app/web.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"COMPONENT\",\n  \"metadata\": {\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"workload\": {\n      \"type\": \"WORKER\",\n      \"source\": {\n        \"type\": \"IMAGE\",\n        \"ref\": \"example/worker:1\"\n      }\n    },\n    \"contract\": {\n      \"inputs\": {},\n      \"outputs\": {}\n    }\n  }\n}\n"
+    },
+    "document": "app/blueprint.yaml",
+    "context": {
+      "profile": "publication"
+    },
+    "expect": {
+      "/status": "INCOMPLETE",
+      "/deferred/0/rule": "CORE-ADMISSION-001"
+    }
+  },
+  {
+    "id": "rendering-sensitive-form",
+    "profile": "rendering",
+    "operation": "form",
+    "requirements": [
+      "BP-UI-001"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"BLUEPRINT\",\n  \"metadata\": {\n    \"slug\": \"app\",\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"components\": {\n      \"web\": {\n        \"componentRef\": \"./web.yaml\",\n        \"size\": \"general.standard.small\",\n        \"bindings\": {\n          \"url\": {\n            \"type\": \"PARAMETER\",\n            \"parameter\": \"key\"\n          }\n        }\n      }\n    },\n    \"parameters\": {\n      \"key\": {\n        \"ui\": {\n          \"label\": \"API key\"\n        }\n      }\n    }\n  }\n}\n",
+      "app/web.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"COMPONENT\",\n  \"metadata\": {\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"workload\": {\n      \"type\": \"WORKER\",\n      \"source\": {\n        \"type\": \"IMAGE\",\n        \"ref\": \"example/worker:1\"\n      }\n    },\n    \"contract\": {\n      \"inputs\": {\n        \"url\": {\n          \"description\": \"Synthetic fixture input\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"target\": {\n            \"envVarKey\": \"VALUE\"\n          },\n          \"sensitive\": true\n        }\n      },\n      \"outputs\": {}\n    }\n  }\n}\n"
+    },
+    "document": "app/blueprint.yaml",
+    "context": {},
+    "expect": {
+      "/0/control": "secret",
+      "/0/label": "API key"
+    }
+  },
+  {
+    "id": "lifecycle-retry-and-rotation",
+    "profile": "lifecycle",
+    "operation": "credential",
+    "requirements": [
+      "BP-RESOLVE-001"
+    ],
+    "input": {
+      "steps": [
+        {
+          "installation": "one",
+          "parameter": "key",
+          "rotation": 0
+        },
+        {
+          "installation": "one",
+          "parameter": "key",
+          "rotation": 0
+        },
+        {
+          "installation": "one",
+          "parameter": "key",
+          "rotation": 1
+        }
+      ]
+    },
+    "expect": {
+      "/generated": 2,
+      "/values/0/value": "synthetic-1",
+      "/values/1/value": "synthetic-1",
+      "/values/2/value": "synthetic-2",
+      "/values/2/sensitive": true
+    }
+  },
+  {
+    "id": "resolution-record-pins-identities",
+    "profile": "resolution",
+    "operation": "record",
+    "requirements": [
+      "BP-RESOLVE-001"
+    ],
+    "input": {
+      "blueprint": "synthetic blueprint bytes",
+      "specifications": {
+        "core": "1.0.0",
+        "component": "1.0.0",
+        "blueprint": "1.0.0"
+      },
+      "components": {
+        "web": {
+          "source": "IMAGE",
+          "identity": "component-1",
+          "revision": 1,
+          "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "imageDigest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "compute": {
+            "identity": "general.standard.small",
+            "version": "7"
+          },
+          "volumes": {},
+          "exposure": {}
+        }
+      },
+      "configuration": {
+        "llm.baseUrl": {
+          "identity": "config-1",
+          "version": "3",
+          "value": "synthetic-secret"
+        }
+      },
+      "credentials": {
+        "apiKey": {
+          "identity": "credential-1",
+          "rotation": 0
+        }
+      }
+    },
+    "expect": {
+      "/status": "VALID",
+      "/record/configuration": {
+        "llm.baseUrl": {
+          "identity": "config-1",
+          "version": "3"
+        }
+      },
+      "/record/credentials": {
+        "apiKey": {
+          "identity": "credential-1",
+          "rotation": 0
+        }
+      }
+    }
+  },
+  {
+    "id": "resolution-record-needs-image-digest",
+    "profile": "resolution",
+    "operation": "record",
+    "requirements": [
+      "BP-RESOLVE-001"
+    ],
+    "input": {
+      "blueprint": "synthetic blueprint bytes",
+      "specifications": {
+        "core": "1.0.0",
+        "component": "1.0.0",
+        "blueprint": "1.0.0"
+      },
+      "components": {
+        "web": {
+          "source": "IMAGE",
+          "identity": "component-1",
+          "revision": 1,
+          "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "compute": {
+            "identity": "general.standard.small",
+            "version": "7"
+          },
+          "volumes": {},
+          "exposure": {}
+        }
+      },
+      "configuration": {
+        "llm.baseUrl": {
+          "identity": "config-1",
+          "version": "3",
+          "value": "synthetic-secret"
+        }
+      },
+      "credentials": {
+        "apiKey": {
+          "identity": "credential-1",
+          "rotation": 0
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_INVALID_RESOLUTION_CONTEXT"
+      }
+    ]
+  },
+  {
+    "id": "resolution-shared-sensitivity",
+    "profile": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-RESOLVE-001"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"size\":\"general.standard.small\",\"bindings\":{\"url\":{\"type\":\"PARAMETER\",\"parameter\":\"key\"}}},\"other\":{\"componentRef\":\"./other.yaml\",\"size\":\"general.standard.small\",\"bindings\":{\"url\":{\"type\":\"PARAMETER\",\"parameter\":\"key\"}}}},\"parameters\":{\"key\":{}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Synthetic fixture input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"VALUE\"},\"required\":false,\"sensitive\":true}},\"outputs\":{}}}}",
+      "app/other.yaml": "{\n  \"specVersion\": \"v1\",\n  \"kind\": \"COMPONENT\",\n  \"metadata\": {\n    \"revision\": 1\n  },\n  \"spec\": {\n    \"workload\": {\n      \"type\": \"WORKER\",\n      \"source\": {\n        \"type\": \"IMAGE\",\n        \"ref\": \"example/worker:1\"\n      }\n    },\n    \"contract\": {\n      \"inputs\": {\n        \"url\": {\n          \"description\": \"Synthetic fixture input\",\n          \"schema\": {\n            \"type\": \"string\"\n          },\n          \"target\": {\n            \"envVarKey\": \"VALUE\"\n          },\n          \"required\": false\n        }\n      },\n      \"outputs\": {}\n    }\n  }\n}\n"
+    },
+    "document": "app/blueprint.yaml",
+    "context": {
+      "parameters": {
+        "key": {
+          "value": "synthetic",
+          "sensitive": true
+        }
+      }
+    },
+    "expect": {
+      "/status": "VALID",
+      "/inputs/web:in:url/sensitive": true,
+      "/inputs/other:in:url/sensitive": true
+    }
+  },
+  {
+    "profile": "resolution",
+    "operation": "validate",
+    "requirements": [
+      "BP-REF-002"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"12345678-1234-1234-1234-123456789abc\",\"revision\":1,\"size\":\"general.standard.small\"}}}}"
+    },
+    "document": "app/blueprint.yaml",
+    "id": "validation-missing-pinned-contract",
+    "expect": {
+      "/status": "INCOMPLETE",
+      "/deferred/0/rule": "BP-REF-002"
+    }
+  },
+  {
+    "profile": "resolution",
+    "operation": "validate",
+    "requirements": [
+      "BP-REF-002"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"12345678-1234-1234-1234-123456789abc\",\"revision\":1,\"size\":\"general.standard.small\"}}}}"
+    },
+    "document": "app/blueprint.yaml",
+    "id": "validation-verified-pinned-contract",
+    "context": {
+      "contracts": {
+        "12345678-1234-1234-1234-123456789abc@1": {
+          "source": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{},\"outputs\":{}}}}",
+          "digest": "4e1169863850b2ff4baaee974d1c42efa8429c6146dc8d51b36255d2bae9c6e1"
+        }
+      }
+    },
+    "expect": {
+      "/status": "VALID"
+    }
+  },
+  {
+    "profile": "resolution",
+    "operation": "validate",
+    "requirements": [
+      "BP-REF-002"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"12345678-1234-1234-1234-123456789abc\",\"revision\":1,\"size\":\"general.standard.small\"}}}}"
+    },
+    "document": "app/blueprint.yaml",
+    "id": "validation-rejects-corrupt-contract",
+    "context": {
+      "contracts": {
+        "12345678-1234-1234-1234-123456789abc@1": {
+          "source": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{},\"outputs\":{}}}}",
+          "digest": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_INVALID_DEPENDENCY",
+        "path": "/spec/components/web/componentRef"
+      }
+    ]
+  },
+  {
+    "id": "resolution-logical-null",
+    "profile": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-RESOLVE-001"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"size\":\"general.standard.small\",\"bindings\":{\"url\":{\"type\":\"LITERAL\",\"value\":null}}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1},\"spec\":{\"workload\":{\"type\":\"WORKER\",\"source\":{\"type\":\"IMAGE\",\"ref\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Synthetic fixture input\",\"schema\":{\"type\":\"null\"},\"target\":{\"envVarKey\":\"VALUE\"},\"required\":false}},\"outputs\":{}}}}"
+    },
+    "document": "app/blueprint.yaml",
+    "expect": {
+      "/status": "VALID",
+      "/inputs/web:in:url/value": null,
+      "/environment/web/VALUE/value": "null"
+    }
+  }
+]

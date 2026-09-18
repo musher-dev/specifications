@@ -1,8 +1,3 @@
-# A local reference spelling a traversal into an interior segment. Every
-# segment must begin with a letter or digit, so `..` cannot appear except in
-# the leading prefix. Two spellings of one target would otherwise both be
-# valid, and the semantic containment check would have to normalise before it
-# could compare.
 specVersion: v1
 kind: BLUEPRINT
 metadata:
@@ -13,5 +8,5 @@ spec:
     db:
       componentRef: ./components/../../etc/passwd.yaml
       size: general.standard.small
-      connections: {}
+      bindings: {}
   parameters: {}

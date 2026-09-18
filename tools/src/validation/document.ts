@@ -1,184 +1,156 @@
 /**
- * The document types every phase shares, and the `parser` phase itself.
- *
- * Separate from validator.ts so that semantic.ts can read the component and
- * listing documents an item contains without importing the module that imports
- * it. NON-NORMATIVE, like everything under tools/.
+ * Strict, byte-oriented YAML/JSON boundary. NON-NORMATIVE adapter for core §6.1.
  */
-import { isNode, isPair, isScalar, parseAllDocuments, visit } from 'yaml'
+import { Composer, type CST, type Document, isAlias, isMap, isScalar, isSeq, Parser } from 'yaml'
 import type { Json } from '../lib/layout.ts'
 
 export type Phase = 'parser' | 'structural' | 'semantic' | 'capability'
-
 export interface Diagnostic {
-  /** Normative. Implementations map their internal errors onto these. */
   readonly code: string
-  /** Normative. JSON Pointer into the document, `` for the root. */
   readonly path: string
-  /** Non-normative — text differs between implementations by design. */
   readonly message: string
 }
-
-/**
- * The bounds core v1 §6.1 states. They are part of the contract rather than
- * an implementation detail: a document one validator accepts and another
- * refuses on size is not one contract, and "be sensible" is not a bound.
- *
- * All three are far above any document a person would write and far below what
- * makes a parser a denial-of-service surface.
- */
 export const MAX_DOCUMENT_BYTES = 1024 * 1024
 export const MAX_SCALAR_BYTES = 64 * 1024
 export const MAX_DEPTH = 64
+const diagnostic = (code: string, message: string): Diagnostic => ({ code, path: '', message })
 
-const UTF8_BOM = '﻿'
-
-function diagnostic(code: string, message: string): Diagnostic {
-  return { code, path: '', message }
+/** Validate original bytes before decoding; replacement decoding is forbidden. */
+export function parseDocumentBytes(source: Uint8Array): { value: Json } | { errors: Diagnostic[] } {
+  if (source.byteLength > MAX_DOCUMENT_BYTES) {
+    return { errors: [diagnostic('ERR_DOCUMENT_TOO_LARGE', 'document exceeds the byte limit')] }
+  }
+  let decoded: string
+  try {
+    decoded = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(source)
+  } catch {
+    return { errors: [diagnostic('ERR_INVALID_UTF8', 'document is not valid UTF-8')] }
+  }
+  return parseDocument(decoded)
 }
 
-/**
- * Strict YAML 1.2, restricted further by the Musher document profile.
- *
- * Core v1 §6.1 is the clause. Everything rejected here is well-formed YAML
- * that this contract withholds, and the reason is always the same one: a
- * document whose meaning depends on which parser reads it, or on how much work
- * a reader is willing to do before deciding, is not a contract.
- *
- * `parseAllDocuments` rather than `parseDocument` because a stream carrying two
- * documents must be seen as two rather than silently reduced to the first, and
- * because its errors carry machine-readable codes — the previous implementation
- * matched on message text, which is exactly what this specification declares
- * non-normative.
- */
+/** String entry point for already decoded text; filesystem callers use bytes. */
 export function parseDocument(source: string): { value: Json } | { errors: Diagnostic[] } {
   const errors: Diagnostic[] = []
-
-  // Size is measured before parsing. A bound a parser can only apply after
-  // building the tree is not a bound on the work it does.
-  const bytes = Buffer.byteLength(source, 'utf8')
-  if (bytes > MAX_DOCUMENT_BYTES) {
+  if (Buffer.byteLength(source, 'utf8') > MAX_DOCUMENT_BYTES) {
+    return { errors: [diagnostic('ERR_DOCUMENT_TOO_LARGE', 'document exceeds the byte limit')] }
+  }
+  if (!source.isWellFormed())
+    return { errors: [diagnostic('ERR_INVALID_UTF8', 'unpaired surrogate')] }
+  // Bound concrete collections before the composer's recursive representation walk.
+  const tokens: CST.Token[] = []
+  try {
+    for (const token of new Parser().parse(
+      source.startsWith('\uFEFF') ? source.slice(1) : source,
+    )) {
+      const pending: { value: unknown; depth: number }[] = [{ value: token, depth: 0 }]
+      while (pending.length) {
+        const { value, depth } = pending.pop()!
+        if (value === null || typeof value !== 'object') continue
+        const node = value as Record<string, unknown>
+        const next =
+          depth +
+          (['block-map', 'block-seq', 'flow-collection'].includes(String(node.type)) ? 1 : 0)
+        if (next > MAX_DEPTH + 1)
+          return { errors: [diagnostic('ERR_DEPTH_EXCEEDED', 'document exceeds nesting limit')] }
+        for (const child of Object.values(node))
+          if (child !== null && typeof child === 'object')
+            pending.push({ value: child, depth: next })
+      }
+      tokens.push(token)
+    }
+  } catch (error) {
     return {
       errors: [
         diagnostic(
-          'ERR_DOCUMENT_TOO_LARGE',
-          `document is ${bytes} bytes, over the ${MAX_DOCUMENT_BYTES}-byte limit`,
+          error instanceof RangeError ? 'ERR_DEPTH_EXCEEDED' : 'ERR_INVALID_YAML',
+          'document cannot be parsed within the profile',
         ),
       ],
     }
   }
-
-  // A BOM is permitted and carries no meaning. Rejecting one would fail
-  // documents whose only fault is the editor that saved them.
-  const text = source.startsWith(UTF8_BOM) ? source.slice(UTF8_BOM.length) : source
-
-  const documents = parseAllDocuments(text, {
-    uniqueKeys: true,
-    merge: false,
-    strict: true,
-    version: '1.2',
-  })
-
-  if (documents.length > 1) {
-    errors.push(
-      diagnostic(
-        'ERR_MULTIPLE_DOCUMENTS',
-        `${documents.length} documents in one file; exactly one is permitted`,
-      ),
-    )
+  let docs: Document.Parsed[]
+  try {
+    docs = [
+      ...new Composer({
+        uniqueKeys: true,
+        merge: false,
+        strict: true,
+        version: '1.2',
+        intAsBigInt: true,
+      }).compose(tokens),
+    ]
+  } catch {
+    return { errors: [diagnostic('ERR_INVALID_YAML', 'document cannot be composed')] }
   }
-
-  const first = documents[0]
-  if (first === undefined) {
-    return { errors: [diagnostic('ERR_INVALID_YAML', 'document is empty')] }
-  }
-
-  for (const error of first.errors) {
+  if (docs.length !== 1)
+    return {
+      errors: [
+        diagnostic(
+          docs.length > 1 ? 'ERR_MULTIPLE_DOCUMENTS' : 'ERR_INVALID_YAML',
+          'exactly one document is required',
+        ),
+      ],
+    }
+  const first = docs[0]!
+  for (const error of first.errors)
     errors.push(
       diagnostic(
         error.code === 'DUPLICATE_KEY' ? 'ERR_DUPLICATE_KEY' : 'ERR_INVALID_YAML',
-        error.message,
+        'invalid YAML document',
       ),
     )
-  }
+  if (errors.length) return { errors }
 
-  visit(first, {
-    // An alias expands and an anchor is inert, and both are rejected. The
-    // reason is §2's: an author who writes one believes it does something, and
-    // a document whose meaning depends on which parser expands it is not one
-    // contract.
-    //
-    // Walked rather than configured because no parser option covers a lone
-    // anchor — `maxAliasCount` only ever sees the alias.
-    Alias(_key, node) {
-      errors.push(diagnostic('ERR_ANCHOR_OR_ALIAS', `alias *${node.source} is not permitted`))
-    },
-    Node(_key, node) {
-      if (!isNode(node)) return
-      if (node.anchor !== undefined) {
-        errors.push(diagnostic('ERR_ANCHOR_OR_ALIAS', `anchor &${node.anchor} is not permitted`))
+  // Iterative representation walk: never expand aliases or convert an invalid AST.
+  const stack: { node: unknown; depth: number }[] = [{ node: first.contents, depth: 0 }]
+  while (stack.length) {
+    const { node, depth } = stack.pop()!
+    if (depth > MAX_DEPTH) {
+      errors.push(diagnostic('ERR_DEPTH_EXCEEDED', 'document exceeds nesting limit'))
+      continue
+    }
+    if (isAlias(node)) {
+      errors.push(diagnostic('ERR_ANCHOR_OR_ALIAS', 'aliases are forbidden'))
+      continue
+    }
+    if (isMap(node) || isSeq(node) || isScalar(node)) {
+      if (node.anchor !== undefined)
+        errors.push(diagnostic('ERR_ANCHOR_OR_ALIAS', 'anchors are forbidden'))
+      if (node.tag) errors.push(diagnostic('ERR_EXPLICIT_TAG', 'explicit tags are forbidden'))
+    }
+    if (isScalar(node)) {
+      const value = node.value
+      if (typeof value === 'string' && Buffer.byteLength(value, 'utf8') > MAX_SCALAR_BYTES)
+        errors.push(diagnostic('ERR_SCALAR_TOO_LONG', 'scalar exceeds byte limit'))
+      if (
+        (typeof value === 'number' &&
+          (!Number.isFinite(value) || (Number.isInteger(value) && !Number.isSafeInteger(value)))) ||
+        (typeof value === 'bigint' &&
+          (value > BigInt(Number.MAX_SAFE_INTEGER) || value < BigInt(Number.MIN_SAFE_INTEGER)))
+      )
+        errors.push(diagnostic('ERR_INVALID_NUMBER', 'number is outside the supported range'))
+      if (
+        typeof value === 'bigint' &&
+        value <= BigInt(Number.MAX_SAFE_INTEGER) &&
+        value >= BigInt(Number.MIN_SAFE_INTEGER)
+      )
+        node.value = Number(value)
+    } else if (isMap(node)) {
+      for (const pair of node.items) {
+        if (!isScalar(pair.key) || typeof pair.key.value !== 'string')
+          errors.push(diagnostic('ERR_NON_STRING_KEY', 'mapping keys must be strings'))
+        else if (pair.key.value === '<<')
+          errors.push(diagnostic('ERR_MERGE_KEY', 'merge keys are forbidden'))
+        stack.push({ node: pair.key, depth: depth + 1 }, { node: pair.value, depth: depth + 1 })
       }
-      // Any explicit tag, including a core-schema one like `!!str`. Scalars
-      // resolve by the YAML 1.2 core schema and nothing else; a tag is a way
-      // to override that resolution, which is the thing being withheld.
-      if (node.tag !== undefined && node.tag !== null) {
-        errors.push(diagnostic('ERR_EXPLICIT_TAG', `explicit tag ${node.tag} is not permitted`))
-      }
-      if (isScalar(node) && typeof node.value === 'string') {
-        const length = Buffer.byteLength(node.value, 'utf8')
-        if (length > MAX_SCALAR_BYTES) {
-          errors.push(
-            diagnostic(
-              'ERR_SCALAR_TOO_LONG',
-              `scalar is ${length} bytes, over the ${MAX_SCALAR_BYTES}-byte limit`,
-            ),
-          )
-        }
-      }
-    },
-    Pair(_key, pair) {
-      if (!isPair(pair) || !isScalar(pair.key)) return
-      const key = pair.key.value
-      // `merge: false` leaves `<<` as an ordinary key rather than expanding it,
-      // so without this it would surface as an unknown field two phases later
-      // and describe the wrong problem.
-      if (key === '<<') {
-        errors.push(diagnostic('ERR_MERGE_KEY', 'merge key << is not permitted'))
-        return
-      }
-      if (typeof key !== 'string') {
-        errors.push(
-          diagnostic('ERR_NON_STRING_KEY', `mapping key ${JSON.stringify(key)} is not a string`),
-        )
-      }
-    },
-  })
-
-  const depth = maxDepth(first.toJS() as Json)
-  if (depth > MAX_DEPTH) {
-    errors.push(
-      diagnostic('ERR_DEPTH_EXCEEDED', `document nests ${depth} deep, over the ${MAX_DEPTH} limit`),
-    )
+    } else if (isSeq(node))
+      for (const item of node.items) stack.push({ node: item, depth: depth + 1 })
   }
-
-  if (errors.length > 0) return { errors }
-  return { value: first.toJS() as Json }
-}
-
-/** Deepest nesting level in a parsed value. A scalar is depth 0. */
-function maxDepth(value: Json, depth = 0): number {
-  // Guard the walk itself: a document already past the limit must not be
-  // measured by unbounded recursion.
-  if (depth > MAX_DEPTH) return depth
-  if (Array.isArray(value)) {
-    let deepest = depth
-    for (const item of value) deepest = Math.max(deepest, maxDepth(item, depth + 1))
-    return deepest
+  if (errors.length) return { errors }
+  try {
+    return { value: first.toJS({ maxAliasCount: 0 }) as Json }
+  } catch {
+    return { errors: [diagnostic('ERR_INVALID_YAML', 'document cannot be represented as JSON')] }
   }
-  if (typeof value === 'object' && value !== null) {
-    let deepest = depth
-    for (const item of Object.values(value)) deepest = Math.max(deepest, maxDepth(item, depth + 1))
-    return deepest
-  }
-  return depth
 }

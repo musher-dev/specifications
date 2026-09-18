@@ -1,9 +1,11 @@
 {
   "id": "semantic-033-generated-parameter-covers-an-insensitive-input",
   "phase": "semantic",
-  "expected": "fail",
+  "expected": "pass",
   "clause": "specifications/blueprint/v1/spec.md#value-sources",
-  "requirements": ["BP-PARAM-004"],
-  "summary": "A generated parameter covering an input not marked sensitive is rejected.",
+  "requirements": [
+    "BP-PARAM-004"
+  ],
+  "summary": "Explicit supply is accepted without the retired restriction.",
   "document": "acme-wiki/blueprint.yaml"
 }

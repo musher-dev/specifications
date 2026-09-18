@@ -1,20 +1,3 @@
-# yaml-language-server: $schema=https://specifications.musher.dev/blueprint/v1/blueprint.schema.json
-#
-# A composition of a thing this platform runs and a thing it does not. `models`
-# deploys an external component (component §5.6), so it has no compute to name
-# and writes `size: null` — a declaration rather than an omission, which is why
-# the field stays REQUIRED.
-#
-# Both wires take their value from the same `fromNode`. That is the whole reason
-# the external shape is a node: an address and a credential are only meaningful
-# together, and drawing them from one node makes that structural rather than
-# something an author has to get right twice.
-#
-# The parameters are the external node's three inputs, since the consumer's two
-# arrive over the wires. None carries `toNode` or `toInput`: binding by key is
-# unambiguous here, and the narrowing fields exist for when it is not. The deploying user is asked for an address, a
-# credential and a model name once, together, in the order given here, and for
-# nothing else. The key is concealed because the input it covers is sensitive.
 specVersion: v1
 kind: BLUEPRINT
 metadata:
@@ -25,30 +8,36 @@ spec:
     models:
       componentRef: ./components/models.yaml
       size: null
-      connections: {}
+      bindings:
+        baseUrl:
+          type: CONFIG_REF
+          source: ${{ config.llm.baseUrl }}
+        apiKey:
+          type: CONFIG_REF
+          source: ${{ config.llm.apiKey }}
+        model:
+          type: PARAMETER
+          parameter: model
     web:
       componentRef: ./components/web.yaml
       size: general.standard.small
-      connections:
+      bindings:
         llmBaseUrl:
-          fromNode: models
-          fromOutput: baseUrl
+          type: OUTPUT
+          node: models
+          output: baseUrl
         llmApiKey:
-          fromNode: models
-          fromOutput: apiKey
+          type: OUTPUT
+          node: models
+          output: apiKey
+        llmModel:
+          type: OUTPUT
+          node: models
+          output: model
   parameters:
-    baseUrl:
-      ui:
-        label: API base URL
-        order: 1
-        examples:
-          - https://api.example.com/v1
-    apiKey:
-      ui:
-        label: API key
-        order: 2
     model:
       ui:
         label: Model name
         order: 3
         prominence: SECONDARY
+      default: example-model

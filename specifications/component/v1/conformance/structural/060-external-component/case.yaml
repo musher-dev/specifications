@@ -1,60 +1,47 @@
-# A node this platform does not run, in full. There is no image and no compute
-# because there is nothing to run; the three values an application needs to
-# reach the service arrive as inputs and leave as INPUT outputs, which is
-# what makes them one set rather than three unrelated strings — a consumer
-# wiring two of them from this node is wiring them from one source.
-#
-# The outputs are resolvable before any edge is bound, provided no connection
-# fills the inputs they read, which blueprint §4.2 enforces; so §6.2's invariant
-# holds and blueprint §4.2's legal cycles stay sound.
 specVersion: v1
 kind: COMPONENT
 metadata:
   revision: 1
 spec:
-  external:
-    resourceType: dev.musher.llm.chat-completions
+  external: {}
   contract:
     inputs:
       baseUrl:
         description: Base URL of the service this node addresses.
         schema:
-          type: STRING
-          format: ENDPOINT_URL
-          resourceType: dev.musher.llm.base-url
+          type: string
+        presentationHint: ENDPOINT_URL
       apiKey:
         description: Bearer credential presented to the service above.
         schema:
-          type: STRING
-          sensitive: true
-          resourceType: dev.musher.llm.api-key
+          type: string
+        sensitive: true
       model:
         description: Name the service uses to select what answers.
         schema:
-          type: STRING
-          resourceType: dev.musher.llm.model-name
+          type: string
         required: false
     outputs:
       baseUrl:
         description: Base URL of the addressed service, for a consumer to call.
         schema:
-          type: STRING
-          format: ENDPOINT_URL
-          resourceType: dev.musher.llm.base-url
-        valueFrom: INPUT
-        input: baseUrl
+          type: string
+        presentationHint: ENDPOINT_URL
+        source:
+          type: INPUT
+          input: baseUrl
       apiKey:
         description: Bearer credential for the addressed service.
         schema:
-          type: STRING
-          sensitive: true
-          resourceType: dev.musher.llm.api-key
-        valueFrom: INPUT
-        input: apiKey
+          type: string
+        sensitive: true
+        source:
+          type: INPUT
+          input: apiKey
       model:
         description: Model name the addressed service answers with.
         schema:
-          type: STRING
-          resourceType: dev.musher.llm.model-name
-        valueFrom: INPUT
-        input: model
+          type: string
+        source:
+          type: INPUT
+          input: model

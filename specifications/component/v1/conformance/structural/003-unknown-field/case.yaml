@@ -1,5 +1,3 @@
-# A misspelled or invented top-level field. Unknown properties are rejected
-# at every level so a typo can never be silently ignored.
 specVersion: v1
 kind: COMPONENT
 metadata:
@@ -11,7 +9,6 @@ spec:
       web:
         containerPort: 8080
         protocol: HTTP
-        visibility: PRIVATE
     source:
       type: IMAGE
       ref: nginx:1.29.4-alpine

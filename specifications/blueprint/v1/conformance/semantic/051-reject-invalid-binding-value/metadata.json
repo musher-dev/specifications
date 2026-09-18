@@ -1,0 +1,11 @@
+{
+  "id": "semantic-051-reject-invalid-binding-value",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#value-sources",
+  "requirements": [
+    "BP-PARAM-008"
+  ],
+  "summary": "reject invalid binding value",
+  "document": "app/blueprint.yaml"
+}

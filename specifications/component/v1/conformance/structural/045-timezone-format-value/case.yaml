@@ -1,9 +1,3 @@
-# A timezone is a closed set of some four hundred terms that IANA revises
-# several times a year. It cannot be an `enum` — nobody inlines four hundred
-# strings into a document, and the list is not stable — and it is not a
-# `pattern`. `format` names the convention and §6.3 names where IANA publishes
-# it, which is all this contract has to say for a renderer to offer the right
-# chooser.
 specVersion: v1
 kind: COMPONENT
 metadata:
@@ -18,16 +12,15 @@ spec:
       web:
         containerPort: 5678
         protocol: HTTP
-        visibility: PRIVATE
   contract:
     inputs:
       timezone:
         description: Time zone the scheduler evaluates times in.
         schema:
-          type: STRING
-          format: TIMEZONE
-          default: UTC
+          type: string
         required: false
         target:
           envVarKey: GENERIC_TIMEZONE
+        default: UTC
+        presentationHint: TIMEZONE
     outputs: {}

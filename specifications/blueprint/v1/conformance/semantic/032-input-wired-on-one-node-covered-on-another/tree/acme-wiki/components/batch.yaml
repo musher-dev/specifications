@@ -12,10 +12,9 @@ spec:
     inputs:
       apiKey:
         schema:
-          type: STRING
-          sensitive: true
-          resourceType: dev.musher.llm.api-key
+          type: string
         target:
           envVarKey: OPENAI_API_KEY
         description: Credential the batch worker presents to the chat-completions service.
+        sensitive: true
     outputs: {}

@@ -1,8 +1,8 @@
 # Blueprint specification
 
 A blueprint document describes a composition of components into one deployable
-application: which components participate, how large each runs, and how they
-are wired to one another. The blueprint is the unit of deployment.
+application: which components participate, which values supply their inputs, and how compute,
+storage and public exposure are allocated. The blueprint is the unit of deployment.
 
 A blueprint is an [item document](../core/v1/spec.md#item-directory),
 `blueprint.yaml`, at the root of its catalog item. The component documents it references sit inside the same item.
@@ -20,7 +20,7 @@ A blueprint is an [item document](../core/v1/spec.md#item-directory),
 2. [§2 Document envelope](v1/spec.md#envelope), for what this family binds
 3. [§3 Identity](v1/spec.md#identity)
 4. [§4 Component graph](v1/spec.md#components), including
-   [§4.2 Connections](v1/spec.md#connections)
+   [§4.2 Explicit bindings](v1/spec.md#connections)
 5. [§5 Parameters](v1/spec.md#parameters) and
    [§7 Diagnostics](v1/spec.md#diagnostics)
 
@@ -39,7 +39,7 @@ dependencies" table in [§2](v1/spec.md#envelope).
 | Prefix | Covers | Section |
 |---|---|---|
 | `BP-ID` | Item identity particular to a blueprint | [§3](v1/spec.md#identity) |
-| `BP-CONN` | Connections | [§4.2](v1/spec.md#connections) |
+| `BP-CONN` | Explicit bindings | [§4.2](v1/spec.md#connections) |
 | `BP-NODE` | Node compute and placement | [§4.3](v1/spec.md#node-compute), [§4.4](v1/spec.md#placement-constraints) |
 
 Every ID, the clause stating it, and the cases pinning it:

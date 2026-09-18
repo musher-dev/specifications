@@ -6,7 +6,7 @@ import { describe, expect, test } from 'bun:test'
 import { spawnSync } from 'node:child_process'
 import { join } from 'node:path'
 import { REPO_ROOT } from '../lib/layout.ts'
-import { absentCliIsFailure } from './standards.ts'
+import { absentCliIsFailure, orphanDefinitions } from './standards.ts'
 
 describe('absentCliIsFailure', () => {
   test('CI=true makes an absent CLI a failure', () => {
@@ -45,4 +45,17 @@ describe('reportAbsentCli', () => {
     expect(result.stdout).toContain('check:parity skipped, not passed')
     expect(result.stdout).toContain('returned')
   })
+})
+
+test('public schema roots retain their dependencies without excusing unused definitions', () => {
+  const schema = {
+    $defs: {
+      Public: { $ref: '#/$defs/Child' },
+      Child: { type: 'string' },
+      Unused: { type: 'number' },
+    },
+  }
+  expect(orphanDefinitions(schema, ['Public'])).toEqual(['Unused'])
+  expect(orphanDefinitions(schema)).toEqual(['Public', 'Child', 'Unused'])
+  expect(() => orphanDefinitions(schema, ['Missing'])).toThrow('missing public schema entry point')
 })

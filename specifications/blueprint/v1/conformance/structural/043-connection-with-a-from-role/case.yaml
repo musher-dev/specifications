@@ -1,6 +1,3 @@
-# The producer end is named by `fromNode`. `fromRole` named the same thing under
-# a word the specification uses nowhere else, and it is gone rather than
-# accepted alongside.
 specVersion: v1
 kind: BLUEPRINT
 metadata:
@@ -11,12 +8,13 @@ spec:
     db:
       componentRef: ./components/postgres.yaml
       size: general.standard.small
-      connections: {}
+      bindings: {}
     web:
       componentRef: ./components/web.yaml
       size: general.standard.small
-      connections:
-        databaseUrl:
+      bindings:
+        bad:
+          type: OUTPUT
           fromRole: db
-          fromOutput: connectionString
+          output: url
   parameters: {}

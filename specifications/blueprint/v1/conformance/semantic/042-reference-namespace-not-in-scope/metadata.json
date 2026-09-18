@@ -2,10 +2,9 @@
   "id": "semantic-042-reference-namespace-not-in-scope",
   "phase": "semantic",
   "expected": "fail",
-  "clause": "specifications/blueprint/v1/spec.md#value-sources",
+  "clause": "specifications/blueprint/v1/spec.md#components",
   "requirements": [
-    "CORE-REF-003",
-    "BP-REF-001"
+    "BP-CONN-002"
   ],
   "summary": "A reserved namespace a parameter default does not admit is rejected.",
   "document": "acme-wiki/blueprint.yaml"

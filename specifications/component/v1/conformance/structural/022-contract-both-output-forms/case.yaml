@@ -1,5 +1,3 @@
-# The whole contract surface in one document: an input marked sensitive, an output the platform resolves, and an output this document
-# states outright.
 specVersion: v1
 kind: COMPONENT
 metadata:
@@ -14,24 +12,29 @@ spec:
       primary:
         containerPort: 5432
         protocol: TCP
-        visibility: PRIVATE
   contract:
     inputs:
       postgresPassword:
         description: Password the database superuser is created with.
         schema:
-          type: STRING
-          sensitive: true
+          type: string
+        sensitive: true
+        target:
+          envVarKey: POSTGRES_PASSWORD
     outputs:
       connectionString:
         description: Connection string a client uses to reach this database.
         schema:
-          type: STRING
-          format: CONNECTION_STRING
-        valueFrom: DERIVED
+          type: string
+        presentationHint: CONNECTION_STRING
+        source:
+          type: ENDPOINT
+          endpoint: primary
+          property: privateAddress
       databaseName:
         description: Name of the database this component creates.
         schema:
-          type: STRING
-        valueFrom: DECLARED
-        value: app
+          type: string
+        source:
+          type: LITERAL
+          value: app

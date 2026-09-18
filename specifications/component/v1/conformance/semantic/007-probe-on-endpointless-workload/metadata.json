@@ -6,5 +6,5 @@
   "requirements": [
     "COMP-EP-001"
   ],
-  "summary": "A probe on a workload declaring no endpoint has no port to poll."
+  "summary": "A service probe cannot name an undeclared endpoint."
 }

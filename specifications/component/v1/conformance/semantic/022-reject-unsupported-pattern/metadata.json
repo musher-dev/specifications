@@ -1,0 +1,10 @@
+{
+  "id": "semantic-022-reject-unsupported-pattern",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#value-schema",
+  "requirements": [
+    "COMP-VAL-003"
+  ],
+  "summary": "reject unsupported pattern"
+}

@@ -1,6 +1,3 @@
-# `$${{` is a single four-character escape token rendering a literal `${{`, so
-# what follows it is text and names no namespace. Without the escape this would
-# be CORE-REF-002.
 specVersion: v1
 kind: BLUEPRINT
 metadata:
@@ -11,9 +8,12 @@ spec:
     app:
       componentRef: ./components/app.yaml
       size: general.standard.small
-      connections: {}
-  parameters:
-    brokerAddress:
-      default: "$${{ not.areference }}"
-      ui:
-        label: Broker address
+      bindings:
+        brokerAddress:
+          type: OUTPUT
+          node: app
+          output: installDefault
+      exposure:
+        amqp: PUBLIC
+        metrics: PRIVATE
+      volumes: {}

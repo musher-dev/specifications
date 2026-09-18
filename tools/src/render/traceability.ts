@@ -39,6 +39,7 @@ interface Citation {
   readonly major: string
   /** The case directory, relative to its family version's corpus. */
   readonly path: string
+  readonly behaviorId?: string
 }
 
 interface Requirement {
@@ -71,6 +72,24 @@ function citations(repoRoot: string): Map<string, Citation[]> {
     const index = readJson(indexPath)
     const cases = isObject(index) && Array.isArray(index.cases) ? index.cases : []
 
+    const behaviorPath = join(family.conformanceDir, 'behavior.json')
+    if (existsSync(behaviorPath)) {
+      const behavior = readJson(behaviorPath)
+      if (Array.isArray(behavior))
+        for (const c of behavior) {
+          if (!isObject(c) || typeof c.id !== 'string' || !Array.isArray(c.requirements)) continue
+          for (const requirement of c.requirements)
+            if (typeof requirement === 'string') {
+              const citation = {
+                family: family.name,
+                major: family.major,
+                path: 'behavior.json',
+                behaviorId: c.id,
+              }
+              cited.set(requirement, [...(cited.get(requirement) ?? []), citation])
+            }
+        }
+    }
     for (const entry of cases as Json[]) {
       if (!isObject(entry) || typeof entry.path !== 'string') continue
       const metadata = readJson(join(family.conformanceDir, entry.path, 'metadata.json'))
@@ -126,7 +145,7 @@ export function buildMatrix(repoRoot: string = REPO_ROOT): string {
       const links = cases
         .map(
           (c) =>
-            `[\`${c.family}/${c.major}/${c.path}\`](${conformanceLink(OUTPUT_DIR, c.family, c.major, c.path)})`,
+            `[\`${c.family}/${c.major}/${c.behaviorId ?? c.path}\`](${c.behaviorId ? repoLink(OUTPUT_DIR, familyPaths(c.family, c.major).conformance + '/' + c.path) : conformanceLink(OUTPUT_DIR, c.family, c.major, c.path)})`,
         )
         .join('<br>')
       lines.push(

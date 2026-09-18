@@ -3,7 +3,9 @@
   "phase": "semantic",
   "expected": "fail",
   "clause": "specifications/blueprint/v1/spec.md#node-compute",
-  "requirements": ["BP-NODE-002"],
+  "requirements": [
+    "BP-NODE-002"
+  ],
   "summary": "A node naming compute for an external component is rejected.",
   "document": "acme-wiki/blueprint.yaml"
 }

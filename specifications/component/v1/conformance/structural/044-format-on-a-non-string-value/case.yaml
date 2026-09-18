@@ -1,7 +1,3 @@
-# Every format member names a lexical convention for text, so the field refines
-# a STRING and nothing else. URI on a NUMBER describes nothing; that it used to
-# validate was an accident of the two fields never having been described
-# together.
 specVersion: v1
 kind: COMPONENT
 metadata:
@@ -16,12 +12,13 @@ spec:
       web:
         containerPort: 8080
         protocol: HTTP
-        visibility: PRIVATE
   contract:
     inputs:
       retries:
         description: Number of times a failed request is retried.
         schema:
-          type: NUMBER
-          format: URI
+          type: number
+        presentationHint: URI
+        target:
+          envVarKey: RETRIES
     outputs: {}

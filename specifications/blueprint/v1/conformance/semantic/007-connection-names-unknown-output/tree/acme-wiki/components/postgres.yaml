@@ -12,13 +12,15 @@ spec:
       primary:
         containerPort: 5432
         protocol: TCP
-        visibility: PRIVATE
   contract:
     inputs: {}
     outputs:
       connectionString:
         schema:
-          type: STRING
-          sensitive: true
-        valueFrom: DERIVED
+          type: string
         description: Connection string a client uses to reach this database.
+        sensitive: true
+        source:
+          type: ENDPOINT
+          endpoint: primary
+          property: privateAddress

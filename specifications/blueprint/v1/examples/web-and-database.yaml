@@ -1,15 +1,3 @@
-# yaml-language-server: $schema=https://specifications.musher.dev/blueprint/v1/blueprint.schema.json
-#
-# Two components wired together. Connections are consumer-anchored: the `web`
-# node declares what it consumes and from which role, so a component never
-# needs to know who will depend on it.
-#
-# The two nodes show that a repo-local reference does not mandate a directory
-# layout — `db` names a document under `components/`, `web` a flat sibling.
-#
-# They also size independently. Compute is chosen per node rather than baked
-# into the component, so the database gets more of it than the web server
-# without either document changing.
 specVersion: v1
 kind: BLUEPRINT
 metadata:
@@ -20,51 +8,43 @@ spec:
     db:
       componentRef: ./components/postgres.yaml
       size: general.standard.medium
-      # Optional pins narrowing which host may run this node. They never change
-      # the compute `size` names — this asks for the profile's vCPU on a host
-      # that dedicates it, not for more of it.
       placement:
         cpuDedication: dedicated
-      connections: {}
+      bindings:
+        postgresPassword:
+          type: PARAMETER
+          parameter: postgresPassword
+      volumes:
+        data:
+          sizeGiB: 20
     web:
       componentRef: ./component-web-server.yaml
       size: general.standard.small
-      connections:
+      bindings:
         databaseUrl:
-          fromNode: db
-          fromOutput: connectionString
-  # `parameters` is the install form, and it is always authored. Binding is by
-  # key: a parameter carrying no `toNode` and no `toInput` names no node, so
-  # `siteTitle` here supplies the `siteTitle` input of every component that
-  # declares one and no connection fills, which is what lets one parameter serve
-  # two components.
-  #
-  # A parameter carries presentation and supply, never the value's shape. Type,
-  # enum, sensitivity and the help text all come from the inputs it covers.
-  # `databaseUrl` arrives over the wire above, so no field asks for it, and the
-  # database password is minted by the platform rather than typed.
-  #
-  # `callbackUrl` is the case a structural field could not express. The address
-  # this deployment answers on is assigned after this document is sealed, so no
-  # author can write the URL down: `${{ self.publicHostname }}` names it, and the
-  # text around it composes the path. `toNode` says whose hostname — a `self`
-  # reference has to denote one node, and the key alone would bind on every node
-  # declaring it.
+          type: OUTPUT
+          node: db
+          output: connectionString
+        siteTitle:
+          type: PARAMETER
+          parameter: siteTitle
+        callbackUrl:
+          type: OUTPUT
+          node: web
+          output: callbackUrl
+        telemetry:
+          type: PARAMETER
+          parameter: telemetry
+      exposure:
+        web: PUBLIC
   parameters:
     postgresPassword:
       generator:
         byteLength: 32
         encoding: BASE64URL
-      ui:
-        label: Database password
     siteTitle:
       ui:
         label: Site title
-    callbackUrl:
-      toNode: web
-      default: "https://${{ self.publicHostname }}/oauth/cb"
-      ui:
-        label: Callback URL
     telemetry:
       ui:
         label: Telemetry to export

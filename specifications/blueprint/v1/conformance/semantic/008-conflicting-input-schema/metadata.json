@@ -3,7 +3,9 @@
   "phase": "semantic",
   "expected": "fail",
   "clause": "specifications/blueprint/v1/spec.md#coverage",
-  "requirements": ["BP-PARAM-002"],
+  "requirements": [
+    "BP-PARAM-002"
+  ],
   "summary": "A parameter covering inputs whose schemas differ is rejected.",
   "document": "acme-wiki/blueprint.yaml"
 }

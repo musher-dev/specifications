@@ -1,6 +1,6 @@
 [
   {
-    "code": "ERR_DUPLICATE_MEDIA_BASENAME",
+    "code": "ERR_DUPLICATE_MEDIA_PATH",
     "path": "/spec/screenshots/1/file"
   }
 ]

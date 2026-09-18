@@ -1,7 +1,3 @@
-# A hyphen is what a composed DNS label uses to join an endpoint name to the
-# names beside it. A name drawn from that same alphabet cannot be delimited:
-# endpoint `api` on a component `web` and a component `api-web` would compose
-# to one label. The grammar excludes the hyphen so the separator survives.
 specVersion: v1
 kind: COMPONENT
 metadata:
@@ -16,4 +12,3 @@ spec:
       admin-console:
         containerPort: 8080
         protocol: HTTP
-        visibility: PRIVATE

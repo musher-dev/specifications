@@ -1,6 +1,3 @@
-# A SERVICE is not scheduled, so this schedule means nothing. Ignoring it
-# would leave the author believing their service runs at 03:00, which is
-# exactly the failure mode §2 refuses for any other misplaced field.
 specVersion: v1
 kind: COMPONENT
 metadata:
@@ -12,9 +9,8 @@ spec:
       web:
         containerPort: 8080
         protocol: HTTP
-        visibility: PRIVATE
     source:
       type: IMAGE
       ref: nginx:1.29.4-alpine
     schedule:
-      cron: "0 3 * * *"
+      cron: 0 3 * * *

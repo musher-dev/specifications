@@ -1,6 +1,6 @@
 [
   {
     "code": "ERR_UNKNOWN_NODE",
-    "path": "/spec/parameters/brokerAddress/toNode"
+    "path": "/spec/components/app/bindings/brokerAddress/node"
   }
 ]

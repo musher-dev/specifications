@@ -3,6 +3,8 @@
   "phase": "semantic",
   "expected": "pass",
   "clause": "specifications/component/v1/spec.md#outputs",
-  "requirements": ["COMP-OUT-002"],
+  "requirements": [
+    "COMP-OUT-002"
+  ],
   "summary": "An INPUT output reading an input this component declares is accepted."
 }

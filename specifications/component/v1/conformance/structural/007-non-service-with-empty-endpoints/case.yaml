@@ -1,6 +1,3 @@
-# "Forbidden" bounds what the field may contain, not whether the key may be
-# written. An empty mapping declares nothing, so it is accepted — the same
-# spelling the blueprint examples use for an empty connections block.
 specVersion: v1
 kind: COMPONENT
 metadata:
@@ -9,7 +6,7 @@ spec:
   workload:
     type: WORKER
     command: /bin/consume
-    endpoints: {}
     source:
       type: IMAGE
       ref: ghcr.io/musher-dev/worker:1.4.0
+    endpoints: {}

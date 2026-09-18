@@ -6,5 +6,5 @@
   "requirements": [
     "COMP-EP-001"
   ],
-  "summary": "A reference omitting the endpoint is rejected where the workload elects no primary."
+  "summary": "A probe naming an absent endpoint is rejected."
 }

@@ -1,8 +1,3 @@
-# The platform mints `signingKey`, and the input receiving it never says the
-# value is secret: `sensitive` defaults to false, so the component would echo
-# the minted key into logs and interfaces like any other setting. A generated
-# value is secret material, and the component is the one document that says how
-# a value is handled, so a generator may only cover inputs that already say so.
 specVersion: v1
 kind: BLUEPRINT
 metadata:
@@ -13,7 +8,12 @@ spec:
     api:
       componentRef: ./components/api.yaml
       size: general.standard.small
-      connections: {}
+      bindings:
+        signingKey:
+          type: PARAMETER
+          parameter: signingKey
+      exposure: {}
+      volumes: {}
   parameters:
     signingKey:
       generator:

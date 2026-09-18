@@ -1,0 +1,10 @@
+{
+  "id": "semantic-025-reject-malformed-reference",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/core/v1/spec.md#reference-grammar",
+  "requirements": [
+    "CORE-REF-001"
+  ],
+  "summary": "reject malformed reference"
+}

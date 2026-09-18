@@ -1,0 +1,6 @@
+[
+  {
+    "code": "ERR_INVALID_MOUNT",
+    "path": "/spec/workload/volumes/nested/mountPath"
+  }
+]

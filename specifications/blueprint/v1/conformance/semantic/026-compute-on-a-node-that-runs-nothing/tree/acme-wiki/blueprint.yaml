@@ -1,7 +1,3 @@
-# A profile named for a component this platform does not run. The slug is
-# grammatical and the node is not, which is why the rule is BP-NODE-002 and not
-# the pattern: nothing about `general.standard.small` is wrong except that there
-# is no workload for it to size.
 specVersion: v1
 kind: BLUEPRINT
 metadata:
@@ -12,17 +8,28 @@ spec:
     models:
       componentRef: ./components/models.yaml
       size: general.standard.small
-      connections: {}
+      bindings:
+        baseUrl:
+          type: PARAMETER
+          parameter: baseUrl
+        apiKey:
+          type: PARAMETER
+          parameter: apiKey
     web:
       componentRef: ./components/web.yaml
       size: general.standard.small
-      connections:
+      bindings:
         llmBaseUrl:
-          fromNode: models
-          fromOutput: baseUrl
+          type: OUTPUT
+          node: models
+          output: baseUrl
         llmApiKey:
-          fromNode: models
-          fromOutput: apiKey
+          type: OUTPUT
+          node: models
+          output: apiKey
+      exposure:
+        web: PUBLIC
+      volumes: {}
   parameters:
     baseUrl:
       ui:

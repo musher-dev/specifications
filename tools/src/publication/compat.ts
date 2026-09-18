@@ -1,26 +1,14 @@
-/**
- * Replay every document a released version accepted against the candidate
- * schema.
- *
- * `spec.md` §3 promises that a document validating against `v1.0.0` validates
- * against every later `v1.x.y`. Until now nothing checked it. Building the
- * bundle from its sources keeps it in step with them, and the conformance corpus proves the
- * cases in it still behave — but the corpus is the corpus as it exists *now*,
- * so deleting a fixture and tightening the rule it covered passes both.
- *
- * A textual schema diff cannot settle this either: whether a change to a
- * `oneOf`, a conditional, or a pattern rejects some previously valid document
- * is a question about documents, not about schema text. So this replays the
- * documents.
- *
- * The corpus is read out of each release's own tag, under the directory its
- * ledger entry records, rather than from the working tree — which is what makes
- * removing a fixture unable to hide a regression. Releases are the ledger's
- * tagged entries (docs/adr/0023); core's are skipped.
- *
- * NON-NORMATIVE, like everything under tools/.
- */
-
+/** Historical acceptance, effective values and observable behavior under pinned context. */
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { dirname, isAbsolute, join, relative } from 'node:path'
+import { runBehaviorCases } from '../conformance/behavior.ts'
+import {
+  type CaseIndexEntry,
+  type CaseMetadata,
+  loadContext,
+  runCase,
+} from '../conformance/conformance.ts'
 import { listTreeFiles, readBlobAtRef } from '../lib/git.ts'
 import {
   discoverFamilies,
@@ -35,15 +23,9 @@ import {
   releaseDirPaths,
   requireTreeAtRef,
 } from '../lib/layout.ts'
-import { parseDocument } from '../validation/document.ts'
+import { parseDocumentBytes } from '../validation/document.ts'
 import { compileFamily } from '../validation/validator.ts'
 import { type RecordedRelease, readLedger, taggedEntries } from './ledger.ts'
-
-interface Subject {
-  /** Repo-relative path as of the tag, for the diagnostic. */
-  readonly path: string
-  readonly source: string
-}
 
 /**
  * Documents a release asserted were valid: its examples, and every conformance
@@ -64,50 +46,17 @@ function partFiles(
     : listTreeFiles(repoRoot, release.tag, path)
 }
 
-function subjectsAt(repoRoot: string, recorded: RecordedRelease): Subject[] {
-  const { release } = recorded
-  const subjects: Subject[] = []
-
-  for (const path of partFiles(repoRoot, recorded, 'examples')) {
-    if (!path.endsWith('.yaml') && !path.endsWith('.yml')) continue
-    const blob = readBlobAtRef(repoRoot, release.tag, path)
-    if (blob !== null) subjects.push({ path, source: blob.toString('utf8') })
-  }
-
-  for (const path of partFiles(repoRoot, recorded, 'conformance')) {
-    if (!path.endsWith('/metadata.json')) continue
-    const blob = readBlobAtRef(repoRoot, release.tag, path)
-    if (blob === null) continue
-
-    let metadata: Json
-    try {
-      metadata = JSON.parse(blob.toString('utf8')) as Json
-    } catch {
-      continue
-    }
-    if (!isObject(metadata) || metadata.expected !== 'pass') continue
-
-    const dir = path.slice(0, -'/metadata.json'.length)
-    // A tree case names its document inside `tree/`; a flat case is `case.yaml`.
-    const document =
-      typeof metadata.document === 'string'
-        ? `${dir}/tree/${metadata.document}`
-        : `${dir}/case.yaml`
-    const source = readBlobAtRef(repoRoot, release.tag, document)
-    if (source !== null) subjects.push({ path: document, source: source.toString('utf8') })
-  }
-
-  return subjects
+/** Missing or malformed historical evidence cannot silently become zero checks. */
+function requiredBlob(repoRoot: string, tag: string, path: string): Buffer {
+  const bytes = readBlobAtRef(repoRoot, tag, path)
+  if (bytes === null) throw new LayoutError(tag + ' is missing historical evidence ' + path)
+  return bytes
 }
 
 /**
- * Replay one release's accepted documents against the current bundle.
- *
- * Parser and structural only. A semantic rule is decided against the item the
- * document sits in, and a fixture's surroundings are not reconstructed here —
- * `check:conformance` is what exercises those. Structural is where "validation
- * became stricter" actually shows up: a narrowed enum, a tightened pattern, a
- * newly required field.
+ * Reconstruct the release's own corpus, including item trees and binary parser
+ * subjects. Evaluate it with candidate semantics and schemas. Never execute
+ * historical tooling, and never substitute today's fixture contents.
  */
 export function replayRelease(
   repoRoot: string,
@@ -115,39 +64,80 @@ export function replayRelease(
   recorded: RecordedRelease,
   failures: Failures,
 ): number {
-  const { release } = recorded
-  const validate = compileFamily(family)
-  const subjects = subjectsAt(repoRoot, recorded)
-
-  for (const subject of subjects) {
-    const parsed = parseDocument(subject.source)
-    if ('errors' in parsed) {
-      failures.add(
-        `${release.tag} accepted ${subject.path}, but the candidate parser rejects it — ` +
-          `${parsed.errors.map((e) => e.code).join(', ')}. Validation became stricter inside ` +
-          'a major version.',
-      )
-      continue
+  const { release, entry } = recorded
+  const scratch = mkdtempSync(join(tmpdir(), 'musher-compat-'))
+  let count = 0
+  try {
+    const corpusPath = releaseDirPaths(entry.path).conformance
+    for (const path of partFiles(repoRoot, recorded, 'conformance')) {
+      const rel = relative(corpusPath, path)
+      if (rel === '..' || rel.startsWith('../') || isAbsolute(rel))
+        throw new LayoutError('historical fixture escapes corpus')
+      const target = join(scratch, rel)
+      mkdirSync(dirname(target), { recursive: true })
+      writeFileSync(target, requiredBlob(repoRoot, release.tag, path))
     }
-    if (validate(parsed.value) as boolean) continue
-    const detail = (validate.errors ?? [])
-      .map((error) => `${error.instancePath || '/'} ${error.message ?? 'is invalid'}`)
-      .join('; ')
-    failures.add(
-      `${release.tag} accepted ${subject.path}, but the candidate schema rejects it — ` +
-        `${detail}. Validation became stricter inside a major version.`,
-    )
+    const index = JSON.parse(
+      requiredBlob(repoRoot, release.tag, corpusPath + '/cases.json').toString('utf8'),
+    ) as Json
+    if (!isObject(index) || !Array.isArray(index.cases))
+      throw new LayoutError(release.tag + ' has an invalid conformance index')
+    const context = loadContext(repoRoot, failures)
+    const candidate = { ...family, conformanceDir: scratch }
+    for (const raw of index.cases) {
+      if (
+        !isObject(raw) ||
+        typeof raw.path !== 'string' ||
+        typeof raw.id !== 'string' ||
+        typeof raw.phase !== 'string'
+      )
+        throw new LayoutError(release.tag + ' has an invalid case entry')
+      if (raw.path.split('/').some((p) => p === '..') || isAbsolute(raw.path))
+        throw new LayoutError('historical case escapes corpus')
+      const metadata = JSON.parse(
+        readFileSync(join(scratch, raw.path, 'metadata.json'), 'utf8'),
+      ) as CaseMetadata
+      // Rejections also pin observable meaning; replay all implemented cases.
+      const outcome = runCase(
+        context,
+        candidate,
+        raw as unknown as CaseIndexEntry,
+        failures,
+        new Set(),
+        new Set(),
+        () => {},
+      )
+      if (outcome === 'skipped')
+        failures.add(release.tag + ' historical obligation cannot be checked: ' + metadata.id)
+      else count++
+    }
+    const behavior = runBehaviorCases(candidate, () => {})
+    count += behavior.ran
+    for (const failure of behavior.failures)
+      failures.add(release.tag + ' behavioural regression: ' + failure)
+    if (family.role !== 'core') {
+      const validate = compileFamily(family)
+      for (const path of partFiles(repoRoot, recorded, 'examples')) {
+        if (!/\.ya?ml$/.test(path)) continue
+        const parsed = parseDocumentBytes(requiredBlob(repoRoot, release.tag, path))
+        count++
+        if ('errors' in parsed)
+          failures.add(release.tag + ' accepted ' + path + ', but the candidate parser rejects it')
+        else if (!validate(parsed.value))
+          failures.add(release.tag + ' accepted ' + path + ', but the candidate schema rejects it')
+      }
+    }
+    return count
+  } finally {
+    rmSync(scratch, { recursive: true, force: true })
   }
-
-  return subjects.length
 }
 
 /**
  * Replay every release against the working tree's schemas.
  *
- * A release of a family with no schema — core — is skipped: it accepted no
- * document a bundle decided, so there is nothing structural to replay. Its
- * parser-phase corpus is exercised by every kind family's own conformance run.
+ * Core's historical parser corpus is replayed as well. Context-dependent
+ * observations come from the release's case trees and supplied context.
  */
 export function replayAll(
   repoRoot: string,
@@ -159,8 +149,7 @@ export function replayAll(
   let checked = 0
 
   for (const recorded of taggedEntries(repoRoot, readLedger(repoRoot))) {
-    const { release, entry } = recorded
-    if (entry.bundleSha256 === null) continue
+    const { release } = recorded
     const family = families.get(`${release.family}/${release.major}`)
     if (family === undefined) {
       // A retired family still has published versions, but no current schema to

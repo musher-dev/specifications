@@ -12,12 +12,13 @@ spec:
       primary:
         containerPort: 5432
         protocol: TCP
-        visibility: PRIVATE
   contract:
     inputs:
       databaseName:
         schema:
-          type: STRING
-          default: app
+          type: string
         description: Name of the database created on first start.
+        default: app
+        target:
+          envVarKey: DATABASE_NAME
     outputs: {}

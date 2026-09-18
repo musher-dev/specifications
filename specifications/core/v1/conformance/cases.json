@@ -66,6 +66,21 @@
       "id": "parser-013-crlf-line-endings",
       "phase": "parser",
       "path": "parser/013-crlf-line-endings"
+    },
+    {
+      "id": "parser-015-reject-malformed-utf8",
+      "phase": "parser",
+      "path": "parser/015-reject-malformed-utf8"
+    },
+    {
+      "id": "parser-016-reject-unsafe-integer",
+      "phase": "parser",
+      "path": "parser/016-reject-unsafe-integer"
+    },
+    {
+      "id": "parser-017-reject-complex-key",
+      "phase": "parser",
+      "path": "parser/017-reject-complex-key"
     }
   ]
 }

@@ -12,13 +12,14 @@ spec:
       primary:
         containerPort: 5432
         protocol: TCP
-        visibility: PRIVATE
   contract:
     inputs:
       adminPassword:
         schema:
-          type: STRING
+          type: string
           pattern: ^.{12,}$
-          sensitive: true
         description: Password of the administrator account the component creates on first start.
+        sensitive: true
+        target:
+          envVarKey: ADMIN_PASSWORD
     outputs: {}

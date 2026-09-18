@@ -68,7 +68,8 @@ that is a review obligation.
 
 ## Compatibility review
 
-Any change that would cause a previously valid document to fail validation is a
+Any change that rejects a previously valid document or changes its defined meaning
+under the same pinned external context is a
 **breaking change**. It requires:
 
 1. Explicit approval from a maintainer listed in CODEOWNERS
@@ -84,7 +85,7 @@ conformance suite, all required. See
 [ADR 0015 §4](adr/0015-selective-code-owner-review.md).
 
 Adding a required field, narrowing an enum, tightening a pattern, and removing
-a field are all breaking. Adding an optional field is not.
+a field are all breaking. Adding an optional field is compatible only when omission preserves existing meaning.
 
 One narrow exception applies before a family's first release.
 [ADR 0005](adr/0005-platform-divergence-reconciliation.md) §1 sets it out:

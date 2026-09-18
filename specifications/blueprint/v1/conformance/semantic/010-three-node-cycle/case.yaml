@@ -1,10 +1,3 @@
-# A three-node cycle: queue -> db -> cache -> queue.
-#
-# This is the case semantic-002 cannot make. A two-node cycle is legible on
-# sight, and an implementation could conceivably permit one by accident. Three
-# nodes, declared in an order that is not the order the edges run in, is a
-# cycle only a real traversal finds — so this pins that §4.2 permits cycles as
-# such rather than tolerating the smallest of them.
 specVersion: v1
 kind: BLUEPRINT
 metadata:
@@ -15,22 +8,25 @@ spec:
     queue:
       componentRef: ./components/queue.yaml
       size: general.standard.small
-      connections:
+      bindings:
         dbUrl:
-          fromNode: db
-          fromOutput: privateAddress
+          type: OUTPUT
+          node: db
+          output: privateAddress
     db:
       componentRef: ./components/db.yaml
       size: general.standard.small
-      connections:
+      bindings:
         cacheUrl:
-          fromNode: cache
-          fromOutput: privateAddress
+          type: OUTPUT
+          node: cache
+          output: privateAddress
     cache:
       componentRef: ./components/cache.yaml
       size: general.standard.small
-      connections:
+      bindings:
         queueUrl:
-          fromNode: queue
-          fromOutput: privateAddress
+          type: OUTPUT
+          node: queue
+          output: privateAddress
   parameters: {}

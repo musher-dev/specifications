@@ -3,6 +3,8 @@
   "phase": "structural",
   "expected": "fail",
   "clause": "specifications/component/v1/spec.md#value-schema",
-  "requirements": ["COMP-VAL-004"],
+  "requirements": [
+    "COMP-VAL-004"
+  ],
   "summary": "A format outside the six-member vocabulary is rejected."
 }

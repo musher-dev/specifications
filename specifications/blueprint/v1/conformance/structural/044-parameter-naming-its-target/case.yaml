@@ -1,6 +1,3 @@
-# Both narrowing fields are OPTIONAL and take the grammars of what they name: a
-# node name, and an input name. Which node and which input exist is §5.1's
-# semantic question and not this case's.
 specVersion: v1
 kind: BLUEPRINT
 metadata:
@@ -11,10 +8,11 @@ spec:
     payments:
       componentRef: ./components/payments.yaml
       size: general.standard.small
-      connections: {}
+      bindings:
+        apiKey:
+          type: PARAMETER
+          parameter: stripeKey
   parameters:
     stripeKey:
-      toNode: payments
-      toInput: apiKey
       ui:
         label: Stripe API key

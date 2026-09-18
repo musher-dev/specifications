@@ -1,5 +1,3 @@
-# GRPC rides on HTTP/2, so it is one of the four protocols a PUBLIC endpoint
-# may serve.
 specVersion: v1
 kind: COMPONENT
 metadata:
@@ -14,8 +12,8 @@ spec:
       rpc:
         containerPort: 8080
         protocol: GRPC
-        visibility: PUBLIC
     health:
       readiness:
         path: /healthz
         endpoint: rpc
+        type: HTTP

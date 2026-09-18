@@ -12,13 +12,14 @@ spec:
       primary:
         containerPort: 5432
         protocol: TCP
-        visibility: PRIVATE
   contract:
     inputs:
       siteTitle:
         schema:
-          type: STRING
-          default: Acme Wiki
+          type: string
         required: true
         description: Title the application shows in its header.
+        default: Acme Wiki
+        target:
+          envVarKey: SITE_TITLE
     outputs: {}

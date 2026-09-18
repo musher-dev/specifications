@@ -1,26 +1,22 @@
-# A misspelling at one end of a reference whose other end is a mapping key in
-# the same document. `semantic` rather than `structural` because deciding it
-# means comparing a property's value against a sibling mapping's keys, which is
-# the class of rule §7 puts in that phase.
 specVersion: v1
 kind: COMPONENT
 metadata:
   revision: 1
 spec:
-  external:
-    resourceType: dev.musher.llm.chat-completions
+  external: {}
   contract:
     inputs:
       baseUrl:
         description: Base URL of the service this node addresses.
         schema:
-          type: STRING
-          format: ENDPOINT_URL
+          type: string
+        presentationHint: ENDPOINT_URL
     outputs:
       baseUrl:
         description: Base URL of the addressed service, for a consumer to call.
         schema:
-          type: STRING
-          format: ENDPOINT_URL
-        valueFrom: INPUT
-        input: baseUrI
+          type: string
+        presentationHint: ENDPOINT_URL
+        source:
+          type: INPUT
+          input: baseUrI

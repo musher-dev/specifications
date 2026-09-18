@@ -1,0 +1,6 @@
+[
+  {
+    "code": "ERR_INVALID_VALUE_SCHEMA",
+    "path": "/spec/contract/inputs/value/schema"
+  }
+]

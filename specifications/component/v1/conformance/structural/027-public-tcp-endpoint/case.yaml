@@ -1,8 +1,3 @@
-# A PUBLIC TCP endpoint publishes a host:port edge address rather than a URL,
-# which is a working capability — an exposed database, broker or game server.
-# No readiness probe accompanies it: §5.4 compels one only for a PUBLIC
-# endpoint in the HTTP family, because an L4 consumer retries and a browser
-# does not.
 specVersion: v1
 kind: COMPONENT
 metadata:
@@ -17,4 +12,3 @@ spec:
       db:
         containerPort: 5432
         protocol: TCP
-        visibility: PUBLIC

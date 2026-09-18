@@ -1,25 +1,21 @@
-# DERIVED means the platform, from the running workload, and there is no
-# running workload. This is the member an author reaches for by habit — every
-# address-publishing output in the corpus is DERIVED — so rejecting it is what
-# keeps the shape honest rather than merely documented.
 specVersion: v1
 kind: COMPONENT
 metadata:
   revision: 1
 spec:
-  external:
-    resourceType: dev.musher.llm.chat-completions
+  external: {}
   contract:
     inputs:
       baseUrl:
         description: Base URL of the service this node addresses.
         schema:
-          type: STRING
-          format: ENDPOINT_URL
+          type: string
+        presentationHint: ENDPOINT_URL
     outputs:
       baseUrl:
         description: Base URL of the addressed service, for a consumer to call.
         schema:
-          type: STRING
-          format: ENDPOINT_URL
-        valueFrom: DERIVED
+          type: string
+        presentationHint: ENDPOINT_URL
+        source:
+          type: DERIVED

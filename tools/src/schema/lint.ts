@@ -394,6 +394,7 @@ function checkMetaValid(doc: { [k: string]: Json }, rel: string, failures: Failu
  * every level should hold its own schemas to the same standard.
  */
 const EXTENSION_KEYWORDS = [
+  'x-musher-grammar',
   // Names the key of a map-valued object, for documentation renderers. The
   // keys are chosen by the document author, so no schema can name them. It
   // sits on the `$def` that is the map's value type, or — where that value is

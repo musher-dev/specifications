@@ -1,7 +1,3 @@
-# A `self` reference naming no endpoint. It selects the primary component §5.2
-# elects on the covered node, and that node's sole PUBLIC endpoint is it, so the
-# L4 rule is applied to the elected endpoint exactly as it would be to a named
-# one.
 specVersion: v1
 kind: BLUEPRINT
 metadata:
@@ -12,9 +8,12 @@ spec:
     app:
       componentRef: ./components/app.yaml
       size: general.standard.small
-      connections: {}
-  parameters:
-    brokerAddress:
-      default: "${{ self.publicAddress }}"
-      ui:
-        label: Broker address
+      bindings:
+        brokerAddress:
+          type: OUTPUT
+          node: app
+          output: installDefault
+      exposure:
+        amqp: PUBLIC
+        metrics: PRIVATE
+      volumes: {}

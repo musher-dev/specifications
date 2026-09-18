@@ -1,0 +1,22 @@
+{
+  "specVersion": "v1",
+  "kind": "BLUEPRINT",
+  "metadata": {
+    "slug": "app",
+    "revision": 1
+  },
+  "spec": {
+    "components": {
+      "web": {
+        "componentRef": "./web.yaml",
+        "size": "general.standard.small",
+        "bindings": {
+          "value": {
+            "type": "PARAMETER",
+            "parameter": "missing"
+          }
+        }
+      }
+    }
+  }
+}

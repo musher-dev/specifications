@@ -1,8 +1,10 @@
 {
   "id": "structural-058-resource-type-on-a-value",
   "phase": "structural",
-  "expected": "pass",
+  "expected": "fail",
   "clause": "specifications/component/v1/spec.md#value-schema",
-  "requirements": ["COMP-VAL-005"],
-  "summary": "A namespaced resourceType validates on an input and on an output, including a third party's namespace."
+  "requirements": [
+    "COMP-VAL-005"
+  ],
+  "summary": "Removed resourceType fields are rejected on value contracts."
 }
