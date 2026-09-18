@@ -26,8 +26,9 @@
  */
 export const RESERVED_NAMESPACES = [
   'self',
-  'params',
-  'config',
+  'parameters',
+  'variables',
+  'connections',
   'deployment',
   'environment',
   'organization',

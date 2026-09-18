@@ -33,80 +33,116 @@
   ],
   "type": "object",
   "$defs": {
-    "BlueprintComputeConstraints": {
-      "$comment": "Every term pin is a lowercase token rather than a member of a closed set: the grammar is fixed by this contract, the vocabularies are not published anywhere yet, and spec.md §4.4 records that as a gap. cpuDedication is the exception — two values are the whole concept.",
+    "BlueprintBinding": {
+      "$comment": "spec.md §4.2 / ADR 0031 §1. The key that is present says where the input’s value comes from: a parameter, another node’s output, or a literal value. Exactly one; `node` belongs to `output`. Values from outside the documents enter only through parameters.",
       "additionalProperties": false,
-      "description": "Advanced, optional compute pins that narrow the hosts a node may be placed on. A pin never changes the compute the node's size names. See spec.md §4.4.",
+      "dependentRequired": {
+        "node": [
+          "output"
+        ]
+      },
+      "description": "Where one receiving input’s value comes from.",
+      "oneOf": [
+        {
+          "properties": {
+            "parameter": true
+          },
+          "required": [
+            "parameter"
+          ]
+        },
+        {
+          "properties": {
+            "node": true,
+            "output": true
+          },
+          "required": [
+            "node",
+            "output"
+          ]
+        },
+        {
+          "properties": {
+            "value": true
+          },
+          "required": [
+            "value"
+          ]
+        }
+      ],
       "properties": {
-        "acceleratorInterconnect": {
-          "description": "Required accelerator interconnect, such as nvlink or pcie. Omit to pin nothing. The permitted terms are not a vocabulary this contract defines — see spec.md §4.4.",
+        "node": {
+          "description": "Node whose output supplies the value.",
+          "type": "string",
+          "x-musher-grammar": "label"
+        },
+        "output": {
+          "type": "string",
+          "pattern": "^[a-z][a-zA-Z0-9]{0,63}$",
           "maxLength": 64,
-          "pattern": "^[a-z0-9][a-z0-9_-]*$",
-          "type": "string"
+          "description": "Output of that node."
         },
-        "acceleratorRuntimes": {
-          "description": "Required accelerator runtimes, such as cuda. An empty array pins nothing, and a term may not repeat. The permitted terms are not a vocabulary this contract defines — see spec.md §4.4.",
-          "items": {
-            "maxLength": 64,
-            "pattern": "^[a-z0-9][a-z0-9_-]*$",
-            "type": "string"
-          },
-          "type": "array",
-          "uniqueItems": true
-        },
-        "acceleratorSKUClass": {
-          "description": "Exact accelerator SKU class to pin. Omit to pin nothing. The permitted terms are not a vocabulary this contract defines — see spec.md §4.4.",
+        "parameter": {
+          "type": "string",
+          "pattern": "^[a-z][a-zA-Z0-9]{0,63}$",
           "maxLength": 64,
-          "pattern": "^[a-z0-9][a-z0-9_-]*$",
-          "type": "string"
+          "description": "Installation parameter supplying the value."
         },
-        "cpuArchitectures": {
-          "description": "Permitted CPU architectures, such as x86_64 or arm64. An empty array pins nothing, and a term may not repeat. The permitted terms are not a vocabulary this contract defines — see spec.md §4.4.",
-          "items": {
-            "maxLength": 64,
-            "pattern": "^[a-z0-9][a-z0-9_-]*$",
-            "type": "string"
-          },
-          "type": "array",
-          "uniqueItems": true
+        "value": {
+          "description": "Logical non-secret literal value."
+        }
+      },
+      "type": "object",
+      "x-additionalPropertiesName": "inputName"
+    },
+    "BlueprintCompute": {
+      "additionalProperties": false,
+      "description": "The compute a workload node runs on: a compute profile, and optional placement pins that narrow where it is placed. Required on a node whose component runs, forbidden on one whose component is EXTERNAL. See spec.md §4.3.",
+      "properties": {
+        "placement": {
+          "$ref": "#/$defs/BlueprintPlacement",
+          "description": "Optional pins narrowing the eligible hosts. Absent and a block with no pin set mean the same thing."
         },
-        "cpuDedication": {
-          "description": "Whether the node's vCPU must be dedicated rather than shared. Omit to pin nothing. This is the one pin whose vocabulary this contract closes — see spec.md §4.4.",
-          "enum": [
-            "shared",
-            "dedicated"
-          ],
-          "type": "string"
-        },
-        "minAcceleratorMemoryGiB": {
-          "description": "Minimum accelerator VRAM in GiB. Omit to pin no floor.",
-          "minimum": 1,
-          "type": "integer"
-        },
-        "minStorageIOPS": {
-          "description": "Minimum provisioned IOPS. Omit to pin no floor.",
-          "minimum": 1,
-          "type": "integer"
-        },
-        "networkClass": {
-          "description": "Required network class. Omit to pin nothing. The permitted terms are not a vocabulary this contract defines — see spec.md §4.4.",
+        "profile": {
+          "$comment": "Lookahead-free, so it compiles under RE2 as well as ECMA-262. Only the grammar is here; membership is a capability check (spec.md §4.3).",
+          "description": "Compute profile slug in family.tier.size form, for example general.standard.small. The profiles actually on offer are published at https://api.musher.dev/v1/reference/compute-profiles.",
           "maxLength": 64,
-          "pattern": "^[a-z0-9][a-z0-9_-]*$",
-          "type": "string"
-        },
-        "storageClass": {
-          "description": "Required storage class, such as local-nvme. Omit to pin nothing. The permitted terms are not a vocabulary this contract defines — see spec.md §4.4.",
-          "maxLength": 64,
-          "pattern": "^[a-z0-9][a-z0-9_-]*$",
+          "pattern": "^(general|compute|memory|storage|gpu|accelerator)\\.(economy|standard|performance|premium)\\.(nano|small|medium|large|xlarge)$",
           "type": "string"
         }
       },
+      "required": [
+        "profile"
+      ],
       "type": "object"
+    },
+    "BlueprintConnectionBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "parameter": {
+          "type": "string",
+          "pattern": "^[a-z][a-zA-Z0-9]{0,63}$",
+          "maxLength": 64,
+          "description": "Parameter whose `from` names a connection, `${{ connections.<path> }}`."
+        }
+      },
+      "required": [
+        "parameter"
+      ],
+      "type": "object",
+      "x-additionalPropertiesName": "requirementName"
     },
     "BlueprintMetadata": {
       "additionalProperties": false,
-      "description": "Identity block of a blueprint document. The blueprint carries the item's revision; its sibling listing carries none. See spec.md §3.",
+      "description": "Identity and description of a blueprint document. The blueprint carries the item’s revision; its sibling listing carries none. See spec.md §3.",
       "properties": {
+        "description": {
+          "$comment": "spec.md §3. Plain text, never rendered as Markdown, bounded like a listing summary. It describes the deployable application to the people who install and operate it; the sibling listing’s summary remains the storefront copy.",
+          "description": "What this application is, in one or two plain-text sentences.",
+          "maxLength": 280,
+          "minLength": 1,
+          "type": "string"
+        },
         "revision": {
           "description": "Item revision — the position of this release in the catalog item's lineage. Orders releases and nothing more.",
           "minimum": 1,
@@ -119,8 +155,9 @@
         }
       },
       "required": [
+        "slug",
         "revision",
-        "slug"
+        "description"
       ],
       "type": "object"
     },
@@ -128,7 +165,7 @@
       "additionalProperties": false,
       "allOf": [
         {
-          "$comment": "spec.md §4.1. The form of `componentRef` decides whether a revision is required: a reference beginning ./ or ../ names a document whose own metadata.revision is the version deployed, so a second one here could contradict it. Moved into this allOf so the node two independent conditionals read as siblings — the reference form says nothing about compute, which is what the branch below is about, and externality is not a property of the reference form: a published reference names an external component as readily as a repo-local one does.",
+          "$comment": "spec.md §4.1. The form of `componentRef` decides whether a revision is required: a reference beginning ./ or ../ names a document whose own metadata.revision is the revision deployed, so a second one here could contradict it.",
           "if": {
             "properties": {
               "componentRef": {
@@ -149,27 +186,20 @@
               "revision"
             ]
           }
-        },
-        {
-          "$comment": "spec.md §4.3 and §4.4. `size: null` is a node that runs no compute, which is the one thing a three-segment profile slug cannot say. A placement pin narrows the hosts a node may be placed on, and a node placed on none has nothing for one to narrow — so a pin is rejected rather than ignored, which is the rule component §5 states for a forbidden field.",
-          "if": {
-            "properties": {
-              "size": {
-                "type": "null"
-              }
-            },
-            "required": [
-              "size"
-            ]
-          },
-          "then": {
-            "properties": {
-              "placement": false
-            }
-          }
         }
       ],
       "properties": {
+        "bindings": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[a-z][a-zA-Z0-9]{0,63}$",
+            "maxLength": 64
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/BlueprintBinding"
+          },
+          "description": "Explicit supplier for each receiving input, keyed by the component’s input name."
+        },
         "componentRef": {
           "anyOf": [
             {
@@ -184,45 +214,21 @@
           "maxLength": 256,
           "type": "string"
         },
-        "placement": {
-          "description": "Optional placement compute pins that narrow the eligible-host set at schedule time. Absent and a block with no pin set mean the same thing. See spec.md §4.4.",
-          "$ref": "#/$defs/BlueprintComputeConstraints"
+        "compute": {
+          "$ref": "#/$defs/BlueprintCompute",
+          "description": "Compute profile and placement for a node whose component runs. Omitted, and forbidden, where the component is EXTERNAL; that agreement is a semantic check against the component (spec.md §4.3)."
         },
-        "revision": {
-          "description": "Lineage version pinned by a published reference. Required on a published reference and rejected on a repo-local one, where the referenced document's own metadata.revision supplies it.",
-          "minimum": 1,
-          "type": "integer"
-        },
-        "size": {
-          "$comment": "Lookahead-free, so it compiles under RE2 as well as ECMA-262. Only the grammar is here; membership is a capability check (spec.md §4.3). `null` is the spelling for a node that runs no compute, and it is the third placement ADR 0007 §5 leaves a field nullable: it says something omission does not, so the field stays REQUIRED and an author records deliberately-none rather than leaving it out.",
-          "anyOf": [
-            {
-              "maxLength": 64,
-              "pattern": "^(general|compute|memory|storage|gpu|accelerator)\\.(economy|standard|performance|premium)\\.(nano|small|medium|large|xlarge)$",
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "description": "Compute Profile slug bound to this node, in family.tier.size form — for example general.standard.small — or null where the node deploys a component this platform does not run and there is no compute to name. Required either way, because a component document carries no compute of its own. The profiles actually on offer are published at https://api.musher.dev/v1/reference/compute-profiles."
-        },
-        "bindings": {
+        "connectionBindings": {
           "type": "object",
+          "description": "The connection parameter that satisfies each of the component’s connection requirements, keyed by requirement name.",
           "propertyNames": {
             "pattern": "^[a-z][a-zA-Z0-9]{0,63}$",
             "maxLength": 64
           },
           "additionalProperties": {
-            "$ref": "#/$defs/BlueprintBinding"
+            "$ref": "#/$defs/BlueprintConnectionBinding"
           },
-          "description": "Explicit input suppliers keyed by receiving input name."
-        },
-        "volumes": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/BlueprintVolumeAllocation"
-          }
+          "x-additionalPropertiesName": "requirementName"
         },
         "exposure": {
           "type": "object",
@@ -236,63 +242,93 @@
               "PRIVATE"
             ]
           },
-          "description": "Endpoint exposure; omitted endpoint entries are PRIVATE.",
+          "description": "Exposure of each of the component’s endpoints, keyed by endpoint name; an endpoint left out is PRIVATE. A WORKER endpoint is never PUBLIC.",
           "x-additionalPropertiesName": "endpointName"
         },
-        "connectionBindings": {
-          "type": "object",
-          "description": "Explicit suppliers for the referenced component connection requirements.",
-          "propertyNames": {
-            "pattern": "^[a-z][a-zA-Z0-9]{0,63}$",
-            "maxLength": 64
-          },
+        "revision": {
+          "description": "Lineage version pinned by a published reference. Required on a published reference and rejected on a repo-local one, where the referenced document's own metadata.revision supplies it.",
+          "minimum": 1,
+          "type": "integer"
+        },
+        "volumes": {
           "additionalProperties": {
-            "$ref": "#/$defs/BlueprintConnectionBinding"
+            "$ref": "#/$defs/BlueprintVolumeAllocation"
           },
-          "x-additionalPropertiesName": "requirementName"
+          "description": "Storage allocated to each of the component’s volumes, keyed by the component’s volume name.",
+          "propertyNames": {
+            "x-musher-grammar": "label"
+          },
+          "type": "object"
         }
       },
       "required": [
-        "componentRef",
-        "size"
+        "componentRef"
       ],
       "type": "object",
       "x-additionalPropertiesName": "nodeName"
     },
     "BlueprintParameter": {
+      "$comment": "spec.md §5 / ADR 0031 §4. A parameter is supplied in one way: submitted (with an optional default), generated, or read from outside the documents through `from`. At most one of default, generator and from.",
       "additionalProperties": false,
-      "description": "Named installation value, explicitly bound by consuming nodes.",
-      "if": {
-        "properties": {
-          "generator": {
-            "type": "object"
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "generator": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "generator"
+            ]
+          },
+          "then": {
+            "properties": {
+              "default": false,
+              "from": false
+            }
           }
         },
-        "required": [
-          "generator"
-        ]
-      },
-      "then": {
-        "properties": {
-          "default": false
+        {
+          "if": {
+            "properties": {
+              "from": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "from"
+            ]
+          },
+          "then": {
+            "properties": {
+              "default": false
+            }
+          }
         }
-      },
+      ],
+      "description": "Named installation value, bound explicitly by the nodes that consume it.",
       "properties": {
         "default": {
-          "description": "Logical default, overridable by a submitted value. No interpolation."
+          "description": "Logical default, replaced by a submitted value. No interpolation."
+        },
+        "from": {
+          "description": "One whole reference to a value outside the documents: ${{ variables.<path> }} for an organization variable, or ${{ connections.<path> }} for an atomic connection. Not submittable, except that a connection may be replaced whole.",
+          "maxLength": 512,
+          "minLength": 1,
+          "type": "string"
         },
         "generator": {
-          "description": "Persisted credential generation; submitted overrides are forbidden.",
-          "$ref": "#/$defs/BlueprintParameterGenerator"
+          "$ref": "#/$defs/BlueprintParameterGenerator",
+          "description": "Persisted credential generation; a submitted value is rejected."
         },
         "ui": {
           "$ref": "#/$defs/BlueprintParameterUi",
-          "description": "Optional form presentation."
+          "description": "Optional install-form presentation."
         }
       },
       "type": "object",
-      "x-additionalPropertiesName": "parameterKey",
-      "$comment": "The selected branch requires its applicable fields and forbids fields that have no meaning for that branch."
+      "x-additionalPropertiesName": "parameterName"
     },
     "BlueprintParameterGenerator": {
       "additionalProperties": false,
@@ -360,158 +396,64 @@
       ],
       "type": "object"
     },
-    "BlueprintSpec": {
+    "BlueprintPlacement": {
+      "$comment": "Every term pin is a lowercase token rather than a member of a closed set: the grammar is fixed by this contract, the vocabularies are not published anywhere yet, and spec.md §4.4 records that as a gap. cpuDedication is the exception — two values are the whole concept.",
       "additionalProperties": false,
-      "description": "Composition, explicit input suppliers, allocation and installation parameters.",
+      "description": "Optional pins that narrow the hosts eligible for the node’s compute profile. A pin never changes the compute the profile names. See spec.md §4.4.",
       "properties": {
-        "components": {
-          "additionalProperties": {
-            "$ref": "#/$defs/BlueprintNode"
-          },
-          "description": "Named component instances.",
-          "minProperties": 1,
-          "propertyNames": {
-            "x-musher-grammar": "label"
-          },
-          "type": "object"
+        "acceleratorInterconnect": {
+          "description": "Required accelerator interconnect, such as nvlink or pcie. Omit to pin nothing. The permitted terms are not a vocabulary this contract defines — see spec.md §4.4.",
+          "maxLength": 64,
+          "pattern": "^[a-z0-9][a-z0-9_-]*$",
+          "type": "string"
         },
-        "parameters": {
-          "additionalProperties": {
-            "$ref": "#/$defs/BlueprintParameter"
-          },
-          "description": "Named installation values; no implicit binding by name.",
-          "type": "object",
-          "propertyNames": {
+        "acceleratorRuntimes": {
+          "description": "Required accelerator runtimes, such as cuda. An empty array pins nothing, and a term may not repeat. The permitted terms are not a vocabulary this contract defines — see spec.md §4.4.",
+          "items": {
             "maxLength": 64,
-            "pattern": "^[a-z][a-zA-Z0-9]{0,63}$"
-          }
+            "pattern": "^[a-z0-9][a-z0-9_-]*$",
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
         },
-        "connectionSources": {
-          "type": "object",
-          "description": "Named atomic connection slots. Selection is persisted per installation and slot.",
-          "propertyNames": {
-            "pattern": "^[a-z][a-zA-Z0-9]{0,63}$",
-            "maxLength": 64
+        "acceleratorSKUClass": {
+          "description": "Exact accelerator SKU class to pin. Omit to pin nothing. The permitted terms are not a vocabulary this contract defines — see spec.md §4.4.",
+          "maxLength": 64,
+          "pattern": "^[a-z0-9][a-z0-9_-]*$",
+          "type": "string"
+        },
+        "cpuArchitectures": {
+          "description": "Permitted CPU architectures, such as x86_64 or arm64. An empty array pins nothing, and a term may not repeat. The permitted terms are not a vocabulary this contract defines — see spec.md §4.4.",
+          "items": {
+            "maxLength": 64,
+            "pattern": "^[a-z0-9][a-z0-9_-]*$",
+            "type": "string"
           },
-          "additionalProperties": {
-            "$ref": "#/$defs/BlueprintConnectionSource"
-          },
-          "x-additionalPropertiesName": "slotName"
+          "type": "array",
+          "uniqueItems": true
+        },
+        "cpuDedication": {
+          "description": "Whether the node's vCPU must be dedicated rather than shared. Omit to pin nothing. This is the one pin whose vocabulary this contract closes — see spec.md §4.4.",
+          "enum": [
+            "shared",
+            "dedicated"
+          ],
+          "type": "string"
+        },
+        "minAcceleratorMemoryGiB": {
+          "description": "Minimum accelerator VRAM in GiB. Omit to pin no floor.",
+          "minimum": 1,
+          "type": "integer"
+        },
+        "networkClass": {
+          "description": "Required network class. Omit to pin nothing. The permitted terms are not a vocabulary this contract defines — see spec.md §4.4.",
+          "maxLength": 64,
+          "pattern": "^[a-z0-9][a-z0-9_-]*$",
+          "type": "string"
         }
       },
-      "required": [
-        "components"
-      ],
       "type": "object"
-    },
-    "BlueprintBinding": {
-      "oneOf": [
-        {
-          "$ref": "#/$defs/BlueprintParameterBinding"
-        },
-        {
-          "$ref": "#/$defs/BlueprintOutputBinding"
-        },
-        {
-          "$ref": "#/$defs/BlueprintLiteralBinding"
-        },
-        {
-          "$ref": "#/$defs/BlueprintConfigBinding"
-        }
-      ],
-      "x-additionalPropertiesName": "inputName"
-    },
-    "BlueprintParameterBinding": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "type": {
-          "const": "PARAMETER",
-          "type": "string"
-        },
-        "parameter": {
-          "type": "string",
-          "pattern": "^[a-z][a-zA-Z0-9]{0,63}$",
-          "maxLength": 64
-        }
-      },
-      "required": [
-        "type",
-        "parameter"
-      ]
-    },
-    "BlueprintOutputBinding": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "type": {
-          "const": "OUTPUT",
-          "type": "string"
-        },
-        "node": {
-          "type": "string",
-          "x-musher-grammar": "label"
-        },
-        "output": {
-          "type": "string",
-          "pattern": "^[a-z][a-zA-Z0-9]{0,63}$",
-          "maxLength": 64
-        }
-      },
-      "required": [
-        "type",
-        "node",
-        "output"
-      ]
-    },
-    "BlueprintLiteralBinding": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "type": {
-          "const": "LITERAL",
-          "type": "string"
-        },
-        "value": true
-      },
-      "required": [
-        "type",
-        "value"
-      ]
-    },
-    "BlueprintConfigBinding": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "type": {
-          "const": "CONFIG_REF",
-          "type": "string"
-        },
-        "source": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 512,
-          "description": "One whole config reference, for example ${{ config.llm.baseUrl }}. Authorized at installation."
-        }
-      },
-      "required": [
-        "type",
-        "source"
-      ]
-    },
-    "BlueprintVolumeAllocation": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "sizeGiB": {
-          "type": "integer",
-          "minimum": 1
-        }
-      },
-      "required": [
-        "sizeGiB"
-      ],
-      "x-additionalPropertiesName": "volumeName"
     },
     "BlueprintResolutionRecord": {
       "type": "object",
@@ -521,7 +463,7 @@
         "blueprintDigest",
         "specifications",
         "components",
-        "configuration",
+        "variables",
         "credentials",
         "installationSnapshot"
       ],
@@ -544,12 +486,13 @@
           "x-additionalPropertiesName": "nodeName",
           "minProperties": 1
         },
-        "configuration": {
+        "variables": {
           "type": "object",
           "additionalProperties": {
-            "$ref": "#/$defs/BlueprintResolvedConfiguration"
+            "$ref": "#/$defs/BlueprintVersionedIdentity"
           },
-          "x-additionalPropertiesName": "configurationPath"
+          "x-additionalPropertiesName": "variablePath",
+          "description": "Identity and version of each organization variable the installation read."
         },
         "credentials": {
           "type": "object",
@@ -559,44 +502,8 @@
           "x-additionalPropertiesName": "parameterName"
         },
         "installationSnapshot": {
-          "$ref": "#/$defs/BlueprintResolvedConfiguration",
+          "$ref": "#/$defs/BlueprintVersionedIdentity",
           "description": "Opaque identity and immutable version of the private installation snapshot; never a secret-derived hash."
-        }
-      }
-    },
-    "BlueprintResolvedConfiguration": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "identity",
-        "version"
-      ],
-      "properties": {
-        "identity": {
-          "type": "string",
-          "minLength": 1
-        },
-        "version": {
-          "type": "string",
-          "minLength": 1
-        }
-      }
-    },
-    "BlueprintResolvedCredential": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "identity",
-        "rotation"
-      ],
-      "properties": {
-        "identity": {
-          "type": "string",
-          "minLength": 1
-        },
-        "rotation": {
-          "type": "integer",
-          "minimum": 0
         }
       }
     },
@@ -640,7 +547,7 @@
           "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
         },
         "compute": {
-          "$ref": "#/$defs/BlueprintResolvedConfiguration"
+          "$ref": "#/$defs/BlueprintVersionedIdentity"
         },
         "volumes": {
           "type": "object",
@@ -736,6 +643,24 @@
         }
       ]
     },
+    "BlueprintResolvedCredential": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identity",
+        "rotation"
+      ],
+      "properties": {
+        "identity": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rotation": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
     "BlueprintResolvedSpecifications": {
       "type": "object",
       "additionalProperties": false,
@@ -763,35 +688,82 @@
         }
       }
     },
-    "BlueprintConnectionSource": {
-      "type": "object",
+    "BlueprintSpec": {
       "additionalProperties": false,
+      "description": "Composition, explicit input suppliers, allocation and installation parameters.",
       "properties": {
-        "source": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 512,
-          "description": "One whole config reference selecting a versioned connection, not independent scalar fields."
+        "components": {
+          "additionalProperties": {
+            "$ref": "#/$defs/BlueprintNode"
+          },
+          "description": "Named component instances.",
+          "minProperties": 1,
+          "propertyNames": {
+            "x-musher-grammar": "label"
+          },
+          "type": "object"
+        },
+        "parameters": {
+          "additionalProperties": {
+            "$ref": "#/$defs/BlueprintParameter"
+          },
+          "description": "Every value the installation takes from outside the documents: submitted, generated, organization variables and connections. Nothing binds by name.",
+          "type": "object",
+          "propertyNames": {
+            "maxLength": 64,
+            "pattern": "^[a-z][a-zA-Z0-9]{0,63}$"
+          }
         }
       },
       "required": [
-        "source"
-      ]
+        "components"
+      ],
+      "type": "object"
     },
-    "BlueprintConnectionBinding": {
+    "BlueprintVersionedIdentity": {
       "type": "object",
       "additionalProperties": false,
+      "required": [
+        "identity",
+        "version"
+      ],
       "properties": {
-        "source": {
+        "identity": {
           "type": "string",
-          "pattern": "^[a-z][a-zA-Z0-9]{0,63}$",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "description": "An opaque identity and an immutable version."
+    },
+    "BlueprintVolumeAllocation": {
+      "additionalProperties": false,
+      "properties": {
+        "minIOPS": {
+          "description": "Minimum provisioned IOPS for this volume. Omit to pin no floor.",
+          "minimum": 1,
+          "type": "integer"
+        },
+        "sizeGiB": {
+          "description": "Allocated size, at or above the component’s minSizeGiB.",
+          "minimum": 1,
+          "type": "integer"
+        },
+        "storageClass": {
+          "description": "Required storage class for this volume, such as local-nvme. Omit to pin nothing. The permitted terms are not a vocabulary this contract defines; see spec.md §4.3.",
           "maxLength": 64,
-          "description": "Named connection slot in spec.connectionSources."
+          "pattern": "^[a-z0-9][a-z0-9_-]*$",
+          "type": "string"
         }
       },
       "required": [
-        "source"
-      ]
+        "sizeGiB"
+      ],
+      "type": "object",
+      "x-additionalPropertiesName": "volumeName"
     }
   }
 }
