@@ -1,6 +1,6 @@
 # Musher Component Document — Specification v1
 
-**Status:** Draft (pre-stable)
+**Status:** Stable
 **Family:** `component`
 **Schema:** `https://specifications.musher.dev/component/v1/component.schema.json`
 
@@ -627,7 +627,7 @@ declared output must be produced, so an absent optional input cannot supply an
 `endpoints.<endpoint>.<property>`: `${{ self.endpoints.web.publicHostname }}`,
 in the same order as an `endpoint` and `property` origin. A path of any other
 shape names no endpoint explicitly, and fails with `ERR_UNKNOWN_ENDPOINT` at
-`from/template`, as an undeclared endpoint does. That includes the withdrawn
+`from/template`, as an undeclared endpoint does. That includes the
 property-first order, `${{ self.publicHostname.web }}`. There is no implicit
 endpoint selection. A declared endpoint followed by a property outside
 [§5.2](#endpoints)'s table fails with `ERR_UNKNOWN_ADDRESS_PROPERTY` at

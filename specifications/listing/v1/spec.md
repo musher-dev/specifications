@@ -1,6 +1,6 @@
 # Musher Listing Document — Specification v1
 
-**Status:** Draft (pre-stable)
+**Status:** Stable
 **Family:** `listing`
 **Schema:** `https://specifications.musher.dev/listing/v1/listing.schema.json`
 
@@ -57,7 +57,7 @@ every rule of core v1 applies to it. This family binds the parameters
 | Item document ([core v1 §4.1](../../core/v1/spec.md#item-directory)) | `listing.yaml` |
 
 This specification narrows core v1 where it says so and relaxes it nowhere. It
-cites core by its line — "core v1 §N" — and the core edition a release was
+cites core by its line ("core v1 §N"), and the core edition a release was
 built and tested against is recorded with that release
 ([core v1 §9](../../core/v1/spec.md#editions)).
 
