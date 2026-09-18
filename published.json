@@ -1,5 +1,13 @@
 {
   "releases": {
+    "component/v1.0.0": {
+      "bundleSha256": "8bbbf9bbcb282991f5157732bfd92b3481692390e582f29c6e9f91c472ac124c",
+      "path": "specifications/component/v1",
+      "requires": {
+        "core": "1.0.0"
+      },
+      "tree": "5af4dcf60367343633d474826a36061e42981457"
+    },
     "core/v1.0.0": {
       "bundleSha256": null,
       "path": "specifications/core/v1",

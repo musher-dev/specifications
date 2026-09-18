@@ -403,6 +403,7 @@ jobs:
         if: steps.stage.outputs.family != 'core'
         env:
           GH_TOKEN: ${{ github.token }}
+          TAG: ${{ matrix.tag }}
           RELEASE_ID: ${{ matrix.release_id }}
           FAMILY: ${{ steps.stage.outputs.family }}
           MAJOR: ${{ steps.stage.outputs.major }}
@@ -425,7 +426,9 @@ jobs:
           elif [ "$(jq -r .draft <<<"$release")" != 'true' ]; then
             echo "::warning::the published release does not carry '${note}'"
           else
-            gh api -X PATCH "$api" -f body="${body}"$'\n\n'"${note}" >/dev/null
+            # tag_name on every edit: GitHub moves a draft edited without it to an
+            # untagged-<hash> tag, and publishing then creates that tag instead.
+            gh api -X PATCH "$api" -f tag_name="$TAG" -f body="${body}"$'\n\n'"${note}" >/dev/null
             echo "Noted: ${note}"
           fi
 
@@ -443,12 +446,15 @@ jobs:
           set -euo pipefail
           api="repos/${GITHUB_REPOSITORY}/releases/${RELEASE_ID}"
           if [ "$(gh api "$api" --jq .draft)" = 'true' ]; then
-            gh api -X PATCH "$api" -F draft=false -f make_latest=false >/dev/null
+            gh api -X PATCH "$api" -f tag_name="$TAG" -F draft=false -f make_latest=false >/dev/null
             echo "Published ${TAG}"
           fi
 
           release="$(gh api "$api")"
           failed=0
+          if [ "$(jq -r .tag_name <<<"$release")" != "$TAG" ]; then
+            echo "::error::release ${RELEASE_ID} was published as $(jq -r .tag_name <<<"$release"), not ${TAG}" >&2; failed=1
+          fi
           if [ "$(jq -r .draft <<<"$release")" != 'false' ]; then
             echo "::error::${TAG} is still a draft" >&2; failed=1
           fi
