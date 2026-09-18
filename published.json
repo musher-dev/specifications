@@ -4,6 +4,14 @@
       "bundleSha256": null,
       "path": "specifications/core/v1",
       "tree": "3bc2818c3a1d305ef55c496edf044119bbe144aa"
+    },
+    "listing/v1.0.0": {
+      "bundleSha256": "8a0ac418d4dacfc998310d11bf8003a1841e10b0869ca6b2b294caafb845305d",
+      "path": "specifications/listing/v1",
+      "requires": {
+        "core": "1.0.0"
+      },
+      "tree": "cf74151d7e9782fa9e30638e028ab61e0898ddf1"
     }
   },
   "version": 2
