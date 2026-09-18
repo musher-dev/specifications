@@ -1,5 +1,14 @@
 {
   "releases": {
+    "blueprint/v1.0.0": {
+      "bundleSha256": "4233cc2d744824fc5384bdbc72465eda6fbb0c0f87377c19793ec6b0ef568945",
+      "path": "specifications/blueprint/v1",
+      "requires": {
+        "component": "1.0.0",
+        "core": "1.0.0"
+      },
+      "tree": "7b353998bdb24adc2371709963fe25e2e8f08a0f"
+    },
     "component/v1.0.0": {
       "bundleSha256": "8bbbf9bbcb282991f5157732bfd92b3481692390e582f29c6e9f91c472ac124c",
       "path": "specifications/component/v1",
