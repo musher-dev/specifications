@@ -28,9 +28,10 @@ afterEach(() => {
 const component = (inputs: object = {}, outputs: object = {}) => ({
   specVersion: 'v1',
   kind: 'COMPONENT',
-  metadata: { revision: 1 },
+  metadata: { revision: 1, description: 'A synthetic worker.' },
   spec: {
-    workload: { type: 'WORKER', source: { type: 'IMAGE', ref: 'example/worker:1' } },
+    type: 'WORKER',
+    workload: { source: { image: 'example/worker:1' } },
     contract: { inputs, outputs },
   },
 })
@@ -56,7 +57,7 @@ function item(
         name,
         {
           componentRef: './' + name + '.yaml',
-          size: 'general.standard.small',
+          compute: { profile: 'general.standard.small' },
           bindings: bindings[name] ?? {},
         },
       ]
@@ -65,7 +66,7 @@ function item(
   const document = {
     specVersion: 'v1',
     kind: 'BLUEPRINT',
-    metadata: { slug: 'app', revision: 1 },
+    metadata: { slug: 'app', revision: 1, description: 'A synthetic application.' },
     spec: { components: nodes, parameters },
   }
   const documentPath = join(itemRoot, 'blueprint.yaml')
@@ -122,21 +123,13 @@ test('definition defaults and secrets are validated', () => {
 })
 test('unrelated nodes never inherit existing parameter bindings', () => {
   const c = component({ apiKey: input({ type: 'string' }, { required: false }) })
-  const first = item(
-    { web: c },
-    { web: { apiKey: { type: 'PARAMETER', parameter: 'key' } } },
-    { key: {} },
-  )
+  const first = item({ web: c }, { web: { apiKey: { parameter: 'key' } } }, { key: {} })
   const result = resolveInstallation(first.document, {
     ...first.context,
     parameters: { key: { value: 'synthetic', sensitive: true } },
   })
   expect(result.status).toBe('VALID')
-  const second = item(
-    { web: c, other: c },
-    { web: { apiKey: { type: 'PARAMETER', parameter: 'key' } } },
-    { key: {} },
-  )
+  const second = item({ web: c, other: c }, { web: { apiKey: { parameter: 'key' } } }, { key: {} })
   const added = resolveInstallation(second.document, {
     ...second.context,
     parameters: { key: { value: 'synthetic', sensitive: true } },
@@ -145,21 +138,22 @@ test('unrelated nodes never inherit existing parameter bindings', () => {
   expect(added.inputs['other:in:apiKey']).toBeUndefined()
   expect(added.inputs['web:in:apiKey']).toEqual(result.inputs['web:in:apiKey'])
 })
-test('configuration source is authorized, typed and sensitive end to end', () => {
+test('a variable is authorized, typed, sensitive and never submitted', () => {
   const setup = item(
     { web: component({ url: input() }) },
-    { web: { url: { type: 'CONFIG_REF', source: '${{ config.llm.baseUrl }}' } } },
+    { web: { url: { parameter: 'baseURL' } } },
+    { baseURL: { from: '${{ variables.errors.reportingURL }}' } },
   )
-  const config = {
+  const variable = {
     value: 'https://synthetic.invalid',
     sensitive: true,
-    identity: 'config-1',
+    identity: 'variable-1',
     version: '7',
     authorized: true,
   }
   const resolved = resolveInstallation(setup.document, {
     ...setup.context,
-    configuration: { 'llm.baseUrl': config },
+    variables: { 'errors.reportingURL': variable },
   })
   expect(resolved.status).toBe('VALID')
   expect(resolved.inputs['web:in:url']?.sensitive).toBe(true)
@@ -168,15 +162,65 @@ test('configuration source is authorized, typed and sensitive end to end', () =>
   expect(
     resolveInstallation(setup.document, {
       ...setup.context,
-      configuration: { 'llm.baseUrl': { ...config, authorized: false } },
+      variables: { 'errors.reportingURL': { ...variable, authorized: false } },
     }).diagnostics,
-  ).toContainEqual(expect.objectContaining({ code: 'ERR_CONFIG_NOT_AUTHORIZED' }))
+  ).toContainEqual(expect.objectContaining({ code: 'ERR_VARIABLE_NOT_AUTHORIZED' }))
   expect(
     resolveInstallation(setup.document, {
       ...setup.context,
-      configuration: { 'llm.baseUrl': { ...config, value: 123 } },
+      variables: { 'errors.reportingURL': { ...variable, value: 123 } },
     }).diagnostics,
   ).toContainEqual(expect.objectContaining({ code: 'ERR_VALUE_CONSTRAINT' }))
+  expect(
+    resolveInstallation(setup.document, {
+      ...setup.context,
+      variables: { 'errors.reportingURL': variable },
+      parameters: { baseURL: { value: 'https://other.invalid', sensitive: false } },
+    }),
+  ).toMatchObject({
+    status: 'INVALID',
+    inputs: {},
+    diagnostics: [
+      expect.objectContaining({
+        code: 'ERR_PARAMETER_NOT_SUBMITTABLE',
+        path: '/spec/parameters/baseURL',
+        stage: 'parameters',
+      }),
+    ],
+  })
+})
+test('a variable failure is reported once per parameter, at its from', () => {
+  const setup = item(
+    { api: component({ url: input() }), web: component({ url: input() }) },
+    { api: { url: { parameter: 'reportingURL' } }, web: { url: { parameter: 'reportingURL' } } },
+    { reportingURL: { from: '${{ variables.errors.reportingURL }}' } },
+  )
+  const variable = {
+    value: 'https://synthetic.invalid',
+    sensitive: false,
+    identity: 'variable-1',
+    version: '7',
+    authorized: false,
+  }
+  const denied = resolveInstallation(setup.document, {
+    ...setup.context,
+    variables: { 'errors.reportingURL': variable },
+  })
+  expect(denied.diagnostics).toEqual([
+    expect.objectContaining({
+      code: 'ERR_VARIABLE_NOT_AUTHORIZED',
+      path: '/spec/parameters/reportingURL/from',
+      phase: 'resolution',
+      stage: 'parameters',
+    }),
+  ])
+  expect(resolveInstallation(setup.document, setup.context).deferred).toEqual([
+    {
+      rule: 'BP-PARAM-009',
+      path: '/spec/parameters/reportingURL/from',
+      missing: 'variable:errors.reportingURL',
+    },
+  ])
 })
 test('forwarding retains sensitivity and rejects value cycles', () => {
   const c = component(
@@ -185,15 +229,15 @@ test('forwarding retains sensitivity and rejects value cycles', () => {
       value: {
         description: 'Forward',
         schema: { type: 'string' },
-        source: { type: 'INPUT', input: 'value' },
+        from: { input: 'value' },
       },
     },
   )
   const setup = item(
     { web: c, other: c },
     {
-      web: { value: { type: 'PARAMETER', parameter: 'key' } },
-      other: { value: { type: 'OUTPUT', node: 'web', output: 'value' } },
+      web: { value: { parameter: 'key' } },
+      other: { value: { node: 'web', output: 'value' } },
     },
     { key: {} },
   )
@@ -206,8 +250,8 @@ test('forwarding retains sensitivity and rejects value cycles', () => {
   const cycle = item(
     { web: c, other: c },
     {
-      web: { value: { type: 'OUTPUT', node: 'other', output: 'value' } },
-      other: { value: { type: 'OUTPUT', node: 'web', output: 'value' } },
+      web: { value: { node: 'other', output: 'value' } },
+      other: { value: { node: 'web', output: 'value' } },
     },
   )
   expect(resolveInstallation(cycle.document, cycle.context).diagnostics).toContainEqual(
@@ -219,9 +263,11 @@ test('published dependencies are incomplete without context and invalid with a b
   const d = {
     specVersion: 'v1',
     kind: 'BLUEPRINT',
-    metadata: { slug: 'app', revision: 1 },
+    metadata: { slug: 'app', revision: 1, description: 'A synthetic application.' },
     spec: {
-      components: { web: { componentRef: ref, revision: 1, size: 'general.standard.small' } },
+      components: {
+        web: { componentRef: ref, revision: 1, compute: { profile: 'general.standard.small' } },
+      },
     },
   }
   expect(validateDocument(blueprintFamily, JSON.stringify(d)).status).toBe('INCOMPLETE')
@@ -267,7 +313,7 @@ function recordSetup() {
   const c = component({ value: input() })
   const setup = item(
     { web: c },
-    { web: { value: { type: 'PARAMETER', parameter: 'level' } } },
+    { web: { value: { parameter: 'level' } } },
     { level: { default: 'info' } },
   )
   const components = {
@@ -289,7 +335,7 @@ function recordSetup() {
       identity: 'installation-snapshot',
       version: '1',
       parameters: { level: { value: 'debug', sensitive: true } },
-      configuration: {},
+      variables: {},
       credentials: {},
       allocations: {},
     },
@@ -370,18 +416,18 @@ test('reference-free templates validate known values and authored secrets', () =
     description: 'constant template',
     schema: { type: 'string', minLength: 8 },
     sensitive: true,
-    source: { type: 'TEMPLATE', template: 'short' },
+    from: { template: 'short' },
   }
   const result = validateDocument(componentFamily, JSON.stringify(component({}, { value: output })))
   expect(result.diagnostics).toEqual(
     expect.arrayContaining([
       expect.objectContaining({
         code: 'ERR_VALUE_CONSTRAINT',
-        path: '/spec/contract/outputs/value/source/template',
+        path: '/spec/contract/outputs/value/from/template',
       }),
       expect.objectContaining({
         code: 'ERR_SECRET_LITERAL',
-        path: '/spec/contract/outputs/value/source/template',
+        path: '/spec/contract/outputs/value/from/template',
       }),
     ]),
   )
@@ -414,7 +460,7 @@ test('whole-value object and array enum members cannot acquire scalar enum label
   ] as const) {
     const setup = item(
       { web: component({ value: input(schema) }) },
-      { web: { value: { type: 'PARAMETER', parameter: 'p' } } },
+      { web: { value: { parameter: 'p' } } },
       { p: { ui: { label: 'Value', enumLabels: { [label]: 'Invalid label' } } } },
     )
     expect(
@@ -429,7 +475,7 @@ test('endpoint ports derive from declarations and allocation views cannot disagr
       port: {
         description: 'port',
         schema: { type: 'integer' },
-        source: { type: 'ENDPOINT', endpoint: 'web', property: 'privatePort' },
+        from: { endpoint: 'web', property: 'privatePort' },
       },
     },
   )
@@ -437,10 +483,10 @@ test('endpoint ports derive from declarations and allocation views cannot disagr
     ...c,
     spec: {
       ...c.spec,
+      type: 'SERVICE',
       workload: {
-        type: 'SERVICE',
-        source: { type: 'IMAGE', ref: 'example/service:1' },
-        endpoints: { web: { protocol: 'HTTP', containerPort: 8080 } },
+        source: { image: 'example/service:1' },
+        endpoints: { web: { protocol: 'HTTP', targetPort: 8080 } },
       },
     },
   }
@@ -492,7 +538,7 @@ test('dynamic output constraints report actual component location and resolution
       hostname: {
         description: 'hostname',
         schema: { type: 'string', minLength: 30 },
-        source: { type: 'ENDPOINT', endpoint: 'web', property: 'privateHostname' },
+        from: { endpoint: 'web', property: 'privateHostname' },
       },
     },
   )
@@ -500,10 +546,10 @@ test('dynamic output constraints report actual component location and resolution
     ...c,
     spec: {
       ...c.spec,
+      type: 'SERVICE',
       workload: {
-        type: 'SERVICE',
-        source: { type: 'IMAGE', ref: 'example/service:1' },
-        endpoints: { web: { protocol: 'HTTP', containerPort: 8080 } },
+        source: { image: 'example/service:1' },
+        endpoints: { web: { protocol: 'HTTP', targetPort: 8080 } },
       },
     },
   }

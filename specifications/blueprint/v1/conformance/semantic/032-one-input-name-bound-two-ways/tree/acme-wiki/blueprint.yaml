@@ -1,0 +1,41 @@
+specVersion: v1
+kind: BLUEPRINT
+metadata:
+  slug: acme-wiki
+  revision: 1
+  description: Synthetic conformance fixture blueprint.
+spec:
+  parameters:
+    apiKey:
+      ui:
+        label: API key
+    baseURL:
+      ui:
+        label: API base URL
+  components:
+    batch:
+      componentRef: ./components/batch.yaml
+      compute:
+        profile: general.standard.small
+      volumes: {}
+      exposure: {}
+      bindings:
+        apiKey:
+          parameter: apiKey
+    models:
+      componentRef: ./components/models.yaml
+      bindings:
+        apiKey:
+          parameter: apiKey
+        baseURL:
+          parameter: baseURL
+    web:
+      componentRef: ./components/web.yaml
+      compute:
+        profile: general.standard.small
+      volumes: {}
+      exposure: {}
+      bindings:
+        apiKey:
+          node: models
+          output: apiKey

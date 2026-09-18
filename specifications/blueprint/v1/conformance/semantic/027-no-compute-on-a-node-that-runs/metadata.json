@@ -4,8 +4,8 @@
   "expected": "fail",
   "clause": "specifications/blueprint/v1/spec.md#node-compute",
   "requirements": [
-    "BP-NODE-002"
+    "BP-NODE-001"
   ],
-  "summary": "A node declining to size a component that runs is rejected.",
+  "summary": "A node carrying no compute for a component that runs is rejected at the node.",
   "document": "acme-wiki/blueprint.yaml"
 }

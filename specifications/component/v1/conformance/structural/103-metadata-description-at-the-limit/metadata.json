@@ -1,0 +1,10 @@
+{
+  "id": "structural-103-metadata-description-at-the-limit",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v1/spec.md#metadata",
+  "requirements": [
+    "COMP-DESC-002"
+  ],
+  "summary": "A metadata description of exactly 280 characters validates."
+}

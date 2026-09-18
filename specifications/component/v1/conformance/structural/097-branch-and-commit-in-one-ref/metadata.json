@@ -1,0 +1,10 @@
+{
+  "id": "structural-097-branch-and-commit-in-one-ref",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#source",
+  "requirements": [
+    "COMP-SRC-001"
+  ],
+  "summary": "A Git ref naming both a branch and a commit is rejected."
+}

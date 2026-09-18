@@ -1,0 +1,10 @@
+{
+  "id": "structural-085-health-on-a-job",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#workload",
+  "requirements": [
+    "COMP-TYPE-004"
+  ],
+  "summary": "A health probe on a JOB is rejected; a JOB has no endpoint to probe."
+}

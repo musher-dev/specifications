@@ -1,0 +1,20 @@
+specVersion: v1
+kind: BLUEPRINT
+metadata:
+  slug: app
+  revision: 1
+  description: Synthetic conformance fixture blueprint.
+spec:
+  parameters:
+    primary:
+      from: "${{ connections.llm.default }}"
+    spare:
+      from: "${{ connections.llm.secondary }}"
+  components:
+    app:
+      componentRef: ./app.yaml
+      compute:
+        profile: general.standard.small
+      connectionBindings:
+        llm:
+          parameter: primary

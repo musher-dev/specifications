@@ -1,0 +1,10 @@
+{
+  "id": "structural-089-cron-macro",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#jobs",
+  "requirements": [
+    "COMP-JOB-002"
+  ],
+  "summary": "A cron macro such as @daily is rejected; a schedule is exactly five fields."
+}

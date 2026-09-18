@@ -6,5 +6,5 @@
   "requirements": [
     "BP-UI-001"
   ],
-  "summary": "A parameter declaring no ui block is rejected."
+  "summary": "A parameter declaring no ui block validates."
 }

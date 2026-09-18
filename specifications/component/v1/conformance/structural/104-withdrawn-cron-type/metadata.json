@@ -1,0 +1,10 @@
+{
+  "id": "structural-104-withdrawn-cron-type",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#workload",
+  "requirements": [
+    "COMP-TYPE-001"
+  ],
+  "summary": "The withdrawn type CRON is rejected; a recurring job is a JOB with a schedule."
+}

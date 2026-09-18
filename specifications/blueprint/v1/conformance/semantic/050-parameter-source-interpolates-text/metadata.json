@@ -1,0 +1,11 @@
+{
+  "id": "semantic-050-parameter-source-interpolates-text",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#value-sources",
+  "requirements": [
+    "BP-REF-001"
+  ],
+  "summary": "A parameter whose from embeds a reference in surrounding text is rejected.",
+  "document": "app/blueprint.yaml"
+}

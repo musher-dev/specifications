@@ -1,0 +1,16 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: EXTERNAL
+  contract:
+    inputs: {}
+    outputs:
+      baseURL:
+        description: Base URL of the addressed service, for a consumer to call.
+        schema:
+          type: string
+        from:
+          value: https://api.example.com/v1

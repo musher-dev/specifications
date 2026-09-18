@@ -1,0 +1,10 @@
+{
+  "id": "structural-047-generated-parameter-with-a-from",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#parameters",
+  "requirements": [
+    "BP-PARAM-010"
+  ],
+  "summary": "A parameter carrying both a generator and from is rejected at from."
+}

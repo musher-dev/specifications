@@ -1,0 +1,16 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: JOB
+  workload:
+    source:
+      image: ghcr.io/example/migrate:1.0.0
+    command:
+      - migrate
+      - up
+  contract:
+    inputs: {}
+    outputs: {}

@@ -1,0 +1,10 @@
+{
+  "id": "structural-092-empty-command",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#workload",
+  "requirements": [
+    "COMP-CMD-001"
+  ],
+  "summary": "A command written as an empty list is rejected; it names nothing to run."
+}

@@ -1,0 +1,10 @@
+{
+  "id": "structural-073-pattern-on-an-array-schema",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#value-schema",
+  "requirements": [
+    "COMP-VAL-006"
+  ],
+  "summary": "A pattern on an array schema is rejected; pattern applies only to strings."
+}

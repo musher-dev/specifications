@@ -1,0 +1,32 @@
+specVersion: v1
+kind: BLUEPRINT
+metadata:
+  slug: app
+  revision: 1
+  description: Synthetic conformance fixture blueprint.
+spec:
+  components:
+    queue:
+      componentRef: ./components/relay.yaml
+      compute:
+        profile: general.standard.small
+      bindings:
+        upstream:
+          node: db
+          output: forwarded
+    db:
+      componentRef: ./components/relay.yaml
+      compute:
+        profile: general.standard.small
+      bindings:
+        upstream:
+          node: cache
+          output: forwarded
+    cache:
+      componentRef: ./components/relay.yaml
+      compute:
+        profile: general.standard.small
+      bindings:
+        upstream:
+          node: queue
+          output: forwarded

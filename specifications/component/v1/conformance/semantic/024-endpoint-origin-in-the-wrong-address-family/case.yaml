@@ -1,0 +1,37 @@
+{
+  "specVersion": "v1",
+  "kind": "COMPONENT",
+  "metadata": {
+    "revision": 1,
+    "description": "Synthetic conformance fixture component."
+  },
+  "spec": {
+    "type": "SERVICE",
+    "workload": {
+      "source": {
+        "image": "example/worker:1"
+      },
+      "endpoints": {
+        "web": {
+          "targetPort": 8080,
+          "protocol": "HTTP"
+        }
+      }
+    },
+    "contract": {
+      "inputs": {},
+      "outputs": {
+        "url": {
+          "description": "Address",
+          "schema": {
+            "type": "string"
+          },
+          "from": {
+            "endpoint": "web",
+            "property": "publicAddress"
+          }
+        }
+      }
+    }
+  }
+}

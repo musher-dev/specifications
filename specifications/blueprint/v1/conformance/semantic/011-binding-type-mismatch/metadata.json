@@ -1,0 +1,11 @@
+{
+  "id": "semantic-011-binding-type-mismatch",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#value-sources",
+  "requirements": [
+    "BP-PARAM-008"
+  ],
+  "summary": "A binding joining an output and an input of different types is rejected.",
+  "document": "acme-wiki/blueprint.yaml"
+}

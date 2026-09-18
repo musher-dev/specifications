@@ -95,7 +95,7 @@ export function observe(family: Family, c: BehaviorCase): Json {
             Buffer.from(String(v.blueprint)),
             record(v.specifications) as Record<string, string>,
             v.components as unknown as ResolutionRecord['components'],
-            v.configuration as unknown as ResolutionRecord['configuration'],
+            v.variables as unknown as ResolutionRecord['variables'],
             v.credentials as unknown as ResolutionRecord['credentials'],
             { ...context, ...record(v.recordContext) } as unknown as RecordContext,
           ),

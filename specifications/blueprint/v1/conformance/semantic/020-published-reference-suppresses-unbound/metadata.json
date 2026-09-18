@@ -2,10 +2,10 @@
   "id": "semantic-020-published-reference-suppresses-unbound",
   "phase": "semantic",
   "expected": "incomplete",
-  "clause": "specifications/blueprint/v1/spec.md#coverage",
+  "clause": "specifications/blueprint/v1/spec.md#recipients",
   "requirements": [
     "BP-PARAM-001"
   ],
-  "summary": "A parameter covering an unreadable node's input is not reported as unbound.",
+  "summary": "A parameter bound only to an unavailable published node's input is not reported as unbound; that node's rules are deferred.",
   "document": "acme-wiki/blueprint.yaml"
 }

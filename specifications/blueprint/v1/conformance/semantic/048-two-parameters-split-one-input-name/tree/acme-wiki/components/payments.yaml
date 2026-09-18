@@ -1,0 +1,24 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: SERVICE
+  workload:
+    source:
+      image: ghcr.io/musher-dev/payments:1.4.2
+    endpoints:
+      web:
+        targetPort: 8080
+        protocol: HTTP
+  contract:
+    inputs:
+      apiKey:
+        schema:
+          type: string
+        description: Credential this service authenticates with.
+        sensitive: true
+        target:
+          envVarKey: API_KEY
+    outputs: {}

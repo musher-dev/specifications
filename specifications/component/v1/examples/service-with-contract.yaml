@@ -2,29 +2,23 @@ specVersion: v1
 kind: COMPONENT
 metadata:
   revision: 1
+  description: PostgreSQL database with a single persistent data volume.
 spec:
+  type: SERVICE
   workload:
-    type: SERVICE
     source:
-      type: IMAGE
-      ref: postgres:17.10-alpine
+      image: postgres:17.10-alpine
     endpoints:
       primary:
-        containerPort: 5432
+        targetPort: 5432
         protocol: TCP
     envVars:
-      - key: PGDATA
-        value:
-          type: LITERAL
-          value: /var/lib/postgresql/data/pgdata
-      - key: POSTGRES_DB
-        value:
-          type: LITERAL
-          value: app
+      PGDATA: /var/lib/postgresql/data/pgdata
+      POSTGRES_DB: app
     volumes:
       data:
         mountPath: /var/lib/postgresql/data
-        minimumSizeGiB: 10
+        minSizeGiB: 10
   contract:
     inputs:
       postgresPassword:
@@ -35,4 +29,11 @@ spec:
         target:
           envVarKey: POSTGRES_PASSWORD
         sensitive: true
-    outputs: {}
+    outputs:
+      address:
+        description: Internal host and port clients reach the database at.
+        schema:
+          type: string
+        from:
+          endpoint: primary
+          property: privateAddress

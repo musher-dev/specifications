@@ -1,0 +1,10 @@
+{
+  "id": "structural-063-external-publishing-a-literal",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v1/spec.md#external",
+  "requirements": [
+    "COMP-EXT-004"
+  ],
+  "summary": "An EXTERNAL component may publish a literal value."
+}

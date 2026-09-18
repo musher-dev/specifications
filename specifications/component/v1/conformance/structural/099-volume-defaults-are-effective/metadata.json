@@ -1,0 +1,12 @@
+{
+  "id": "structural-099-volume-defaults-are-effective",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v1/spec.md#volumes",
+  "summary": "A volume declaring only mountPath and minSizeGiB is unshared and writable.",
+  "effective": {
+    "/spec/workload/volumes/data/minSizeGiB": 10,
+    "/spec/workload/volumes/data/shared": false,
+    "/spec/workload/volumes/data/readOnly": false
+  }
+}

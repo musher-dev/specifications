@@ -1,0 +1,11 @@
+{
+  "id": "semantic-010-three-node-value-cycle",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#bindings",
+  "requirements": [
+    "BP-CONN-002"
+  ],
+  "summary": "Three nodes each forwarding the input the next one binds form a value cycle, which is rejected.",
+  "document": "app/blueprint.yaml"
+}

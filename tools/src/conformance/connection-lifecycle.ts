@@ -10,7 +10,7 @@ export function observeConnectionLifecycle(input: Json): Json {
   if (!Array.isArray(steps)) throw new Error('connection lifecycle requires steps')
   for (const step of steps) {
     const installation = String(at(step, 'installation')),
-      slot = String(at(step, 'slot'))
+      parameter = String(at(step, 'parameter'))
     const generation = Number(at(step, 'generation') ?? 0),
       fault = at(step, 'fault')
     try {
@@ -28,7 +28,7 @@ export function observeConnectionLifecycle(input: Json): Json {
       const result = selectConnection(
         store,
         installation,
-        slot,
+        parameter,
         generation,
         (key) => {
           // The same acquisition operation must not mint twice, even if local persistence failed.
@@ -39,11 +39,11 @@ export function observeConnectionLifecycle(input: Json): Json {
               identity: 'connection-' + id,
               version,
               installation,
-              slot,
+              parameter,
               kind: 'MANAGED',
               costOwner: 'synthetic-org',
               source: {
-                reference: '${{ config.llm.default }}',
+                reference: '${{ connections.llm.default }}',
                 identity: 'default-policy',
                 version,
               },
@@ -51,11 +51,11 @@ export function observeConnectionLifecycle(input: Json): Json {
                 identity: 'credential-' + id,
                 rotation: generation,
                 value: 'synthetic-' + id,
-                permittedBaseUrls: ['https://gateway.example/openai/v1'],
+                permittedBaseURLs: ['https://gateway.example/openai/v1'],
               },
               views: {
                 OPENAI_CHAT_COMPLETIONS: {
-                  baseUrl: 'https://gateway.example/openai/v1',
+                  baseURL: 'https://gateway.example/openai/v1',
                   model: 'model-' + version,
                   capabilities: ['STREAMING', 'TOOL_CALLS'],
                 },

@@ -3,10 +3,12 @@ kind: BLUEPRINT
 metadata:
   slug: postgres
   revision: 1
+  description: Synthetic conformance fixture blueprint.
 spec:
+  parameters: {}
   components:
     db:
       componentRef: 550e8400-e29b-41d4-a716-446655440000
-      size: general.standard.small
+      compute:
+        profile: general.standard.small
       bindings: {}
-  parameters: {}

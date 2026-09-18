@@ -1,0 +1,10 @@
+{
+  "id": "structural-083-service-without-a-workload",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#workload",
+  "requirements": [
+    "COMP-EXT-001"
+  ],
+  "summary": "A SERVICE declaring no workload is rejected; only an EXTERNAL component runs nothing."
+}

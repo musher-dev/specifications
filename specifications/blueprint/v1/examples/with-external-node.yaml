@@ -3,41 +3,49 @@ kind: BLUEPRINT
 metadata:
   slug: with-external-node
   revision: 1
+  description: A web application using a managed PostgreSQL database that runs outside the platform.
 spec:
+  parameters:
+    databaseHost:
+      from: "${{ variables.databases.primary.host }}"
+    databasePassword:
+      from: "${{ variables.databases.primary.password }}"
+    databaseName:
+      ui:
+        label: Database name
+        prominence: SECONDARY
+      default: app
   components:
-    models:
-      componentRef: ./components/models.yaml
-      size: null
+    database:
+      componentRef: ./components/managed-postgres.yaml
       bindings:
-        baseUrl:
-          type: CONFIG_REF
-          source: ${{ config.llm.baseUrl }}
-        apiKey:
-          type: CONFIG_REF
-          source: ${{ config.llm.apiKey }}
-        model:
-          type: PARAMETER
-          parameter: model
+        host:
+          parameter: databaseHost
+        database:
+          parameter: databaseName
+        username:
+          value: app
+        password:
+          parameter: databasePassword
     web:
       componentRef: ./components/web.yaml
-      size: general.standard.small
+      compute:
+        profile: general.standard.small
+      exposure:
+        web: PUBLIC
       bindings:
-        llmBaseUrl:
-          type: OUTPUT
-          node: models
-          output: baseUrl
-        llmApiKey:
-          type: OUTPUT
-          node: models
-          output: apiKey
-        llmModel:
-          type: OUTPUT
-          node: models
-          output: model
-  parameters:
-    model:
-      ui:
-        label: Model name
-        order: 3
-        prominence: SECONDARY
-      default: example-model
+        databaseHost:
+          node: database
+          output: host
+        databasePort:
+          node: database
+          output: port
+        databaseName:
+          node: database
+          output: database
+        databaseUser:
+          node: database
+          output: username
+        databasePassword:
+          node: database
+          output: password

@@ -1,0 +1,11 @@
+{
+  "id": "semantic-064-parameter-source-in-an-unknown-namespace",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#value-sources",
+  "requirements": [
+    "BP-REF-001"
+  ],
+  "summary": "A parameter reading the withdrawn config namespace names a namespace core does not reserve.",
+  "document": "app/blueprint.yaml"
+}

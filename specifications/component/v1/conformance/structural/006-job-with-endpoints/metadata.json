@@ -1,0 +1,10 @@
+{
+  "id": "structural-006-job-with-endpoints",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#workload",
+  "requirements": [
+    "COMP-TYPE-004"
+  ],
+  "summary": "A JOB declaring an endpoint is rejected; it runs to completion and serves nothing."
+}

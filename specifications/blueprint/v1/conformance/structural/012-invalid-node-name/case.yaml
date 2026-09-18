@@ -3,10 +3,12 @@ kind: BLUEPRINT
 metadata:
   slug: web-and-database
   revision: 1
+  description: Synthetic conformance fixture blueprint.
 spec:
+  parameters: {}
   components:
     Web_Server:
       componentRef: ./components/web.yaml
-      size: general.standard.small
+      compute:
+        profile: general.standard.small
       bindings: {}
-  parameters: {}

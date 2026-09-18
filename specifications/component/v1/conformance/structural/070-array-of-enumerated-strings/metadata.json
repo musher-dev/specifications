@@ -1,0 +1,11 @@
+{
+  "id": "structural-070-array-of-enumerated-strings",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v1/spec.md#value-schema",
+  "requirements": [
+    "COMP-VAL-001",
+    "COMP-VAL-006"
+  ],
+  "summary": "An array input whose items are enumerated strings, with an array default, and an array output with an array literal validate."
+}

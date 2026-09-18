@@ -1,0 +1,10 @@
+{
+  "id": "semantic-039-cron-month-name",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#jobs",
+  "requirements": [
+    "COMP-JOB-002"
+  ],
+  "summary": "A month written as a name is rejected; cron fields take numbers only."
+}

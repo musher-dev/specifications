@@ -1,0 +1,10 @@
+{
+  "id": "semantic-044-template-reads-the-public-url-of-a-tcp-endpoint",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#endpoints",
+  "requirements": [
+    "COMP-EP-004"
+  ],
+  "summary": "A template reading publicURL from a TCP endpoint is rejected; a URL belongs to an HTTP-family endpoint."
+}

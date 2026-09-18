@@ -1,0 +1,30 @@
+specVersion: v1
+kind: BLUEPRINT
+metadata:
+  slug: acme-wiki
+  revision: 1
+  description: Synthetic conformance fixture blueprint.
+spec:
+  parameters:
+    siteTitle:
+      ui:
+        label: Site title
+  components:
+    api:
+      componentRef: ./components/api.yaml
+      compute:
+        profile: general.standard.small
+      volumes: {}
+      exposure:
+        primary: PRIVATE
+      bindings:
+        siteTitle:
+          parameter: siteTitle
+    db:
+      componentRef: ./components/postgres.yaml
+      compute:
+        profile: general.standard.small
+      volumes: {}
+      exposure:
+        primary: PRIVATE
+      bindings: {}

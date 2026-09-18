@@ -1,0 +1,10 @@
+{
+  "id": "structural-042-pattern-on-an-object-schema",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#value-schema",
+  "requirements": [
+    "COMP-VAL-002"
+  ],
+  "summary": "A pattern on an object schema is rejected; pattern applies only to strings."
+}

@@ -1,0 +1,11 @@
+{
+  "id": "semantic-069-public-property-of-an-endpoint-left-out",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#node-compute",
+  "requirements": [
+    "BP-NODE-005"
+  ],
+  "summary": "An endpoint left out of exposure is PRIVATE, so an output reading its public URL is rejected at the node.",
+  "document": "acme-wiki/blueprint.yaml"
+}

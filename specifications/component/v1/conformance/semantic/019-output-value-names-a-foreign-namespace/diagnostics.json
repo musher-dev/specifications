@@ -1,6 +1,6 @@
 [
   {
     "code": "ERR_REFERENCE_NOT_IN_SCOPE",
-    "path": "/spec/contract/outputs/baseUrl/source/template"
+    "path": "/spec/contract/outputs/baseURL/from/template"
   }
 ]

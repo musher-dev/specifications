@@ -1,0 +1,10 @@
+{
+  "id": "structural-051-placement-storage-class",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#node-compute",
+  "requirements": [
+    "BP-NODE-004"
+  ],
+  "summary": "A storage class pinned on placement is an unknown field: it belongs to the volume it describes."
+}

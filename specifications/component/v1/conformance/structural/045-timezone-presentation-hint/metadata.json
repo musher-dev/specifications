@@ -1,0 +1,13 @@
+{
+  "id": "structural-045-timezone-presentation-hint",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v1/spec.md#value-schema",
+  "requirements": [
+    "COMP-VAL-004"
+  ],
+  "summary": "A string input may carry the TIMEZONE presentationHint.",
+  "effective": {
+    "/spec/contract/inputs/timezone/sensitive": false
+  }
+}

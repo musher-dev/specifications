@@ -1,0 +1,24 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: SERVICE
+  workload:
+    source:
+      image: nginx:1.29.4-alpine
+    endpoints:
+      internal:
+        targetPort: 8080
+        protocol: HTTP
+  contract:
+    inputs: {}
+    outputs:
+      publicURL:
+        schema:
+          type: string
+        description: Public URL the application answers at.
+        from:
+          endpoint: internal
+          property: publicURL

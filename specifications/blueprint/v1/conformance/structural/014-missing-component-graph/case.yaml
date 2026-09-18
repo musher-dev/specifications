@@ -3,5 +3,6 @@ kind: BLUEPRINT
 metadata:
   slug: acme-wiki
   revision: 1
+  description: Synthetic conformance fixture blueprint.
 spec:
   parameters: {}

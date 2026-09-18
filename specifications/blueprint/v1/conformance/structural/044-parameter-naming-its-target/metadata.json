@@ -1,7 +1,0 @@
-{
-  "id": "structural-044-parameter-naming-its-target",
-  "phase": "structural",
-  "expected": "pass",
-  "clause": "specifications/blueprint/v1/spec.md#coverage",
-  "summary": "A parameter may name the node and the input it covers."
-}

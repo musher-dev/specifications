@@ -1,0 +1,9 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  contract:
+    inputs: {}
+    outputs: {}

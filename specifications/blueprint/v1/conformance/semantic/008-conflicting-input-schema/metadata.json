@@ -2,10 +2,10 @@
   "id": "semantic-008-conflicting-input-schema",
   "phase": "semantic",
   "expected": "fail",
-  "clause": "specifications/blueprint/v1/spec.md#coverage",
+  "clause": "specifications/blueprint/v1/spec.md#recipients",
   "requirements": [
     "BP-PARAM-002"
   ],
-  "summary": "A parameter covering inputs whose schemas differ is rejected.",
+  "summary": "A parameter bound to inputs whose logical schemas differ is rejected.",
   "document": "acme-wiki/blueprint.yaml"
 }

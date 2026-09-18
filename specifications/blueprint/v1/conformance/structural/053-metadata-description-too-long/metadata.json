@@ -1,0 +1,10 @@
+{
+  "id": "structural-053-metadata-description-too-long",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#identity",
+  "requirements": [
+    "BP-ID-004"
+  ],
+  "summary": "A description longer than 280 characters is rejected."
+}

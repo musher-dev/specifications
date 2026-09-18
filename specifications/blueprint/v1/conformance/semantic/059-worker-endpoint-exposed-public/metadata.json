@@ -1,0 +1,11 @@
+{
+  "id": "semantic-059-worker-endpoint-exposed-public",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#node-compute",
+  "requirements": [
+    "BP-NODE-005"
+  ],
+  "summary": "A WORKER endpoint exposed PUBLIC is rejected, even with a readiness probe.",
+  "document": "app/blueprint.yaml"
+}

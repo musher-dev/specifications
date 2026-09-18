@@ -6,6 +6,6 @@
   "requirements": [
     "BP-CONNECTION-001"
   ],
-  "summary": "atomic connection",
+  "summary": "A connection parameter bound to a component’s connection requirement validates.",
   "document": "connection-app/blueprint.yaml"
 }

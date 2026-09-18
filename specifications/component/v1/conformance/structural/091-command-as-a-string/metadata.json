@@ -1,0 +1,10 @@
+{
+  "id": "structural-091-command-as-a-string",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#workload",
+  "requirements": [
+    "COMP-CMD-001"
+  ],
+  "summary": "A command written as one string is rejected; it is a list of arguments, with no shell to split it."
+}

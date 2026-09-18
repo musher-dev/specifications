@@ -1,0 +1,33 @@
+specVersion: v1
+kind: BLUEPRINT
+metadata:
+  slug: acme-wiki
+  revision: 1
+  description: Synthetic conformance fixture blueprint.
+spec:
+  parameters:
+    stripeKey:
+      ui:
+        label: Stripe API key
+    sendgridKey:
+      ui:
+        label: SendGrid API key
+  components:
+    payments:
+      componentRef: ./components/payments.yaml
+      compute:
+        profile: general.standard.small
+      volumes: {}
+      exposure: {}
+      bindings:
+        apiKey:
+          parameter: stripeKey
+    mailer:
+      componentRef: ./components/mailer.yaml
+      compute:
+        profile: general.standard.small
+      volumes: {}
+      exposure: {}
+      bindings:
+        apiKey:
+          parameter: sendgridKey

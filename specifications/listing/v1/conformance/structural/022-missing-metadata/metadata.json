@@ -1,0 +1,10 @@
+{
+  "id": "structural-022-missing-metadata",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/core/v1/spec.md#envelope",
+  "requirements": [
+    "CORE-ENV-003"
+  ],
+  "summary": "A document without metadata is rejected at the root."
+}

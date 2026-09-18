@@ -33,29 +33,19 @@
       "path": "structural/005-nested-unknown-field"
     },
     {
-      "id": "structural-006-non-service-with-endpoints",
+      "id": "structural-006-job-with-endpoints",
       "phase": "structural",
-      "path": "structural/006-non-service-with-endpoints"
+      "path": "structural/006-job-with-endpoints"
     },
     {
-      "id": "structural-007-non-service-with-empty-endpoints",
+      "id": "structural-007-job-with-empty-endpoints",
       "phase": "structural",
-      "path": "structural/007-non-service-with-empty-endpoints"
+      "path": "structural/007-job-with-empty-endpoints"
     },
     {
       "id": "structural-008-job-without-command",
       "phase": "structural",
       "path": "structural/008-job-without-command"
-    },
-    {
-      "id": "structural-009-cron-workload",
-      "phase": "structural",
-      "path": "structural/009-cron-workload"
-    },
-    {
-      "id": "structural-010-cron-without-schedule",
-      "phase": "structural",
-      "path": "structural/010-cron-without-schedule"
     },
     {
       "id": "structural-011-schedule-on-service",
@@ -78,14 +68,14 @@
       "path": "structural/014-git-source-without-build"
     },
     {
-      "id": "structural-015-public-service-without-readiness",
+      "id": "structural-015-service-without-a-readiness-probe",
       "phase": "structural",
-      "path": "structural/015-public-service-without-readiness"
+      "path": "structural/015-service-without-a-readiness-probe"
     },
     {
-      "id": "structural-016-private-service-without-readiness",
+      "id": "structural-016-tcp-service-without-a-health-probe",
       "phase": "structural",
-      "path": "structural/016-private-service-without-readiness"
+      "path": "structural/016-tcp-service-without-a-health-probe"
     },
     {
       "id": "structural-017-relative-mount-path",
@@ -93,9 +83,9 @@
       "path": "structural/017-relative-mount-path"
     },
     {
-      "id": "structural-021-derived-output-with-value",
+      "id": "structural-021-endpoint-and-value-in-one-from",
       "phase": "structural",
-      "path": "structural/021-derived-output-with-value"
+      "path": "structural/021-endpoint-and-value-in-one-from"
     },
     {
       "id": "structural-022-contract-both-output-forms",
@@ -108,39 +98,29 @@
       "path": "structural/023-field-from-newer-release"
     },
     {
-      "id": "structural-024-container-port-below-range",
+      "id": "structural-024-target-port-below-range",
       "phase": "structural",
-      "path": "structural/024-container-port-below-range"
+      "path": "structural/024-target-port-below-range"
     },
     {
-      "id": "structural-025-container-port-above-range",
+      "id": "structural-025-target-port-above-range",
       "phase": "structural",
-      "path": "structural/025-container-port-above-range"
+      "path": "structural/025-target-port-above-range"
     },
     {
-      "id": "structural-026-privileged-container-port",
+      "id": "structural-026-privileged-target-port",
       "phase": "structural",
-      "path": "structural/026-privileged-container-port"
+      "path": "structural/026-privileged-target-port"
     },
     {
-      "id": "structural-027-public-tcp-endpoint",
+      "id": "structural-028-grpc-service-with-an-http-health-endpoint",
       "phase": "structural",
-      "path": "structural/027-public-tcp-endpoint"
-    },
-    {
-      "id": "structural-028-public-grpc-endpoint",
-      "phase": "structural",
-      "path": "structural/028-public-grpc-endpoint"
+      "path": "structural/028-grpc-service-with-an-http-health-endpoint"
     },
     {
       "id": "structural-029-endpoint-name-not-a-slug",
       "phase": "structural",
       "path": "structural/029-endpoint-name-not-a-slug"
-    },
-    {
-      "id": "structural-030-two-public-endpoints",
-      "phase": "structural",
-      "path": "structural/030-two-public-endpoints"
     },
     {
       "id": "structural-031-endpoint-name-with-a-hyphen",
@@ -168,44 +148,44 @@
       "path": "structural/038-probe-defaults-are-effective"
     },
     {
-      "id": "structural-039-integer-value-type",
+      "id": "structural-039-uppercase-schema-type",
       "phase": "structural",
-      "path": "structural/039-integer-value-type"
+      "path": "structural/039-uppercase-schema-type"
     },
     {
-      "id": "structural-040-number-value-type",
+      "id": "structural-040-integer-and-number-schemas",
       "phase": "structural",
-      "path": "structural/040-number-value-type"
+      "path": "structural/040-integer-and-number-schemas"
     },
     {
-      "id": "structural-041-json-value-type",
+      "id": "structural-041-object-schemas-with-object-values",
       "phase": "structural",
-      "path": "structural/041-json-value-type"
+      "path": "structural/041-object-schemas-with-object-values"
     },
     {
-      "id": "structural-042-json-value-with-pattern",
+      "id": "structural-042-pattern-on-an-object-schema",
       "phase": "structural",
-      "path": "structural/042-json-value-with-pattern"
+      "path": "structural/042-pattern-on-an-object-schema"
     },
     {
-      "id": "structural-043-json-value-with-enum",
+      "id": "structural-043-enum-with-duplicate-members",
       "phase": "structural",
-      "path": "structural/043-json-value-with-enum"
+      "path": "structural/043-enum-with-duplicate-members"
     },
     {
-      "id": "structural-044-format-on-a-non-string-value",
+      "id": "structural-044-presentation-hint-on-a-number",
       "phase": "structural",
-      "path": "structural/044-format-on-a-non-string-value"
+      "path": "structural/044-presentation-hint-on-a-number"
     },
     {
-      "id": "structural-045-timezone-format-value",
+      "id": "structural-045-timezone-presentation-hint",
       "phase": "structural",
-      "path": "structural/045-timezone-format-value"
+      "path": "structural/045-timezone-presentation-hint"
     },
     {
-      "id": "structural-046-format-outside-the-vocabulary",
+      "id": "structural-046-presentation-hint-outside-the-vocabulary",
       "phase": "structural",
-      "path": "structural/046-format-outside-the-vocabulary"
+      "path": "structural/046-presentation-hint-outside-the-vocabulary"
     },
     {
       "id": "structural-053-input-name-outside-the-grammar",
@@ -248,19 +228,19 @@
       "path": "structural/060-external-component"
     },
     {
-      "id": "structural-061-external-beside-a-workload",
+      "id": "structural-061-workload-on-an-external-component",
       "phase": "structural",
-      "path": "structural/061-external-beside-a-workload"
+      "path": "structural/061-workload-on-an-external-component"
     },
     {
-      "id": "structural-062-component-with-neither-shape",
+      "id": "structural-062-component-without-a-type",
       "phase": "structural",
-      "path": "structural/062-component-with-neither-shape"
+      "path": "structural/062-component-without-a-type"
     },
     {
-      "id": "structural-063-external-without-a-resource-type",
+      "id": "structural-063-external-publishing-a-literal",
       "phase": "structural",
-      "path": "structural/063-external-without-a-resource-type"
+      "path": "structural/063-external-publishing-a-literal"
     },
     {
       "id": "structural-064-external-publishing-nothing",
@@ -268,49 +248,44 @@
       "path": "structural/064-external-publishing-nothing"
     },
     {
-      "id": "structural-065-external-output-derived",
+      "id": "structural-067-input-origin-on-a-workload",
       "phase": "structural",
-      "path": "structural/065-external-output-derived"
+      "path": "structural/067-input-origin-on-a-workload"
     },
     {
-      "id": "structural-067-input-output-on-a-workload",
+      "id": "structural-068-output-with-an-empty-from",
       "phase": "structural",
-      "path": "structural/067-input-output-on-a-workload"
+      "path": "structural/068-output-with-an-empty-from"
     },
     {
-      "id": "structural-068-input-output-without-a-name",
+      "id": "structural-069-value-and-input-in-one-from",
       "phase": "structural",
-      "path": "structural/068-input-output-without-a-name"
+      "path": "structural/069-value-and-input-in-one-from"
     },
     {
-      "id": "structural-069-input-named-on-a-declared-output",
+      "id": "structural-070-array-of-enumerated-strings",
       "phase": "structural",
-      "path": "structural/069-input-named-on-a-declared-output"
+      "path": "structural/070-array-of-enumerated-strings"
     },
     {
-      "id": "structural-070-string-list-value",
+      "id": "structural-071-array-of-unenumerated-strings",
       "phase": "structural",
-      "path": "structural/070-string-list-value"
+      "path": "structural/071-array-of-unenumerated-strings"
     },
     {
-      "id": "structural-071-string-list-without-an-enum",
+      "id": "structural-072-empty-item-enum",
       "phase": "structural",
-      "path": "structural/071-string-list-without-an-enum"
+      "path": "structural/072-empty-item-enum"
     },
     {
-      "id": "structural-072-string-list-with-an-empty-enum",
+      "id": "structural-073-pattern-on-an-array-schema",
       "phase": "structural",
-      "path": "structural/072-string-list-with-an-empty-enum"
+      "path": "structural/073-pattern-on-an-array-schema"
     },
     {
-      "id": "structural-073-string-list-with-a-pattern",
+      "id": "structural-074-presentation-hint-on-an-array",
       "phase": "structural",
-      "path": "structural/073-string-list-with-a-pattern"
-    },
-    {
-      "id": "structural-074-string-list-with-a-format",
-      "phase": "structural",
-      "path": "structural/074-string-list-with-a-format"
+      "path": "structural/074-presentation-hint-on-an-array"
     },
     {
       "id": "structural-075-input-without-a-description",
@@ -333,39 +308,164 @@
       "path": "structural/078-input-names-its-supplier"
     },
     {
+      "id": "structural-079-atomic-connection",
+      "phase": "structural",
+      "path": "structural/079-atomic-connection"
+    },
+    {
+      "id": "structural-080-unknown-connection-protocol",
+      "phase": "structural",
+      "path": "structural/080-unknown-connection-protocol"
+    },
+    {
+      "id": "structural-081-unknown-connection-capability",
+      "phase": "structural",
+      "path": "structural/081-unknown-connection-capability"
+    },
+    {
+      "id": "structural-082-missing-connection-role",
+      "phase": "structural",
+      "path": "structural/082-missing-connection-role"
+    },
+    {
+      "id": "structural-083-service-without-a-workload",
+      "phase": "structural",
+      "path": "structural/083-service-without-a-workload"
+    },
+    {
+      "id": "structural-084-schedule-on-a-worker",
+      "phase": "structural",
+      "path": "structural/084-schedule-on-a-worker"
+    },
+    {
+      "id": "structural-085-health-on-a-job",
+      "phase": "structural",
+      "path": "structural/085-health-on-a-job"
+    },
+    {
+      "id": "structural-086-worker-without-endpoints",
+      "phase": "structural",
+      "path": "structural/086-worker-without-endpoints"
+    },
+    {
+      "id": "structural-087-scheduled-job",
+      "phase": "structural",
+      "path": "structural/087-scheduled-job"
+    },
+    {
+      "id": "structural-088-job-without-a-schedule",
+      "phase": "structural",
+      "path": "structural/088-job-without-a-schedule"
+    },
+    {
+      "id": "structural-089-cron-macro",
+      "phase": "structural",
+      "path": "structural/089-cron-macro"
+    },
+    {
+      "id": "structural-090-cron-with-a-seconds-field",
+      "phase": "structural",
+      "path": "structural/090-cron-with-a-seconds-field"
+    },
+    {
+      "id": "structural-091-command-as-a-string",
+      "phase": "structural",
+      "path": "structural/091-command-as-a-string"
+    },
+    {
+      "id": "structural-092-empty-command",
+      "phase": "structural",
+      "path": "structural/092-empty-command"
+    },
+    {
+      "id": "structural-093-metadata-without-a-description",
+      "phase": "structural",
+      "path": "structural/093-metadata-without-a-description"
+    },
+    {
+      "id": "structural-094-metadata-description-too-long",
+      "phase": "structural",
+      "path": "structural/094-metadata-description-too-long"
+    },
+    {
+      "id": "structural-095-property-without-an-endpoint",
+      "phase": "structural",
+      "path": "structural/095-property-without-an-endpoint"
+    },
+    {
+      "id": "structural-096-image-and-git-in-one-source",
+      "phase": "structural",
+      "path": "structural/096-image-and-git-in-one-source"
+    },
+    {
+      "id": "structural-097-branch-and-commit-in-one-ref",
+      "phase": "structural",
+      "path": "structural/097-branch-and-commit-in-one-ref"
+    },
+    {
+      "id": "structural-098-dockerfile-and-buildpacks-in-one-build",
+      "phase": "structural",
+      "path": "structural/098-dockerfile-and-buildpacks-in-one-build"
+    },
+    {
+      "id": "structural-099-volume-defaults-are-effective",
+      "phase": "structural",
+      "path": "structural/099-volume-defaults-are-effective"
+    },
+    {
+      "id": "structural-100-endpoint-without-a-property",
+      "phase": "structural",
+      "path": "structural/100-endpoint-without-a-property"
+    },
+    {
+      "id": "structural-101-external-input-with-a-target",
+      "phase": "structural",
+      "path": "structural/101-external-input-with-a-target"
+    },
+    {
+      "id": "structural-102-empty-metadata-description",
+      "phase": "structural",
+      "path": "structural/102-empty-metadata-description"
+    },
+    {
+      "id": "structural-103-metadata-description-at-the-limit",
+      "phase": "structural",
+      "path": "structural/103-metadata-description-at-the-limit"
+    },
+    {
+      "id": "structural-104-withdrawn-cron-type",
+      "phase": "structural",
+      "path": "structural/104-withdrawn-cron-type"
+    },
+    {
+      "id": "structural-105-schedule-time-zone",
+      "phase": "structural",
+      "path": "structural/105-schedule-time-zone"
+    },
+    {
+      "id": "structural-106-external-without-outputs",
+      "phase": "structural",
+      "path": "structural/106-external-without-outputs"
+    },
+    {
       "id": "semantic-001-floating-tag-image-reference",
       "phase": "semantic",
       "path": "semantic/001-floating-tag-image-reference"
     },
     {
-      "id": "semantic-002-probe-names-unknown-endpoint",
+      "id": "semantic-002-probe-names-an-unknown-endpoint",
       "phase": "semantic",
-      "path": "semantic/002-probe-names-unknown-endpoint"
+      "path": "semantic/002-probe-names-an-unknown-endpoint"
     },
     {
-      "id": "semantic-005-no-primary-endpoint-elected",
+      "id": "semantic-006-probe-names-one-of-several-endpoints",
       "phase": "semantic",
-      "path": "semantic/005-no-primary-endpoint-elected"
-    },
-    {
-      "id": "semantic-006-primary-endpoint-elected",
-      "phase": "semantic",
-      "path": "semantic/006-primary-endpoint-elected"
-    },
-    {
-      "id": "semantic-007-probe-on-endpointless-workload",
-      "phase": "semantic",
-      "path": "semantic/007-probe-on-endpointless-workload"
+      "path": "semantic/006-probe-names-one-of-several-endpoints"
     },
     {
       "id": "semantic-008-probe-on-tcp-endpoint",
       "phase": "semantic",
       "path": "semantic/008-probe-on-tcp-endpoint"
-    },
-    {
-      "id": "semantic-010-duplicate-env-var-key",
-      "phase": "semantic",
-      "path": "semantic/010-duplicate-env-var-key"
     },
     {
       "id": "semantic-011-env-key-claimed-twice",
@@ -413,9 +513,9 @@
       "path": "semantic/023-reject-overlapping-mounts"
     },
     {
-      "id": "semantic-024-reject-wrong-address-family",
+      "id": "semantic-024-endpoint-origin-in-the-wrong-address-family",
       "phase": "semantic",
-      "path": "semantic/024-reject-wrong-address-family"
+      "path": "semantic/024-endpoint-origin-in-the-wrong-address-family"
     },
     {
       "id": "semantic-025-reject-malformed-reference",
@@ -426,26 +526,6 @@
       "id": "semantic-026-reject-unknown-namespace",
       "phase": "semantic",
       "path": "semantic/026-reject-unknown-namespace"
-    },
-    {
-      "id": "structural-079-atomic-connection",
-      "phase": "structural",
-      "path": "structural/079-atomic-connection"
-    },
-    {
-      "id": "structural-080-unknown-connection-protocol",
-      "phase": "structural",
-      "path": "structural/080-unknown-connection-protocol"
-    },
-    {
-      "id": "structural-081-unknown-connection-capability",
-      "phase": "structural",
-      "path": "structural/081-unknown-connection-capability"
-    },
-    {
-      "id": "structural-082-missing-connection-role",
-      "phase": "structural",
-      "path": "structural/082-missing-connection-role"
     },
     {
       "id": "semantic-027-atomic-connection",
@@ -481,6 +561,61 @@
       "id": "semantic-033-connection-member-reused",
       "phase": "semantic",
       "path": "semantic/033-connection-member-reused"
+    },
+    {
+      "id": "semantic-034-worker-with-a-private-health-endpoint",
+      "phase": "semantic",
+      "path": "semantic/034-worker-with-a-private-health-endpoint"
+    },
+    {
+      "id": "semantic-035-template-in-the-withdrawn-self-order",
+      "phase": "semantic",
+      "path": "semantic/035-template-in-the-withdrawn-self-order"
+    },
+    {
+      "id": "semantic-036-external-output-reads-an-endpoint",
+      "phase": "semantic",
+      "path": "semantic/036-external-output-reads-an-endpoint"
+    },
+    {
+      "id": "semantic-037-template-reads-an-unknown-address-property",
+      "phase": "semantic",
+      "path": "semantic/037-template-reads-an-unknown-address-property"
+    },
+    {
+      "id": "semantic-038-cron-minute-out-of-range",
+      "phase": "semantic",
+      "path": "semantic/038-cron-minute-out-of-range"
+    },
+    {
+      "id": "semantic-039-cron-month-name",
+      "phase": "semantic",
+      "path": "semantic/039-cron-month-name"
+    },
+    {
+      "id": "semantic-040-cron-day-of-week-seven",
+      "phase": "semantic",
+      "path": "semantic/040-cron-day-of-week-seven"
+    },
+    {
+      "id": "semantic-041-cron-lists-ranges-and-steps",
+      "phase": "semantic",
+      "path": "semantic/041-cron-lists-ranges-and-steps"
+    },
+    {
+      "id": "semantic-042-worker-output-reads-a-public-address",
+      "phase": "semantic",
+      "path": "semantic/042-worker-output-reads-a-public-address"
+    },
+    {
+      "id": "semantic-043-external-template-reads-an-endpoint",
+      "phase": "semantic",
+      "path": "semantic/043-external-template-reads-an-endpoint"
+    },
+    {
+      "id": "semantic-044-template-reads-the-public-url-of-a-tcp-endpoint",
+      "phase": "semantic",
+      "path": "semantic/044-template-reads-the-public-url-of-a-tcp-endpoint"
     }
   ]
 }

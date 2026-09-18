@@ -55,7 +55,7 @@ test('historical semantic acceptance survives removal of the current fixture', (
     s,
     JSON.stringify({
       kind: 'COMPONENT',
-      spec: { workload: { source: { type: 'IMAGE', ref: 'example:latest' } } },
+      spec: { type: 'SERVICE', workload: { source: { image: 'example:latest' } } },
     }),
     {},
   )

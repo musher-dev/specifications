@@ -1,0 +1,10 @@
+{
+  "id": "structural-044-binding-names-each-source",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/blueprint/v1/spec.md#bindings",
+  "requirements": [
+    "BP-CONN-003"
+  ],
+  "summary": "Bindings naming a parameter, a node output and a literal value, one source each, validate."
+}

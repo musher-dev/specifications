@@ -28,10 +28,11 @@ archives must work offline without fetching mutable `main`.
    workload values. The public resolution record contains opaque snapshot
    references, never secret values or hashes of them. Reconcile records against
    the blueprint and resolved component artifacts.
-3. Acquire connections atomically per installation and named slot. Persist the
-   organization policy revision, connection version, protocol views, model,
-   endpoint configuration, credential identity and rotation together. Shared
-   slots share one selection; equal protocols alone never imply sharing.
+3. Acquire connections atomically per installation and connection parameter.
+   Persist the organization policy revision, connection version, protocol views,
+   model, endpoint settings, credential identity and rotation together.
+   Connection requirements bound to one connection parameter share one
+   selection; equal protocols alone never imply sharing.
 4. Implement durable, idempotent acquisition and credential issuance. Inject
    failures between acquisition, issuance, persistence, and materialization.
    Recovery must reuse the selection and avoid duplicate active credentials;
@@ -76,13 +77,15 @@ unknown capabilities. Do not infer a protocol from the model vendor.
    before migrating catalog documents. Keep existing deployments on their
    persisted installation snapshots during rollout.
 2. Migrate catalog components and blueprints together. Declare grouped connection
-   requirements over existing sensitive-string credential inputs, named source
-   slots, and explicit connection bindings. Remove independent URL/key/model
-   suppliers for group-owned inputs and retired targeting vocabulary.
+   requirements over existing sensitive-string credential inputs, blueprint
+   connection parameters, and explicit connection bindings. Remove independent
+   URL/key/model suppliers for group-owned inputs and retired targeting
+   vocabulary.
 3. Validate every migrated catalog document structurally and semantically, then
    exercise installation resolution and current admission in the platform.
-   Include two same-protocol slots, explicit sharing, complete replacement,
-   default changes, retries, rotation, revocation, and clone scenarios.
+   Include two same-protocol connection parameters, explicit sharing, complete
+   replacement, default changes, retries, rotation, revocation, and clone
+   scenarios.
 4. Update downstream documentation to link the generated reference. Preserve
    platform-specific API and lifecycle documentation; do not maintain duplicate
    handwritten document field tables.

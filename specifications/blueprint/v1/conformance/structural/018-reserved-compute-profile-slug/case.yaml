@@ -3,10 +3,12 @@ kind: BLUEPRINT
 metadata:
   slug: inference
   revision: 1
+  description: Synthetic conformance fixture blueprint.
 spec:
+  parameters: {}
   components:
     api:
       componentRef: ./components/api.yaml
-      size: gpu.premium.xlarge
+      compute:
+        profile: gpu.premium.xlarge
       bindings: {}
-  parameters: {}

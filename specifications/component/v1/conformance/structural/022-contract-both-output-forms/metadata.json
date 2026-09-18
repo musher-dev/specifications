@@ -3,5 +3,5 @@
   "phase": "structural",
   "expected": "pass",
   "clause": "specifications/component/v1/spec.md#outputs",
-  "summary": "A sensitive input, a DERIVED output, and a DECLARED output together validate."
+  "summary": "A sensitive input, an endpoint output and a literal output together validate."
 }

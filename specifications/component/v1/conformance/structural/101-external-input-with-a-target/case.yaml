@@ -1,0 +1,22 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: EXTERNAL
+  contract:
+    inputs:
+      host:
+        description: Hostname of the managed database server.
+        schema:
+          type: string
+        target:
+          envVarKey: DATABASE_HOST
+    outputs:
+      host:
+        description: Hostname of the managed database server, for a client to connect to.
+        schema:
+          type: string
+        from:
+          input: host

@@ -1,0 +1,25 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: WORKER
+  workload:
+    source:
+      image: ghcr.io/musher-dev/worker:1.4.0
+    command:
+      - /bin/consume
+    endpoints:
+      health:
+        targetPort: 8081
+        protocol: HTTP
+    health:
+      readiness:
+        http:
+          endpoint: health
+          path: /readyz
+      liveness:
+        http:
+          endpoint: health
+          path: /healthz

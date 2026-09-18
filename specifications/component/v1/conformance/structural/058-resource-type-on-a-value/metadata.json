@@ -4,7 +4,7 @@
   "expected": "fail",
   "clause": "specifications/component/v1/spec.md#value-schema",
   "requirements": [
-    "COMP-VAL-005"
+    "CORE-ENV-005"
   ],
   "summary": "Removed resourceType fields are rejected on value contracts."
 }

@@ -1,26 +1,20 @@
-{
-  "specVersion": "v1",
-  "kind": "BLUEPRINT",
-  "metadata": {
-    "slug": "connection-app",
-    "revision": 1
-  },
-  "spec": {
-    "connectionSources": {
-      "primary": {
-        "source": "${{ config.llm.default }}"
-      }
-    },
-    "components": {
-      "app": {
-        "componentRef": "./component.yaml",
-        "size": "general.standard.small",
-        "connectionBindings": {
-          "llm": {
-            "source": "primary"
-          }
-        }
-      }
-    }
-  }
-}
+specVersion: v1
+kind: BLUEPRINT
+metadata:
+  slug: support-assistant
+  revision: 1
+  description: A support assistant that answers questions with the language model the installer chooses.
+spec:
+  parameters:
+    llm:
+      from: "${{ connections.llm.default }}"
+      ui:
+        label: Language model
+  components:
+    assistant:
+      componentRef: ./components/assistant.yaml
+      compute:
+        profile: general.standard.small
+      connectionBindings:
+        llm:
+          parameter: llm

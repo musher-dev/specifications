@@ -29,8 +29,13 @@ export interface Outline {
   readonly byNumber: ReadonlyMap<string, string>
 }
 
-/** A section heading carrying a stable anchor. `##` and `###` only. */
-const HEADING = /^(#{2,3})\s+<a id="([^"]+)"><\/a>\s*([0-9.]+)?\s*(.+?)\s*$/
+/**
+ * A section heading carrying a stable anchor. `##` and `###` only. A heading
+ * may carry further anchors after the first, kept so older links still land;
+ * the first is the section's id and the rest are not part of its title.
+ */
+const HEADING =
+  /^(#{2,3})\s+<a id="([^"]+)"><\/a>(?:\s*<a id="[^"]+"><\/a>)*\s*([0-9.]+)?\s*(.+?)\s*$/
 /** A stable requirement identifier: `CORE-ENV-001`, `BP-REF-003`. */
 export const REQUIREMENT_ID = /^[A-Z]{2,6}-[A-Z0-9]{2,12}-\d{3}$/
 /** Any explicit anchor, wherever it sits. */

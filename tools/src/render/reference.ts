@@ -14,11 +14,13 @@
  * throws by name and pointer. A new keyword entering the contract fails the site
  * build; it does not ship a page that quietly omits a rule.
  *
- * Two custom annotations are the reason a bespoke reader is better here than any
- * general tool, and both are rendering hints that assert nothing:
- * `x-musher-discriminator` names which `oneOf` branch to expect, and
- * `x-additionalPropertiesName` names the key of a map whose keys the document
- * author chooses. `lint.ts` allowlists exactly these two.
+ * Two constructs are the reason a bespoke reader is better here than any general
+ * tool. A union selected by key (ADR 0031 §1) is an object declaring every
+ * property, with a `oneOf` whose branches each name the keys that select one
+ * form; a generic renderer shows those branches as anonymous schemas, and this
+ * one says "exactly one of `image` or `git`". And `x-additionalPropertiesName`,
+ * a rendering hint that asserts nothing, names the key of a map whose keys the
+ * document author chooses. `lint.ts` allowlists the hint.
  *
  * NON-NORMATIVE, like everything under tools/.
  */
@@ -76,7 +78,7 @@ const KNOWN_KEYS = new Set<string>([
   'if',
   'then',
   'else',
-  'x-musher-discriminator',
+  'dependentRequired',
   'x-additionalPropertiesName',
   ...CONSTRAINT_KEYS,
 ])
@@ -84,16 +86,6 @@ const KNOWN_KEYS = new Set<string>([
 export interface Constraint {
   readonly name: string
   readonly value: Json
-}
-
-export interface Branch {
-  readonly label: string | undefined
-  readonly target: string
-}
-
-export interface Discriminator {
-  readonly propertyName: string
-  readonly branches: readonly Branch[]
 }
 
 export type Shape =
@@ -110,11 +102,7 @@ export type Shape =
       readonly keyPattern: string | undefined
       readonly value: Shape
     }
-  | {
-      readonly kind: 'union'
-      readonly discriminator: Discriminator | undefined
-      readonly branches: readonly Shape[]
-    }
+  | { readonly kind: 'union'; readonly branches: readonly Shape[] }
   /** A genuine two-form alternation with no null branch, e.g. two patterns. */
   | { readonly kind: 'alternation'; readonly branches: readonly Shape[] }
   /** The `false` subschema: present in no valid document. */
@@ -145,6 +133,8 @@ export type Predicate =
   | { readonly kind: 'enum'; readonly field: string; readonly values: readonly Json[] }
   | { readonly kind: 'pattern'; readonly field: string; readonly pattern: string }
   | { readonly kind: 'notConst'; readonly field: string; readonly value: Json }
+  /** The field is present: required by the `if`, and tested for nothing but its type. */
+  | { readonly kind: 'present'; readonly field: string }
   | { readonly kind: 'all'; readonly of: readonly Predicate[] }
   /** A condition no mechanical phrasing does justice to; its `$comment` carries it. */
   | { readonly kind: 'opaque' }
@@ -163,6 +153,22 @@ export interface ConditionDoc {
   readonly comment: string | undefined
 }
 
+/**
+ * A union selected by key: which of the type's own fields pick its form.
+ *
+ * Each form lists the keys that select it, all present together (`endpoint`
+ * with `property`). Exactly one form is present in a valid document.
+ */
+export interface KeyChoice {
+  readonly forms: readonly (readonly string[])[]
+}
+
+/** `dependentRequired`: when `field` is present, every one of `requires` is too. */
+export interface Dependency {
+  readonly field: string
+  readonly requires: readonly string[]
+}
+
 export interface TypeDoc {
   readonly name: string
   readonly anchor: string
@@ -173,6 +179,9 @@ export interface TypeDoc {
   readonly closed: boolean
   readonly fields: readonly FieldDoc[]
   readonly conditions: readonly ConditionDoc[]
+  /** Present iff the type is a union selected by key. */
+  readonly choice: KeyChoice | undefined
+  readonly dependencies: readonly Dependency[]
 }
 
 export interface ReferenceModel {
@@ -267,36 +276,6 @@ class Builder {
     return typeof name === 'string' ? name : undefined
   }
 
-  private discriminatorOf(node: { [k: string]: Json }, pointer: string): Discriminator | undefined {
-    const raw = node['x-musher-discriminator']
-    if (!isObject(raw)) return undefined
-    const propertyName = raw.propertyName
-    const mapping = raw.mapping
-    if (typeof propertyName !== 'string' || !isObject(mapping)) {
-      this.fail(pointer, 'has an x-musher-discriminator without a propertyName and mapping')
-    }
-    // Resolved by pointer and sorted by value. The mapping's keys are
-    // alphabetical after canonicalization while `oneOf` keeps its authored
-    // order, and for ComponentEnvVar.value the two genuinely disagree — zipping
-    // them positionally would label each branch with the other's name.
-    const branches: Branch[] = []
-    for (const label of Object.keys(mapping).sort()) {
-      const target: Json = mapping[label] as Json
-      if (typeof target !== 'string' || !target.startsWith('#/$defs/')) {
-        this.fail(pointer, `has a discriminator mapping for ${label} that is not a local pointer`)
-      }
-      const name = target.slice('#/$defs/'.length)
-      if (this.defs[name] === undefined) {
-        this.fail(
-          pointer,
-          `has a discriminator mapping for ${label} naming a missing $defs/${name}`,
-        )
-      }
-      branches.push({ label, target: name })
-    }
-    return { propertyName, branches }
-  }
-
   /**
    * Read one schema node's shape.
    *
@@ -334,11 +313,10 @@ class Builder {
         // reads them from the node, so only the shape collapses here.
         return { shape: only, nullable }
       }
-      const discriminator = this.discriminatorOf(node, pointer)
       return {
         shape:
-          key === 'oneOf' || discriminator !== undefined
-            ? { kind: 'union', discriminator, branches: shapes }
+          key === 'oneOf'
+            ? { kind: 'union', branches: shapes }
             : { kind: 'alternation', branches: shapes },
         nullable,
       }
@@ -382,12 +360,13 @@ class Builder {
     if (Array.isArray(node.type)) {
       this.fail(pointer, 'declares an array "type", which no Musher schema uses — add a case')
     }
-    // `KNOWN_KEYS` gates the *name* of a keyword. These four are named there
+    // `KNOWN_KEYS` gates the *name* of a keyword. These are named there
     // because they are legitimate inside a conditional, where `predicateOf`
-    // and `effectsOf` read them — but in shape position this reader has no
-    // case for any of them, and returning a bare `object` or `any` would drop
-    // a type, a nested field set, or a negation without a word. Refuse instead.
-    for (const unhandled of ['allOf', 'not', 'if', 'properties'] as const) {
+    // and `effectsOf` read them, or on a type, where `typeOf` reads them. In
+    // shape position this reader has no case for any of them, and returning a
+    // bare `object` or `any` would drop a type, a nested field set, or a
+    // negation without a word. Refuse instead.
+    for (const unhandled of ['allOf', 'not', 'if', 'properties', 'dependentRequired'] as const) {
       if (node[unhandled] !== undefined) {
         this.fail(
           pointer,
@@ -413,9 +392,24 @@ class Builder {
   /** One `if` read as a statement about a field, or `opaque` where it is not. */
   private predicateOf(raw: Json): Predicate {
     if (!isObject(raw) || !isObject(raw.properties)) return { kind: 'opaque' }
+    const required = new Set(
+      Array.isArray(raw.required)
+        ? raw.required.filter((r): r is string => typeof r === 'string')
+        : [],
+    )
     const parts: Predicate[] = []
     for (const field of Object.keys(raw.properties).sort()) {
       const test = (raw.properties as { [k: string]: Json })[field]
+      // A test that asserts only a type, or nothing, on a key the `if` requires
+      // is how a schema says "when this key is present". The type restates the
+      // field's own declaration, so the phrase drops nothing.
+      const presence =
+        required.has(field) &&
+        (test === true || (isObject(test) && Object.keys(test).every((k) => k === 'type')))
+      if (presence) {
+        parts.push({ kind: 'present', field })
+        continue
+      }
       if (!isObject(test)) return { kind: 'opaque' }
       if ('const' in test) parts.push({ kind: 'const', field, value: test.const as Json })
       else if (Array.isArray(test.enum))
@@ -510,6 +504,82 @@ class Builder {
     return out
   }
 
+  /**
+   * A type-level `oneOf` read as a union selected by key, or refused.
+   *
+   * Each branch must only require keys the type itself declares, and declare
+   * them `true`: the type's own `properties` carry every field's schema, and a
+   * branch says only which keys select it. A branch that asserts anything more
+   * is a union this reader cannot phrase as "exactly one of", so it throws
+   * rather than rendering the type as if every field were independently
+   * optional.
+   */
+  private choiceOf(
+    node: { [k: string]: Json },
+    declared: ReadonlySet<string>,
+    pointer: string,
+  ): KeyChoice | undefined {
+    if (node.anyOf !== undefined) {
+      this.fail(pointer, 'carries a type-level "anyOf", which no Musher schema uses; add a case')
+    }
+    const branches = node.oneOf
+    if (branches === undefined) return undefined
+    if (!Array.isArray(branches) || branches.length < 2) {
+      this.fail(pointer, 'has a type-level "oneOf" with fewer than two branches')
+    }
+    const forms = branches.map((branch, i) => {
+      const at = `${pointer}/oneOf/${i}`
+      if (!isObject(branch)) this.fail(at, 'is not a schema object')
+      const extra = Object.keys(branch).filter((k) => k !== 'properties' && k !== 'required')
+      const required = Array.isArray(branch.required)
+        ? branch.required.filter((r): r is string => typeof r === 'string')
+        : []
+      const properties = isObject(branch.properties) ? branch.properties : {}
+      const keys = Object.keys(properties)
+      const selectsByKey =
+        extra.length === 0 &&
+        required.length > 0 &&
+        keys.every((k) => properties[k] === true) &&
+        [...keys].sort().join() === [...required].sort().join()
+      if (!selectsByKey) {
+        this.fail(
+          at,
+          'is not a key-selected branch ({properties: {key: true}, required: [key]}); ' +
+            'add a case rather than letting the page render its fields as independent',
+        )
+      }
+      for (const key of required) {
+        if (!declared.has(key))
+          this.fail(at, `selects by "${key}", which the type does not declare`)
+      }
+      return required
+    })
+    return { forms }
+  }
+
+  private dependenciesOf(
+    node: { [k: string]: Json },
+    declared: ReadonlySet<string>,
+    pointer: string,
+  ): Dependency[] {
+    const raw = node.dependentRequired
+    if (raw === undefined) return []
+    if (!isObject(raw)) this.fail(pointer, 'has a "dependentRequired" that is not an object')
+    return Object.keys(raw)
+      .sort()
+      .map((field) => {
+        const requires = raw[field]
+        if (
+          !Array.isArray(requires) ||
+          !requires.every((r): r is string => typeof r === 'string') ||
+          ![field, ...requires].every((f) => declared.has(f))
+        ) {
+          this.fail(`${pointer}/dependentRequired/${field}`, 'must list fields the type declares')
+        }
+        return { field, requires }
+      })
+  }
+
   typeOf(raw: Json, name: string, pointer: string): TypeDoc {
     if (!isObject(raw)) this.fail(pointer, 'is not an object schema')
     const node = raw
@@ -553,6 +623,8 @@ class Builder {
       closed: node.additionalProperties === false,
       fields,
       conditions: this.conditionsOf(node, pointer),
+      choice: this.choiceOf(node, new Set(Object.keys(properties)), pointer),
+      dependencies: this.dependenciesOf(node, new Set(Object.keys(properties)), pointer),
     }
   }
 
@@ -664,11 +736,7 @@ function describeShape(shape: Shape): string {
       return `mapping, keyed by ${key}${grammar}, to ${describeShape(shape.value)}`
     }
     case 'union':
-      return shape.discriminator === undefined
-        ? `one of ${shape.branches.map(describeShape).join(', ')}`
-        : `one of, by <code>${escapeHtml(shape.discriminator.propertyName)}</code>: ${shape.discriminator.branches
-            .map((b) => `<code>${escapeHtml(b.label ?? '')}</code> → ${typeLink(b.target)}`)
-            .join(', ')}`
+      return `one of ${shape.branches.map(describeShape).join(', ')}`
     case 'alternation':
       return `one of ${shape.branches.length} forms: ${shape.branches.map(describeShape).join(', or ')}`
     case 'forbidden':
@@ -764,6 +832,8 @@ function phraseWhen(predicate: Predicate): string {
       return `When <code>${escapeHtml(predicate.field)}</code> matches <code>${escapeHtml(predicate.pattern)}</code>`
     case 'notConst':
       return `When <code>${escapeHtml(predicate.field)}</code> is not <code>${escapeHtml(String(predicate.value))}</code>`
+    case 'present':
+      return `When <code>${escapeHtml(predicate.field)}</code> is present`
     case 'all':
       return predicate.of
         .map(phraseWhen)
@@ -772,6 +842,40 @@ function phraseWhen(predicate: Predicate): string {
     case 'opaque':
       return 'Under the condition above'
   }
+}
+
+function code(name: string): string {
+  return `<code>${escapeHtml(name)}</code>`
+}
+
+/** `a`, `a or b`, `a, b, or c`: a list a reader reads as one sentence. */
+function orList(items: readonly string[]): string {
+  if (items.length <= 2) return items.join(' or ')
+  return `${items.slice(0, -1).join(', ')}, or ${items.at(-1)}`
+}
+
+/**
+ * A union selected by key, and any `dependentRequired`, as sentences.
+ *
+ * Every field of such a type is optional on its own, so without this block the
+ * page would say an empty object is fine and that two forms may be combined.
+ */
+function renderChoice(type: TypeDoc): string {
+  const lines: string[] = []
+  if (type.choice !== undefined) {
+    const forms = type.choice.forms.map((form) => form.map(code).join(' with '))
+    lines.push(
+      `<p>Exactly one of ${orList(forms)} is present. The key present selects the form.</p>`,
+    )
+  }
+  for (const dependency of type.dependencies) {
+    lines.push(
+      `<p>${code(dependency.field)} requires ${dependency.requires.map(code).join(' and ')}.</p>`,
+    )
+  }
+  return lines.length === 0
+    ? ''
+    : `<div class="rules"><p class="meta">Forms</p>\n${lines.join('\n')}</div>`
 }
 
 function renderType(type: TypeDoc, context: PageContext, heading: string): string {
@@ -784,6 +888,7 @@ function renderType(type: TypeDoc, context: PageContext, heading: string): strin
     prose(type.description, context),
     key,
     note(type.comment, context, 'Authoring note'),
+    renderChoice(type),
     renderConditions(type, context),
     type.fields.map((field) => renderField(field, context)).join('\n'),
   ]

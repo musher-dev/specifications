@@ -1035,15 +1035,17 @@ function checkCoverage(family: Family, exercised: ReadonlySet<string>, failures:
  */
 const UNPINNED: ReadonlyMap<string, string> = new Map([
   [
-    'CORE-ENV-001',
-    'A fixture cannot omit specVersion and still declare which family it belongs ' +
-      'to; the rule is exercised indirectly by every case in every corpus',
+    'COMP-JOB-001',
+    'When an unscheduled JOB runs (once per rollout, ordered against nothing), that its ' +
+      'outcome is recorded, that it is not retried and that its failure blocks no other ' +
+      "node's rollout are runtime obligations of the platform; no document phase or " +
+      'behavioural operation observes a rollout',
   ],
   [
-    'CORE-ENV-003',
-    'metadata is required by every fixture in every corpus, so no single case pins it',
+    'COMP-JOB-004',
+    'Skipping a run due while the previous one executes is a runtime obligation of the ' +
+      'scheduler; no document phase or behavioural operation observes a run',
   ],
-  ['CORE-ENV-004', 'spec is required by every fixture in every corpus, so no single case pins it'],
 ])
 
 /**

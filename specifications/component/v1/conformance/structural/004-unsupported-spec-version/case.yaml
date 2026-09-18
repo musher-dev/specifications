@@ -2,13 +2,13 @@ specVersion: v99
 kind: COMPONENT
 metadata:
   revision: 1
+  description: Synthetic conformance fixture component.
 spec:
+  type: SERVICE
   workload:
-    type: SERVICE
+    source:
+      image: nginx:1.29.4-alpine
     endpoints:
       web:
-        containerPort: 8080
+        targetPort: 8080
         protocol: HTTP
-    source:
-      type: IMAGE
-      ref: nginx:1.29.4-alpine

@@ -6,6 +6,6 @@
   "requirements": [
     "BP-CONNECTION-001"
   ],
-  "summary": "connection independent supplier",
+  "summary": "An ordinary binding to an input a connection requirement owns is rejected.",
   "document": "connection-app/blueprint.yaml"
 }

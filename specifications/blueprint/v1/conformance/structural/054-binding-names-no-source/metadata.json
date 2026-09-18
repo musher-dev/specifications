@@ -1,0 +1,10 @@
+{
+  "id": "structural-054-binding-names-no-source",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#bindings",
+  "requirements": [
+    "BP-CONN-003"
+  ],
+  "summary": "A binding naming no source key is rejected as missing its source."
+}

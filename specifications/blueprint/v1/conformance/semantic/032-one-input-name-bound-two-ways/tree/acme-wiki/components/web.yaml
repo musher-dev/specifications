@@ -1,0 +1,20 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: WORKER
+  workload:
+    source:
+      image: ghcr.io/example/app:1.4.2
+  contract:
+    inputs:
+      apiKey:
+        schema:
+          type: string
+        target:
+          envVarKey: OPENAI_API_KEY
+        description: Credential the application presents to the chat-completions service.
+        sensitive: true
+    outputs: {}

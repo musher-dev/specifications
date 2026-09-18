@@ -9,7 +9,9 @@
 healthz
 storefront
 storefronts
+submittable
 endpointless
+exposable
 undeployable
 
 # --- Specification craft -----------------------------------------------------
@@ -31,6 +33,7 @@ deserialisation
 bluemonday
 CNAB
 Consolas
+Heroku
 Pydantic
 Segoe
 SLSA

@@ -1,0 +1,10 @@
+{
+  "id": "semantic-041-cron-lists-ranges-and-steps",
+  "phase": "semantic",
+  "expected": "pass",
+  "clause": "specifications/component/v1/spec.md#jobs",
+  "requirements": [
+    "COMP-JOB-002"
+  ],
+  "summary": "A cron expression using steps, ranges, lists and a stepped range, separated by spaces and a tab, validates."
+}

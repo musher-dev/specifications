@@ -1,0 +1,10 @@
+{
+  "id": "structural-069-value-and-input-in-one-from",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#outputs",
+  "requirements": [
+    "COMP-OUT-001"
+  ],
+  "summary": "An output whose from names both a literal value and an input is rejected."
+}

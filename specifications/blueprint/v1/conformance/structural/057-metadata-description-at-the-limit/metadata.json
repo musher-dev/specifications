@@ -1,0 +1,10 @@
+{
+  "id": "structural-057-metadata-description-at-the-limit",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/blueprint/v1/spec.md#identity",
+  "requirements": [
+    "BP-ID-004"
+  ],
+  "summary": "A description of exactly 280 characters validates: the limit is inclusive."
+}

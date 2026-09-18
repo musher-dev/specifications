@@ -1,0 +1,20 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: SERVICE
+  workload:
+    source:
+      git:
+        repositoryURL: https://github.com/musher-dev/examples
+        ref:
+          branch: main
+          commit: 0123456789abcdef0123456789abcdef01234567
+        build:
+          dockerfile: Dockerfile
+    endpoints:
+      web:
+        targetPort: 8080
+        protocol: HTTP

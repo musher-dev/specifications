@@ -2,13 +2,13 @@ specVersion: v1
 kind: COMPONENT
 metadata:
   revision: 4
+  description: Synthetic conformance fixture component.
 spec:
+  type: SERVICE
   workload:
-    type: SERVICE
     source:
-      type: IMAGE
-      ref: pgvector/pgvector:0.8.1-pg17
+      image: pgvector/pgvector:0.8.1-pg17
     endpoints:
       db:
-        containerPort: 5432
+        targetPort: 5432
         protocol: TCP

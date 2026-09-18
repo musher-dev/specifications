@@ -1,0 +1,10 @@
+{
+  "id": "structural-061-workload-on-an-external-component",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#workload",
+  "requirements": [
+    "COMP-EXT-001"
+  ],
+  "summary": "An EXTERNAL component declaring a workload is rejected; the platform runs nothing for it."
+}
