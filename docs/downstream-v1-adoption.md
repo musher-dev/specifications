@@ -5,19 +5,17 @@ This is an informative adoption guide for the platform and catalog repositories.
 [blueprint](../specifications/blueprint/v1/spec.md) specifications govern the
 contract; this checklist does not define another document dialect.
 
-## Pin the reviewed contract
+## Pin the released contract
 
-Before starting downstream migration, record the full immutable commit SHA of
-this hardening change after it merges. The SHA is pending until that merge;
-do not substitute a moving branch, invent a final SHA, or claim that this
-guide pins a release already published. Record the selected SHA in each
-migration pull request and vendor the matching schemas, specifications, and
-conformance corpus together.
-
-Once releases are published, replace the temporary commit pin with the exact
-family releases and their verified dependency closure from `published.json`.
-Keep checksums and dependency identities with vendored artifacts. Release
-archives must work offline without fetching mutable `main`.
+Pin exact releases, never a commit on `main`: `core/v1.0.0`,
+`component/v1.0.0` and `blueprint/v1.0.0`, plus `listing/v1.0.0` where the
+catalog reads listings. [`published.json`](../published.json) records each
+release's tree, bundle digest and exact dependencies. Vendor each family's
+release archive, which carries its schema, specification, examples and
+conformance corpus together with its whole dependency closure, and keep
+the digests and dependency identities beside it. Verify each asset as
+[SECURITY.md → Verifying a release](../.github/SECURITY.md#verifying-a-release)
+describes. Release archives work offline, without fetching `main`.
 
 ## Platform implementation
 

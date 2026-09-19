@@ -39,6 +39,9 @@ release line, tagged `<family>/v<MAJOR>.<MINOR>.<PATCH>`.
    status policy means its branch is up to date first. release-please tags the
    merge commit and creates a **draft** GitHub Release. The tag is forced at
    merge because a draft would otherwise get its tag only when published.
+   release-please reads the version from the merged pull request's body, the
+   `## X.Y.Z` heading between its two `---` lines, so never rewrite that body
+   by hand: a body it cannot parse tags nothing.
 4. **Stage.** The `artifacts` job refuses to continue unless immutable releases
    are enabled on the repository. It checks out the tag and applies the **tag
    guard**: on a push, the tag's commit must be an ancestor of the pushed commit
@@ -131,8 +134,6 @@ To read the prose of a released version rather than the draft, use any of:
 - `spec.md` inside the release archive;
 - git: `git show <family>/v<X.Y.Z>:<path>/spec.md`, where `<path>` is the
   ledger entry's `path`, today `specifications/<family>/v<MAJOR>`.
-
-The site's pages exist once the first deploy has run.
 
 The alias `/<family>/v<N>/<family>.schema.json` serves the newest release of
 that major, with its `$id` restamped to the alias URL. Before a major's first
@@ -372,10 +373,19 @@ It checks out the tag and uses the tag's tooling and Bun version, so a dispatch
 from a newer `main` still builds what the tag describes. The tag guard requires
 the tag to be an ancestor of `origin/main`. Re-running it is safe.
 
+If a release pull request merges and nothing is tagged, release-please could not
+read the version from its body, and the next run opens a pull request for the
+version after it. Restore the body to release-please's form, with the notes
+from the merged `CHANGELOG.md` under a `## X.Y.Z` heading. Then re-run that
+push's release workflow with `gh run rerun <run-id>`, and close the pull request
+it opened by mistake.
+
 ## Prerequisites before the first tag
 
-These live outside the repository. Each must be in place before any family,
-starting with core, is tagged:
+These live outside the repository. Each was in place for the first releases on
+2026-09-18, except the redirect in step 7. They matter again only if the
+pipeline moves to another repository or host. Each must be in place before any
+family, starting with core, is tagged:
 
 1. **Enable immutable releases** on the repository. The release job refuses to
    run without them, because enabling them later protects no release already

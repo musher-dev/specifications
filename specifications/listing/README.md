@@ -11,7 +11,7 @@ A listing is an [item document](../core/v1/spec.md#item-directory),
 
 | Major | Specification | Examples | Released? |
 |---|---|---|---|
-| `v1` | [`v1/spec.md`](v1/spec.md) | [`v1/examples/`](v1/examples/) | Draft — no `listing/v1.*` tag yet ([how to tell](../../docs/publication.md#draft-or-released)) |
+| `v1` | [`v1/spec.md`](v1/spec.md) | [`v1/examples/`](v1/examples/) | Released from [`1.0.0`](https://github.com/musher-dev/specifications/releases/tag/listing%2Fv1.0.0). Every release is in [`published.json`](../../published.json) ([how to tell](../../docs/publication.md#draft-or-released)) |
 
 ## Start here
 
