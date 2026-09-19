@@ -16,7 +16,7 @@ own executable form is a parser-phase conformance corpus.
 
 | Major | Specification | Corpus | Released? |
 |---|---|---|---|
-| `v1` | [`v1/spec.md`](v1/spec.md) | [`v1/conformance/`](v1/conformance/) | Draft — no `core/v1.*` tag yet ([how to tell](../../docs/publication.md#draft-or-released)) |
+| `v1` | [`v1/spec.md`](v1/spec.md) | [`v1/conformance/`](v1/conformance/) | Released from [`1.0.0`](https://github.com/musher-dev/specifications/releases/tag/core%2Fv1.0.0). Every release is in [`published.json`](../../published.json) ([how to tell](../../docs/publication.md#draft-or-released)) |
 
 Core has its own release line, tagged `core/v<MAJOR>.<MINOR>.<PATCH>`. Each
 family release records the core edition it was built and tested against

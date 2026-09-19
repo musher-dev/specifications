@@ -13,7 +13,7 @@ references sit inside the same item.
 
 | Major | Specification | Examples | Released? |
 |---|---|---|---|
-| `v1` | [`v1/spec.md`](v1/spec.md) | [`v1/examples/`](v1/examples/) | Draft — no `blueprint/v1.*` tag yet ([how to tell](../../docs/publication.md#draft-or-released)) |
+| `v1` | [`v1/spec.md`](v1/spec.md) | [`v1/examples/`](v1/examples/) | Released from [`1.0.0`](https://github.com/musher-dev/specifications/releases/tag/blueprint%2Fv1.0.0). Every release is in [`published.json`](../../published.json) ([how to tell](../../docs/publication.md#draft-or-released)) |
 
 ## Start here
 

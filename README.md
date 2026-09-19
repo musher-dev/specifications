@@ -7,8 +7,9 @@ conformance corpora. The platform API and Musher's internal data models are
 specified elsewhere. An implementation that disagrees with what is published
 here is defective.
 
-**Status:** pre-stable. Whether a version is released:
-[Draft or released](docs/publication.md#draft-or-released).
+**Status:** stable. Every family has released `1.0.0`, and
+[`published.json`](published.json) lists every release. What makes a version
+released: [Draft or released](docs/publication.md#draft-or-released).
 
 ## Specifications
 
@@ -19,8 +20,7 @@ here is defective.
 | blueprint | [`blueprint/v1/spec.md`](specifications/blueprint/v1/spec.md) | [README](specifications/blueprint/README.md) | [blueprint v1](https://specifications.musher.dev/reference/blueprint/v1/spec/) |
 | listing | [`listing/v1/spec.md`](specifications/listing/v1/spec.md) | [README](specifications/listing/README.md) | [listing v1](https://specifications.musher.dev/reference/listing/v1/spec/) |
 
-The rendered prose is generated and informative, and is live once the site's
-first deploy has run. What each family describes and how they depend on one
+The rendered prose is generated and informative. What each family describes and how they depend on one
 another is set out in [specifications/README.md](specifications/README.md), and
 which of its parts are normative in
 [What is normative](specifications/README.md#what-is-normative).
