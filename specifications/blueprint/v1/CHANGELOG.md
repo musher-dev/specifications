@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.1.0](https://github.com/musher-dev/specifications/compare/blueprint/v1.0.0...blueprint/v1.1.0) (2026-09-20)
+
+
+### Additions
+
+* **blueprint:** defer the description obligation to publication ([965b046](https://github.com/musher-dev/specifications/commit/965b046126d7440e45e6e8ab0b3789a6655f6015))
+* **component:** defer the description obligation to publication, and enforce COMP-OUT-003 ([965b046](https://github.com/musher-dev/specifications/commit/965b046126d7440e45e6e8ab0b3789a6655f6015))
+
+
+### Specification prose
+
+* **repo:** record how a released family is corrected within its major ([965b046](https://github.com/musher-dev/specifications/commit/965b046126d7440e45e6e8ab0b3789a6655f6015))
+
 ## 1.0.0 (2026-09-18)
 
 
