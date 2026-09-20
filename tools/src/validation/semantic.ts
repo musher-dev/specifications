@@ -210,6 +210,11 @@ export function componentDiagnostics(document: Json): Diagnostic[] {
         if (!input) issue(out, 'ERR_UNKNOWN_INPUT_REFERENCE', path + '/from/input')
         else if (!compatible(record(input), v))
           issue(out, 'ERR_VALUE_CONSTRAINT', path + '/from/input')
+        // COMP-OUT-003: an origin that can be absent cannot produce the output.
+        // It is checked after the type rule so that a document breaking both
+        // keeps the code v1.0.0 gave it.
+        else if (at(input, 'required') === false && at(input, 'default') === undefined)
+          issue(out, 'ERR_OUTPUT_NOT_PRODUCIBLE', path + '/from/input')
       }
       const template = typeof from.template === 'string' ? from.template : undefined
       if (template !== undefined) {

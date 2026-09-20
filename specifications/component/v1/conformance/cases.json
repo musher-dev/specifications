@@ -616,6 +616,16 @@
       "id": "semantic-044-template-reads-the-public-url-of-a-tcp-endpoint",
       "phase": "semantic",
       "path": "semantic/044-template-reads-the-public-url-of-a-tcp-endpoint"
+    },
+    {
+      "id": "semantic-045-output-input-names-an-optional-input",
+      "phase": "semantic",
+      "path": "semantic/045-output-input-names-an-optional-input"
+    },
+    {
+      "id": "semantic-046-output-input-names-an-optional-input-with-a-default",
+      "phase": "semantic",
+      "path": "semantic/046-output-input-names-an-optional-input-with-a-default"
     }
   ]
 }

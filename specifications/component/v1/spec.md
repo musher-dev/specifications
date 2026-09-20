@@ -94,17 +94,38 @@ property is `ERR_UNKNOWN_FIELD`, as
 [core v1 §2](../../core/v1/spec.md#envelope) requires at every level.
 
 <a id="description"></a><a id="COMP-DESC-002"></a>**`COMP-DESC-002`**: `description`
-is REQUIRED. It says what the component is, in one or two sentences of plain
-text, 1 to 280 characters, the limit of a
+says what the component is, in one or two sentences of plain text, 1 to 280
+characters, the limit of a
 [listing summary](../../listing/v1/spec.md#presentation). A consumer MUST NOT
-render it as Markdown. An absent description is `ERR_MISSING_FIELD` at
-`/metadata`, and an empty or longer one is `ERR_INVALID_VALUE`. These are
-structural rules.
+render it as Markdown. An empty description, or one longer than 280 characters,
+is `ERR_INVALID_VALUE` at `/metadata/description`. These are structural rules,
+and they bind a description that is present. Whether one has to be present is
+`COMP-DESC-003`.
+
+<a id="COMP-DESC-003"></a>**`COMP-DESC-003`**: A published component MUST carry
+a `description`. One absent at publication is rejected in the `capability` phase
+with `ERR_DESCRIPTION_REQUIRED` at `/metadata`.
 
 A component's file stem is its only other name, and a published component is
 reused by items that know nothing about it, so the document describes itself.
 The description is for the person composing a blueprint. It is not storefront
 copy: that is the listing's `summary`.
+
+**Why the phase is `capability`, and it is not the reason `COMP-ID-001` has.**
+That rule is `capability` because deciding it needs the catalog, which needs the
+network. This one needs neither: a validator holding the file can see the field
+is absent. It is `capability` because *absent* and *not written yet* are the same
+bytes, and only the publisher can tell them apart. A component with no
+description is readable. Its `kind`, its `specVersion` and its `revision` all
+parse, and every rule in this document still decides, so it is a component an
+author is still writing, and refusing to store it makes them describe the thing
+before the thing exists. Publication is where being unfinished stops being
+allowed, so publication is where the obligation falls.
+
+An offline validator therefore MUST NOT report `ERR_DESCRIPTION_REQUIRED`, and
+an editor is free to say the field is empty in whatever way editors say that.
+What it MUST NOT do is call the document invalid, because under this contract it
+is not.
 
 `revision` is an integer, 1 or greater. It is REQUIRED and never defaulted.
 Exact deployment identity additionally requires the generated artifact digest.
@@ -159,8 +180,8 @@ and a validator is handed one.
 **What v1 does not constrain.** Nothing orders one component's revisions against
 another's: two components in the same item sitting at 4 and 11 mean nothing
 worth reading into. Nothing checks a revision offline at all: `minimum: 1` is the
-whole of the `structural` rule, and every other statement in this section is
-either `capability` or a SHOULD.
+whole of the `structural` rule about it, and every other statement here about
+the revision is either `capability` or a SHOULD.
 
 ## <a id="workload"></a><a id="type"></a>5. The component's shape
 
@@ -618,9 +639,22 @@ outputs:
 own input; otherwise `ERR_UNKNOWN_INPUT_REFERENCE` at `from/input`. Its logical
 type must fit the output. An input the blueprint binds to another node's output
 may be forwarded, and blueprint rejects the cycles that can form
-([blueprint `BP-CONN-002`](../../blueprint/v1/spec.md#BP-CONN-002)). Every
-declared output must be produced, so an absent optional input cannot supply an
-`input` origin.
+([blueprint `BP-CONN-002`](../../blueprint/v1/spec.md#BP-CONN-002)).
+
+<a id="COMP-OUT-003"></a>**`COMP-OUT-003`**: Every declared output must be
+produced, so an `input` origin MUST name an input that is always supplied: one
+that is required, or one that carries a `default`. An origin naming an optional
+input with no default is `ERR_OUTPUT_NOT_PRODUCIBLE` at `from/input`. The
+default of `required` is true ([§6.1](#inputs)), so an input that says nothing
+satisfies this.
+
+The code is not `ERR_UNKNOWN_INPUT_REFERENCE`, because the input exists and
+naming it was not the mistake. What the document promises is an output, and
+[§6.1](#inputs) already says that an unbound optional input with no default is
+simply absent. An output whose only source can be absent is a promise the
+contract cannot keep, and a consuming node discovers that at install time rather
+than here. A `default` closes it, because a default is a value: it makes the
+input supplied whether a blueprint binds it or not.
 
 <a id="COMP-REF-001"></a>**`COMP-REF-001`**: A `template` admits only core's
 `self` namespace, and a `self` path is exactly
@@ -732,7 +766,11 @@ propagation and secret-publication prohibitions apply.
 
 Core's phases and explicit coverage statuses apply. Components are structurally
 validated before semantic checks. Publication requires the publication profile;
-workload execution additionally requires blueprint resolution and admission.
+workload execution additionally requires blueprint resolution and admission. Two
+rules here fall on the publication side of that line and nowhere earlier:
+[`COMP-ID-001`](#COMP-ID-001), because the lineage is a fact the catalog holds,
+and [`COMP-DESC-003`](#COMP-DESC-003), because an unwritten description is only
+a defect in a component someone is trying to publish.
 
 ## <a id="diagnostics"></a>8. Diagnostics
 
@@ -749,11 +787,13 @@ Core diagnostics also apply.
 | `ERR_ENDPOINT_NOT_EXPOSABLE` | `semantic` | A `WORKER` endpoint is exposed `PUBLIC`, or a `WORKER` output reads a public property. |
 | `ERR_INVALID_SCHEDULE` | `semantic` | A cron field is outside §5.7's grammar or range. |
 | `ERR_UNKNOWN_INPUT_REFERENCE` | `semantic` | Output names no own input. |
+| `ERR_OUTPUT_NOT_PRODUCIBLE` | `semantic` | Output forwards an optional input that has no default. |
 | `ERR_INVALID_MOUNT` | `semantic` | Mount is not canonical or overlaps another. |
 | `ERR_INVALID_VALUE_SCHEMA` | `semantic` | Unsupported or invalid logical schema. |
 | `ERR_VALUE_CONSTRAINT` | `semantic`, `resolution` | Known value or output origin violates a contract. |
 | `ERR_SECRET_LITERAL` | `semantic` | Authored literal supplies a sensitive contract. |
 | `ERR_VERSION_NOT_MONOTONIC` | `capability` | Published component revision does not increase. |
+| `ERR_DESCRIPTION_REQUIRED` | `capability` | Publication requires a description this document does not carry. |
 | `ERR_ENV_ENCODING` | `resolution` | Value cannot be encoded into an environment variable. |
 | `ERR_INVALID_CONNECTION_REQUIREMENT` | `semantic` | Invalid connection member or role. |
 

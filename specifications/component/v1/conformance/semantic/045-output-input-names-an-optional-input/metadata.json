@@ -1,0 +1,10 @@
+{
+  "id": "semantic-045-output-input-names-an-optional-input",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#outputs",
+  "requirements": [
+    "COMP-OUT-003"
+  ],
+  "summary": "An INPUT output naming an optional input with no default is rejected, since the output may not be produced."
+}

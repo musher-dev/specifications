@@ -1,10 +1,10 @@
 {
   "id": "structural-050-missing-metadata-description",
   "phase": "structural",
-  "expected": "fail",
+  "expected": "pass",
   "clause": "specifications/blueprint/v1/spec.md#identity",
   "requirements": [
     "BP-ID-004"
   ],
-  "summary": "A blueprint whose metadata carries no description is rejected."
+  "summary": "A blueprint whose metadata carries no description is structurally valid: the obligation is BP-ID-005's, at publication."
 }

@@ -91,3 +91,81 @@ describe('replayRelease', () => {
     })
   })
 })
+
+/**
+ * A declared relaxation, and the two ways it is refused.
+ *
+ * ADR 0032 §3. The fixture uses the real key from `RELAXED`, so these tests
+ * exercise the entry the repository actually ships rather than a stand-in.
+ */
+describe('a declared relaxation', () => {
+  const RELAXED_CASE = 'structural-093-metadata-without-a-description'
+
+  /** Release component 1.0.0 carrying one case, with the verdict it declared. */
+  function cutWithCase(expected: 'pass' | 'fail', reject = false): FixtureRepo {
+    const fx = new FixtureRepo()
+    repo = fx
+    const p = new Pipeline(fx)
+    p.releaseCore('1.0.0')
+    fx.writeFamilySkeleton('component', 'v1')
+    const dir = `${COMPONENT.conformance}/structural/093-metadata-without-a-description`
+    fx.writeFile(`${dir}/case.yaml`, 'metadata:\n  revision: 1\n')
+    fx.writeFile(
+      `${dir}/metadata.json`,
+      JSON.stringify({ id: RELAXED_CASE, phase: 'structural', expected }, null, 2),
+    )
+    if (expected === 'fail')
+      fx.writeFile(
+        `${dir}/diagnostics.json`,
+        JSON.stringify([{ code: 'ERR_MISSING_FIELD', path: '/metadata' }], null, 2),
+      )
+    fx.writeFile(
+      `${COMPONENT.conformance}/cases.json`,
+      JSON.stringify(
+        {
+          cases: [
+            {
+              id: RELAXED_CASE,
+              phase: 'structural',
+              path: 'structural/093-metadata-without-a-description',
+            },
+          ],
+        },
+        null,
+        2,
+      ),
+    )
+    p.releaseKind(
+      'component',
+      'v1',
+      '1.0.0',
+      fx.bundleDoc(
+        'component',
+        'v1',
+        reject
+          ? { properties: { description: { type: 'string' } }, required: ['description'] }
+          : {},
+      ),
+      { skeleton: false, publish: false },
+    )
+    return fx
+  }
+
+  test('a rejection the candidate no longer makes is replayed as a pass', () => {
+    const failures = new Failures()
+    expect(replay(cutWithCase('fail'), failures)).toBe(2)
+    expect(failures.messages).toEqual([])
+  })
+
+  test('a relaxation whose case still rejects is reported, so it cannot go stale', () => {
+    const failures = new Failures()
+    replay(cutWithCase('fail', true), failures)
+    expect(failures.messages.join('\n')).toContain('expected to pass but failed')
+  })
+
+  test('a relaxation naming a case the release accepted is refused', () => {
+    const error = thrown(() => replay(cutWithCase('pass'), new Failures()))
+    expect(error).toBeInstanceOf(LayoutError)
+    expect((error as Error).message).toContain('moves a verdict from fail to pass')
+  })
+})

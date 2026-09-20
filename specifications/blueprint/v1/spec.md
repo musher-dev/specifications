@@ -91,13 +91,22 @@ carries on a declarative apply, describe a row in a control plane, not a
 document. They MUST NOT appear on a blueprint document, and a validator MUST
 reject them with `ERR_UNKNOWN_FIELD` like any other unknown property.
 
-<a id="description"></a><a id="BP-ID-004"></a>**`BP-ID-004`**: `description` is
-REQUIRED. It says what the deployable application is, in one or two sentences of
-plain text, 1 to 280 characters, the limit of a
+<a id="description"></a><a id="BP-ID-004"></a>**`BP-ID-004`**: `description` says
+what the deployable application is, in one or two sentences of plain text, 1 to
+280 characters, the limit of a
 [listing summary](../../listing/v1/spec.md#presentation). A consumer MUST NOT
-render it as Markdown. An absent description is `ERR_MISSING_FIELD` at
-`/metadata`, and an empty one or one longer than 280 characters is
-`ERR_INVALID_VALUE` at `/metadata/description`. These are structural rules.
+render it as Markdown. An empty description, or one longer than 280 characters,
+is `ERR_INVALID_VALUE` at `/metadata/description`. These are structural rules,
+and they bind a description that is present. Whether one has to be present is
+`BP-ID-005`.
+
+<a id="BP-ID-005"></a>**`BP-ID-005`**: A published blueprint MUST carry a
+`description`. One absent at publication is rejected in the `capability` phase
+with [`ERR_DESCRIPTION_REQUIRED`](../../component/v1/spec.md#diagnostics) at
+`/metadata`. The reasoning is
+[component §4](../../component/v1/spec.md#COMP-DESC-003)'s and is not restated:
+an unwritten description is a blueprint someone is still writing, and only a
+publisher can tell that from one that is finished.
 
 The description is for the people who install and operate the application. It
 is not storefront copy: that is the sibling listing's `summary`, and neither is
@@ -144,7 +153,9 @@ is deployable and not browsable rather than one that is malformed. Nothing
 orders one item's revisions against another's either, and nothing checks a
 blueprint revision against the lineage it extends: `minimum: 1` is the whole of
 the offline rule. Component §4 carries a `capability` rule for a component's
-lineage, and this family has no analogue of it.
+lineage ([`COMP-ID-001`](../../component/v1/spec.md#COMP-ID-001)), and this
+family has no analogue of it. `BP-ID-005` is this family's only `capability`
+rule, and it is about the description rather than the lineage.
 
 ### <a id="item-directory"></a>3.1 The item directory
 
@@ -711,8 +722,9 @@ them as well. Labels and descriptions do not override contracts.
 Core's explicit profiles and statuses apply. Structural-only success does not
 claim publication or deployment validity. Local and published dependencies share
 offline semantic checks; acquisition is a separate authorized operation.
-Publication completes contract and catalog obligations. Deployment additionally
-completes installation resolution, authorization and current capability checks.
+Publication completes contract and catalog obligations, [`BP-ID-005`](#BP-ID-005)
+among them. Deployment additionally completes installation resolution,
+authorization and current capability checks.
 
 ## <a id="diagnostics"></a>7. Diagnostics
 

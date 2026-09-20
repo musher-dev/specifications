@@ -1,8 +1,11 @@
 /**
  * The four-phase validation pipeline, as far as this repository implements it.
  *
- * Phases `parser`, `structural` and `semantic` run here. `capability` does not:
- * it needs an account, a region and a quota, which is a server.
+ * Phases `parser`, `structural` and `semantic` run here. `capability` all but
+ * does not: it needs an account, a region and a quota, which is a server. The
+ * exception is the one capability rule a document decides on its own, a
+ * publication profile with no description, and it runs here so the behavioural
+ * corpus can pin it.
  *
  * Running three phases is not this repository publishing a reference validator.
  * ADR 0001 §6 forbids that and is untouched; ADR 0001 §7 describes tools/ as one
@@ -10,7 +13,7 @@
  * the fixtures beats declaring them.
  */
 import type { ErrorObject, ValidateFunction } from 'ajv'
-import { discoverKinds, type Family } from '../lib/layout.ts'
+import { discoverKinds, type Family, isObject, type Json } from '../lib/layout.ts'
 import { familyBundle } from '../schema/bundle.ts'
 import { strictAjv } from '../schema/lint.ts'
 import { type Diagnostic, type Phase, parseDocument, parseDocumentBytes } from './document.ts'
@@ -87,6 +90,29 @@ export function compileFamily(family: Family): ValidateFunction {
 }
 
 /**
+ * The publication obligations this runner can decide from the document alone.
+ *
+ * `capability` is the server's phase, and most of what it decides needs a
+ * catalog this runner does not have. A description is the exception: the field
+ * is right there, and what makes the rule `capability` is not that deciding it
+ * needs the network but that only a publisher can tell an absent description
+ * from one its author has not written yet (component v1 §4, blueprint v1 §3).
+ */
+function publicationDiagnostics(family: Family, document: Json): Diagnostic[] {
+  if (family.name !== 'component' && family.name !== 'blueprint') return []
+  const metadata = isObject(document) ? document.metadata : undefined
+  if (isObject(metadata) && metadata.description !== undefined) return []
+  return [
+    {
+      code: 'ERR_DESCRIPTION_REQUIRED',
+      path: '/metadata',
+      message: 'ERR_DESCRIPTION_REQUIRED',
+      phase: 'capability',
+    },
+  ]
+}
+
+/**
  * Run the parser, structural and semantic phases over one document, in order.
  * A later phase is not entered until the earlier ones pass, which is what
  * core v1 §6 requires of every implementation.
@@ -150,18 +176,18 @@ export function validateDocument(
         path: '/spec/components',
         missing: 'installation resolution',
       })
-    const status = report.diagnostics.length
-      ? 'INVALID'
-      : report.deferred.length
-        ? 'INCOMPLETE'
-        : 'VALID'
+    const diagnostics: Diagnostic[] = report.diagnostics.map((d) => ({ ...d, phase: 'semantic' }))
+    // Core v1 §6: a later phase is not entered until the earlier ones pass.
+    if (diagnostics.length === 0 && (profile === 'publication' || profile === 'deployment'))
+      diagnostics.push(...publicationDiagnostics(family, parsed.value))
+    const status = diagnostics.length ? 'INVALID' : report.deferred.length ? 'INCOMPLETE' : 'VALID'
     return {
       ok: status === 'VALID',
       status,
       validationProfile: profile,
       deferred: report.deferred,
-      phase: 'semantic',
-      diagnostics: report.diagnostics.map((d) => ({ ...d, phase: 'semantic' })),
+      phase: diagnostics.some((d) => d.phase === 'capability') ? 'capability' : 'semantic',
+      diagnostics,
     }
   }
 

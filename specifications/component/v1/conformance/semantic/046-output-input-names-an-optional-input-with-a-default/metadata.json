@@ -1,0 +1,10 @@
+{
+  "id": "semantic-046-output-input-names-an-optional-input-with-a-default",
+  "phase": "semantic",
+  "expected": "pass",
+  "clause": "specifications/component/v1/spec.md#outputs",
+  "requirements": [
+    "COMP-OUT-003"
+  ],
+  "summary": "An optional input carrying a default is always supplied, so an output may forward it."
+}

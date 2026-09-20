@@ -404,6 +404,50 @@
     }
   },
   {
+    "id": "document-profile-accepts-an-undescribed-blueprint",
+    "profile": "resolution",
+    "operation": "validate",
+    "requirements": [
+      "BP-ID-004"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"parameters\":{},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{},\"outputs\":{}}}}"
+    },
+    "document": "app/blueprint.yaml",
+    "expect": {
+      "/status": "VALID",
+      "/validationProfile": "document"
+    }
+  },
+  {
+    "id": "publication-needs-a-description",
+    "profile": "resolution",
+    "operation": "validate",
+    "requirements": [
+      "BP-ID-005"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1},\"spec\":{\"parameters\":{},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{},\"outputs\":{}}}}"
+    },
+    "document": "app/blueprint.yaml",
+    "context": {
+      "validationProfile": "publication"
+    },
+    "expect": {
+      "/status": "INVALID",
+      "/phase": "capability"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_DESCRIPTION_REQUIRED",
+        "path": "/metadata",
+        "phase": "capability"
+      }
+    ]
+  },
+  {
     "id": "rendering-sensitive-form",
     "profile": "rendering",
     "operation": "form",
