@@ -140,8 +140,8 @@
       "description": "Identity and description of a blueprint document. The blueprint carries the item’s revision; its sibling listing carries none. See spec.md §3.",
       "properties": {
         "description": {
-          "$comment": "spec.md §3. Plain text, never rendered as Markdown, bounded like a listing summary. It describes the deployable application to the people who install and operate it; the sibling listing’s summary remains the storefront copy.",
-          "description": "What this application is, in one or two plain-text sentences.",
+          "$comment": "spec.md §3 BP-ID-004. Plain text, never rendered as Markdown, bounded like a listing summary. It describes the deployable application to the people who install and operate it; the sibling listing’s summary remains the storefront copy. Structurally optional so a blueprint can be stored while it is being written; BP-ID-005 requires it of a published one.",
+          "description": "What this application is, in one or two plain-text sentences. Required to publish.",
           "maxLength": 280,
           "minLength": 1,
           "type": "string"
@@ -159,8 +159,7 @@
       },
       "required": [
         "slug",
-        "revision",
-        "description"
+        "revision"
       ],
       "type": "object"
     },

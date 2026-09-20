@@ -1,10 +1,10 @@
 {
   "id": "structural-093-metadata-without-a-description",
   "phase": "structural",
-  "expected": "fail",
+  "expected": "pass",
   "clause": "specifications/component/v1/spec.md#metadata",
   "requirements": [
     "COMP-DESC-002"
   ],
-  "summary": "A component whose metadata declares no description is rejected."
+  "summary": "A component whose metadata declares no description is structurally valid: the obligation is COMP-DESC-003's, at publication."
 }

@@ -1,5 +1,5 @@
 /** Historical acceptance, effective values and observable behavior under pinned context. */
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, isAbsolute, join, relative } from 'node:path'
 import { runBehaviorCases } from '../conformance/behavior.ts'
@@ -44,6 +44,65 @@ function partFiles(
   return hasPart(release.family, release.major, part)
     ? requireTreeAtRef(repoRoot, release.tag, path, `${release.family}/${release.major} ${part}`)
     : listTreeFiles(repoRoot, release.tag, path)
+}
+
+/**
+ * Released cases a later release deliberately stopped rejecting, and why.
+ *
+ * This gate replays a release's rejections as well as its acceptances, because
+ * a rejection pins observable meaning too. That is the right default and it is
+ * stricter than the guarantee it enforces: core v1 §3 forbids validation
+ * becoming *stricter* within a major, and says nothing against a relaxation. So
+ * a release that deliberately stops rejecting a document has to say so here,
+ * keyed `<tag>:<case id>`, in a diff a reviewer sees. It takes the same shape,
+ * and for the same reason, as `UNPINNED` and `UNCOVERED` in the conformance
+ * runner.
+ *
+ * An entry moves one historical verdict from `fail` to `pass` and nothing else.
+ * The released document is still replayed, byte for byte, through today's
+ * pipeline; only the verdict it is measured against moves. An entry whose
+ * historical case did not reject is refused, because a `pass` to `fail` waiver
+ * would hide the one thing this gate exists to catch. An entry whose case still
+ * rejects is refused as well, by `runCase` reporting a pass that failed, so a
+ * relaxation cannot outlive the release that needed it.
+ */
+const RELAXED: ReadonlyMap<string, string> = new Map([
+  [
+    'component/v1.0.0:structural-093-metadata-without-a-description',
+    'component v1.1.0 makes metadata.description structurally optional and requires it of a ' +
+      'published component instead (COMP-DESC-003), so a document this case rejected is now ' +
+      'one an author may still be writing',
+  ],
+  [
+    'blueprint/v1.0.0:structural-050-missing-metadata-description',
+    'blueprint v1.1.0 makes metadata.description structurally optional and requires it of a ' +
+      'published blueprint instead (BP-ID-005), for the reason above',
+  ],
+])
+
+/**
+ * Apply a declared relaxation to the reconstructed case, in the scratch corpus.
+ *
+ * Rewriting the historical `metadata.json` is the whole of it: the document,
+ * its tree and every other fixture file stay as the tag wrote them.
+ */
+function relax(scratch: string, tag: string, caseDir: string, metadata: CaseMetadata): void {
+  if (!RELAXED.has(tag + ':' + metadata.id)) return
+  if (metadata.expected !== 'fail')
+    throw new LayoutError(
+      tag +
+        ' relaxes ' +
+        metadata.id +
+        ', which it did not reject. A relaxation only ' +
+        'moves a verdict from fail to pass',
+    )
+  const dir = join(scratch, caseDir)
+  writeFileSync(
+    join(dir, 'metadata.json'),
+    JSON.stringify({ ...metadata, expected: 'pass' }, null, 2) + '\n',
+  )
+  const diagnostics = join(dir, 'diagnostics.json')
+  if (existsSync(diagnostics)) rmSync(diagnostics)
 }
 
 /** Missing or malformed historical evidence cannot silently become zero checks. */
@@ -97,6 +156,7 @@ export function replayRelease(
       const metadata = JSON.parse(
         readFileSync(join(scratch, raw.path, 'metadata.json'), 'utf8'),
       ) as CaseMetadata
+      relax(scratch, release.tag, raw.path, metadata)
       // Rejections also pin observable meaning; replay all implemented cases.
       const outcome = runCase(
         context,

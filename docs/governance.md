@@ -87,6 +87,17 @@ conformance suite, all required. See
 Adding a required field, narrowing an enum, tightening a pattern, and removing
 a field are all breaking. Adding an optional field is compatible only when omission preserves existing meaning.
 
+**Valid means valid against the released specification**, of which `spec.md` is
+the definitive part, not merely accepted by the reference tooling or left
+unpinned by the corpus. So giving a code and a case to a condition the released
+prose already rejects is a defect fix and a minor release, not a narrowing, and
+a release that deliberately *stops* rejecting a document declares that case so
+`check:compat` can tell the relaxation from a regression.
+[ADR 0032](adr/0032-correcting-a-released-family-within-its-major.md) states
+both, and the bound on the first: the rule must be one a reader can be shown in
+the released prose. A rule that has to be reconstructed is a new rule, and a new
+rule that narrows validation is a new major.
+
 One narrow exception applies before a family's first release.
 [ADR 0005](adr/0005-platform-divergence-reconciliation.md) §1 sets it out:
 while a family has no published version, requirements 2 and 3 do not apply,

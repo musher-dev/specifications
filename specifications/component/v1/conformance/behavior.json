@@ -94,6 +94,113 @@
     ]
   },
   {
+    "id": "document-profile-accepts-an-undescribed-component",
+    "profile": "resolution",
+    "operation": "validate",
+    "requirements": [
+      "COMP-DESC-002"
+    ],
+    "input": {
+      "specVersion": "v1",
+      "kind": "COMPONENT",
+      "metadata": {
+        "revision": 1
+      },
+      "spec": {
+        "type": "WORKER",
+        "workload": {
+          "source": {
+            "image": "example/worker:1"
+          }
+        },
+        "contract": {
+          "inputs": {},
+          "outputs": {}
+        }
+      }
+    },
+    "expect": {
+      "/status": "VALID",
+      "/validationProfile": "document"
+    }
+  },
+  {
+    "id": "publication-needs-a-description",
+    "profile": "resolution",
+    "operation": "validate",
+    "requirements": [
+      "COMP-DESC-003"
+    ],
+    "input": {
+      "specVersion": "v1",
+      "kind": "COMPONENT",
+      "metadata": {
+        "revision": 1
+      },
+      "spec": {
+        "type": "WORKER",
+        "workload": {
+          "source": {
+            "image": "example/worker:1"
+          }
+        },
+        "contract": {
+          "inputs": {},
+          "outputs": {}
+        }
+      }
+    },
+    "context": {
+      "validationProfile": "publication"
+    },
+    "expect": {
+      "/status": "INVALID",
+      "/phase": "capability"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_DESCRIPTION_REQUIRED",
+        "path": "/metadata",
+        "phase": "capability"
+      }
+    ]
+  },
+  {
+    "id": "publication-accepts-a-described-component",
+    "profile": "resolution",
+    "operation": "validate",
+    "requirements": [
+      "COMP-DESC-003"
+    ],
+    "input": {
+      "specVersion": "v1",
+      "kind": "COMPONENT",
+      "metadata": {
+        "revision": 1,
+        "description": "Synthetic conformance fixture component."
+      },
+      "spec": {
+        "type": "WORKER",
+        "workload": {
+          "source": {
+            "image": "example/worker:1"
+          }
+        },
+        "contract": {
+          "inputs": {},
+          "outputs": {}
+        }
+      }
+    },
+    "context": {
+      "validationProfile": "publication"
+    },
+    "expect": {
+      "/status": "INCOMPLETE",
+      "/deferred/0/rule": "CORE-ADMISSION-001"
+    }
+  },
+  {
     "id": "constant-template-constraint",
     "profile": "resolution",
     "operation": "validate",

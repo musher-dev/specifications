@@ -401,8 +401,8 @@
       "description": "Identity and description of a component document. The name is the file stem.",
       "properties": {
         "description": {
-          "$comment": "spec.md §4. Plain text, never rendered as Markdown, and bounded like a listing summary: it is one or two sentences a composer reads beside a node, not documentation.",
-          "description": "What this component is, in one or two plain-text sentences.",
+          "$comment": "spec.md §4 COMP-DESC-002. Plain text, never rendered as Markdown, and bounded like a listing summary: it is one or two sentences a composer reads beside a node, not documentation. Structurally optional so a component can be stored while it is being written; COMP-DESC-003 requires it of a published one.",
+          "description": "What this component is, in one or two plain-text sentences. Required to publish.",
           "maxLength": 280,
           "minLength": 1,
           "type": "string"
@@ -414,8 +414,7 @@
         }
       },
       "required": [
-        "revision",
-        "description"
+        "revision"
       ],
       "type": "object"
     },

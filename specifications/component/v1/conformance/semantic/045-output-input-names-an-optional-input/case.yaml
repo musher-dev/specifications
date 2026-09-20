@@ -1,0 +1,21 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: EXTERNAL
+  contract:
+    inputs:
+      model:
+        description: Model the addressed service selects by default.
+        schema:
+          type: string
+        required: false
+    outputs:
+      model:
+        description: Model name, for a consumer to select.
+        schema:
+          type: string
+        from:
+          input: model
