@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/musher-dev/specifications/compare/blueprint/v1.1.0...blueprint/v1.2.0) (2026-09-21)
+
+
+### Additions
+
+* **blueprint:** defer the node obligation to publication ([c1bb2d6](https://github.com/musher-dev/specifications/commit/c1bb2d6449436f596c21e55522a94f8755a36c2f))
+
 ## [1.1.0](https://github.com/musher-dev/specifications/compare/blueprint/v1.0.0...blueprint/v1.1.0) (2026-09-20)
 
 
