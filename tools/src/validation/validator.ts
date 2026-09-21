@@ -3,9 +3,9 @@
  *
  * Phases `parser`, `structural` and `semantic` run here. `capability` all but
  * does not: it needs an account, a region and a quota, which is a server. The
- * exception is the one capability rule a document decides on its own, a
- * publication profile with no description, and it runs here so the behavioural
- * corpus can pin it.
+ * exceptions are the capability rules a document decides on its own, a
+ * publication profile with no description or with an empty blueprint graph, and
+ * they run here so the behavioural corpus can pin them.
  *
  * Running three phases is not this repository publishing a reference validator.
  * ADR 0001 §6 forbids that and is untouched; ADR 0001 §7 describes tools/ as one
@@ -93,23 +93,29 @@ export function compileFamily(family: Family): ValidateFunction {
  * The publication obligations this runner can decide from the document alone.
  *
  * `capability` is the server's phase, and most of what it decides needs a
- * catalog this runner does not have. A description is the exception: the field
- * is right there, and what makes the rule `capability` is not that deciding it
- * needs the network but that only a publisher can tell an absent description
- * from one its author has not written yet (component v1 §4, blueprint v1 §3).
+ * catalog this runner does not have. A description and a blueprint's first node
+ * are the exceptions: the field is right there, and what makes each rule
+ * `capability` is not that deciding it needs the network but that only a
+ * publisher can tell an absent one from one its author has not written yet
+ * (component v1 §4, blueprint v1 §3 and §4).
  */
 function publicationDiagnostics(family: Family, document: Json): Diagnostic[] {
   if (family.name !== 'component' && family.name !== 'blueprint') return []
+  const out: Diagnostic[] = []
+  const obligation = (code: string, path: string) =>
+    out.push({ code, path, message: code, phase: 'capability' })
   const metadata = isObject(document) ? document.metadata : undefined
-  if (isObject(metadata) && metadata.description !== undefined) return []
-  return [
-    {
-      code: 'ERR_DESCRIPTION_REQUIRED',
-      path: '/metadata',
-      message: 'ERR_DESCRIPTION_REQUIRED',
-      phase: 'capability',
-    },
-  ]
+  if (!isObject(metadata) || metadata.description === undefined)
+    obligation('ERR_DESCRIPTION_REQUIRED', '/metadata')
+  const spec = isObject(document) ? document.spec : undefined
+  if (
+    family.name === 'blueprint' &&
+    isObject(spec) &&
+    isObject(spec.components) &&
+    Object.keys(spec.components).length === 0
+  )
+    obligation('ERR_NODE_REQUIRED', '/spec/components')
+  return out
 }
 
 /**

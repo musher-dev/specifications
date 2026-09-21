@@ -448,6 +448,48 @@
     ]
   },
   {
+    "id": "document-profile-accepts-an-empty-graph",
+    "profile": "resolution",
+    "operation": "validate",
+    "requirements": [
+      "BP-GRAPH-001"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{},\"components\":{}}}"
+    },
+    "document": "app/blueprint.yaml",
+    "expect": {
+      "/status": "VALID",
+      "/validationProfile": "document"
+    }
+  },
+  {
+    "id": "publication-needs-a-node",
+    "profile": "resolution",
+    "operation": "validate",
+    "requirements": [
+      "BP-GRAPH-001"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{},\"components\":{}}}"
+    },
+    "document": "app/blueprint.yaml",
+    "context": {
+      "validationProfile": "publication"
+    },
+    "expect": {
+      "/status": "INVALID",
+      "/phase": "capability"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_NODE_REQUIRED",
+        "path": "/spec/components",
+        "phase": "capability"
+      }
+    ]
+  },
+  {
     "id": "rendering-sensitive-form",
     "profile": "rendering",
     "operation": "form",

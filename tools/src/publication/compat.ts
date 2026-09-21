@@ -78,6 +78,16 @@ const RELAXED: ReadonlyMap<string, string> = new Map([
     'blueprint v1.1.0 makes metadata.description structurally optional and requires it of a ' +
       'published blueprint instead (BP-ID-005), for the reason above',
   ],
+  [
+    'blueprint/v1.0.0:structural-013-empty-component-graph',
+    'blueprint v1.2.0 lets spec.components be empty and requires a node of a published ' +
+      'blueprint instead (BP-GRAPH-001), so a blueprint can be stored before its first node ' +
+      'is chosen',
+  ],
+  [
+    'blueprint/v1.1.0:structural-013-empty-component-graph',
+    'blueprint v1.2.0 lets spec.components be empty (BP-GRAPH-001), for the reason above',
+  ],
 ])
 
 /**
