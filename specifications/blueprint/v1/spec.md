@@ -154,8 +154,9 @@ orders one item's revisions against another's either, and nothing checks a
 blueprint revision against the lineage it extends: `minimum: 1` is the whole of
 the offline rule. Component §4 carries a `capability` rule for a component's
 lineage ([`COMP-ID-001`](../../component/v1/spec.md#COMP-ID-001)), and this
-family has no analogue of it. `BP-ID-005` is this family's only `capability`
-rule, and it is about the description rather than the lineage.
+family has no analogue of it. This family's `capability` rules are `BP-ID-005`,
+about the description, and [`BP-GRAPH-001`](#BP-GRAPH-001), about the graph.
+Neither is about the lineage.
 
 ### <a id="item-directory"></a>3.1 The item directory
 
@@ -188,9 +189,18 @@ component reference, for the same reason.
 
 ## <a id="components"></a>4. Component graph
 
-Nodes live in `spec.components`, keyed by a core label. At least one node is
-required. Each node requires `componentRef`, and a node whose component runs
-also requires `compute` ([§4.3](#node-compute)).
+Nodes live in `spec.components`, keyed by a core label. Each node requires
+`componentRef`, and a node whose component runs also requires `compute`
+([§4.3](#node-compute)). `components` itself is REQUIRED, and structurally it
+MAY be empty.
+
+<a id="BP-GRAPH-001"></a>**`BP-GRAPH-001`**: A published blueprint MUST declare
+at least one node. An empty `components` at publication is rejected in the
+`capability` phase with `ERR_NODE_REQUIRED` at `/spec/components`. The
+reasoning is [component §4](../../component/v1/spec.md#COMP-DESC-003)'s and is
+not restated: an empty graph is a blueprint someone is still writing, and only a
+publisher can tell that from one that is finished. An offline validator
+therefore MUST NOT report `ERR_NODE_REQUIRED`.
 
 ```yaml
 components:
@@ -723,8 +733,8 @@ Core's explicit profiles and statuses apply. Structural-only success does not
 claim publication or deployment validity. Local and published dependencies share
 offline semantic checks; acquisition is a separate authorized operation.
 Publication completes contract and catalog obligations, [`BP-ID-005`](#BP-ID-005)
-among them. Deployment additionally completes installation resolution,
-authorization and current capability checks.
+and [`BP-GRAPH-001`](#BP-GRAPH-001) among them. Deployment additionally completes
+installation resolution, authorization and current capability checks.
 
 ## <a id="diagnostics"></a>7. Diagnostics
 
@@ -737,6 +747,7 @@ Core and component diagnostics apply, with these additions:
 | `ERR_INVALID_DEPENDENCY` | `semantic` | Supplied contract is invalid or fails identity/digest verification. |
 | `ERR_CONFLICTING_NODE_COMPUTE` | `semantic` | A node whose component runs carries no compute, or an external node carries some. |
 | `ERR_UNKNOWN_NODE` | `semantic` | Binding names no node. |
+| `ERR_NODE_REQUIRED` | `capability` | Publication requires a node this blueprint does not declare. |
 | `ERR_UNKNOWN_OUTPUT` | `semantic` | Binding names no producer output. |
 | `ERR_UNKNOWN_INPUT` | `semantic` | Binding names no receiver input. |
 | `ERR_UNKNOWN_PARAMETER` | `semantic`, `resolution` | Binding, connection binding or submitted value names no parameter. |

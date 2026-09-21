@@ -698,8 +698,8 @@
           "additionalProperties": {
             "$ref": "#/$defs/BlueprintNode"
           },
-          "description": "Named component instances.",
-          "minProperties": 1,
+          "$comment": "spec.md §4 BP-GRAPH-001. Structurally it may be empty so a blueprint can be stored before its first node is chosen, or after its last one is removed; BP-GRAPH-001 requires at least one node of a published blueprint.",
+          "description": "Named component instances. At least one is required to publish.",
           "propertyNames": {
             "x-musher-grammar": "label"
           },

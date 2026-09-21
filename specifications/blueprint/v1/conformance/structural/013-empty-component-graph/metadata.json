@@ -1,7 +1,7 @@
 {
   "id": "structural-013-empty-component-graph",
   "phase": "structural",
-  "expected": "fail",
+  "expected": "pass",
   "clause": "specifications/blueprint/v1/spec.md#components",
-  "summary": "A blueprint declaring no node is rejected."
+  "summary": "A blueprint declaring no node is structurally valid: the obligation is BP-GRAPH-001's, at publication."
 }
