@@ -1,0 +1,17 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: WORKER
+  workload:
+    source:
+      image: example/worker:1
+  contract:
+    inputs:
+      llm:
+        description: Language-model connection
+        connection:
+          protocol: OPENAI_CHAT_COMPLETIONS
+    outputs: {}

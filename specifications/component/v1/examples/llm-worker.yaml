@@ -2,7 +2,7 @@ specVersion: v1
 kind: COMPONENT
 metadata:
   revision: 1
-  description: Background worker that answers queued requests with a language model reached through an atomic connection.
+  description: Background worker that answers queued requests with a language model it reaches through three ordinary inputs.
 spec:
   type: WORKER
   workload:
@@ -10,34 +10,24 @@ spec:
       image: ghcr.io/musher-dev/assistant-worker:2.3.0
   contract:
     inputs:
-      baseURL:
+      llmBaseURL:
         description: Base URL of the language-model API.
         schema:
           type: string
         presentationHint: ENDPOINT_URL
         target:
           envVarKey: OPENAI_BASE_URL
-      apiKey:
+      llmAPIKey:
         description: Credential presented to the language-model API.
         schema:
           type: string
         sensitive: true
         target:
           envVarKey: OPENAI_API_KEY
-      model:
+      llmModel:
         description: Model the language-model API answers with.
         schema:
           type: string
         target:
           envVarKey: OPENAI_MODEL
     outputs: {}
-    connectionRequirements:
-      llm:
-        protocol: OPENAI_CHAT_COMPLETIONS
-        capabilities:
-          - STREAMING
-          - TOOL_CALLS
-        inputs:
-          baseURL: baseURL
-          apiKey: apiKey
-          model: model

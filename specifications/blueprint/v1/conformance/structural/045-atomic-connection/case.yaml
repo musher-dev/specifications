@@ -17,8 +17,11 @@
         "componentRef": "./component.yaml",
         "compute": {
           "profile": "general.standard.small"
-        },
-        "connectionBindings": {
+        }
+      },
+      "app-llm": {
+        "componentRef": "./component-llm.yaml",
+        "bindings": {
           "llm": {
             "parameter": "primary"
           }

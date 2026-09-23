@@ -6,6 +6,6 @@
   "requirements": [
     "BP-PARAM-001"
   ],
-  "summary": "A connection parameter no connection binding names is rejected like any unbound parameter.",
+  "summary": "A connection parameter no binding names is rejected like any unbound parameter.",
   "document": "app/blueprint.yaml"
 }

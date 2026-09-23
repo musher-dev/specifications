@@ -7,12 +7,24 @@ metadata:
 spec:
   parameters:
     baseURL:
-      from: "${{ variables.errors.reportingURL }}"
+      from: ${{ variables.errors.reportingURL }}
   components:
     app:
       componentRef: ./app.yaml
       compute:
         profile: general.standard.small
-      connectionBindings:
+      bindings:
+        url:
+          node: app-llm
+          output: baseURL
+        key:
+          node: app-llm
+          output: apiKey
+        model:
+          node: app-llm
+          output: model
+    app-llm:
+      componentRef: ./app-llm.yaml
+      bindings:
         llm:
           parameter: baseURL

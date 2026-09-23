@@ -2,10 +2,11 @@
   "id": "semantic-057-connection-missing-binding",
   "phase": "semantic",
   "expected": "fail",
-  "clause": "specifications/blueprint/v1/spec.md#atomic-connections",
+  "clause": "specifications/blueprint/v1/spec.md#parameters",
   "requirements": [
-    "BP-CONNECTION-001"
+    "BP-CONNECTION-001",
+    "BP-PARAM-003"
   ],
-  "summary": "A connection requirement with no connection binding is rejected.",
+  "summary": "A connection input left unbound is rejected: a connection input is always required.",
   "document": "connection-app/blueprint.yaml"
 }

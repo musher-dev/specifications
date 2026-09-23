@@ -32,12 +32,3 @@ spec:
         target:
           envVarKey: MODEL
     outputs: {}
-    connectionRequirements:
-      llm:
-        protocol: OPENAI_CHAT_COMPLETIONS
-        capabilities:
-          - STREAMING
-        inputs:
-          baseURL: url
-          apiKey: key
-          model: model

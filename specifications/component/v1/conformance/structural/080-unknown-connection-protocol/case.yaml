@@ -1,65 +1,39 @@
-{
-  "specVersion": "v1",
-  "kind": "COMPONENT",
-  "metadata": {
-    "revision": 1,
-    "description": "Synthetic conformance fixture component."
-  },
-  "spec": {
-    "type": "WORKER",
-    "workload": {
-      "source": {
-        "image": "example/worker:1"
-      }
-    },
-    "contract": {
-      "inputs": {
-        "url": {
-          "description": "Connection input",
-          "schema": {
-            "type": "string"
-          },
-          "sensitive": false,
-          "target": {
-            "envVarKey": "URL"
-          }
-        },
-        "key": {
-          "description": "Connection input",
-          "schema": {
-            "type": "string"
-          },
-          "sensitive": true,
-          "target": {
-            "envVarKey": "KEY"
-          }
-        },
-        "model": {
-          "description": "Connection input",
-          "schema": {
-            "type": "string"
-          },
-          "sensitive": false,
-          "target": {
-            "envVarKey": "MODEL"
-          }
-        }
-      },
-      "outputs": {},
-      "connectionRequirements": {
-        "llm": {
-          "protocol": "OPENAI",
-          "capabilities": [
-            "STREAMING",
-            "TOOL_CALLS"
-          ],
-          "inputs": {
-            "baseURL": "url",
-            "apiKey": "key",
-            "model": "model"
-          }
-        }
-      }
-    }
-  }
-}
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: EXTERNAL
+  contract:
+    inputs:
+      llm:
+        description: Language-model connection
+        connection:
+          protocol: OPENAI
+          capabilities:
+            - STREAMING
+            - TOOL_CALLS
+    outputs:
+      baseURL:
+        description: Connection base URL
+        schema:
+          type: string
+        from:
+          input: llm
+          member: baseURL
+      apiKey:
+        description: Connection credential
+        schema:
+          type: string
+        sensitive: true
+        from:
+          input: llm
+          member: apiKey
+      model:
+        description: Connection model
+        schema:
+          type: string
+        from:
+          input: llm
+          member: model

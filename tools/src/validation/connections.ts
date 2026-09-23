@@ -2,7 +2,7 @@
 import { isObject, type Json } from '../lib/layout.ts'
 import { scanReferences } from '../lib/references.ts'
 import type { Diagnostic } from './document.ts'
-import { boundedValue, valueFits } from './values.ts'
+import { boundedValue } from './values.ts'
 
 export type ConnectionProtocol = 'OPENAI_CHAT_COMPLETIONS' | 'ANTHROPIC_MESSAGES'
 export type ConnectionCapability = 'STREAMING' | 'TOOL_CALLS'
@@ -55,8 +55,6 @@ function at(v: unknown, ...path: string[]): Json | undefined {
   return v as Json | undefined
 }
 const token = (v: string) => v.replaceAll('~', '~0').replaceAll('/', '~1')
-const requirements = (c: Json | undefined) =>
-  record(at(c, 'spec', 'contract', 'connectionRequirements'))
 const protocols = ['OPENAI_CHAT_COMPLETIONS', 'ANTHROPIC_MESSAGES']
 const capabilities = ['STREAMING', 'TOOL_CALLS']
 function diagnostic(code: string, path: string, resolution = false): Diagnostic {
@@ -68,34 +66,19 @@ function diagnostic(code: string, path: string, resolution = false): Diagnostic 
     ...(resolution ? { stage: 'connections' } : {}),
   }
 }
-export function connectionOwnedInputs(component: Json | undefined): Set<string> {
-  return new Set(
-    Object.values(requirements(component)).flatMap((r) =>
-      Object.values(record(at(r, 'inputs'))).map(String),
-    ),
-  )
-}
-export function connectionRequirementDiagnostics(component: Json): Diagnostic[] {
-  const out: Diagnostic[] = [],
-    seen = new Set<string>()
-  for (const [name, requirement] of Object.entries(requirements(component))) {
-    const path = '/spec/contract/connectionRequirements/' + token(name)
-    for (const [role, key] of Object.entries(record(at(requirement, 'inputs')))) {
-      const input = at(component, 'spec', 'contract', 'inputs', String(key))
-      if (
-        !input ||
-        seen.has(String(key)) ||
-        at(input, 'schema', 'type') !== 'string' ||
-        at(input, 'default') !== undefined ||
-        at(input, 'required') === false ||
-        (role === 'apiKey' && at(input, 'sensitive') !== true)
-      )
-        out.push(diagnostic('ERR_INVALID_CONNECTION_REQUIREMENT', path + '/inputs/' + token(role)))
-      seen.add(String(key))
-    }
-  }
-  return out
-}
+/** The members a connection input holds, fixed by its protocol (component §6.4). */
+export const CONNECTION_MEMBERS = ['baseURL', 'apiKey', 'model'] as const
+export type ConnectionMember = (typeof CONNECTION_MEMBERS)[number]
+/** Component §6.1: the key present says an input is a connection input. */
+export const isConnectionInput = (input: Json | undefined): boolean =>
+  Object.hasOwn(record(input), 'connection')
+/** The value contract of one connection member: a string, and only the credential is secret. */
+export const connectionMemberContract = (member: string): Record<string, Json> => ({
+  schema: { type: 'string' },
+  sensitive: member === 'apiKey',
+})
+const inputsOf = (component: Json | undefined) =>
+  record(at(component, 'spec', 'contract', 'inputs'))
 /** The namespaces a parameter's `from` admits (blueprint BP-REF-001). */
 export const PARAMETER_SOURCE_NAMESPACES = ['variables', 'connections'] as const
 export type ParameterSourceNamespace = (typeof PARAMETER_SOURCE_NAMESPACES)[number]
@@ -140,7 +123,10 @@ export function parameterSourceDiagnostics(
     )
   return parameterSource(parameter) ? [] : [diagnostic('ERR_INVALID_PARAMETER_SOURCE', path)]
 }
-/** BP-CONNECTION-001: requirements are bound to connection parameters, and nothing else. */
+/**
+ * BP-CONNECTION-001: a connection input is bound only by a connection parameter,
+ * and a connection parameter binds only connection inputs.
+ */
 export function connectionBindingDiagnostics(
   blueprint: Json,
   components: ReadonlyMap<string, Json>,
@@ -148,27 +134,24 @@ export function connectionBindingDiagnostics(
   const out: Diagnostic[] = [],
     parameters = record(at(blueprint, 'spec', 'parameters'))
   for (const [node, n] of Object.entries(record(at(blueprint, 'spec', 'components')))) {
-    const component = components.get(node),
-      componentRequirements = requirements(component)
-    const base = '/spec/components/' + token(node),
-      bindings = record(at(n, 'connectionBindings'))
-    for (const [name, binding] of Object.entries(bindings)) {
-      const parameter = String(at(binding, 'parameter')),
-        path = base + '/connectionBindings/' + token(name)
-      if (component && !Object.hasOwn(componentRequirements, name))
-        out.push(diagnostic('ERR_INVALID_CONNECTION_BINDING', path))
-      if (!Object.hasOwn(parameters, parameter))
-        out.push(diagnostic('ERR_UNKNOWN_PARAMETER', path + '/parameter'))
-      else if (parameterSource(parameters[parameter])?.namespace !== 'connections')
-        out.push(diagnostic('ERR_INVALID_CONNECTION_BINDING', path + '/parameter'))
+    const inputs = inputsOf(components.get(node))
+    for (const [name, binding] of Object.entries(record(at(n, 'bindings')))) {
+      if (!Object.hasOwn(inputs, name)) continue
+      const parameter = at(binding, 'parameter'),
+        path = '/spec/components/' + token(node) + '/bindings/' + token(name)
+      // An undeclared parameter is ERR_UNKNOWN_PARAMETER, and nothing more.
+      if (typeof parameter === 'string' && !Object.hasOwn(parameters, parameter)) continue
+      const connection =
+        typeof parameter === 'string' &&
+        parameterSource(parameters[parameter])?.namespace === 'connections'
+      if (isConnectionInput(inputs[name]) !== connection)
+        out.push(
+          diagnostic(
+            'ERR_INVALID_CONNECTION_BINDING',
+            typeof parameter === 'string' ? path + '/parameter' : path,
+          ),
+        )
     }
-    if (!component) continue
-    for (const name of Object.keys(componentRequirements))
-      if (!Object.hasOwn(bindings, name))
-        out.push(diagnostic('ERR_INVALID_CONNECTION_BINDING', base + '/componentRef'))
-    for (const key of connectionOwnedInputs(component))
-      if (Object.hasOwn(record(at(n, 'bindings')), key))
-        out.push(diagnostic('ERR_INVALID_CONNECTION_BINDING', base + '/bindings/' + token(key)))
   }
   return out
 }
@@ -278,14 +261,14 @@ export function resolveConnections(
     }
   }
   for (const [node, n] of Object.entries(record(at(blueprint, 'spec', 'components')))) {
-    const component = components.get(node)
-    for (const [name, requirement] of Object.entries(requirements(component))) {
-      const path = '/spec/components/' + token(node) + '/connectionBindings/' + token(name)
-      const parameter = String(at(n, 'connectionBindings', name, 'parameter')),
-        selection = selections.get(parameter)
+    for (const [name, input] of Object.entries(inputsOf(components.get(node)))) {
+      if (!isConnectionInput(input)) continue
+      const path = '/spec/components/' + token(node) + '/bindings/' + token(name)
+      const selection = selections.get(String(at(n, 'bindings', name, 'parameter')))
       if (!selection) continue
-      const view = selection.views[String(at(requirement, 'protocol')) as ConnectionProtocol]
-      const required = at(requirement, 'capabilities') ?? []
+      const view =
+        selection.views[String(at(input, 'connection', 'protocol')) as ConnectionProtocol]
+      const required = at(input, 'connection', 'capabilities') ?? []
       if (
         !view ||
         !Array.isArray(required) ||
@@ -294,31 +277,12 @@ export function resolveConnections(
         diagnostics.push(diagnostic('ERR_CONNECTION_INCOMPATIBLE', path, true))
         continue
       }
-      const values = {
-        baseURL: view.baseURL,
-        model: view.model,
-        apiKey: selection.credential.value,
-      }
-      for (const [role, key] of Object.entries(record(at(requirement, 'inputs')))) {
-        const input = at(component, 'spec', 'contract', 'inputs', String(key)),
-          value = values[role as keyof typeof values]
-        if (value === undefined || !valueFits(at(input, 'schema')!, value)) {
-          diagnostics.push({
-            ...diagnostic('ERR_VALUE_CONSTRAINT', path, true),
-            related: [
-              {
-                artifact: String(at(n, 'componentRef')),
-                path: '/spec/contract/inputs/' + token(String(key)),
-              },
-            ],
-          })
-        } else
-          inputs[`${node}:in:${key}`] = {
-            value,
-            sensitive: role === 'apiKey' || at(input, 'sensitive') === true,
-            identity: selection.identity,
-            version: selection.version,
-          }
+      // One value, read a member at a time by the outputs that forward it (component §6.2).
+      inputs[`${node}:in:${name}`] = {
+        value: { baseURL: view.baseURL, apiKey: selection.credential.value, model: view.model },
+        sensitive: true,
+        identity: selection.identity,
+        version: selection.version,
       }
     }
   }

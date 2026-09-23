@@ -1,0 +1,10 @@
+{
+  "id": "structural-012-bare-image-name",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v1/spec.md#source",
+  "requirements": [
+    "COMP-SRC-002"
+  ],
+  "summary": "A bare image name is accepted and means the tag latest, as in Docker."
+}

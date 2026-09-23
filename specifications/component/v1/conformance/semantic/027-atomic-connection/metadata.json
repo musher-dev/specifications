@@ -2,9 +2,9 @@
   "id": "semantic-027-atomic-connection",
   "phase": "semantic",
   "expected": "pass",
-  "clause": "specifications/component/v1/spec.md#connection-requirements",
+  "clause": "specifications/component/v1/spec.md#outputs",
   "requirements": [
-    "COMP-CONNECTION-001"
+    "COMP-OUT-004"
   ],
-  "summary": "atomic connection"
+  "summary": "Outputs forwarding each member of a connection input validate."
 }

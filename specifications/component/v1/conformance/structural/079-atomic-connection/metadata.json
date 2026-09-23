@@ -4,7 +4,7 @@
   "expected": "pass",
   "clause": "specifications/component/v1/spec.md#connection-requirements",
   "requirements": [
-    "COMP-CONNECTION-001"
+    "COMP-CONNECTION-002"
   ],
-  "summary": "atomic connection"
+  "summary": "An external component with a connection input, forwarding each member, validates."
 }

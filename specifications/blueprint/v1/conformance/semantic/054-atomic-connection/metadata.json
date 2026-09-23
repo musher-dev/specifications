@@ -6,6 +6,6 @@
   "requirements": [
     "BP-CONNECTION-001"
   ],
-  "summary": "A connection parameter bound to a component’s connection requirement validates.",
+  "summary": "A connection parameter bound to an external node’s connection input, whose outputs a worker wires, validates.",
   "document": "connection-app/blueprint.yaml"
 }

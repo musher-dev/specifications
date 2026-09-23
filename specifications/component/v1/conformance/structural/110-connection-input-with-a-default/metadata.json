@@ -1,0 +1,10 @@
+{
+  "id": "structural-110-connection-input-with-a-default",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#connection-requirements",
+  "requirements": [
+    "COMP-CONNECTION-002"
+  ],
+  "summary": "A connection input declaring a default is rejected: a connection is always acquired whole."
+}

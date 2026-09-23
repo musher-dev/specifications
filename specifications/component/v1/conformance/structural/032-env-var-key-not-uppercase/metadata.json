@@ -3,5 +3,5 @@
   "phase": "structural",
   "expected": "fail",
   "clause": "specifications/component/v1/spec.md#env-vars",
-  "summary": "An environment-variable key outside the POSIX grammar is rejected."
+  "summary": "An input target outside the POSIX environment-variable grammar is rejected."
 }

@@ -91,6 +91,25 @@ const RELAXED: ReadonlyMap<string, string> = new Map([
 ])
 
 /**
+ * Releases the compatibility guarantee no longer runs from, keyed by tag, with
+ * the tree the ledger recorded for each.
+ *
+ * ADR 0033 §5 reset the component and blueprint v1 baselines once, before anyone
+ * outside the project had adopted them. These releases stay published and their
+ * ledger entries stay as they are; only the replay stops. The tree makes an
+ * entry name one release rather than a tag name any repository could cut, and
+ * `compat.test.ts` pins the map to exactly these five, because the reset is
+ * spent: the next narrowing of either family is a `v2`.
+ */
+export const WITHDRAWN: ReadonlyMap<string, string> = new Map([
+  ['component/v1.0.0', '5af4dcf60367343633d474826a36061e42981457'],
+  ['component/v1.1.0', '736b712df60b955046968467b4c6a0d12d3f3ee9'],
+  ['blueprint/v1.0.0', '7b353998bdb24adc2371709963fe25e2e8f08a0f'],
+  ['blueprint/v1.1.0', 'a1a2b61358a4276f7c45c6cae77f2294854be5ad'],
+  ['blueprint/v1.2.0', '88ec9331e54eb422ef7ffbeb1a84561ced93ed6d'],
+])
+
+/**
  * Apply a declared relaxation to the reconstructed case, in the scratch corpus.
  *
  * Rewriting the historical `metadata.json` is the whole of it: the document,
@@ -220,6 +239,10 @@ export function replayAll(
 
   for (const recorded of taggedEntries(repoRoot, readLedger(repoRoot))) {
     const { release } = recorded
+    if (WITHDRAWN.get(release.tag) === recorded.entry.tree) {
+      console.log(`  · ${release.tag}: withdrawn by ADR 0033 §5, not replayed`)
+      continue
+    }
     const family = families.get(`${release.family}/${release.major}`)
     if (family === undefined) {
       // A retired family still has published versions, but no current schema to

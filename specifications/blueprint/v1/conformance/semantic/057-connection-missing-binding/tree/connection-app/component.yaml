@@ -45,21 +45,7 @@
           }
         }
       },
-      "outputs": {},
-      "connectionRequirements": {
-        "llm": {
-          "protocol": "OPENAI_CHAT_COMPLETIONS",
-          "capabilities": [
-            "STREAMING",
-            "TOOL_CALLS"
-          ],
-          "inputs": {
-            "baseURL": "url",
-            "apiKey": "key",
-            "model": "model"
-          }
-        }
-      }
+      "outputs": {}
     }
   }
 }

@@ -1,6 +1,21 @@
 /** Effective document defaults without coercion or invented ancestors. */
 import { isObject, type Json } from '../lib/layout.ts'
 import { strictAjv } from '../schema/lint.ts'
+
+/**
+ * Narrow a parent's properties by a branch's. A branch that only names a
+ * property (`true`) to select itself leaves the parent's declaration, and its
+ * default, in place; a branch forbidding one (`false`) leaves it no default.
+ */
+function narrowProperties(
+  parent: Json | undefined,
+  branch: Json | undefined,
+): Record<string, Json> {
+  const out: Record<string, Json> = { ...(isObject(parent) ? parent : {}) }
+  for (const [key, value] of Object.entries(isObject(branch) ? branch : {}))
+    if (value !== true) out[key] = value
+  return out
+}
 export function normalizeDocument(bundle: Json, document: Json): Json {
   const defs = isObject(bundle) && isObject(bundle.$defs) ? bundle.$defs : {}
   function schemaOf(raw: Json, value: Json, depth = 0): Record<string, Json> {
@@ -16,11 +31,41 @@ export function normalizeDocument(bundle: Json, document: Json): Json {
         for (const branch of branches) {
           if (!isObject(branch)) continue
           if (strictAjv().compile({ ...branch, $defs: defs })(value)) {
-            schema = { ...schema, ...schemaOf(branch, value, depth + 1) }
+            const selected = schemaOf(branch, value, depth + 1)
+            schema = {
+              ...schema,
+              ...selected,
+              properties: narrowProperties(schema.properties, selected.properties),
+            }
             break
           }
         }
     }
+    // A conditional that holds can forbid a field, and a forbidden field has no
+    // default. Only the prohibition is taken: what a `then` requires of a field
+    // it allows is validation, not a default.
+    if (Array.isArray(schema.allOf))
+      for (const branch of schema.allOf) {
+        if (!isObject(branch) || !isObject(branch.if) || !isObject(branch.then)) continue
+        // Strict mode wants every required key declared; naming it is enough.
+        const named = Array.isArray(branch.if.required) ? branch.if.required.map(String) : []
+        const condition = {
+          ...branch.if,
+          properties: {
+            ...Object.fromEntries(named.map((key) => [key, true])),
+            ...(isObject(branch.if.properties) ? branch.if.properties : {}),
+          },
+          $defs: defs,
+        }
+        if (!strictAjv().compile(condition)(value)) continue
+        const forbidden = Object.entries(
+          isObject(branch.then.properties) ? branch.then.properties : {},
+        ).filter(([, v]) => v === false)
+        schema = {
+          ...schema,
+          properties: narrowProperties(schema.properties, Object.fromEntries(forbidden)),
+        }
+      }
     return schema
   }
   function visit(raw: Json, value: Json, depth = 0): Json {

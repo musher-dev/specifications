@@ -6,6 +6,6 @@
   "requirements": [
     "BP-CONNECTION-001"
   ],
-  "summary": "A connection binding naming a parameter that reads a variable is rejected.",
+  "summary": "A binding to a connection input naming a parameter that reads a variable is rejected.",
   "document": "app/blueprint.yaml"
 }

@@ -7,6 +7,12 @@ compatibility mode. Keep component contracts reusable, declare everything an
 installation takes from outside the documents as a blueprint parameter, and wire
 it on the consuming blueprint node.
 
+The connection syntax below was replaced after the first release:
+[ADR 0033](adr/0033-inputs-are-the-only-way-into-a-component.md) removes
+`connectionRequirements`, `connectionBindings` and `envVars`.
+[Downstream v1 adoption](downstream-v1-adoption.md#migrating-to-inputs-only-component-v120-and-blueprint-v130)
+has the current migration.
+
 | Previous declaration | Replacement |
 |---|---|
 | Implicit matching parameter names; toNode/toInput; connections | One explicit binding per consuming input |

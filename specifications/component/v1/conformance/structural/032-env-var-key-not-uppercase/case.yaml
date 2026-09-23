@@ -12,5 +12,11 @@ spec:
       web:
         targetPort: 8080
         protocol: HTTP
-    envVars:
-      database-url: postgres://localhost/app
+  contract:
+    inputs:
+      databaseURL:
+        description: Connection URL of the database.
+        schema:
+          type: string
+        target:
+          envVarKey: database-url

@@ -11,10 +11,22 @@ spec:
       ui:
         label: Language model
   components:
+    llm:
+      componentRef: ./components/openai-chat.yaml
+      bindings:
+        llm:
+          parameter: llm
     assistant:
       componentRef: ./components/assistant.yaml
       compute:
         profile: general.standard.small
-      connectionBindings:
-        llm:
-          parameter: llm
+      bindings:
+        llmBaseURL:
+          node: llm
+          output: baseURL
+        llmAPIKey:
+          node: llm
+          output: apiKey
+        llmModel:
+          node: llm
+          output: model

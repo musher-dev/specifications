@@ -18,7 +18,24 @@
         "compute": {
           "profile": "general.standard.small"
         },
-        "connectionBindings": {
+        "bindings": {
+          "url": {
+            "node": "app-llm",
+            "output": "baseURL"
+          },
+          "key": {
+            "node": "app-llm",
+            "output": "apiKey"
+          },
+          "model": {
+            "node": "app-llm",
+            "output": "model"
+          }
+        }
+      },
+      "app-llm": {
+        "componentRef": "./component-llm.yaml",
+        "bindings": {
           "llm": {
             "parameter": "missing"
           }

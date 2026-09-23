@@ -12,9 +12,6 @@ spec:
       primary:
         targetPort: 5432
         protocol: TCP
-    envVars:
-      PGDATA: /var/lib/postgresql/data/pgdata
-      POSTGRES_DB: app
     volumes:
       data:
         mountPath: /var/lib/postgresql/data
@@ -29,6 +26,20 @@ spec:
         target:
           envVarKey: POSTGRES_PASSWORD
         sensitive: true
+      databaseName:
+        description: Name of the database created on first start.
+        schema:
+          type: string
+        default: app
+        target:
+          envVarKey: POSTGRES_DB
+      dataDirectory:
+        description: Directory inside the data volume PostgreSQL keeps its files in.
+        schema:
+          type: string
+        default: /var/lib/postgresql/data/pgdata
+        target:
+          envVarKey: PGDATA
     outputs:
       address:
         description: Internal host and port clients reach the database at.

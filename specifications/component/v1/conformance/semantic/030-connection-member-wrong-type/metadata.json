@@ -1,0 +1,10 @@
+{
+  "id": "semantic-030-connection-member-wrong-type",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#outputs",
+  "requirements": [
+    "COMP-OUT-004"
+  ],
+  "summary": "An output forwarding a connection member declares a string schema."
+}

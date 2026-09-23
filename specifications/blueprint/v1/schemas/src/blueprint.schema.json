@@ -119,22 +119,6 @@
       ],
       "type": "object"
     },
-    "BlueprintConnectionBinding": {
-      "additionalProperties": false,
-      "properties": {
-        "parameter": {
-          "type": "string",
-          "pattern": "^[a-z][a-zA-Z0-9]{0,63}$",
-          "maxLength": 64,
-          "description": "Parameter whose `from` names a connection, `${{ connections.<path> }}`."
-        }
-      },
-      "required": [
-        "parameter"
-      ],
-      "type": "object",
-      "x-additionalPropertiesName": "requirementName"
-    },
     "BlueprintMetadata": {
       "additionalProperties": false,
       "description": "Identity and description of a blueprint document. The blueprint carries the item’s revision; its sibling listing carries none. See spec.md §3.",
@@ -219,18 +203,6 @@
         "compute": {
           "$ref": "#/$defs/BlueprintCompute",
           "description": "Compute profile and placement for a node whose component runs. Omitted, and forbidden, where the component is EXTERNAL; that agreement is a semantic check against the component (spec.md §4.3)."
-        },
-        "connectionBindings": {
-          "type": "object",
-          "description": "The connection parameter that satisfies each of the component’s connection requirements, keyed by requirement name.",
-          "propertyNames": {
-            "pattern": "^[a-z][a-zA-Z0-9]{0,63}$",
-            "maxLength": 64
-          },
-          "additionalProperties": {
-            "$ref": "#/$defs/BlueprintConnectionBinding"
-          },
-          "x-additionalPropertiesName": "requirementName"
         },
         "exposure": {
           "type": "object",

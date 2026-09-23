@@ -1,0 +1,10 @@
+{
+  "id": "semantic-001-floating-image-tag",
+  "phase": "semantic",
+  "expected": "pass",
+  "clause": "specifications/component/v1/spec.md#source",
+  "requirements": [
+    "COMP-SRC-002"
+  ],
+  "summary": "A floating tag such as latest is accepted; a tag is a request, not a pin."
+}

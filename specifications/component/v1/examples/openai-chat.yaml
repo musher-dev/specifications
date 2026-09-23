@@ -1,0 +1,40 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Language-model API reached through an organization connection, handing its endpoint, credential and model to the nodes that call it.
+spec:
+  type: EXTERNAL
+  contract:
+    inputs:
+      llm:
+        description: Language-model connection this node stands for.
+        connection:
+          protocol: OPENAI_CHAT_COMPLETIONS
+          capabilities:
+            - STREAMING
+            - TOOL_CALLS
+    outputs:
+      baseURL:
+        description: Base URL of the language-model API.
+        schema:
+          type: string
+        presentationHint: ENDPOINT_URL
+        from:
+          input: llm
+          member: baseURL
+      apiKey:
+        description: Credential the language-model API accepts.
+        schema:
+          type: string
+        sensitive: true
+        from:
+          input: llm
+          member: apiKey
+      model:
+        description: Model the language-model API answers with.
+        schema:
+          type: string
+        from:
+          input: llm
+          member: model

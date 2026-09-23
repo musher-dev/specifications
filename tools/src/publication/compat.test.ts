@@ -7,10 +7,10 @@
  * regressed. These tests hold that a missing corpus is a failure instead.
  */
 import { afterEach, describe, expect, test } from 'bun:test'
-import { discoverKinds, Failures, familyPaths, LayoutError } from '../lib/layout.ts'
+import { discoverKinds, Failures, familyPaths, LayoutError, REPO_ROOT } from '../lib/layout.ts'
 import { FixtureRepo } from '../testing/fixture.ts'
 import { Pipeline } from '../testing/pipeline.ts'
-import { replayAll, replayRelease } from './compat.ts'
+import { replayAll, replayRelease, WITHDRAWN } from './compat.ts'
 import { readLedger, taggedEntries } from './ledger.ts'
 
 const COMPONENT = familyPaths('component', 'v1')
@@ -167,5 +167,29 @@ describe('a declared relaxation', () => {
     const error = thrown(() => replay(cutWithCase('pass'), new Failures()))
     expect(error).toBeInstanceOf(LayoutError)
     expect((error as Error).message).toContain('moves a verdict from fail to pass')
+  })
+})
+
+/**
+ * The one-time v1 baseline reset, ADR 0033 §5.
+ *
+ * The reset is spent. This test is where adding a sixth release would have to
+ * be argued, in a diff a reviewer reads, and it holds each entry to the tree
+ * the ledger recorded so an entry cannot name a release that does not exist.
+ */
+describe('the withdrawn releases', () => {
+  test('are exactly the five releases ADR 0033 names', () => {
+    expect([...WITHDRAWN.keys()].sort()).toEqual([
+      'blueprint/v1.0.0',
+      'blueprint/v1.1.0',
+      'blueprint/v1.2.0',
+      'component/v1.0.0',
+      'component/v1.1.0',
+    ])
+  })
+
+  test('each names the tree the ledger recorded for its tag', () => {
+    const ledger = readLedger(REPO_ROOT)
+    for (const [tag, tree] of WITHDRAWN) expect(ledger.releases[tag]?.tree).toBe(tree)
   })
 })
