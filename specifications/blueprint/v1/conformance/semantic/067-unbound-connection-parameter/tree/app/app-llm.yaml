@@ -1,0 +1,38 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture external connection.
+spec:
+  type: EXTERNAL
+  contract:
+    inputs:
+      llm:
+        description: Language-model connection
+        connection:
+          protocol: OPENAI_CHAT_COMPLETIONS
+          capabilities:
+            - STREAMING
+    outputs:
+      baseURL:
+        description: Connection base URL
+        schema:
+          type: string
+        from:
+          input: llm
+          member: baseURL
+      apiKey:
+        description: Connection credential
+        schema:
+          type: string
+        sensitive: true
+        from:
+          input: llm
+          member: apiKey
+      model:
+        description: Connection model
+        schema:
+          type: string
+        from:
+          input: llm
+          member: model

@@ -3,37 +3,48 @@ import type { Json } from '../lib/layout.ts'
 import {
   type ConnectionSelection,
   connectionBindingDiagnostics,
-  connectionRequirementDiagnostics,
+  isConnectionInput,
   parameterSource,
   parameterSourceDiagnostics,
   resolveConnections,
   selectConnection,
 } from './connections.ts'
 
-const input = (sensitive = false) => ({
-  description: 'Connection input',
-  schema: { type: 'string' },
-  sensitive,
-})
+/** An input of the fixture component, or a member of a resolved value. */
+function at(value: Json | undefined, key: string): Json | undefined {
+  const inputs = (component as any).spec.contract.inputs
+  if (value === component) return inputs[key]
+  return value !== null && typeof value === 'object' && !Array.isArray(value)
+    ? value[key]
+    : undefined
+}
+
+/** An external node standing for one connection (component §6.4). */
 const component: Json = {
   spec: {
+    type: 'EXTERNAL',
     contract: {
-      inputs: { url: input(), key: input(true), model: input() },
-      connectionRequirements: {
+      inputs: {
         llm: {
-          protocol: 'OPENAI_CHAT_COMPLETIONS',
-          capabilities: ['STREAMING'],
-          inputs: { baseURL: 'url', apiKey: 'key', model: 'model' },
+          description: 'Language-model connection',
+          connection: { protocol: 'OPENAI_CHAT_COMPLETIONS', capabilities: ['STREAMING'] },
         },
+        region: { description: 'Region', schema: { type: 'string' } },
       },
     },
   },
 }
 const blueprint: Json = {
   spec: {
-    parameters: { primary: { from: '${{ connections.llm.default }}' } },
+    parameters: {
+      primary: { from: '${{ connections.llm.default }}' },
+      region: { default: 'eu' },
+    },
     components: {
-      app: { componentRef: 'acme/app', connectionBindings: { llm: { parameter: 'primary' } } },
+      app: {
+        componentRef: 'acme/app',
+        bindings: { llm: { parameter: 'primary' }, region: { parameter: 'region' } },
+      },
     },
   },
 }
@@ -66,31 +77,47 @@ const run = (s = selection()) =>
     parameters: { primary: { status: 'SELECTED', persisted: true, selection: s } },
   })
 describe('atomic named connections', () => {
-  test('validates explicit ownership and projects one immutable selection', () => {
-    expect(connectionRequirementDiagnostics(component)).toEqual([])
+  test('binds a connection input to a connection parameter and projects one immutable selection', () => {
+    expect(isConnectionInput(at(component, 'llm'))).toBe(true)
+    expect(isConnectionInput(at(component, 'region'))).toBe(false)
     expect(connectionBindingDiagnostics(blueprint, components)).toEqual([])
     const r = run()
     expect(r.diagnostics).toEqual([])
     expect(r.deferred).toEqual([])
-    expect(r.inputs['app:in:key']).toEqual({
-      value: 'synthetic-only',
+    expect(r.inputs['app:in:llm']).toEqual({
+      value: {
+        baseURL: 'https://gateway.example/openai/v1',
+        apiKey: 'synthetic-only',
+        model: 'model-a',
+      },
       sensitive: true,
       identity: 'connection-1',
       version: '1',
     })
   })
-  test('rejects group collisions, missing requirements and independent member defaults', () => {
-    const c = structuredClone(component) as any
-    c.spec.contract.inputs.key.default = 'secret'
-    expect(connectionRequirementDiagnostics(c)[0]?.code).toBe('ERR_INVALID_CONNECTION_REQUIREMENT')
+  test('a connection and an input must agree in kind', () => {
     const b = structuredClone(blueprint) as any
-    b.spec.components.app.bindings = { key: { value: 'x' } }
-    expect(connectionBindingDiagnostics(b, components)[0]?.code).toBe(
-      'ERR_INVALID_CONNECTION_BINDING',
-    )
-    delete b.spec.components.app.bindings
-    delete b.spec.components.app.connectionBindings
-    expect(connectionBindingDiagnostics(b, components).length).toBeGreaterThan(0)
+    b.spec.components.app.bindings.llm = { value: 'x' }
+    expect(connectionBindingDiagnostics(b, components)).toMatchObject([
+      { code: 'ERR_INVALID_CONNECTION_BINDING', path: '/spec/components/app/bindings/llm' },
+    ])
+    b.spec.components.app.bindings.llm = { parameter: 'region' }
+    expect(connectionBindingDiagnostics(b, components)).toMatchObject([
+      {
+        code: 'ERR_INVALID_CONNECTION_BINDING',
+        path: '/spec/components/app/bindings/llm/parameter',
+      },
+    ])
+    b.spec.components.app.bindings = { region: { parameter: 'primary' } }
+    expect(connectionBindingDiagnostics(b, components)).toMatchObject([
+      {
+        code: 'ERR_INVALID_CONNECTION_BINDING',
+        path: '/spec/components/app/bindings/region/parameter',
+      },
+    ])
+    // An undeclared parameter is ERR_UNKNOWN_PARAMETER alone.
+    b.spec.components.app.bindings = { llm: { parameter: 'missing' } }
+    expect(connectionBindingDiagnostics(b, components)).toEqual([])
   })
   test('distinguishes offline context, authoritative absence, denial and incompatibility', () => {
     expect(resolveConnections(blueprint, components, undefined).deferred).toHaveLength(1)
@@ -148,7 +175,7 @@ describe('atomic named connections', () => {
     b.spec.parameters.second = { from: '${{ connections.llm.secondary }}' }
     b.spec.components.worker = {
       componentRef: 'acme/app',
-      connectionBindings: { llm: { parameter: 'second' } },
+      bindings: { llm: { parameter: 'second' } },
     }
     const cs = new Map([...components, ['worker', component]] as [string, Json][])
     const second = selection('second')
@@ -164,8 +191,8 @@ describe('atomic named connections', () => {
       },
     } as const
     const r = resolveConnections(b, cs, context)
-    expect(r.inputs['app:in:model']?.value).toBe('model-a')
-    expect(r.inputs['worker:in:model']?.value).toBe('model-b')
+    expect(at(r.inputs['app:in:llm']?.value, 'model')).toBe('model-a')
+    expect(at(r.inputs['worker:in:llm']?.value, 'model')).toBe('model-b')
     expect(
       resolveConnections(b, cs, {
         ...context,
@@ -175,7 +202,7 @@ describe('atomic named connections', () => {
   })
   test('both protocol views can project from one explicitly shared connection', () => {
     const c = structuredClone(component) as any
-    c.spec.contract.connectionRequirements.llm.protocol = 'ANTHROPIC_MESSAGES'
+    c.spec.contract.inputs.llm.connection.protocol = 'ANTHROPIC_MESSAGES'
     const s = selection() as any
     s.credential.permittedBaseURLs.push('https://gateway.example/anthropic')
     s.views.ANTHROPIC_MESSAGES = {
@@ -187,7 +214,7 @@ describe('atomic named connections', () => {
       installation: 'install-1',
       parameters: { primary: { status: 'SELECTED', persisted: true, selection: s } },
     })
-    expect(r.inputs['app:in:url']?.value).toBe('https://gateway.example/anthropic')
+    expect(at(r.inputs['app:in:llm']?.value, 'baseURL')).toBe('https://gateway.example/anthropic')
   })
 })
 
@@ -272,7 +299,7 @@ test('a managed credential cannot be reused under another connection parameter',
   b.spec.parameters.second = { from: '${{ connections.llm.default }}' }
   b.spec.components.worker = {
     componentRef: 'acme/app',
-    connectionBindings: { llm: { parameter: 'second' } },
+    bindings: { llm: { parameter: 'second' } },
   }
   const result = resolveConnections(b as Json, new Map([...components, ['worker', component]]), {
     installation: 'install-1',
@@ -309,26 +336,21 @@ test('a complete user replacement supplies its own endpoint, credential and mode
   }
   const result = run(replacement)
   expect(result.diagnostics).toEqual([])
-  expect(result.inputs['app:in:url']?.value).toBe('https://provider.example/v1')
-  expect(result.inputs['app:in:key']?.value).toBe('synthetic-user-key')
-  expect(result.inputs['app:in:model']?.value).toBe('user-model')
+  expect(result.inputs['app:in:llm']?.value).toEqual({
+    baseURL: 'https://provider.example/v1',
+    apiKey: 'synthetic-user-key',
+    model: 'user-model',
+  })
 })
 
-test('a connection parameter is bound only through connectionBindings', () => {
+test('a variables parameter cannot fill a connection input', () => {
   const b = structuredClone(blueprint) as Record<string, any>
   b.spec.parameters.region = { from: '${{ variables.cloud.region }}' }
-  b.spec.components.app.connectionBindings.llm = { parameter: 'region' }
+  b.spec.components.app.bindings.llm = { parameter: 'region' }
   expect(connectionBindingDiagnostics(b as Json, components)).toContainEqual(
     expect.objectContaining({
       code: 'ERR_INVALID_CONNECTION_BINDING',
-      path: '/spec/components/app/connectionBindings/llm/parameter',
-    }),
-  )
-  b.spec.components.app.connectionBindings.llm = { parameter: 'missing' }
-  expect(connectionBindingDiagnostics(b as Json, components)).toContainEqual(
-    expect.objectContaining({
-      code: 'ERR_UNKNOWN_PARAMETER',
-      path: '/spec/components/app/connectionBindings/llm/parameter',
+      path: '/spec/components/app/bindings/llm/parameter',
     }),
   )
 })

@@ -15,7 +15,13 @@ import {
 import { scanReferences } from '../lib/references.ts'
 import { familyBundle } from '../schema/bundle.ts'
 import { strictAjv } from '../schema/lint.ts'
-import { type ConnectionsContext, parameterSource, resolveConnections } from './connections.ts'
+import {
+  type ConnectionsContext,
+  connectionMemberContract,
+  isConnectionInput,
+  parameterSource,
+  resolveConnections,
+} from './connections.ts'
 import { type Diagnostic, type Phase, parseDocumentBytes } from './document.ts'
 import { at, record, type SemanticContext, semanticReport, token } from './semantic.ts'
 import { compileFamily } from './validator.ts'
@@ -282,6 +288,13 @@ export function resolveInstallation(
       value = input(node, String(s.input))
       if (!value && !diagnostics.length && !deferred.length)
         fail('ERR_UNSATISFIED_REQUIRED_INPUT', path)
+      // Component §6.2: a connection input is forwarded one member at a time.
+      if (value && typeof s.member === 'string')
+        value = {
+          ...value,
+          value: record(value.value)[s.member]!,
+          sensitive: connectionMemberContract(s.member).sensitive === true,
+        }
     }
     if (typeof s.endpoint === 'string') value = endpoint(node, s.endpoint, String(s.property), path)
     if (typeof s.template === 'string') {
@@ -347,8 +360,8 @@ export function resolveInstallation(
     const definition = record(at(report.components.get(node), 'spec', 'contract', 'inputs', name)),
       s = record(at(nodes[node], 'bindings', name))
     let value: ResolvedValue | undefined = connectionResult.inputs[id]
-    if (value) {
-      /* The grouped connection owns this input. */
+    if (value || isConnectionInput(definition)) {
+      /* A connection input takes its value only from its selection, reported above. */
     } else if (!Object.keys(s).length) {
       if (Object.hasOwn(definition, 'default'))
         value = { value: definition.default!, sensitive: false }
@@ -392,7 +405,9 @@ export function resolveInstallation(
           definition.sensitive === true ||
           (typeof s.parameter === 'string' && parameterSensitivity.has(s.parameter)),
       }
-      if (!valueFits(definition.schema!, value.value)) fail('ERR_VALUE_CONSTRAINT', path)
+      // The selection was checked against the protocol's members when it was acquired.
+      if (!isConnectionInput(definition) && !valueFits(definition.schema!, value.value))
+        fail('ERR_VALUE_CONSTRAINT', path)
       else inputs[id] = value
     }
     active.delete(id)
@@ -432,15 +447,6 @@ export function resolveInstallation(
             'environment',
           )
         }
-      }
-    }
-    for (const [key, value] of Object.entries(
-      record(at(report.components.get(node), 'spec', 'workload', 'envVars')),
-    )) {
-      try {
-        environment[node]![key] = { value: encodeEnvironment(value), sensitive: false }
-      } catch {
-        fail('ERR_ENV_ENCODING', `/spec/components/${token(node)}`, 'environment')
       }
     }
     for (const name of Object.keys(

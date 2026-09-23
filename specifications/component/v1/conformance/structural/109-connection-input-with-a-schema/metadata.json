@@ -1,0 +1,10 @@
+{
+  "id": "structural-109-connection-input-with-a-schema",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#connection-requirements",
+  "requirements": [
+    "COMP-CONNECTION-002"
+  ],
+  "summary": "A connection input declaring a schema is rejected: its protocol fixes its members."
+}

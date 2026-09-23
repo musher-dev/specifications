@@ -60,7 +60,7 @@
             "type": "string"
           },
           "x-additionalPropertiesName": "argumentName",
-          "description": "Build arguments keyed by argument name, injected into the image build context (Docker ARG). Build-time configuration only; runtime configuration rides on the workload's envVars and inputs.",
+          "description": "Build arguments keyed by argument name, injected into the image build context (Docker ARG). Build-time configuration only; runtime configuration rides on inputs.",
           "type": "object",
           "propertyNames": {
             "$comment": "spec.md §5.1 / ADR 0007 §4. A build argument becomes an environment variable in the build context, so it takes the environment-variable grammar rather than one of its own.",
@@ -94,38 +94,11 @@
       ],
       "type": "object"
     },
-    "ComponentConnectionInputs": {
+    "ComponentConnection": {
+      "$comment": "spec.md §6.4 COMP-CONNECTION-002 / ADR 0033 §2. The protocol fixes the members (baseURL, apiKey and model, all strings, apiKey sensitive), so a connection input carries no schema of its own.",
       "type": "object",
       "additionalProperties": false,
-      "properties": {
-        "baseURL": {
-          "type": "string",
-          "pattern": "^[a-z][a-zA-Z0-9]{0,63}$",
-          "maxLength": 64,
-          "description": "Existing input receiving the connection baseURL role."
-        },
-        "apiKey": {
-          "type": "string",
-          "pattern": "^[a-z][a-zA-Z0-9]{0,63}$",
-          "maxLength": 64,
-          "description": "Existing input receiving the connection apiKey role."
-        },
-        "model": {
-          "type": "string",
-          "pattern": "^[a-z][a-zA-Z0-9]{0,63}$",
-          "maxLength": 64,
-          "description": "Existing input receiving the connection model role."
-        }
-      },
-      "required": [
-        "baseURL",
-        "apiKey",
-        "model"
-      ]
-    },
-    "ComponentConnectionRequirement": {
-      "type": "object",
-      "additionalProperties": false,
+      "description": "The atomic connection this input stands for: an endpoint, a credential and a model acquired together.",
       "properties": {
         "protocol": {
           "type": "string",
@@ -146,14 +119,10 @@
           },
           "uniqueItems": true,
           "description": "Required protocol features. Omission requires no optional capabilities."
-        },
-        "inputs": {
-          "$ref": "#/$defs/ComponentConnectionInputs"
         }
       },
       "required": [
-        "protocol",
-        "inputs"
+        "protocol"
       ]
     },
     "ComponentContract": {
@@ -180,18 +149,6 @@
             "maxLength": 64,
             "pattern": "^[a-z][a-zA-Z0-9]{0,63}$"
           }
-        },
-        "connectionRequirements": {
-          "type": "object",
-          "description": "Atomic connection requirements; each member input has exactly one owner. See spec.md §6.4.",
-          "propertyNames": {
-            "pattern": "^[a-z][a-zA-Z0-9]{0,63}$",
-            "maxLength": 64
-          },
-          "additionalProperties": {
-            "$ref": "#/$defs/ComponentConnectionRequirement"
-          },
-          "x-additionalPropertiesName": "requirementName"
         }
       },
       "type": "object"
@@ -324,14 +281,53 @@
       "type": "object"
     },
     "ComponentImageReference": {
-      "$comment": "Lookahead-free so it compiles under RE2 as well as ECMA-262. The tag colon is the one after the final slash, which is what keeps a registry port (localhost:5000/nginx) from reading as a tag. Only the grammar is here: the floating-tag blocklist stays a semantic rule. See spec.md §5.1.",
-      "description": "OCI image reference the workload runs from. Must carry a tag or an @sha256 digest; a bare name is an implicit :latest and shifts under the registry.",
+      "$comment": "Lookahead-free so it compiles under RE2 as well as ECMA-262. The tag colon is the one after the final slash, which is what keeps a registry port (localhost:5000/nginx) from reading as a tag. See spec.md §5.1.",
+      "description": "OCI image reference the workload runs from. A bare name means the tag latest, as in Docker. A tag is a request; only an @sha256 digest identifies content.",
       "maxLength": 512,
-      "pattern": "^(?:[A-Za-z0-9][A-Za-z0-9.-]*(?::[0-9]+)?/)?(?:[a-z0-9][a-z0-9._-]*/)*[a-z0-9][a-z0-9._-]*(?::[A-Za-z0-9_][A-Za-z0-9._-]{0,127}|(?::[A-Za-z0-9_][A-Za-z0-9._-]{0,127})?@sha256:[0-9a-f]{64})$",
+      "pattern": "^(?:[A-Za-z0-9][A-Za-z0-9.-]*(?::[0-9]+)?/)?(?:[a-z0-9][a-z0-9._-]*/)*[a-z0-9][a-z0-9._-]*(?::[A-Za-z0-9_][A-Za-z0-9._-]{0,127})?(?:@sha256:[0-9a-f]{64})?$",
       "type": "string"
     },
     "ComponentInput": {
+      "$comment": "spec.md §6.1 / ADR 0033 §2. The key that is present says what kind of input this is: `schema` for a value input, `connection` for a connection input. Exactly one.",
       "additionalProperties": false,
+      "oneOf": [
+        {
+          "properties": {
+            "schema": true
+          },
+          "required": [
+            "schema"
+          ]
+        },
+        {
+          "properties": {
+            "connection": true
+          },
+          "required": [
+            "connection"
+          ]
+        }
+      ],
+      "allOf": [
+        {
+          "$comment": "spec.md §6.4 COMP-CONNECTION-002. A connection input carries none of the value fields: its protocol fixes its members, and it is always required.",
+          "if": {
+            "required": [
+              "connection"
+            ]
+          },
+          "then": {
+            "properties": {
+              "schema": false,
+              "default": false,
+              "required": false,
+              "sensitive": false,
+              "presentationHint": false,
+              "target": false
+            }
+          }
+        }
+      ],
       "properties": {
         "description": {
           "$comment": "spec.md §6 COMP-DESC-001. REQUIRED, and the component is its only home: a blueprint parameter carries no description of its own and shows this one, so a value is described once, by the document that needs it.",
@@ -371,11 +367,14 @@
         },
         "default": {
           "description": "Logical fallback used only when no binding is declared."
+        },
+        "connection": {
+          "$ref": "#/$defs/ComponentConnection",
+          "description": "The connection this input stands for. Only an EXTERNAL component declares one."
         }
       },
       "required": [
-        "description",
-        "schema"
+        "description"
       ],
       "type": "object",
       "x-additionalPropertiesName": "inputName"
@@ -460,7 +459,7 @@
       "x-additionalPropertiesName": "outputName"
     },
     "ComponentOutputFrom": {
-      "$comment": "spec.md §6.2 / ADR 0031 §1. Where the output value comes from is the key that is present: a literal value, one of this component’s own inputs, a property of one of its endpoints, or a template over its own endpoints. Exactly one; `endpoint` and `property` are one origin, and each requires the other.",
+      "$comment": "spec.md §6.2 / ADR 0031 §1 / ADR 0033 §2. Where the output value comes from is the key that is present: a literal value, one of this component’s own inputs (with the member read, when the input is a connection input), a property of one of its endpoints, or a template over its own endpoints. Exactly one; `endpoint` and `property` are one origin, and each requires the other, and `member` requires `input`.",
       "additionalProperties": false,
       "dependentRequired": {
         "endpoint": [
@@ -468,6 +467,9 @@
         ],
         "property": [
           "endpoint"
+        ],
+        "member": [
+          "input"
         ]
       },
       "description": "Where the output value comes from.",
@@ -539,6 +541,15 @@
         },
         "value": {
           "description": "Logical non-secret literal value."
+        },
+        "member": {
+          "type": "string",
+          "enum": [
+            "baseURL",
+            "apiKey",
+            "model"
+          ],
+          "description": "Member of a connection input to forward. Required when the input is a connection input, and forbidden otherwise."
         }
       },
       "type": "object"
@@ -638,7 +649,7 @@
       "additionalProperties": false,
       "allOf": [
         {
-          "$comment": "spec.md §5. `type` is the category and selects which fields apply. EXTERNAL is a node this platform does not run: it has no workload, so its inputs have no environment target, and it exists to publish values another node consumes, so an absent contract is a missing field and an empty outputs mapping an invalid value. Written as if/then over properties declared once, so every default beneath stays within the effective-value resolution ADR 0008 requires.",
+          "$comment": "spec.md §5. `type` is the category and selects which fields apply. EXTERNAL is a node this platform does not run: it has no workload, so its inputs have no environment target, and it is the only kind of component that declares a connection input, and it exists to publish values another node consumes, so an absent contract is a missing field and an empty outputs mapping an invalid value. Written as if/then over properties declared once, so every default beneath stays within the effective-value resolution ADR 0008 requires.",
           "if": {
             "properties": {
               "type": {
@@ -683,7 +694,8 @@
                       "properties": {
                         "target": {
                           "$ref": "#/$defs/ComponentInputTarget"
-                        }
+                        },
+                        "connection": false
                       },
                       "required": [
                         "target"
@@ -1168,21 +1180,6 @@
             "pattern": "^[a-z][a-z0-9]{0,19}$"
           },
           "type": "object"
-        },
-        "envVars": {
-          "additionalProperties": {
-            "description": "Verbatim value. An empty string is allowed.",
-            "type": "string"
-          },
-          "description": "Intrinsic non-secret environment constants, keyed by variable name. Configurable values are inputs with a target, supplied by the blueprint.",
-          "propertyNames": {
-            "$comment": "spec.md §5.3 / ADR 0007 §4. The POSIX shape: a name outside it is not portably settable. A duplicate key is rejected by the parser, so no rule here repeats it.",
-            "maxLength": 128,
-            "minLength": 1,
-            "pattern": "^[A-Z_][A-Z0-9_]*$"
-          },
-          "type": "object",
-          "x-additionalPropertiesName": "envVarName"
         },
         "health": {
           "$ref": "#/$defs/ComponentHealthProbes",

@@ -14,8 +14,8 @@ import { canonicalJson, type Family, isObject, type Json } from '../lib/layout.t
 import { scanReferences } from '../lib/references.ts'
 import {
   connectionBindingDiagnostics,
-  connectionOwnedInputs,
-  connectionRequirementDiagnostics,
+  connectionMemberContract,
+  isConnectionInput,
   parameterSource,
   parameterSourceDiagnostics,
 } from './connections.ts'
@@ -50,17 +50,6 @@ const keysOf = (value: Json | undefined) => Object.keys(record(value))
 export const token = (value: string) => value.replaceAll('~', '~0').replaceAll('/', '~1')
 const issue = (out: Diagnostic[], code: string, path: string) =>
   out.push({ code, path, message: code, phase: 'semantic' })
-const FLOATING_TAGS = new Set([
-  'latest',
-  'main',
-  'main-stable',
-  'master',
-  'stable',
-  'edge',
-  'nightly',
-  'dev',
-  'rolling',
-])
 export const ADDRESS_PROPERTIES = [
   'publicURL',
   'publicHostname',
@@ -134,15 +123,9 @@ export function constantTemplate(from: Json | undefined): string | undefined {
     return template.replaceAll('$${{', '${{')
 }
 export function componentDiagnostics(document: Json): Diagnostic[] {
-  const out: Diagnostic[] = [...connectionRequirementDiagnostics(document)]
+  const out: Diagnostic[] = []
   const workload = record(at(document, 'spec', 'workload'))
   const contract = record(at(document, 'spec', 'contract'))
-  const image = at(workload, 'source', 'image')
-  if (typeof image === 'string' && !image.includes('@sha256:')) {
-    const tag = image.slice(image.lastIndexOf('/') + 1).split(':')[1]
-    if (tag && FLOATING_TAGS.has(tag.toLowerCase()))
-      issue(out, 'ERR_UNPINNED_IMAGE', '/spec/workload/source/image')
-  }
   const cron = at(workload, 'schedule', 'cron')
   if (typeof cron === 'string' && !cronIsValid(cron))
     issue(out, 'ERR_INVALID_SCHEDULE', '/spec/workload/schedule/cron')
@@ -172,15 +155,17 @@ export function componentDiagnostics(document: Json): Diagnostic[] {
       issue(out, 'ERR_INVALID_MOUNT', `/spec/workload/volumes/${token(name)}/mountPath`)
     mounts.push(path)
   }
-  // Component §5.3: the envVars keys are unique already (the parser rejects a
-  // repeated mapping key), and every one of them is claimed before any input.
-  const env = new Set<string>(keysOf(workload.envVars))
+  // Component §5.3: every environment variable is an input's target, and no two
+  // inputs claim one name.
+  const env = new Set<string>()
   for (const direction of ['inputs', 'outputs']) {
     for (const [name, value] of Object.entries(record(contract[direction])).sort(([a], [b]) =>
       Buffer.compare(Buffer.from(a), Buffer.from(b)),
     )) {
       const v = record(value),
         path = `/spec/contract/${direction}/${token(name)}`
+      // A connection input has no schema: its protocol fixes its members (§6.4).
+      if (direction === 'inputs' && isConnectionInput(v)) continue
       if (v.schema === undefined || schemaProblem(v.schema))
         issue(out, 'ERR_INVALID_VALUE_SCHEMA', path + '/schema')
       // Component §6.2: the key present in `from` is the output's origin.
@@ -207,8 +192,20 @@ export function componentDiagnostics(document: Json): Diagnostic[] {
       if (direction !== 'outputs') continue
       if (typeof from.input === 'string') {
         const input = at(contract, 'inputs', from.input)
+        const member = asString(from.member)
         if (!input) issue(out, 'ERR_UNKNOWN_INPUT_REFERENCE', path + '/from/input')
-        else if (!compatible(record(input), v))
+        // COMP-OUT-004: a connection input is read one member at a time, and a
+        // value input has no members.
+        else if (isConnectionInput(record(input)) !== (member !== undefined))
+          issue(
+            out,
+            'ERR_UNKNOWN_INPUT_REFERENCE',
+            path + (member === undefined ? '/from/input' : '/from/member'),
+          )
+        else if (member !== undefined) {
+          if (!compatible(connectionMemberContract(member), v))
+            issue(out, 'ERR_VALUE_CONSTRAINT', path + '/from/input')
+        } else if (!compatible(record(input), v))
           issue(out, 'ERR_VALUE_CONSTRAINT', path + '/from/input')
         // COMP-OUT-003: an origin that can be absent cannot produce the output.
         // It is checked after the type rule so that a document breaking both
@@ -695,7 +692,6 @@ export function semanticReport(
       for (const [input, v] of Object.entries(inputs)) {
         dependencies.set(`${name}:in:${input}`, [])
         if (
-          !connectionOwnedInputs(component).has(input) &&
           at(n.bindings, input) === undefined &&
           at(v, 'default') === undefined &&
           at(v, 'required') !== false
@@ -726,11 +722,9 @@ export function semanticReport(
           issue(out, 'ERR_UNKNOWN_PARAMETER', path + '/parameter')
           continue
         }
-        // BP-CONNECTION-001: a connection enters only through connectionBindings.
-        if (parameterSource(p)?.namespace === 'connections') {
-          issue(out, 'ERR_INVALID_CONNECTION_BINDING', path + '/parameter')
-          continue
-        }
+        // BP-CONNECTION-001 decides whether a connection and an input agree in kind,
+        // and a connection input declares no schema, default or sensitivity to check.
+        if (parameterSource(p)?.namespace === 'connections' || isConnectionInput(consumer)) continue
         if (inputs[input]) {
           const receivers = consumers.get(String(s.parameter)) ?? []
           receivers.push(consumer)
@@ -758,7 +752,12 @@ export function semanticReport(
         const producer = resolved.get(s.node),
           output = at(producer, 'spec', 'contract', 'outputs', String(s.output))
         if (producer && !output) issue(out, 'ERR_UNKNOWN_OUTPUT', path + '/output')
-        if (output && inputs[input] && !compatible(record(output), consumer))
+        if (
+          output &&
+          inputs[input] &&
+          !isConnectionInput(consumer) &&
+          !compatible(record(output), consumer)
+        )
           issue(out, 'ERR_INCOMPATIBLE_TYPE', path + '/output')
         const literal =
           at(output, 'from', 'value') !== undefined
@@ -785,10 +784,7 @@ export function semanticReport(
     const receivers = consumers.get(name) ?? [],
       path = '/spec/parameters/' + token(name)
     const used = Object.values(nodes).some((n) =>
-      [
-        ...Object.values(record(at(n, 'bindings'))),
-        ...Object.values(record(at(n, 'connectionBindings'))),
-      ].some((b) => at(b, 'parameter') === name),
+      Object.values(record(at(n, 'bindings'))).some((b) => at(b, 'parameter') === name),
     )
     if (!used) issue(out, 'ERR_UNBOUND_PARAMETER', path)
     out.push(...parameterSourceDiagnostics(name, p))

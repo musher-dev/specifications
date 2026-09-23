@@ -388,11 +388,6 @@
       "path": "semantic/057-connection-missing-binding"
     },
     {
-      "id": "semantic-058-connection-unknown-requirement",
-      "phase": "semantic",
-      "path": "semantic/058-connection-unknown-requirement"
-    },
-    {
       "id": "semantic-059-worker-endpoint-exposed-public",
       "phase": "semantic",
       "path": "semantic/059-worker-endpoint-exposed-public"

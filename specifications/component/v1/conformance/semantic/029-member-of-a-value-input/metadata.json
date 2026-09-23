@@ -1,0 +1,10 @@
+{
+  "id": "semantic-029-member-of-a-value-input",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#outputs",
+  "requirements": [
+    "COMP-OUT-004"
+  ],
+  "summary": "An output reading a member of a value input is rejected: only a connection input has members."
+}

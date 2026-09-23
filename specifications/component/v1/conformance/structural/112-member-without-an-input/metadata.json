@@ -1,0 +1,10 @@
+{
+  "id": "structural-112-member-without-an-input",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#outputs",
+  "requirements": [
+    "COMP-OUT-004"
+  ],
+  "summary": "An output origin naming a member without an input is rejected."
+}

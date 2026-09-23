@@ -8,8 +8,12 @@ contract; this checklist does not define another document dialect.
 ## Pin the released contract
 
 Pin exact releases, never a commit on `main`: `core/v1.0.0`,
-`component/v1.0.0` and `blueprint/v1.0.0`, plus `listing/v1.0.0` where the
-catalog reads listings. [`published.json`](../published.json) records each
+`component/v1.2.0` and `blueprint/v1.3.0`, plus `listing/v1.0.0` where the
+catalog reads listings. Earlier component and blueprint releases were withdrawn
+from the compatibility guarantee by
+[ADR 0033](adr/0033-inputs-are-the-only-way-into-a-component.md) §5; migrate
+from them as [below](#migrating-to-inputs-only-component-v120-and-blueprint-v130)
+describes. [`published.json`](../published.json) records each
 release's tree, bundle digest and exact dependencies. Vendor each family's
 release archive, which carries its schema, specification, examples and
 conformance corpus together with its whole dependency closure, and keep
@@ -29,8 +33,8 @@ describes. Release archives work offline, without fetching `main`.
 3. Acquire connections atomically per installation and connection parameter.
    Persist the organization policy revision, connection version, protocol views,
    model, endpoint settings, credential identity and rotation together.
-   Connection requirements bound to one connection parameter share one
-   selection; equal protocols alone never imply sharing.
+   Connection inputs bound to one connection parameter share one selection;
+   equal protocols alone never imply sharing.
 4. Implement durable, idempotent acquisition and credential issuance. Inject
    failures between acquisition, issuance, persistence, and materialization.
    Recovery must reuse the selection and avoid duplicate active credentials;
@@ -96,3 +100,20 @@ Downstream completion requires linked migration changes, passing shared
 conformance, gateway integration evidence, and durable lifecycle failure tests.
 Specification fixtures alone must not be presented as completed production
 integration. Track any missing evidence as explicit downstream follow-up work.
+
+## Migrating to inputs only (component v1.2.0 and blueprint v1.3.0)
+
+[ADR 0033](adr/0033-inputs-are-the-only-way-into-a-component.md) makes inputs the
+only way a value reaches a workload, and makes a language model an external
+component. Every change is mechanical:
+
+| Before | After |
+|---|---|
+| `workload.envVars: { NAME: value }` | An input with `schema: {type: string}`, `default: value` and `target: {envVarKey: NAME}` |
+| `contract.connectionRequirements` on a workload | Remove it. Keep the three inputs as ordinary value inputs |
+| The connection itself | An `EXTERNAL` component with one connection input, `{description, connection: {protocol, capabilities}}`, and outputs `from: {input, member}` for `baseURL`, `apiKey` and `model` |
+| `connectionBindings: { llm: { parameter: p } }` on a node | A node for the external component with `bindings: { llm: { parameter: p } }`, and `node` bindings from the workload's three inputs to its outputs |
+| An image with no tag, or a floating tag | Valid as written. A bare name means `latest`, as in Docker |
+
+The console's component editor shows one list, Inputs. It no longer has a
+separate environment-variables panel.

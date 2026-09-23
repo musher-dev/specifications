@@ -7,11 +7,7 @@
     "description": "Synthetic conformance fixture blueprint."
   },
   "spec": {
-    "parameters": {
-      "primary": {
-        "from": "${{ connections.llm.default }}"
-      }
-    },
+    "parameters": {},
     "components": {
       "app": {
         "componentRef": "./component.yaml",
@@ -20,12 +16,24 @@
         },
         "bindings": {
           "url": {
-            "value": "https://elsewhere.example"
+            "node": "app-llm",
+            "output": "baseURL"
+          },
+          "key": {
+            "node": "app-llm",
+            "output": "apiKey"
+          },
+          "model": {
+            "node": "app-llm",
+            "output": "model"
           }
-        },
-        "connectionBindings": {
+        }
+      },
+      "app-llm": {
+        "componentRef": "./component-llm.yaml",
+        "bindings": {
           "llm": {
-            "parameter": "primary"
+            "value": "https://elsewhere.example"
           }
         }
       }

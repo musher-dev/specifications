@@ -6,5 +6,5 @@
   "requirements": [
     "BP-CONNECTION-001"
   ],
-  "summary": "A parameter reading a connection, bound through connectionBindings, validates."
+  "summary": "A parameter reading a connection, bound to a connection input through ordinary bindings, validates."
 }

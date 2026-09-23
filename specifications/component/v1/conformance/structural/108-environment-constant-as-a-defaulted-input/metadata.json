@@ -1,0 +1,7 @@
+{
+  "id": "structural-108-environment-constant-as-a-defaulted-input",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v1/spec.md#env-vars",
+  "summary": "A constant written as an input with a default and a target validates."
+}

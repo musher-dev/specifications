@@ -106,6 +106,13 @@ there is none to run from. Requirement 1 still applies, as does declaring the
 change as breaking. The exception closes for a family the moment its first tag
 is created.
 
+That window was opened once more, after the first tags, by
+[ADR 0033](adr/0033-inputs-are-the-only-way-into-a-component.md) §5, for
+component and blueprint, before anyone outside the project had adopted them.
+`check:compat` stops replaying exactly the five releases that record names, and a
+test pins that list. The reset is spent: the next narrowing of either family is a
+new major on the terms above.
+
 ## Changing a controlled vocabulary
 
 A field whose value comes from a closed `enum` is a controlled vocabulary this

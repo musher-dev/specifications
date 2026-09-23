@@ -53,9 +53,9 @@
       "path": "structural/011-schedule-on-service"
     },
     {
-      "id": "structural-012-unpinned-image-reference",
+      "id": "structural-012-bare-image-name",
       "phase": "structural",
-      "path": "structural/012-unpinned-image-reference"
+      "path": "structural/012-bare-image-name"
     },
     {
       "id": "structural-013-digest-pinned-image-reference",
@@ -323,9 +323,9 @@
       "path": "structural/081-unknown-connection-capability"
     },
     {
-      "id": "structural-082-missing-connection-role",
+      "id": "structural-082-connection-without-a-protocol",
       "phase": "structural",
-      "path": "structural/082-missing-connection-role"
+      "path": "structural/082-connection-without-a-protocol"
     },
     {
       "id": "structural-083-service-without-a-workload",
@@ -448,9 +448,39 @@
       "path": "structural/106-external-without-outputs"
     },
     {
-      "id": "semantic-001-floating-tag-image-reference",
+      "id": "structural-107-environment-constants-withdrawn",
+      "phase": "structural",
+      "path": "structural/107-environment-constants-withdrawn"
+    },
+    {
+      "id": "structural-108-environment-constant-as-a-defaulted-input",
+      "phase": "structural",
+      "path": "structural/108-environment-constant-as-a-defaulted-input"
+    },
+    {
+      "id": "structural-109-connection-input-with-a-schema",
+      "phase": "structural",
+      "path": "structural/109-connection-input-with-a-schema"
+    },
+    {
+      "id": "structural-110-connection-input-with-a-default",
+      "phase": "structural",
+      "path": "structural/110-connection-input-with-a-default"
+    },
+    {
+      "id": "structural-111-connection-input-on-a-worker",
+      "phase": "structural",
+      "path": "structural/111-connection-input-on-a-worker"
+    },
+    {
+      "id": "structural-112-member-without-an-input",
+      "phase": "structural",
+      "path": "structural/112-member-without-an-input"
+    },
+    {
+      "id": "semantic-001-floating-image-tag",
       "phase": "semantic",
-      "path": "semantic/001-floating-tag-image-reference"
+      "path": "semantic/001-floating-image-tag"
     },
     {
       "id": "semantic-002-probe-names-an-unknown-endpoint",
@@ -533,34 +563,19 @@
       "path": "semantic/027-atomic-connection"
     },
     {
-      "id": "semantic-028-connection-credential-not-sensitive",
+      "id": "semantic-028-connection-member-missing",
       "phase": "semantic",
-      "path": "semantic/028-connection-credential-not-sensitive"
+      "path": "semantic/028-connection-member-missing"
     },
     {
-      "id": "semantic-029-connection-member-default",
+      "id": "semantic-029-member-of-a-value-input",
       "phase": "semantic",
-      "path": "semantic/029-connection-member-default"
+      "path": "semantic/029-member-of-a-value-input"
     },
     {
-      "id": "semantic-030-connection-member-optional",
+      "id": "semantic-030-connection-member-wrong-type",
       "phase": "semantic",
-      "path": "semantic/030-connection-member-optional"
-    },
-    {
-      "id": "semantic-031-connection-member-wrong-type",
-      "phase": "semantic",
-      "path": "semantic/031-connection-member-wrong-type"
-    },
-    {
-      "id": "semantic-032-connection-member-unknown",
-      "phase": "semantic",
-      "path": "semantic/032-connection-member-unknown"
-    },
-    {
-      "id": "semantic-033-connection-member-reused",
-      "phase": "semantic",
-      "path": "semantic/033-connection-member-reused"
+      "path": "semantic/030-connection-member-wrong-type"
     },
     {
       "id": "semantic-034-worker-with-a-private-health-endpoint",

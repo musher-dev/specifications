@@ -4,7 +4,7 @@
   "expected": "fail",
   "clause": "specifications/component/v1/spec.md#connection-requirements",
   "requirements": [
-    "COMP-CONNECTION-001"
+    "COMP-CONNECTION-002"
   ],
-  "summary": "unknown connection protocol"
+  "summary": "A connection input naming an unknown protocol is rejected."
 }

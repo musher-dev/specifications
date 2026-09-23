@@ -43,6 +43,56 @@
     }
   },
   {
+    "id": "normalization-connection-input-takes-no-value-defaults",
+    "profile": "normalization",
+    "operation": "normalize",
+    "requirements": [
+      "COMP-CONNECTION-002"
+    ],
+    "input": {
+      "specVersion": "v1",
+      "kind": "COMPONENT",
+      "metadata": {
+        "revision": 1,
+        "description": "Synthetic conformance fixture component."
+      },
+      "spec": {
+        "type": "EXTERNAL",
+        "contract": {
+          "inputs": {
+            "llm": {
+              "description": "Language-model connection",
+              "connection": {
+                "protocol": "OPENAI_CHAT_COMPLETIONS"
+              }
+            }
+          },
+          "outputs": {
+            "model": {
+              "description": "Connection model",
+              "schema": {
+                "type": "string"
+              },
+              "from": {
+                "input": "llm",
+                "member": "model"
+              }
+            }
+          }
+        }
+      }
+    },
+    "expect": {
+      "/idempotent": true,
+      "/value/spec/contract/inputs/llm": {
+        "description": "Language-model connection",
+        "connection": {
+          "protocol": "OPENAI_CHAT_COMPLETIONS"
+        }
+      }
+    }
+  },
+  {
     "id": "publication-first-revision",
     "profile": "lifecycle",
     "operation": "revision",

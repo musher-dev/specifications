@@ -80,7 +80,10 @@ built and tested against is recorded with that release
 
 Stated once for every family in
 [core v1 §3](../../core/v1/spec.md#compatibility), and applies without
-narrowing.
+narrowing. For this family it runs from `v1.2.0`:
+[ADR 0033](../../../docs/adr/0033-inputs-are-the-only-way-into-a-component.md)
+§5 withdrew `v1.0.0` and `v1.1.0` from it, once, before anyone outside the
+project had adopted them.
 
 ## <a id="metadata"></a>4. Metadata
 
@@ -230,7 +233,7 @@ The type decides which workload fields apply:
 | `endpoints` | Required, non-empty | Optional | Forbidden |
 | `health` | Optional | Optional | Forbidden |
 | `schedule` | Forbidden | Forbidden | Optional |
-| `envVars`, `volumes` | Optional | Optional | Optional |
+| `volumes` | Optional | Optional | Optional |
 
 Forbidden means absent. Empty mappings and null are not alternative spellings.
 A forbidden field is `ERR_INVALID_VALUE` at its own path, and a required one
@@ -293,10 +296,12 @@ exactly one of `dockerfile` and `buildpacks`. In each of these, naming neither
 is `ERR_MISSING_FIELD` and naming both is `ERR_INVALID_VALUE`. These are
 structural rules.
 
-<a id="COMP-SRC-002"></a>**`COMP-SRC-002`**: `image` is an OCI image reference
-and MUST carry a tag or a SHA-256 digest. A bare name is an implicit `latest`
-and is `ERR_INVALID_VALUE`, structural. A tag is an author request; only a
-resolved digest identifies immutable content.
+<a id="COMP-SRC-002"></a>**`COMP-SRC-002`**: `image` is an OCI image reference:
+a name, then optionally a tag, then optionally a SHA-256 digest. A name without
+a tag means the tag `latest`, as it does in Docker, and every tag is accepted.
+A reference outside that grammar is `ERR_INVALID_VALUE`, structural. A tag is
+an author request, and a tag such as `latest` moves; only a resolved digest
+identifies immutable content.
 
 An omitted Git `ref` requests the repository's default branch. A `branch` is a
 request, not a pin: the branch moves. A `commit` identifies the repository
@@ -306,15 +311,7 @@ content, not every build input or the resulting image.
 `build.buildpacks.builderImage` names a Cloud Native Buildpacks builder.
 `build.arguments` applies to either strategy: build-time values keyed by name,
 using the environment-variable grammar of [§5.3](#env-vars). They configure the
-build only; runtime configuration rides on `envVars` and inputs.
-
-<a id="COMP-SRC-003"></a>**`COMP-SRC-003`**: Without a digest, image tags MUST NOT
-be latest, main, main-stable, master, stable, edge, nightly, dev or rolling,
-compared case-insensitively. Failure: `ERR_UNPINNED_IMAGE` at
-`/spec/workload/source/image`, semantic.
-
-This set is fixed for v1. Extending it to reject previously accepted documents
-is breaking regardless of validation phase. Other tags are still mutable.
+build only; runtime configuration rides on inputs ([§6.1](#inputs)).
 
 ### <a id="endpoints"></a>5.2 Endpoints
 
@@ -382,27 +379,30 @@ these facts. Inconsistent or malformed facts fail with blueprint's
 
 ### <a id="env-vars"></a>5.3 Environment variables
 
-`envVars` maps each variable name to its value, an intrinsic non-secret
-constant written verbatim. An empty string is a value. Names match
-`^[A-Z_][A-Z0-9_]*$` and contain 1–128 characters. A name appears once: the YAML
-profile rejects a repeated mapping key in the `parser` phase
-([`CORE-YAML-006`](../../core/v1/spec.md#CORE-YAML-006)), so no rule here
-restates it.
+A workload's environment is exactly its inputs' targets. Each input of a
+workload component names, in `target.envVarKey`, the variable its value is
+written to ([§6.1](#inputs)), and nothing else writes the environment. Names
+match `^[A-Z_][A-Z0-9_]*$` and contain 1–128 characters.
+
+A value that does not vary between installations is still an input: one with a
+`default`, which a blueprint may leave unwired or override
+([blueprint §4.2](../../blueprint/v1/spec.md#bindings)). The install form is
+authored separately in the blueprint, so a default asks the installer nothing.
+A value that must never be overridden belongs in the image.
 
 ```yaml
-envVars:
-  PGDATA: /var/lib/postgresql/data/pgdata
-  POSTGRES_DB: app
+inputs:
+  pgdata:
+    description: Directory PostgreSQL keeps its data files in.
+    schema: { type: string }
+    default: /var/lib/postgresql/data/pgdata
+    target: { envVarKey: PGDATA }
 ```
 
-A value that varies between installations is not an environment constant. It is
-an input with a target ([§6.1](#inputs)), supplied by the blueprint, and an
-organization variable reaches a component only that way.
-
-<a id="COMP-ENVVAR-002"></a>**`COMP-ENVVAR-002`**: An input target MUST NOT claim
-a name `envVars` declares, or another input's key. Failure:
-`ERR_CONFLICTING_ENV_KEY` at the claiming input's `target/envVarKey`; input
-names are compared in UTF-8 order to select the later declaration.
+<a id="COMP-ENVVAR-002"></a>**`COMP-ENVVAR-002`**: Two inputs MUST NOT claim one
+`envVarKey`. Failure: `ERR_CONFLICTING_ENV_KEY` at the claiming input's
+`target/envVarKey`; input names are compared in UTF-8 order to select the later
+declaration.
 
 An input's value is encoded into its environment variable after logical
 validation:
@@ -482,7 +482,8 @@ component the platform does not run, addressed elsewhere: a managed database,
 for example, whose address and credentials another node consumes. It has no workload
 ([`COMP-EXT-001`](#COMP-EXT-001)), and its inputs have no environment `target`,
 because nothing runs to receive one. A target on one is `ERR_INVALID_VALUE` at
-its `target`, structural.
+its `target`, structural. It is the only kind of component that declares a
+connection input ([`COMP-CONNECTION-002`](#COMP-CONNECTION-002)).
 
 <a id="COMP-EXT-003"></a>**`COMP-EXT-003`**: An `EXTERNAL` component requires a
 `contract` with a non-empty `outputs` map. It exists to publish values another
@@ -511,9 +512,10 @@ spec:
 ```
 
 There is no `resourceType` at node or value scope; what an external component
-is does not select how it is supplied. A language model or other API reached with an
-endpoint, a credential and a model together is a connection
-([§6.4](#connection-requirements)), not an external node.
+is does not select how it is supplied. A language model reached with an
+endpoint, a credential and a model together is an external component too: its
+connection input ([§6.4](#connection-requirements)) takes the connection whole,
+and its outputs hand the members to the nodes that call it.
 
 ### <a id="jobs"></a>5.7 Jobs and schedules
 
@@ -585,12 +587,18 @@ start one.
 `^[a-z][a-zA-Z0-9]{0,63}$`.
 
 <a id="COMP-DESC-001"></a>**`COMP-DESC-001`**: Every input and output requires a
-non-empty description and a logical schema.
+non-empty description, and every value input and every output a logical schema.
 
 ### <a id="inputs"></a>6.1 Inputs
 
-Inputs declare `schema` and `description`, and optionally `required` (default
-true), `default`, `sensitive` (default false), `presentationHint` and `target`.
+An input is a **value input**, which declares `schema`, or a **connection
+input**, which declares `connection` ([§6.4](#connection-requirements)). The key
+that is present says which: declaring neither is `ERR_MISSING_FIELD`, and
+declaring both is `ERR_INVALID_VALUE`. These are structural rules.
+
+A value input declares `schema` and `description`, and optionally `required`
+(default true), `default`, `sensitive` (default false), `presentationHint` and
+`target`.
 An input of a workload component requires `target.envVarKey`, the environment
 variable its value is written to; an input of an `EXTERNAL` component forbids a
 target ([`COMP-EXT-002`](#COMP-EXT-002)).
@@ -618,7 +626,7 @@ origin:
 | Keys | Meaning |
 |---|---|
 | `value` | Logical non-secret value |
-| `input` | Forward the named own input, retaining sensitivity |
+| `input`, optional `member` | Forward the named own input, or one member of a connection input, retaining sensitivity |
 | `endpoint`, `property` | Read one allocated endpoint property |
 | `template` | Single-pass string substitution over own endpoints |
 
@@ -655,6 +663,15 @@ simply absent. An output whose only source can be absent is a promise the
 contract cannot keep, and a consuming node discovers that at install time rather
 than here. A `default` closes it, because a default is a value: it makes the
 input supplied whether a blueprint binds it or not.
+
+<a id="COMP-OUT-004"></a>**`COMP-OUT-004`**: An `input` origin naming a connection
+input MUST carry `member`, one of `baseURL`, `apiKey` or `model`, and one naming
+a value input MUST NOT. Failure: `ERR_UNKNOWN_INPUT_REFERENCE`, at `from/input`
+when the member is missing and at `from/member` when it is not wanted, semantic.
+A `member` without an `input` is `ERR_MISSING_FIELD`, structural. Each member
+is a string, so an output forwarding one declares a string schema, as
+[`COMP-OUT-002`](#COMP-OUT-002) requires of any forwarded value; `apiKey` is
+sensitive, so an output forwarding it is sensitive ([§11](#security)).
 
 <a id="COMP-REF-001"></a>**`COMP-REF-001`**: A `template` admits only core's
 `self` namespace, and a `self` path is exactly
@@ -724,24 +741,39 @@ Logical values share core's depth, byte and scalar limits. Numbers use finite
 binary64 values, with integers restricted to the inclusive safe-integer range.
 Unsupported numeric values are rejected, never silently rounded.
 
-### <a id="connection-requirements"></a>6.4 Connection requirements
+### <a id="connection-requirements"></a>6.4 Connection inputs
 
-`contract.connectionRequirements` is an optional map of named atomic connection
-requirements: an endpoint, a credential and a model the component needs
-together. A blueprint satisfies each one with a connection parameter
-([blueprint §5.3](../../blueprint/v1/spec.md#atomic-connections)). Names use the
-input-name grammar. Each requirement requires `protocol` and `inputs`, which
-maps exactly the three roles `baseURL`, `apiKey` and `model` to existing inputs.
+A connection input stands for an endpoint, a credential and a model the platform
+acquires together as one atomic connection
+([ADR 0030](../../../docs/adr/0030-atomic-named-connections.md)). It declares
+`description` and `connection`, which requires `protocol` and may list
+`capabilities`. The component that declares one is an external node standing
+for the model API, and its outputs hand the members on:
 
 ```yaml
-connectionRequirements:
-  llm:
-    protocol: OPENAI_CHAT_COMPLETIONS
-    capabilities: [STREAMING]
+spec:
+  type: EXTERNAL
+  contract:
     inputs:
-      baseURL: llmBaseURL
-      apiKey: llmAPIKey
-      model: llmModel
+      llm:
+        description: Language-model connection this node stands for.
+        connection:
+          protocol: OPENAI_CHAT_COMPLETIONS
+          capabilities: [STREAMING]
+    outputs:
+      baseURL:
+        description: Base URL of the language-model API.
+        schema: { type: string }
+        from: { input: llm, member: baseURL }
+      apiKey:
+        description: Credential the language-model API accepts.
+        schema: { type: string }
+        sensitive: true
+        from: { input: llm, member: apiKey }
+      model:
+        description: Model the language-model API answers with.
+        schema: { type: string }
+        from: { input: llm, member: model }
 ```
 
 Protocols are OPENAI_CHAT_COMPLETIONS and ANTHROPIC_MESSAGES: client request and
@@ -751,16 +783,24 @@ STREAMING requires incremental protocol-native response events and termination;
 TOOL_CALLS requires protocol-native tool requests and tool-result continuation.
 Omitting capabilities requests only ordinary non-streaming text conversation.
 
-<a id="COMP-CONNECTION-001"></a>**`COMP-CONNECTION-001`**: Every role MUST name a
-required string input with no default. An input named by a role belongs to
-exactly one requirement, and two roles cannot name the same input. The `apiKey`
-role MUST name a sensitive input. Failure:
-`ERR_INVALID_CONNECTION_REQUIREMENT`.
+<a id="COMP-CONNECTION-002"></a>**`COMP-CONNECTION-002`**: A connection input
+declares only `description` and `connection`. Its protocol fixes its members,
+`baseURL`, `apiKey` and `model`, each a string and `apiKey` sensitive, so it
+MUST NOT carry `schema`, `default`, `required`, `sensitive`,
+`presentationHint` or `target`, and it is always required. Only an `EXTERNAL`
+component declares one. A field this excludes is `ERR_INVALID_VALUE` at that
+field, and a connection input on a `SERVICE`, `WORKER` or `JOB` is
+`ERR_INVALID_VALUE` at its `connection`. These are structural rules.
 
-The inputs keep their own schemas, descriptions and environment targets; the
-requirement groups them and does not duplicate them. Credentials are whole
-values, never templates or concatenated strings. Existing sensitivity
-propagation and secret-publication prohibitions apply.
+A blueprint fills a connection input with a connection parameter
+([blueprint §5.3](../../blueprint/v1/spec.md#atomic-connections)), and the
+nodes that call the model wire ordinary inputs to the external node's outputs.
+A workload never declares a connection input. It receives a connection's
+members as ordinary values, like any other value from outside the blueprint
+([§5.6](#external)).
+
+Credentials are whole values, never templates or concatenated strings. Existing
+sensitivity propagation and secret-publication prohibitions apply.
 
 ## <a id="validation-layers"></a>7. Validation layers
 
@@ -778,7 +818,6 @@ Core diagnostics also apply.
 
 | Code | Phase | Meaning |
 |---|---|---|
-| `ERR_UNPINNED_IMAGE` | `semantic` | Forbidden floating image tag. |
 | `ERR_CONFLICTING_ENV_KEY` | `semantic` | Environment destination claimed twice. |
 | `ERR_UNKNOWN_ENDPOINT` | `semantic` | Endpoint absent or not explicitly named. |
 | `ERR_ENDPOINT_NOT_HTTP` | `semantic` | Endpoint cannot supply this HTTP operation. |
@@ -786,7 +825,7 @@ Core diagnostics also apply.
 | `ERR_UNKNOWN_ADDRESS_PROPERTY` | `semantic` | Template reads a property §5.2 does not define. |
 | `ERR_ENDPOINT_NOT_EXPOSABLE` | `semantic` | A `WORKER` endpoint is exposed `PUBLIC`, or a `WORKER` output reads a public property. |
 | `ERR_INVALID_SCHEDULE` | `semantic` | A cron field is outside §5.7's grammar or range. |
-| `ERR_UNKNOWN_INPUT_REFERENCE` | `semantic` | Output names no own input. |
+| `ERR_UNKNOWN_INPUT_REFERENCE` | `semantic` | Output names no own input, or reads a connection input without the member §6.2 requires. |
 | `ERR_OUTPUT_NOT_PRODUCIBLE` | `semantic` | Output forwards an optional input that has no default. |
 | `ERR_INVALID_MOUNT` | `semantic` | Mount is not canonical or overlaps another. |
 | `ERR_INVALID_VALUE_SCHEMA` | `semantic` | Unsupported or invalid logical schema. |
@@ -795,7 +834,6 @@ Core diagnostics also apply.
 | `ERR_VERSION_NOT_MONOTONIC` | `capability` | Published component revision does not increase. |
 | `ERR_DESCRIPTION_REQUIRED` | `capability` | Publication requires a description this document does not carry. |
 | `ERR_ENV_ENCODING` | `resolution` | Value cannot be encoded into an environment variable. |
-| `ERR_INVALID_CONNECTION_REQUIREMENT` | `semantic` | Invalid connection member or role. |
 
 ## <a id="conformance"></a>9. Conformance
 
@@ -814,8 +852,8 @@ conformance evidence.
 
 ## <a id="security"></a>11. Security considerations
 
-Published artifacts MUST NOT contain secret plaintext, including defaults,
-environment constants and build arguments. A validator cannot discover every
+Published artifacts MUST NOT contain secret plaintext, including defaults
+and build arguments. A validator cannot discover every
 unmarked secret; this does not authorize embedding one. Sensitive contracts
 reject authored literal supply.
 

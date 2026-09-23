@@ -6,6 +6,6 @@
   "requirements": [
     "BP-CONNECTION-001"
   ],
-  "summary": "A connection binding naming no parameter is rejected.",
+  "summary": "A binding to a connection input naming no parameter is rejected.",
   "document": "connection-app/blueprint.yaml"
 }

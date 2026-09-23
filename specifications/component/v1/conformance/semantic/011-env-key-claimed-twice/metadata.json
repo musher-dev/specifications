@@ -6,5 +6,5 @@
   "requirements": [
     "COMP-ENVVAR-002"
   ],
-  "summary": "An envVars key also claimed by an input's target.envVarKey is rejected."
+  "summary": "Two inputs claiming one environment variable are rejected, at the later declaration."
 }

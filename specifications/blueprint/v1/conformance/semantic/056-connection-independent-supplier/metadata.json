@@ -6,6 +6,6 @@
   "requirements": [
     "BP-CONNECTION-001"
   ],
-  "summary": "An ordinary binding to an input a connection requirement owns is rejected.",
+  "summary": "A value binding to a connection input is rejected: only a connection parameter supplies one.",
   "document": "connection-app/blueprint.yaml"
 }

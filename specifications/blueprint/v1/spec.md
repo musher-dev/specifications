@@ -83,6 +83,13 @@ built and tested against is recorded with that release
 | [core](../../core/v1/spec.md) | v1 |
 | [component](../../component/v1/spec.md) | v1 |
 
+The compatibility guarantee of
+[core v1 §3](../../core/v1/spec.md#compatibility) runs, for this family, from
+`v1.3.0`:
+[ADR 0033](../../../docs/adr/0033-inputs-are-the-only-way-into-a-component.md)
+§5 withdrew `v1.0.0` to `v1.2.0` from it, once, before anyone outside the
+project had adopted them.
+
 ## <a id="identity"></a>3. Identity
 
 `metadata` carries `slug`, `revision` and `description`, and nothing else. A
@@ -215,8 +222,6 @@ components:
     bindings:
       databaseURL: { node: db, output: connectionString }
       siteTitle: { parameter: siteTitle }
-    connectionBindings:
-      llm: { parameter: llm }
 ```
 
 | Member | Holds | Section |
@@ -226,7 +231,6 @@ components:
 | `compute` | The compute profile and its placement pins | [§4.3](#node-compute), [§4.4](#placement-constraints) |
 | `volumes` | The storage allocated to each volume | [§4.3](#node-compute) |
 | `exposure` | The exposure of each endpoint | [§4.3](#node-compute) |
-| `connectionBindings` | The connection parameter for each connection requirement | [§5.3](#atomic-connections) |
 
 ### <a id="component-reference"></a>4.1 Component reference
 
@@ -426,9 +430,9 @@ parameters:
   llm: { from: "${{ connections.llm.default }}", ui: { label: Language model } }
 ```
 
-The node in [§4](#components)'s example reaches two of these: its `bindings`
-name `siteTitle`, and its `connectionBindings` name `llm`. A node never names a
-variable or a connection directly.
+The node in [§4](#components)'s example reaches `siteTitle` through its
+`bindings`, and [§5.3](#atomic-connections) shows a connection reaching a node
+the same way. A node never names a variable or a connection directly.
 
 <a id="BP-PARAM-010"></a>**`BP-PARAM-010`**: A parameter carries at most one of
 `default`, `generator` and `from`. A `default` beside `generator` or `from` is
@@ -442,8 +446,7 @@ schema of their own; the inputs bound to them own the value contract
 ### <a id="recipients"></a><a id="coverage"></a><a id="derivation"></a><a id="merge"></a><a id="authored-parameters"></a>5.1 Recipients
 
 <a id="BP-PARAM-001"></a>**`BP-PARAM-001`**: Every parameter MUST be named by at
-least one `parameter` binding or, for a connection parameter, one connection
-binding ([§5.3](#atomic-connections)); otherwise `ERR_UNBOUND_PARAMETER`.
+least one `parameter` binding; otherwise `ERR_UNBOUND_PARAMETER`.
 
 <a id="BP-PARAM-002"></a>**`BP-PARAM-002`**: Shared parameters require equal
 logical schemas, ignoring mapping order. Otherwise `ERR_CONFLICTING_INPUT_SCHEMA`.
@@ -460,8 +463,8 @@ node (`ERR_UNKNOWN_NODE`) and an output its component declares
 (`ERR_UNKNOWN_OUTPUT`).
 
 <a id="BP-PARAM-007"></a>**`BP-PARAM-007`**: Every binding names an existing
-input (`ERR_UNKNOWN_INPUT`), and every `parameter` binding and connection binding
-names a declared parameter (`ERR_UNKNOWN_PARAMETER`).
+input (`ERR_UNKNOWN_INPUT`), and every `parameter` binding names a
+declared parameter (`ERR_UNKNOWN_PARAMETER`).
 
 ### <a id="value-sources"></a>5.2 Supply and resolution
 
@@ -607,44 +610,51 @@ Operational eligibility can change independently, but cannot rewrite the record.
 A **connection parameter** is a parameter whose `from` is
 `${{ connections.<path> }}`. It names one atomic connection
 ([ADR 0030](../../../docs/adr/0030-atomic-named-connections.md)): an endpoint, a
-credential and a model acquired together, not a scalar lookup. Each node's
-`connectionBindings` maps the name of a component connection requirement
-([component §6.4](../../component/v1/spec.md#connection-requirements)) to
-`{ parameter: <name> }`, naming the connection parameter that satisfies it.
-Requirement names use the input-name grammar. The dotted path after
-`connections.` is an exact key naming one connection the organization has
-configured, for example `llm.default`; it is not object traversal and not a
-selector.
+credential and a model acquired together, not a scalar lookup. It fills a
+connection input ([component §6.4](../../component/v1/spec.md#connection-requirements))
+through an ordinary `parameter` binding. The component that declares the input
+is an external node standing for the model API, and the nodes that call the
+model wire their inputs to its outputs, as they would to a managed database's.
+The dotted path after `connections.` is an exact key naming one connection the
+organization has configured, for example `llm.default`; it is not object
+traversal and not a selector.
 
 ```yaml
 parameters:
-  llm: { from: "${{ connections.llm.default }}" }
+  llm: { from: "${{ connections.llm.default }}", ui: { label: Language model } }
 components:
+  llm:
+    componentRef: ./components/openai-chat.yaml
+    bindings:
+      llm: { parameter: llm }
   assistant:
     componentRef: ./components/assistant.yaml
     compute: { profile: general.standard.small }
-    connectionBindings:
-      llm: { parameter: llm }
+    bindings:
+      llmBaseURL: { node: llm, output: baseURL }
+      llmAPIKey: { node: llm, output: apiKey }
+      llmModel: { node: llm, output: model }
 ```
 
-<a id="BP-CONNECTION-001"></a>**`BP-CONNECTION-001`**: Every component connection
-requirement MUST have exactly one connection binding, and it MUST name a
-connection parameter. A connection parameter MUST be bound only through
-`connectionBindings`, and any other parameter only through `bindings`. Each of
-these fails with `ERR_INVALID_CONNECTION_BINDING`:
+<a id="BP-CONNECTION-001"></a>**`BP-CONNECTION-001`**: A connection input MUST be
+bound only by a `parameter` binding naming a connection parameter, and a
+connection parameter MUST bind only connection inputs. Each of these fails with
+`ERR_INVALID_CONNECTION_BINDING`:
 
-- a connection binding naming no requirement of the component;
-- a requirement with no connection binding;
-- a connection binding naming a parameter that is not a connection parameter;
-- a `parameter` binding naming a connection parameter;
-- an ordinary binding to an input a requirement owns.
+- a `value` or `node` binding to a connection input, at the binding;
+- a `parameter` binding to a connection input naming a parameter that is not a
+  connection parameter, at the binding's `parameter`;
+- a `parameter` binding to a value input naming a connection parameter, at the
+  binding's `parameter`.
 
-A connection binding naming no parameter is `ERR_UNKNOWN_PARAMETER`
-([`BP-PARAM-007`](#BP-PARAM-007)), and a connection parameter nothing binds is
-`ERR_UNBOUND_PARAMETER` ([`BP-PARAM-001`](#BP-PARAM-001)). The parameter's
-`from` must satisfy [`BP-REF-001`](#BP-REF-001). There is no implicit sharing by
-input name or protocol. A `variables` parameter holds one value, and separate
-variables cannot assemble a connection.
+A binding naming no parameter is `ERR_UNKNOWN_PARAMETER`
+([`BP-PARAM-007`](#BP-PARAM-007)), and nothing else. A connection input is always
+required, so one left unbound is `ERR_UNSATISFIED_REQUIRED_INPUT`
+([`BP-PARAM-003`](#BP-PARAM-003)). A connection input declares no schema, so
+[`BP-PARAM-002`](#BP-PARAM-002) does not compare it. The parameter's `from` must
+satisfy [`BP-REF-001`](#BP-REF-001). There is no implicit sharing by input name
+or protocol. A `variables` parameter holds one value, and separate variables
+cannot assemble a connection.
 
 <a id="BP-CONNECTION-002"></a>**`BP-CONNECTION-002`**: Installation acquires one
 immutable, authorized selection per installation identity and connection
@@ -750,11 +760,11 @@ Core and component diagnostics apply, with these additions:
 | `ERR_NODE_REQUIRED` | `capability` | Publication requires a node this blueprint does not declare. |
 | `ERR_UNKNOWN_OUTPUT` | `semantic` | Binding names no producer output. |
 | `ERR_UNKNOWN_INPUT` | `semantic` | Binding names no receiver input. |
-| `ERR_UNKNOWN_PARAMETER` | `semantic`, `resolution` | Binding, connection binding or submitted value names no parameter. |
+| `ERR_UNKNOWN_PARAMETER` | `semantic`, `resolution` | Binding or submitted value names no parameter. |
 | `ERR_INCOMPATIBLE_TYPE` | `semantic` | Producer type cannot supply consumer. |
 | `ERR_UNREFERENCED_COMPONENT` | `semantic` | Item contains an unused component. |
 | `ERR_CONFLICTING_INPUT_SCHEMA` | `semantic` | Shared parameter receivers disagree. |
-| `ERR_UNBOUND_PARAMETER` | `semantic` | No binding or connection binding names the parameter. |
+| `ERR_UNBOUND_PARAMETER` | `semantic` | No binding names the parameter. |
 | `ERR_UNSATISFIED_REQUIRED_INPUT` | `semantic`, `resolution` | Required input has no binding or default. |
 | `ERR_ENDPOINT_NOT_PUBLIC` | `semantic` | Output requires exposure not selected by the blueprint. |
 | `ERR_UNKNOWN_ENUM_MEMBER` | `semantic` | UI label names no enum member. |
@@ -762,7 +772,7 @@ Core and component diagnostics apply, with these additions:
 | `ERR_INVALID_VOLUME_ALLOCATION` | `semantic` | Volume allocation is absent, unknown or below minimum. |
 | `ERR_READINESS_REQUIRED` | `semantic` | Public HTTP-family service has no readiness probe. |
 | `ERR_VALUE_CYCLE` | `semantic` | Value dependencies contain a cycle. |
-| `ERR_INVALID_CONNECTION_BINDING` | `semantic` | A connection requirement is unbound or bound to something other than a connection parameter, or a connection parameter or connection-owned input is bound by an ordinary binding. |
+| `ERR_INVALID_CONNECTION_BINDING` | `semantic` | A connection input is bound by something other than a connection parameter, or a connection parameter binds a value input. |
 | `ERR_PARAMETER_NOT_SUBMITTABLE` | `resolution` | A submitted value names a generated, variable or connection parameter. |
 | `ERR_MISSING_PARAMETER_VALUE` | `resolution` | Required submitted value is absent. |
 | `ERR_VARIABLE_NOT_AUTHORIZED` | `resolution` | Installation cannot read the organization variable. |

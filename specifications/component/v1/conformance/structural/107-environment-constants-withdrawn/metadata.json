@@ -1,0 +1,7 @@
+{
+  "id": "structural-107-environment-constants-withdrawn",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#env-vars",
+  "summary": "A workload envVars map is rejected: every environment variable is an input."
+}

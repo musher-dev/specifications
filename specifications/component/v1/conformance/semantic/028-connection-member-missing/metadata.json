@@ -1,0 +1,10 @@
+{
+  "id": "semantic-028-connection-member-missing",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#outputs",
+  "requirements": [
+    "COMP-OUT-004"
+  ],
+  "summary": "An output forwarding a connection input without naming a member is rejected."
+}
