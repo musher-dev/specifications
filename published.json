@@ -43,6 +43,14 @@
       },
       "tree": "736b712df60b955046968467b4c6a0d12d3f3ee9"
     },
+    "component/v1.2.0": {
+      "bundleSha256": "8e1ace8bdbea68cfb697672545b2f24937cf84fdee633ac7baf58382fff063d5",
+      "path": "specifications/component/v1",
+      "requires": {
+        "core": "1.0.0"
+      },
+      "tree": "a53d98a160f9f6fb1539a47b2222af2e8b28969b"
+    },
     "core/v1.0.0": {
       "bundleSha256": null,
       "path": "specifications/core/v1",
