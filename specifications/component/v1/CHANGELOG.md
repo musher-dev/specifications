@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.0](https://github.com/musher-dev/specifications/compare/component/v1.1.0...component/v1.2.0) (2026-09-23)
+
+
+### Additions
+
+* **blueprint:** bind a connection input through ordinary bindings ([86464e0](https://github.com/musher-dev/specifications/commit/86464e06b0d44e87425e1bb6f4a62691118ce66d))
+* **component:** make inputs the only way into a component ([86464e0](https://github.com/musher-dev/specifications/commit/86464e06b0d44e87425e1bb6f4a62691118ce66d))
+
 ## [1.1.0](https://github.com/musher-dev/specifications/compare/component/v1.0.0...component/v1.1.0) (2026-09-20)
 
 
