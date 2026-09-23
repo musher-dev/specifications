@@ -27,6 +27,15 @@
       },
       "tree": "88ec9331e54eb422ef7ffbeb1a84561ced93ed6d"
     },
+    "blueprint/v1.3.0": {
+      "bundleSha256": "711baf20056ce4c9c5d109b12839a1210eb653fe0befd72c7c58822c3fa4a6b6",
+      "path": "specifications/blueprint/v1",
+      "requires": {
+        "component": "1.2.0",
+        "core": "1.0.0"
+      },
+      "tree": "865bb4e8465e0dc83759bcb7e363579774b30e80"
+    },
     "component/v1.0.0": {
       "bundleSha256": "8bbbf9bbcb282991f5157732bfd92b3481692390e582f29c6e9f91c472ac124c",
       "path": "specifications/component/v1",
