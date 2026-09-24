@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/musher-dev/specifications/compare/blueprint/v1.3.0...blueprint/v1.4.0) (2026-09-24)
+
+
+### Additions
+
+* **blueprint:** deploy only a finished component ([#123](https://github.com/musher-dev/specifications/issues/123)) ([a820e8a](https://github.com/musher-dev/specifications/commit/a820e8ad84d7ee8e1c02ef38e1e2f734ad92f5a3)), closes [#120](https://github.com/musher-dev/specifications/issues/120)
+
 ## [1.3.0](https://github.com/musher-dev/specifications/compare/blueprint/v1.2.0...blueprint/v1.3.0) (2026-09-23)
 
 
