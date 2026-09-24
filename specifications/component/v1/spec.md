@@ -413,6 +413,72 @@ an independently supplied public URL, hostname or port cannot disagree with
 these facts. Inconsistent or malformed facts fail with blueprint's
 `ERR_INVALID_RESOLUTION_CONTEXT`.
 
+<a id="tls"></a>**The hop to the workload.** `protocol` is what the platform
+speaks to `targetPort`: its proxy, forwarding traffic to an endpoint a blueprint
+exposes, and its probes ([§5.4](#health)). How the public reaches the platform,
+including public TLS, is the platform's concern and is unaffected. `HTTPS` is
+the only protocol that is TLS on this hop in v1; `HTTP`, `WS` and `GRPC` are
+cleartext on it.
+
+```yaml
+endpoints:
+  web:
+    targetPort: 6901
+    protocol: HTTPS
+    tls:
+      verify: BUNDLE
+      serverName: kasm.example.internal
+      trustBundle: { input: caBundle }
+```
+
+<a id="COMP-EP-005"></a>**`COMP-EP-005`**: `tls` says how the platform trusts
+the certificate an `HTTPS` endpoint presents, and only an `HTTPS` endpoint
+carries one; on any other protocol it is `ERR_INVALID_VALUE` at the endpoint's
+`tls`. `verify` is `SYSTEM`, `BUNDLE` or `NONE`, and defaults to `SYSTEM`.
+`BUNDLE` requires `trustBundle` and `serverName`, and naming neither or only one
+is `ERR_MISSING_FIELD` at `tls`; `trustBundle` under any other mode is
+`ERR_INVALID_VALUE` at `tls/trustBundle`. `serverName` is a lowercase DNS name
+of at most 253 characters whose last label starts with a letter, so never an IP
+literal; any other value is `ERR_INVALID_VALUE`. These are structural rules.
+
+<a id="COMP-EP-006"></a>**`COMP-EP-006`**: `trustBundle` names, in `input`, one
+of the component's own inputs, and the input's value is one or more PEM
+`CERTIFICATE` blocks. An input that does not exist is
+`ERR_UNKNOWN_INPUT_REFERENCE`, and one whose schema is not a string is
+`ERR_VALUE_CONSTRAINT`. The trust policy cannot fall back when its roots are
+absent, so the input MUST always be supplied: required, or carrying a
+`default`. An optional input with no default is `ERR_INPUT_NOT_GUARANTEED`. Each
+anchors at `tls/trustBundle/input`, and these are semantic rules.
+
+A CA certificate is not a secret. One baked into the image is an input with a
+`default`, and one the installer brings is a required input, which may be the
+same input the workload reads its own certificate from.
+
+<a id="COMP-EP-007"></a>**`COMP-EP-007`**: The trust policy is the endpoint's,
+and every connection the platform makes to the endpoint uses it: forwarded
+traffic and every probe alike. It does not bind other nodes, which reach the
+endpoint through its private address with clients of their own.
+
+- `SYSTEM`: the certificate chain MUST end at a root the implementation
+  publicly trusts, and the certificate MUST be valid for the server name.
+- `BUNDLE`: as `SYSTEM`, except that the roots are exactly the certificates in
+  `trustBundle`. A bundle holding no certificate is a configuration error.
+- `NONE`: neither the chain nor the name is verified. This is an explicit
+  exception for one endpoint whose workload serves a certificate nothing can
+  verify, such as one it generated at startup. It gives up the platform's
+  ability to tell the workload from anything else answering on that port.
+
+The server name is `serverName` when present, and is what the connection sends
+in SNI. Without one, the certificate MUST be valid for the host the platform
+connects to, which this specification does not fix, so an endpoint that
+verifies SHOULD name its `serverName`. The server name never changes the address
+connected to or the HTTP `Host` header. Under `NONE`, `serverName` sets SNI only.
+
+An implementation MUST NOT fall back from `SYSTEM` or `BUNDLE` to `NONE`, from
+`HTTPS` to `HTTP`, or from a declared policy to an implicit one. A policy it
+cannot honour is a configuration error, reported as one, and never a failed
+probe.
+
 ### <a id="env-vars"></a>5.3 Environment variables
 
 A workload's environment is exactly its inputs' targets. Each input of a
@@ -469,14 +535,66 @@ only mechanism in v1, and any other key is an unknown field.
 
 The stages are startup (initialization gate), readiness (traffic gate without
 restart), and liveness (restart on failure). Until startup succeeds, readiness
-and liveness checks are suspended. HTTP status 200–399 succeeds; transport
-failure, timeout or another status fails. Failure thresholds count consecutive
+and liveness checks are suspended. A probe is a `GET` of `path`, sent over the
+named endpoint's protocol and trust policy
+([`COMP-EP-007`](#COMP-EP-007)); a probe has no TLS settings of its own, and a
+health check needing a different protocol names a different endpoint. HTTP
+status 200–399 succeeds; transport failure, timeout or another status fails. A
+redirect is a status like any other: it is evaluated as returned and never
+followed. Failure thresholds count consecutive
 failures; success thresholds count consecutive successes. Exhausting startup's
 failure threshold restarts the workload.
 
 Defaults: initialDelaySeconds 10, periodSeconds 10, timeoutSeconds 5,
 successThreshold 1, failureThreshold 3. Initial delay is non-negative; every
 other numeric probe field is a positive integer.
+
+```yaml
+readiness:
+  http:
+    endpoint: web
+    path: /
+    expectedStatuses: [200]
+    auth:
+      basic:
+        username: { value: kasm_user }
+        password: { input: vncPassword }
+```
+
+<a id="COMP-EP-008"></a>**`COMP-EP-008`**: `expectedStatuses` replaces the
+200–399 range for one probe: the probe succeeds on a status in the list, and on
+no other. It is a non-empty list of unique integers from 200 to 599, since a
+1xx status is never the answer to a request; anything else is
+`ERR_INVALID_VALUE` or `ERR_INVALID_TYPE`, structural.
+
+<a id="COMP-EP-009"></a>**`COMP-EP-009`**: `auth` holds exactly one mechanism,
+named by its key: `basic`, which requires `username` and `password`, or
+`bearer`, which requires `token`. Each credential holds exactly one origin: a
+literal `value`, a non-empty string, or `input`, one of the component's own
+inputs. In each of these, naming neither is `ERR_MISSING_FIELD` and naming both
+is `ERR_INVALID_VALUE`. These are structural rules.
+
+<a id="COMP-EP-010"></a>**`COMP-EP-010`**: A password and a token are secrets,
+so a `value` supplying one is `ERR_SECRET_LITERAL` at that `value`. An `input`
+origin names an input that exists, or it is `ERR_UNKNOWN_INPUT_REFERENCE`; one
+whose schema is a string, or it is `ERR_VALUE_CONSTRAINT`; and one that is
+always supplied, or it is `ERR_INPUT_NOT_GUARANTEED`, because a probe missing a
+credential would test something other than what it declares. An input
+supplying a password or a token MUST be `sensitive`, so that nothing upstream
+of it can supply it as a literal, or it is `ERR_VALUE_CONSTRAINT`. Each
+anchors at the credential's `input`, and these are semantic rules.
+
+<a id="COMP-EP-011"></a>**`COMP-EP-011`**: Probe credentials are sent on the
+probe's request only. An implementation MUST NOT add them to traffic it
+forwards to the endpoint, and they are sensitive wherever they travel
+([§11](#security)).
+
+A probe says what it proves, so prefer the strongest one the workload allows:
+a health path that answers without credentials, then an authenticated probe of
+a real page. A workload behind a login that offers neither can still be probed
+with `expectedStatuses: [401]`, which is valid but proves only that the login
+answers, not that what is behind it works. A listing whose readiness rests on
+such a probe SHOULD say so.
 
 <a id="COMP-EP-003"></a>**`COMP-EP-003`**: Public HTTP-family exposure requires a
 readiness probe. Blueprint checks it against the component contract when a node
@@ -873,12 +991,13 @@ Core diagnostics also apply.
 | `ERR_UNKNOWN_ADDRESS_PROPERTY` | `semantic` | Template reads a property §5.2 does not define. |
 | `ERR_ENDPOINT_NOT_EXPOSABLE` | `semantic` | A `WORKER` endpoint is exposed `PUBLIC`, or a `WORKER` output reads a public property. |
 | `ERR_INVALID_SCHEDULE` | `semantic` | A cron field is outside §5.7's grammar or range. |
-| `ERR_UNKNOWN_INPUT_REFERENCE` | `semantic` | Output names no own input, or reads a connection input without the member §6.2 requires. |
+| `ERR_UNKNOWN_INPUT_REFERENCE` | `semantic` | An output, trust bundle or probe credential names no own input, or an output reads a connection input without the member §6.2 requires. |
 | `ERR_OUTPUT_NOT_PRODUCIBLE` | `semantic` | Output forwards an optional input that has no default. |
+| `ERR_INPUT_NOT_GUARANTEED` | `semantic` | A trust bundle or probe credential reads an optional input that has no default. |
 | `ERR_INVALID_MOUNT` | `semantic` | Mount is not canonical or overlaps another. |
 | `ERR_INVALID_VALUE_SCHEMA` | `semantic` | Unsupported or invalid logical schema. |
-| `ERR_VALUE_CONSTRAINT` | `semantic`, `resolution` | Known value or output origin violates a contract. |
-| `ERR_SECRET_LITERAL` | `semantic` | Authored literal supplies a sensitive contract. |
+| `ERR_VALUE_CONSTRAINT` | `semantic`, `resolution` | Known value, or the input an origin or reference names, violates a contract. |
+| `ERR_SECRET_LITERAL` | `semantic` | Authored literal supplies a sensitive contract or a probe secret. |
 | `ERR_VERSION_NOT_MONOTONIC` | `capability` | Published component revision does not increase. |
 | `ERR_DESCRIPTION_REQUIRED` | `capability` | Publication requires a description this document, or one of its inputs or outputs, does not carry. |
 | `ERR_WORKLOAD_REQUIRED` | `capability` | Publication requires a workload of a `SERVICE`, `WORKER` or `JOB`. |
@@ -898,8 +1017,9 @@ outcomes as defined in [the conformance contract](../../../docs/conformance.md).
 ## <a id="known-debt"></a>10. Unsupported capabilities
 
 Runtime-emitted outputs, arbitrary expressions, recursive substitution,
-provider-specific configuration maps, non-HTTP health mechanisms, schedule
-time zones and ordering a job against other nodes are unsupported. Reject
+provider-specific configuration maps, non-HTTP health mechanisms, TLS on the hop
+to a WebSocket or gRPC workload, probe request headers other than credentials,
+schedule time zones and ordering a job against other nodes are unsupported. Reject
 unsupported declarations. Adding them requires defined semantics and
 conformance evidence.
 
@@ -914,3 +1034,11 @@ Sensitivity follows the value through binding, forwarding, formatting and
 storage. Effective sensitivity is source OR destination sensitivity.
 Diagnostics, logs, events, previews and public plans MUST NOT expose sensitive
 values, their substrings, or content hashes. Materialization is a private channel.
+
+An endpoint with `verify: NONE` ([`COMP-EP-007`](#COMP-EP-007)) is reached over
+TLS that authenticates nothing: whatever answers on its port is trusted, and a
+probe credential sent to it goes to that peer. Declare it only for a workload
+whose certificate cannot be verified, and prefer `BUNDLE` wherever the
+certificate is known in advance. Probe credentials are sent on probes only
+([`COMP-EP-011`](#COMP-EP-011)), so an endpoint's own authentication still
+guards the traffic the platform forwards to it.

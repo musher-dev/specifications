@@ -1,0 +1,10 @@
+{
+  "id": "semantic-048-probe-password-from-a-sensitive-input",
+  "phase": "semantic",
+  "expected": "pass",
+  "clause": "specifications/component/v1/spec.md#health",
+  "requirements": [
+    "COMP-EP-010"
+  ],
+  "summary": "A probe password read from a required sensitive string input is accepted."
+}

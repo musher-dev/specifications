@@ -1,0 +1,6 @@
+[
+  {
+    "code": "ERR_INPUT_NOT_GUARANTEED",
+    "path": "/spec/workload/health/readiness/http/auth/basic/password/input"
+  }
+]

@@ -1,0 +1,10 @@
+{
+  "id": "structural-118-bundle-without-a-trust-bundle",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#endpoints",
+  "requirements": [
+    "COMP-EP-005"
+  ],
+  "summary": "BUNDLE verification names the bundle it trusts."
+}

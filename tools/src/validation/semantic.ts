@@ -166,6 +166,25 @@ export function componentObligations(document: Json, { metadata = true } = {}): 
         obligation('ERR_DESCRIPTION_REQUIRED', `/spec/contract/${direction}/${token(name)}`)
   return out
 }
+/**
+ * Component §5.2 COMP-EP-006 and §5.4 COMP-EP-010: workload configuration that
+ * reads one of the component's own inputs reads a string input that is always
+ * supplied, and a secret one reads a sensitive input.
+ */
+function inputReferenceDiagnostics(
+  out: Diagnostic[],
+  contract: Record<string, Json>,
+  name: string,
+  path: string,
+  secret: boolean,
+): void {
+  const input = at(contract, 'inputs', name)
+  if (!isObject(input)) issue(out, 'ERR_UNKNOWN_INPUT_REFERENCE', path)
+  else if (at(input, 'schema', 'type') !== 'string' || (secret && input.sensitive !== true))
+    issue(out, 'ERR_VALUE_CONSTRAINT', path)
+  else if (input.required === false && input.default === undefined)
+    issue(out, 'ERR_INPUT_NOT_GUARANTEED', path)
+}
 export function componentDiagnostics(document: Json): Diagnostic[] {
   const out: Diagnostic[] = []
   const workload = record(at(document, 'spec', 'workload'))
@@ -181,6 +200,33 @@ export function componentDiagnostics(document: Json): Diagnostic[] {
     if (!endpoint) issue(out, 'ERR_UNKNOWN_ENDPOINT', path)
     else if (!['HTTP', 'HTTPS'].includes(String(at(endpoint, 'protocol'))))
       issue(out, 'ERR_ENDPOINT_NOT_HTTP', path)
+    // COMP-EP-010: a credential comes from an input the probe can always read,
+    // and a password or token is never a literal.
+    const base = `/spec/workload/health/${token(name)}/http/auth`
+    const credentials: [string, Json | undefined, boolean][] = [
+      ['basic/username', at(http, 'auth', 'basic', 'username'), false],
+      ['basic/password', at(http, 'auth', 'basic', 'password'), true],
+      ['bearer/token', at(http, 'auth', 'bearer', 'token'), true],
+    ]
+    for (const [key, credential, secret] of credentials) {
+      if (!isObject(credential)) continue
+      if (secret && Object.hasOwn(credential, 'value'))
+        issue(out, 'ERR_SECRET_LITERAL', `${base}/${key}/value`)
+      if (typeof credential.input === 'string')
+        inputReferenceDiagnostics(out, contract, credential.input, `${base}/${key}/input`, secret)
+    }
+  }
+  // COMP-EP-006: a trust bundle's roots come from an input that is always there.
+  for (const [name, endpoint] of Object.entries(record(workload.endpoints))) {
+    const input = at(endpoint, 'tls', 'trustBundle', 'input')
+    if (typeof input === 'string')
+      inputReferenceDiagnostics(
+        out,
+        contract,
+        input,
+        `/spec/workload/endpoints/${token(name)}/tls/trustBundle/input`,
+        false,
+      )
   }
   const mounts: string[] = []
   for (const [name, volume] of Object.entries(record(workload.volumes))) {

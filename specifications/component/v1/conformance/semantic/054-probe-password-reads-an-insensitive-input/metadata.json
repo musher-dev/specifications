@@ -1,0 +1,10 @@
+{
+  "id": "semantic-054-probe-password-reads-an-insensitive-input",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#health",
+  "requirements": [
+    "COMP-EP-010"
+  ],
+  "summary": "A probe password reads a sensitive input."
+}

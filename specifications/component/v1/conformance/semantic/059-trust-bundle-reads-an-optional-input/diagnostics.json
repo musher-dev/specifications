@@ -1,0 +1,6 @@
+[
+  {
+    "code": "ERR_INPUT_NOT_GUARANTEED",
+    "path": "/spec/workload/endpoints/web/tls/trustBundle/input"
+  }
+]

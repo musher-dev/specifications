@@ -1,0 +1,10 @@
+{
+  "id": "structural-131-probe-auth-with-two-mechanisms",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#health",
+  "requirements": [
+    "COMP-EP-009"
+  ],
+  "summary": "auth holds exactly one mechanism."
+}

@@ -1,0 +1,10 @@
+{
+  "id": "semantic-051-bearer-token-literal",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#health",
+  "requirements": [
+    "COMP-EP-010"
+  ],
+  "summary": "A probe bearer token is never a literal."
+}

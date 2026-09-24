@@ -1,0 +1,10 @@
+{
+  "id": "structural-115-https-endpoint-verifies-nothing",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v1/spec.md#endpoints",
+  "requirements": [
+    "COMP-EP-005"
+  ],
+  "summary": "An HTTPS endpoint may opt out of certificate verification explicitly."
+}

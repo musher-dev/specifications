@@ -1,0 +1,10 @@
+{
+  "id": "structural-114-https-endpoint-trusts-a-bundle",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v1/spec.md#endpoints",
+  "requirements": [
+    "COMP-EP-005"
+  ],
+  "summary": "An HTTPS endpoint may verify against a bundle it names, with the name to verify."
+}

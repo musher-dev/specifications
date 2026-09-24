@@ -1,0 +1,10 @@
+{
+  "id": "structural-124-expected-status-below-range",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#health",
+  "requirements": [
+    "COMP-EP-008"
+  ],
+  "summary": "An expected status is a final status, 200 or above."
+}

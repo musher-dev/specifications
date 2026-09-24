@@ -1,0 +1,10 @@
+{
+  "id": "structural-122-server-name-is-an-ip-literal",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#endpoints",
+  "requirements": [
+    "COMP-EP-005"
+  ],
+  "summary": "A server name is a DNS name, never an IP literal."
+}

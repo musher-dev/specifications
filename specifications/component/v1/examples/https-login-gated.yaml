@@ -1,0 +1,39 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Browser desktop served over HTTPS with a certificate generated at startup, behind a password.
+spec:
+  type: SERVICE
+  workload:
+    source:
+      image: kasmweb/doom:1.18.0
+    endpoints:
+      web:
+        targetPort: 6901
+        protocol: HTTPS
+        # The image generates its certificate when it starts, so nothing can
+        # verify it in advance. NONE is the explicit exception for that.
+        tls:
+          verify: NONE
+    health:
+      readiness:
+        http:
+          endpoint: web
+          path: /
+          auth:
+            basic:
+              username:
+                value: kasm_user
+              password:
+                input: vncPassword
+  contract:
+    inputs:
+      vncPassword:
+        description: Password for the kasm_user login, used by people and by the readiness probe.
+        schema:
+          type: string
+          minLength: 8
+        sensitive: true
+        target:
+          envVarKey: VNC_PW

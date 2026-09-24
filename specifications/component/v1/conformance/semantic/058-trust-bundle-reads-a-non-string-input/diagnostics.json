@@ -1,0 +1,6 @@
+[
+  {
+    "code": "ERR_VALUE_CONSTRAINT",
+    "path": "/spec/workload/endpoints/web/tls/trustBundle/input"
+  }
+]

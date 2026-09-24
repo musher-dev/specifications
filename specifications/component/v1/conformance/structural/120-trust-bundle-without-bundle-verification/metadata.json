@@ -1,0 +1,10 @@
+{
+  "id": "structural-120-trust-bundle-without-bundle-verification",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#endpoints",
+  "requirements": [
+    "COMP-EP-005"
+  ],
+  "summary": "A trust bundle is forbidden unless verify is BUNDLE."
+}

@@ -1,0 +1,10 @@
+{
+  "id": "semantic-057-trust-bundle-names-no-input",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#endpoints",
+  "requirements": [
+    "COMP-EP-006"
+  ],
+  "summary": "A trust bundle names one of the component’s own inputs."
+}

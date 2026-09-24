@@ -1,0 +1,10 @@
+{
+  "id": "structural-132-probe-auth-naming-no-mechanism",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#health",
+  "requirements": [
+    "COMP-EP-009"
+  ],
+  "summary": "auth names a mechanism."
+}

@@ -1042,6 +1042,19 @@ const UNPINNED: ReadonlyMap<string, string> = new Map([
       'behavioural operation observes a rollout',
   ],
   [
+    'COMP-EP-007',
+    "How the platform verifies an endpoint's certificate, that forwarded traffic and " +
+      'probes share one policy and that it never falls back to a weaker one are runtime ' +
+      'obligations of the proxy and the prober; no document phase or behavioural operation ' +
+      'opens a connection',
+  ],
+  [
+    'COMP-EP-011',
+    'That probe credentials ride on probe requests and never on forwarded traffic is a ' +
+      'runtime obligation of the proxy and the prober; no document phase or behavioural ' +
+      'operation observes a request',
+  ],
+  [
     'COMP-JOB-004',
     'Skipping a run due while the previous one executes is a runtime obligation of the ' +
       'scheduler; no document phase or behavioural operation observes a run',
