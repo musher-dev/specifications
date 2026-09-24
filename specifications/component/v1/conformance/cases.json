@@ -478,6 +478,116 @@
       "path": "structural/112-member-without-an-input"
     },
     {
+      "id": "structural-113-https-endpoint-verifies-a-server-name",
+      "phase": "structural",
+      "path": "structural/113-https-endpoint-verifies-a-server-name"
+    },
+    {
+      "id": "structural-114-https-endpoint-trusts-a-bundle",
+      "phase": "structural",
+      "path": "structural/114-https-endpoint-trusts-a-bundle"
+    },
+    {
+      "id": "structural-115-https-endpoint-verifies-nothing",
+      "phase": "structural",
+      "path": "structural/115-https-endpoint-verifies-nothing"
+    },
+    {
+      "id": "structural-116-tls-on-an-http-endpoint",
+      "phase": "structural",
+      "path": "structural/116-tls-on-an-http-endpoint"
+    },
+    {
+      "id": "structural-117-tls-on-a-tcp-endpoint",
+      "phase": "structural",
+      "path": "structural/117-tls-on-a-tcp-endpoint"
+    },
+    {
+      "id": "structural-118-bundle-without-a-trust-bundle",
+      "phase": "structural",
+      "path": "structural/118-bundle-without-a-trust-bundle"
+    },
+    {
+      "id": "structural-119-bundle-without-a-server-name",
+      "phase": "structural",
+      "path": "structural/119-bundle-without-a-server-name"
+    },
+    {
+      "id": "structural-120-trust-bundle-without-bundle-verification",
+      "phase": "structural",
+      "path": "structural/120-trust-bundle-without-bundle-verification"
+    },
+    {
+      "id": "structural-121-unknown-verify-mode",
+      "phase": "structural",
+      "path": "structural/121-unknown-verify-mode"
+    },
+    {
+      "id": "structural-122-server-name-is-an-ip-literal",
+      "phase": "structural",
+      "path": "structural/122-server-name-is-an-ip-literal"
+    },
+    {
+      "id": "structural-123-probe-expects-a-401",
+      "phase": "structural",
+      "path": "structural/123-probe-expects-a-401"
+    },
+    {
+      "id": "structural-124-expected-status-below-range",
+      "phase": "structural",
+      "path": "structural/124-expected-status-below-range"
+    },
+    {
+      "id": "structural-125-expected-status-above-range",
+      "phase": "structural",
+      "path": "structural/125-expected-status-above-range"
+    },
+    {
+      "id": "structural-126-empty-expected-statuses",
+      "phase": "structural",
+      "path": "structural/126-empty-expected-statuses"
+    },
+    {
+      "id": "structural-127-repeated-expected-status",
+      "phase": "structural",
+      "path": "structural/127-repeated-expected-status"
+    },
+    {
+      "id": "structural-128-expected-status-as-a-string",
+      "phase": "structural",
+      "path": "structural/128-expected-status-as-a-string"
+    },
+    {
+      "id": "structural-129-probe-with-basic-auth",
+      "phase": "structural",
+      "path": "structural/129-probe-with-basic-auth"
+    },
+    {
+      "id": "structural-130-probe-with-bearer-auth",
+      "phase": "structural",
+      "path": "structural/130-probe-with-bearer-auth"
+    },
+    {
+      "id": "structural-131-probe-auth-with-two-mechanisms",
+      "phase": "structural",
+      "path": "structural/131-probe-auth-with-two-mechanisms"
+    },
+    {
+      "id": "structural-132-probe-auth-naming-no-mechanism",
+      "phase": "structural",
+      "path": "structural/132-probe-auth-naming-no-mechanism"
+    },
+    {
+      "id": "structural-133-probe-password-as-a-bare-string",
+      "phase": "structural",
+      "path": "structural/133-probe-password-as-a-bare-string"
+    },
+    {
+      "id": "structural-134-credential-with-two-origins",
+      "phase": "structural",
+      "path": "structural/134-credential-with-two-origins"
+    },
+    {
       "id": "semantic-001-floating-image-tag",
       "phase": "semantic",
       "path": "semantic/001-floating-image-tag"
@@ -641,6 +751,71 @@
       "id": "semantic-046-output-input-names-an-optional-input-with-a-default",
       "phase": "semantic",
       "path": "semantic/046-output-input-names-an-optional-input-with-a-default"
+    },
+    {
+      "id": "semantic-047-login-gated-https-service",
+      "phase": "semantic",
+      "path": "semantic/047-login-gated-https-service"
+    },
+    {
+      "id": "semantic-048-probe-password-from-a-sensitive-input",
+      "phase": "semantic",
+      "path": "semantic/048-probe-password-from-a-sensitive-input"
+    },
+    {
+      "id": "semantic-049-probe-username-from-an-input",
+      "phase": "semantic",
+      "path": "semantic/049-probe-username-from-an-input"
+    },
+    {
+      "id": "semantic-050-probe-password-literal",
+      "phase": "semantic",
+      "path": "semantic/050-probe-password-literal"
+    },
+    {
+      "id": "semantic-051-bearer-token-literal",
+      "phase": "semantic",
+      "path": "semantic/051-bearer-token-literal"
+    },
+    {
+      "id": "semantic-052-probe-credential-names-no-input",
+      "phase": "semantic",
+      "path": "semantic/052-probe-credential-names-no-input"
+    },
+    {
+      "id": "semantic-053-probe-credential-reads-a-non-string-input",
+      "phase": "semantic",
+      "path": "semantic/053-probe-credential-reads-a-non-string-input"
+    },
+    {
+      "id": "semantic-054-probe-password-reads-an-insensitive-input",
+      "phase": "semantic",
+      "path": "semantic/054-probe-password-reads-an-insensitive-input"
+    },
+    {
+      "id": "semantic-055-probe-credential-reads-an-optional-input",
+      "phase": "semantic",
+      "path": "semantic/055-probe-credential-reads-an-optional-input"
+    },
+    {
+      "id": "semantic-056-trust-bundle-from-an-input-with-a-default",
+      "phase": "semantic",
+      "path": "semantic/056-trust-bundle-from-an-input-with-a-default"
+    },
+    {
+      "id": "semantic-057-trust-bundle-names-no-input",
+      "phase": "semantic",
+      "path": "semantic/057-trust-bundle-names-no-input"
+    },
+    {
+      "id": "semantic-058-trust-bundle-reads-a-non-string-input",
+      "phase": "semantic",
+      "path": "semantic/058-trust-bundle-reads-a-non-string-input"
+    },
+    {
+      "id": "semantic-059-trust-bundle-reads-an-optional-input",
+      "phase": "semantic",
+      "path": "semantic/059-trust-bundle-reads-an-optional-input"
     }
   ]
 }

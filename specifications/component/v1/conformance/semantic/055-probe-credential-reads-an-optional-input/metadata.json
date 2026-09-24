@@ -1,0 +1,10 @@
+{
+  "id": "semantic-055-probe-credential-reads-an-optional-input",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#health",
+  "requirements": [
+    "COMP-EP-010"
+  ],
+  "summary": "A probe credential reads an input that is always supplied."
+}

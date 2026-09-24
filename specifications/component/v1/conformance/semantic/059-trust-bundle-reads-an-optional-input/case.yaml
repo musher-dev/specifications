@@ -1,0 +1,28 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: SERVICE
+  workload:
+    source:
+      image: example/web:1
+    endpoints:
+      web:
+        targetPort: 6901
+        protocol: HTTPS
+        tls:
+          verify: BUNDLE
+          serverName: web.example.internal
+          trustBundle:
+            input: caBundle
+  contract:
+    inputs:
+      caBundle:
+        description: Synthetic fixture input.
+        schema:
+          type: string
+        target:
+          envVarKey: CA_BUNDLE
+        required: false

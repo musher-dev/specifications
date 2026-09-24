@@ -1,0 +1,12 @@
+{
+  "id": "semantic-047-login-gated-https-service",
+  "phase": "semantic",
+  "expected": "pass",
+  "clause": "specifications/component/v1/spec.md#workload",
+  "requirements": [
+    "COMP-EP-002",
+    "COMP-EP-005",
+    "COMP-EP-008"
+  ],
+  "summary": "A readiness probe may expect 401 from an HTTPS endpoint whose certificate is not verified."
+}

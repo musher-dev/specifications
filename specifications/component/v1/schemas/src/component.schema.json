@@ -33,6 +33,37 @@
   ],
   "type": "object",
   "$defs": {
+    "ComponentBasicAuth": {
+      "additionalProperties": false,
+      "properties": {
+        "password": {
+          "$ref": "#/$defs/ComponentProbeCredential",
+          "description": "Password; a sensitive input, never a literal."
+        },
+        "username": {
+          "$ref": "#/$defs/ComponentProbeCredential",
+          "description": "User name, literal or from an input."
+        }
+      },
+      "required": [
+        "username",
+        "password"
+      ],
+      "type": "object"
+    },
+    "ComponentBearerAuth": {
+      "additionalProperties": false,
+      "properties": {
+        "token": {
+          "$ref": "#/$defs/ComponentProbeCredential",
+          "description": "Token; a sensitive input, never a literal."
+        }
+      },
+      "required": [
+        "token"
+      ],
+      "type": "object"
+    },
     "ComponentBuild": {
       "$comment": "spec.md §5.1. Exactly one of dockerfile and buildpacks says how the source is built; arguments apply to either.",
       "additionalProperties": false,
@@ -155,9 +186,31 @@
     },
     "ComponentEndpoint": {
       "additionalProperties": false,
+      "allOf": [
+        {
+          "$comment": "spec.md §5.2 COMP-EP-005. Only HTTPS is TLS on the hop to the workload in v1, so only an HTTPS endpoint carries a trust policy.",
+          "if": {
+            "not": {
+              "properties": {
+                "protocol": {
+                  "const": "HTTPS"
+                }
+              },
+              "required": [
+                "protocol"
+              ]
+            }
+          },
+          "then": {
+            "properties": {
+              "tls": false
+            }
+          }
+        }
+      ],
       "properties": {
         "protocol": {
-          "description": "Protocol served on the port: HTTP, HTTPS, WS, GRPC, TCP, or UDP.",
+          "description": "Protocol the platform speaks to the workload on the port: HTTP, HTTPS, WS, GRPC, TCP, or UDP.",
           "enum": [
             "HTTP",
             "HTTPS",
@@ -173,6 +226,10 @@
           "maximum": 65535,
           "minimum": 1,
           "type": "integer"
+        },
+        "tls": {
+          "$ref": "#/$defs/ComponentEndpointTls",
+          "description": "How the platform trusts the workload's certificate. Only on an HTTPS endpoint; omitted, the certificate is verified against publicly trusted roots."
         }
       },
       "required": [
@@ -181,6 +238,62 @@
       ],
       "type": "object",
       "x-additionalPropertiesName": "endpointName"
+    },
+    "ComponentEndpointTls": {
+      "$comment": "spec.md §5.2 COMP-EP-005 / COMP-EP-007. One policy for every connection the platform makes to the endpoint, routing and probes alike. BUNDLE names its roots and the name to verify; the other modes carry no bundle. serverName is a DNS name, never an IP literal: its last label starts with a letter.",
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "verify": {
+                "const": "BUNDLE"
+              }
+            },
+            "required": [
+              "verify"
+            ]
+          },
+          "then": {
+            "properties": {
+              "serverName": true,
+              "trustBundle": true
+            },
+            "required": [
+              "trustBundle",
+              "serverName"
+            ]
+          },
+          "else": {
+            "properties": {
+              "trustBundle": false
+            }
+          }
+        }
+      ],
+      "properties": {
+        "serverName": {
+          "description": "Name sent in SNI and matched against the certificate. Never changes the address connected to or the HTTP Host header. Omitted, the certificate must be valid for the host the platform connects to. Required with BUNDLE.",
+          "maxLength": 253,
+          "pattern": "^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)*[a-z](?:[a-z0-9-]{0,61}[a-z0-9])?$",
+          "type": "string"
+        },
+        "trustBundle": {
+          "$ref": "#/$defs/ComponentInputReference",
+          "description": "Own string input holding the PEM certificates that are the only trusted roots. Required with BUNDLE, and forbidden otherwise."
+        },
+        "verify": {
+          "default": "SYSTEM",
+          "description": "How the certificate is verified: SYSTEM (publicly trusted roots), BUNDLE (the roots in trustBundle), or NONE (no chain or name verification; an explicit exception for this endpoint).",
+          "enum": [
+            "SYSTEM",
+            "BUNDLE",
+            "NONE"
+          ],
+          "type": "string"
+        }
+      },
+      "type": "object"
     },
     "ComponentGitRef": {
       "$comment": "spec.md §5.1. Exactly one of branch and commit.",
@@ -261,12 +374,28 @@
     },
     "ComponentHttpProbe": {
       "additionalProperties": false,
-      "description": "An HTTP request the platform sends; a 200 to 399 status succeeds.",
+      "description": "An HTTP GET the platform sends over the endpoint's protocol and TLS policy; a 200 to 399 status succeeds unless expectedStatuses says otherwise. Redirects are never followed.",
       "properties": {
+        "auth": {
+          "$ref": "#/$defs/ComponentProbeAuth",
+          "description": "Credentials sent on the probe request only, never on forwarded traffic."
+        },
         "endpoint": {
           "description": "Named endpoint serving HTTP or HTTPS.",
           "pattern": "^[a-z][a-z0-9]{0,19}$",
           "type": "string"
+        },
+        "expectedStatuses": {
+          "$comment": "spec.md §5.4 COMP-EP-008. A final status is 200 to 599; a 1xx is never the answer to a probe.",
+          "description": "HTTP statuses that count as success, replacing the 200 to 399 default for this probe.",
+          "items": {
+            "maximum": 599,
+            "minimum": 200,
+            "type": "integer"
+          },
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
         },
         "path": {
           "description": "Absolute HTTP path the platform requests.",
@@ -375,6 +504,22 @@
       },
       "type": "object",
       "x-additionalPropertiesName": "inputName"
+    },
+    "ComponentInputReference": {
+      "$comment": "spec.md §5.2 COMP-EP-006 / ADR 0033. A value the workload configuration reads enters through one of the component's own inputs.",
+      "additionalProperties": false,
+      "properties": {
+        "input": {
+          "description": "Own input supplying the value.",
+          "maxLength": 64,
+          "pattern": "^[a-z][a-zA-Z0-9]{0,63}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "input"
+      ],
+      "type": "object"
     },
     "ComponentInputTarget": {
       "additionalProperties": false,
@@ -591,6 +736,77 @@
       "required": [
         "http"
       ],
+      "type": "object"
+    },
+    "ComponentProbeAuth": {
+      "$comment": "spec.md §5.4 COMP-EP-009 / ADR 0031 §1. The mechanism is the key that is present. Exactly one.",
+      "additionalProperties": false,
+      "description": "Credentials the probe request carries.",
+      "oneOf": [
+        {
+          "properties": {
+            "basic": true
+          },
+          "required": [
+            "basic"
+          ]
+        },
+        {
+          "properties": {
+            "bearer": true
+          },
+          "required": [
+            "bearer"
+          ]
+        }
+      ],
+      "properties": {
+        "basic": {
+          "$ref": "#/$defs/ComponentBasicAuth",
+          "description": "HTTP Basic credentials."
+        },
+        "bearer": {
+          "$ref": "#/$defs/ComponentBearerAuth",
+          "description": "Bearer token credentials."
+        }
+      },
+      "type": "object"
+    },
+    "ComponentProbeCredential": {
+      "$comment": "spec.md §5.4 COMP-EP-010 / ADR 0031 §1. Where the credential comes from is the key that is present, as in an output's `from`. A password or token is a sensitive destination, so a `value` there is ERR_SECRET_LITERAL, semantic.",
+      "additionalProperties": false,
+      "description": "Where one credential comes from.",
+      "oneOf": [
+        {
+          "properties": {
+            "value": true
+          },
+          "required": [
+            "value"
+          ]
+        },
+        {
+          "properties": {
+            "input": true
+          },
+          "required": [
+            "input"
+          ]
+        }
+      ],
+      "properties": {
+        "input": {
+          "description": "Own input supplying the credential.",
+          "maxLength": 64,
+          "pattern": "^[a-z][a-zA-Z0-9]{0,63}$",
+          "type": "string"
+        },
+        "value": {
+          "description": "Literal non-secret value.",
+          "minLength": 1,
+          "type": "string"
+        }
+      },
       "type": "object"
     },
     "ComponentSchedule": {

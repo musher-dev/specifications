@@ -1,0 +1,10 @@
+{
+  "id": "structural-133-probe-password-as-a-bare-string",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#health",
+  "requirements": [
+    "COMP-EP-009"
+  ],
+  "summary": "A credential is an origin object, never a bare string."
+}

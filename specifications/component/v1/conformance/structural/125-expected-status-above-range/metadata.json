@@ -1,0 +1,10 @@
+{
+  "id": "structural-125-expected-status-above-range",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#health",
+  "requirements": [
+    "COMP-EP-008"
+  ],
+  "summary": "An expected status is at most 599."
+}

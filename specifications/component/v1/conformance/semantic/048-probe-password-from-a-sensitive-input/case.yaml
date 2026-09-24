@@ -1,0 +1,36 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: SERVICE
+  workload:
+    source:
+      image: example/web:1
+    endpoints:
+      web:
+        targetPort: 6901
+        protocol: HTTPS
+        tls:
+          verify: NONE
+    health:
+      readiness:
+        http:
+          endpoint: web
+          path: /
+          auth:
+            basic:
+              username:
+                value: kasm_user
+              password:
+                input: vncPassword
+  contract:
+    inputs:
+      vncPassword:
+        description: Synthetic fixture input.
+        schema:
+          type: string
+        target:
+          envVarKey: VNC_PW
+        sensitive: true

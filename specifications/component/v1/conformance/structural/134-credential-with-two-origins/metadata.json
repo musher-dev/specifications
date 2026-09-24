@@ -1,0 +1,10 @@
+{
+  "id": "structural-134-credential-with-two-origins",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#health",
+  "requirements": [
+    "COMP-EP-009"
+  ],
+  "summary": "A credential holds exactly one origin."
+}

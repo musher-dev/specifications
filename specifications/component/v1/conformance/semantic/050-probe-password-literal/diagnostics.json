@@ -1,0 +1,6 @@
+[
+  {
+    "code": "ERR_SECRET_LITERAL",
+    "path": "/spec/workload/health/readiness/http/auth/basic/password/value"
+  }
+]

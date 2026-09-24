@@ -1,0 +1,10 @@
+{
+  "id": "semantic-058-trust-bundle-reads-a-non-string-input",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#endpoints",
+  "requirements": [
+    "COMP-EP-006"
+  ],
+  "summary": "A trust bundle reads a string input."
+}

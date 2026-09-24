@@ -1,0 +1,14 @@
+{
+  "id": "structural-113-https-endpoint-verifies-a-server-name",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v1/spec.md#endpoints",
+  "requirements": [
+    "COMP-EP-005"
+  ],
+  "summary": "An HTTPS endpoint naming only a server name verifies against publicly trusted roots.",
+  "effective": {
+    "/spec/workload/endpoints/web/tls/verify": "SYSTEM",
+    "/spec/workload/endpoints/web/tls/serverName": "web.example.com"
+  }
+}

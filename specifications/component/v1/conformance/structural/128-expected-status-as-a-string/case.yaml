@@ -1,0 +1,21 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: SERVICE
+  workload:
+    source:
+      image: example/web:1
+    endpoints:
+      web:
+        targetPort: 8080
+        protocol: HTTP
+    health:
+      readiness:
+        http:
+          endpoint: web
+          path: /
+          expectedStatuses:
+            - "401"

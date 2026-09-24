@@ -1,0 +1,10 @@
+{
+  "id": "structural-130-probe-with-bearer-auth",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v1/spec.md#health",
+  "requirements": [
+    "COMP-EP-009"
+  ],
+  "summary": "A probe may carry a bearer token from an input."
+}

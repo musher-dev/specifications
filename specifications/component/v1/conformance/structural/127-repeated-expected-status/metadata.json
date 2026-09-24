@@ -1,0 +1,10 @@
+{
+  "id": "structural-127-repeated-expected-status",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#health",
+  "requirements": [
+    "COMP-EP-008"
+  ],
+  "summary": "expectedStatuses names each status once."
+}

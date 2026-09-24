@@ -8,7 +8,7 @@ contract; this checklist does not define another document dialect.
 ## Pin the released contract
 
 Pin exact releases, never a commit on `main`: `core/v1.0.0`,
-`component/v1.3.0` and `blueprint/v1.4.0`, plus `listing/v1.0.0` where the
+`component/v1.4.0` and `blueprint/v1.4.0`, plus `listing/v1.0.0` where the
 catalog reads listings. Earlier component and blueprint releases were withdrawn
 from the compatibility guarantee by
 [ADR 0033](adr/0033-inputs-are-the-only-way-into-a-component.md) §5; migrate
@@ -129,3 +129,30 @@ code ([component §5](../specifications/component/v1/spec.md#publication-obligat
 Validate drafts with the `document` profile and publish with `publication`.
 A blueprint node still deploys only a finished component
 ([`BP-REF-003`](../specifications/blueprint/v1/spec.md#BP-REF-003)).
+
+## HTTPS workload endpoints (component v1.4.0)
+
+An `HTTPS` endpoint can now say how the platform trusts its certificate
+(`tls.verify` of `SYSTEM`, `BUNDLE` or `NONE`, with `serverName` and
+`trustBundle`), and an HTTP probe can name the statuses it expects
+(`expectedStatuses`) and the credentials it sends (`auth.basic` or
+`auth.bearer`, each credential from an input)
+([component §5.2](../specifications/component/v1/spec.md#tls) and
+[§5.4](../specifications/component/v1/spec.md#health)).
+
+- Derive the proxy's upstream transport and every probe client from one
+  resolution of the endpoint's protocol and `tls`, so they cannot disagree
+  ([`COMP-EP-007`](../specifications/component/v1/spec.md#COMP-EP-007)).
+- Never fall back from a verifying mode to `NONE`, or from `HTTPS` to `HTTP`.
+  A host that cannot honour an endpoint's policy is a placement or
+  configuration error, not a failed probe.
+- Resolve probe credentials from their inputs, send them on probe requests
+  only, and never add them to forwarded traffic or write them to logs
+  ([`COMP-EP-011`](../specifications/component/v1/spec.md#COMP-EP-011)).
+- Follow no redirect on a probe. An absent `expectedStatuses` still means
+  200–399.
+
+The blueprint v1.4.0 release archive carries component v1.3.0 in its dependency
+closure, so a validator built from it rejects a repo-local component using
+these fields with `ERR_UNKNOWN_FIELD`. The next blueprint release, built against
+component v1.4.0, closes that.

@@ -1,0 +1,10 @@
+{
+  "id": "semantic-059-trust-bundle-reads-an-optional-input",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#endpoints",
+  "requirements": [
+    "COMP-EP-006"
+  ],
+  "summary": "A trust bundle reads an input that is always supplied, so trust never falls back."
+}

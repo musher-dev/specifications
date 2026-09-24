@@ -1,0 +1,10 @@
+{
+  "id": "structural-129-probe-with-basic-auth",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v1/spec.md#health",
+  "requirements": [
+    "COMP-EP-009"
+  ],
+  "summary": "A probe may carry Basic credentials, a literal user name and a password input."
+}

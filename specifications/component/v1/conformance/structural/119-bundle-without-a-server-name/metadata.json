@@ -1,0 +1,10 @@
+{
+  "id": "structural-119-bundle-without-a-server-name",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#endpoints",
+  "requirements": [
+    "COMP-EP-005"
+  ],
+  "summary": "BUNDLE verification names the server name the certificate is verified for."
+}

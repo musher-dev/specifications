@@ -1,0 +1,10 @@
+{
+  "id": "structural-116-tls-on-an-http-endpoint",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#endpoints",
+  "requirements": [
+    "COMP-EP-005"
+  ],
+  "summary": "Only an HTTPS endpoint carries a trust policy."
+}

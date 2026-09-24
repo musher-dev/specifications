@@ -1,0 +1,10 @@
+{
+  "id": "structural-117-tls-on-a-tcp-endpoint",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#endpoints",
+  "requirements": [
+    "COMP-EP-005"
+  ],
+  "summary": "A TCP endpoint carries no trust policy."
+}
