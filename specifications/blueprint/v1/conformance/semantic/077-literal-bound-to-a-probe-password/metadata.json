@@ -1,0 +1,11 @@
+{
+  "id": "semantic-077-literal-bound-to-a-probe-password",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#health",
+  "requirements": [
+    "COMP-EP-010"
+  ],
+  "summary": "The sensitive input a probe password reads cannot be bound to a literal.",
+  "document": "app/blueprint.yaml"
+}

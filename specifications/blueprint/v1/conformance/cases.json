@@ -541,6 +541,16 @@
       "id": "semantic-075-node-deploys-a-component-without-a-metadata-description",
       "phase": "semantic",
       "path": "semantic/075-node-deploys-a-component-without-a-metadata-description"
+    },
+    {
+      "id": "semantic-076-public-https-node-with-an-authenticated-probe",
+      "phase": "semantic",
+      "path": "semantic/076-public-https-node-with-an-authenticated-probe"
+    },
+    {
+      "id": "semantic-077-literal-bound-to-a-probe-password",
+      "phase": "semantic",
+      "path": "semantic/077-literal-bound-to-a-probe-password"
     }
   ]
 }

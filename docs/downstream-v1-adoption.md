@@ -8,7 +8,7 @@ contract; this checklist does not define another document dialect.
 ## Pin the released contract
 
 Pin exact releases, never a commit on `main`: `core/v1.0.0`,
-`component/v1.4.0` and `blueprint/v1.4.0`, plus `listing/v1.0.0` where the
+`component/v1.4.0` and `blueprint/v1.5.0`, plus `listing/v1.0.0` where the
 catalog reads listings. Earlier component and blueprint releases were withdrawn
 from the compatibility guarantee by
 [ADR 0033](adr/0033-inputs-are-the-only-way-into-a-component.md) §5; migrate
@@ -130,7 +130,7 @@ Validate drafts with the `document` profile and publish with `publication`.
 A blueprint node still deploys only a finished component
 ([`BP-REF-003`](../specifications/blueprint/v1/spec.md#BP-REF-003)).
 
-## HTTPS workload endpoints (component v1.4.0)
+## HTTPS workload endpoints (component v1.4.0 and blueprint v1.5.0)
 
 An `HTTPS` endpoint can now say how the platform trusts its certificate
 (`tls.verify` of `SYSTEM`, `BUNDLE` or `NONE`, with `serverName` and
@@ -152,7 +152,6 @@ An `HTTPS` endpoint can now say how the platform trusts its certificate
 - Follow no redirect on a probe. An absent `expectedStatuses` still means
   200–399.
 
-The blueprint v1.4.0 release archive carries component v1.3.0 in its dependency
-closure, so a validator built from it rejects a repo-local component using
-these fields with `ERR_UNKNOWN_FIELD`. The next blueprint release, built against
-component v1.4.0, closes that.
+Validate blueprints with blueprint v1.5.0 or later. The v1.4.0 release archive
+carries component v1.3.0 in its dependency closure, so a validator built from
+it rejects a repo-local component using these fields with `ERR_UNKNOWN_FIELD`.
