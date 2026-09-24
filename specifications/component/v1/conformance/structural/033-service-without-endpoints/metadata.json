@@ -1,10 +1,7 @@
 {
   "id": "structural-033-service-without-endpoints",
   "phase": "structural",
-  "expected": "fail",
+  "expected": "pass",
   "clause": "specifications/component/v1/spec.md#workload",
-  "requirements": [
-    "COMP-TYPE-002"
-  ],
-  "summary": "A SERVICE declaring no endpoints block is rejected."
+  "summary": "A SERVICE that does not yet declare an endpoints block is structurally valid: the obligation is COMP-TYPE-002’s, at publication."
 }

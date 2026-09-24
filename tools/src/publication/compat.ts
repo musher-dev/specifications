@@ -88,6 +88,48 @@ const RELAXED: ReadonlyMap<string, string> = new Map([
     'blueprint/v1.1.0:structural-013-empty-component-graph',
     'blueprint v1.2.0 lets spec.components be empty (BP-GRAPH-001), for the reason above',
   ],
+  [
+    'component/v1.2.0:structural-083-service-without-a-workload',
+    'component v1.3.0 makes a workload structurally optional and requires it of a published ' +
+      'component instead (COMP-TYPE-006), so a component can be stored before its runtime is ' +
+      'written',
+  ],
+  [
+    'component/v1.2.0:structural-008-job-without-command',
+    'component v1.3.0 requires command of a published JOB instead (COMP-TYPE-007), for the ' +
+      'reason above',
+  ],
+  [
+    'component/v1.2.0:structural-033-service-without-endpoints',
+    'component v1.3.0 requires an endpoint of a published SERVICE instead (COMP-TYPE-002), ' +
+      'for the reason above',
+  ],
+  [
+    'component/v1.2.0:structural-034-service-with-empty-endpoints',
+    'component v1.3.0 requires an endpoint of a published SERVICE (COMP-TYPE-002), so a ' +
+      'draft can drop its last endpoint while replacing it',
+  ],
+  [
+    'component/v1.2.0:structural-064-external-publishing-nothing',
+    'component v1.3.0 requires an output of a published EXTERNAL component instead ' +
+      '(COMP-EXT-003), so a draft can drop its last output while replacing it',
+  ],
+  [
+    'component/v1.2.0:structural-106-external-without-outputs',
+    'component v1.3.0 requires an output of a published EXTERNAL component (COMP-EXT-003), ' +
+      'for the reason above',
+  ],
+  [
+    'component/v1.2.0:structural-075-input-without-a-description',
+    'component v1.3.0 requires every input and output of a published component to be ' +
+      'described instead (COMP-DESC-004), so an editor can store a row before its description ' +
+      'is written',
+  ],
+  [
+    'component/v1.2.0:structural-076-output-without-a-description',
+    'component v1.3.0 requires every output of a published component to be described ' +
+      '(COMP-DESC-004), for the reason above',
+  ],
 ])
 
 /**

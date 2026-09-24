@@ -1,10 +1,7 @@
 {
   "id": "structural-008-job-without-command",
   "phase": "structural",
-  "expected": "fail",
+  "expected": "pass",
   "clause": "specifications/component/v1/spec.md#workload",
-  "requirements": [
-    "COMP-TYPE-004"
-  ],
-  "summary": "A JOB omitting command is rejected; there is nothing for it to run."
+  "summary": "A JOB that does not yet declare command is structurally valid: the obligation is COMP-TYPE-007’s, at publication."
 }

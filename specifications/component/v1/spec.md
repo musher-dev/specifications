@@ -190,8 +190,9 @@ the revision is either `capability` or a SHOULD.
 
 `spec` holds `type`, `workload` and `contract`. The type says what kind of
 node the component is, the workload says how the platform runs it, and the
-contract ([§6](#contract)) says what configuration it consumes and produces. A
-minimal service needs only a type, an image and one endpoint:
+contract ([§6](#contract)) says what configuration it consumes and produces. The
+smallest service that can be published needs only a type, an image and one
+endpoint:
 
 ```yaml
 spec:
@@ -219,31 +220,57 @@ The categories split by lifecycle and by whether the workload serves traffic:
 | `JOB` | Runs to completion ([§5.7](#jobs)) | None |
 | `EXTERNAL` | Not run by this platform ([§5.6](#external)) | None |
 
-<a id="COMP-EXT-001"></a>**`COMP-EXT-001`**: `spec.workload` is REQUIRED unless
-the type is `EXTERNAL`, and MUST be absent when it is. A missing workload is
-`ERR_MISSING_FIELD` at `/spec`; a workload on an `EXTERNAL` component is
-`ERR_INVALID_VALUE` at `/spec/workload`. These are structural rules.
+<a id="COMP-EXT-001"></a>**`COMP-EXT-001`**: `spec.workload` MUST be absent when
+the type is `EXTERNAL`. A workload on an `EXTERNAL` component is
+`ERR_INVALID_VALUE` at `/spec/workload`, structural.
+
+<a id="COMP-TYPE-006"></a>**`COMP-TYPE-006`**: A published `SERVICE`, `WORKER`
+or `JOB` MUST carry a `workload`. One without is rejected in the `capability`
+phase with `ERR_WORKLOAD_REQUIRED` at `/spec`.
 
 The type decides which workload fields apply:
 
 | Field | `SERVICE` | `WORKER` | `JOB` |
 |---|---|---|---|
-| `source` | Required | Required | Required |
-| `command` | Optional | Optional | Required |
-| `endpoints` | Required, non-empty | Optional | Forbidden |
+| `source` | Required to publish | Required to publish | Required to publish |
+| `command` | Optional | Optional | Required to publish |
+| `endpoints` | At least one to publish | Optional | Forbidden |
 | `health` | Optional | Optional | Forbidden |
 | `schedule` | Forbidden | Forbidden | Optional |
 | `volumes` | Optional | Optional | Optional |
 
 Forbidden means absent. Empty mappings and null are not alternative spellings.
-A forbidden field is `ERR_INVALID_VALUE` at its own path, and a required one
-that is missing is `ERR_MISSING_FIELD` at the object that lacks it. Unknown
-fields are rejected. These are structural rules. The four rules that follow say
-why each type allows what it does.
+A forbidden field is `ERR_INVALID_VALUE` at its own path. Unknown fields are
+rejected. These are structural rules. The rules that follow say why each type
+allows what it does.
 
-<a id="COMP-TYPE-002"></a>**`COMP-TYPE-002`**: A `SERVICE` MUST declare at least
-one endpoint. It is request-driven, and a service nothing can reach serves
-nothing.
+<a id="publication-obligations"></a>**What publication requires.** "Required to
+publish" is not a structural rule. A component with a type and nothing else is a
+component someone is still writing, for the reason
+[`COMP-DESC-003`](#COMP-DESC-003) gives: *absent* and *not written yet* are the
+same bytes, and only the publisher can tell them apart. So an unfinished
+component validates, an editor can store it, and each of these is checked when
+it is published:
+
+| Obligation | Rule | Code | Path |
+|---|---|---|---|
+| A runnable component carries a `workload` | [`COMP-TYPE-006`](#COMP-TYPE-006) | `ERR_WORKLOAD_REQUIRED` | `/spec` |
+| A workload carries a `source` | [`COMP-SRC-004`](#COMP-SRC-004) | `ERR_SOURCE_REQUIRED` | `/spec/workload` |
+| A `SERVICE` declares an endpoint | [`COMP-TYPE-002`](#COMP-TYPE-002) | `ERR_ENDPOINT_REQUIRED` | `/spec/workload`, or `/spec/workload/endpoints` when empty |
+| A `JOB` carries a `command` | [`COMP-TYPE-007`](#COMP-TYPE-007) | `ERR_COMMAND_REQUIRED` | `/spec/workload` |
+| An `EXTERNAL` component publishes an output | [`COMP-EXT-003`](#COMP-EXT-003) | `ERR_OUTPUT_REQUIRED` | The object that lacks it, or `/spec/contract/outputs` when empty |
+| Every input and output is described | [`COMP-DESC-004`](#COMP-DESC-004) | `ERR_DESCRIPTION_REQUIRED` | The input or output |
+
+An absent field is reported at the object that lacks it, and a field that is
+present and empty at itself. Each is `capability`, and an offline validator
+MUST NOT report any of them. Everything that constrains a field that *is*
+present stays structural.
+
+<a id="COMP-TYPE-002"></a>**`COMP-TYPE-002`**: A published `SERVICE` MUST declare
+at least one endpoint. It is request-driven, and a service nothing can reach
+serves nothing. One without is rejected in the `capability` phase with
+`ERR_ENDPOINT_REQUIRED`, at `/spec/workload` when `endpoints` is absent and at
+`/spec/workload/endpoints` when it is empty.
 
 <a id="COMP-TYPE-003"></a>**`COMP-TYPE-003`**: A `WORKER` MAY declare endpoints
 and health probes. Its endpoints serve the platform and sibling nodes, for
@@ -255,9 +282,14 @@ property of one of its own endpoints, through an `endpoint` origin or a
 `template`, could never resolve. It fails with `ERR_ENDPOINT_NOT_EXPOSABLE` at
 the output's `from` or `from/template`, semantic.
 
-<a id="COMP-TYPE-004"></a>**`COMP-TYPE-004`**: A `JOB` MUST declare `command`,
-and MUST NOT declare `endpoints` or `health`. It runs to completion and serves
-nothing, so there is nothing to route to or probe.
+<a id="COMP-TYPE-004"></a>**`COMP-TYPE-004`**: A `JOB` MUST NOT declare
+`endpoints` or `health`. It runs to completion and serves nothing, so there is
+nothing to route to or probe.
+
+<a id="COMP-TYPE-007"></a>**`COMP-TYPE-007`**: A published `JOB` MUST carry
+`command`, because it runs to completion and has nothing to run without one. One
+without is rejected in the `capability` phase with `ERR_COMMAND_REQUIRED` at
+`/spec/workload`.
 
 <a id="COMP-TYPE-005"></a>**`COMP-TYPE-005`**: Only a `JOB` MAY declare
 `schedule`. A schedule is a property of a job, not a category of its own.
@@ -295,6 +327,10 @@ when present, holds exactly one of `branch` and `commit`, and its `build` holds
 exactly one of `dockerfile` and `buildpacks`. In each of these, naming neither
 is `ERR_MISSING_FIELD` and naming both is `ERR_INVALID_VALUE`. These are
 structural rules.
+
+<a id="COMP-SRC-004"></a>**`COMP-SRC-004`**: A published workload MUST carry a
+`source`. One without is rejected in the `capability` phase with
+`ERR_SOURCE_REQUIRED` at `/spec/workload`.
 
 <a id="COMP-SRC-002"></a>**`COMP-SRC-002`**: `image` is an OCI image reference:
 a name, then optionally a tag, then optionally a SHA-256 digest. A name without
@@ -485,11 +521,12 @@ because nothing runs to receive one. A target on one is `ERR_INVALID_VALUE` at
 its `target`, structural. It is the only kind of component that declares a
 connection input ([`COMP-CONNECTION-002`](#COMP-CONNECTION-002)).
 
-<a id="COMP-EXT-003"></a>**`COMP-EXT-003`**: An `EXTERNAL` component requires a
-`contract` with a non-empty `outputs` map. It exists to publish values another
-node consumes, so one publishing nothing is a node nothing can need. An absent
-`contract` or `outputs` is `ERR_MISSING_FIELD`, and an empty `outputs` is
-`ERR_INVALID_VALUE`. These are structural rules.
+<a id="COMP-EXT-003"></a>**`COMP-EXT-003`**: A published `EXTERNAL` component
+MUST publish at least one output. It exists to publish values another node
+consumes, so one publishing nothing is a node nothing can need. One without is
+rejected in the `capability` phase with `ERR_OUTPUT_REQUIRED`: at `/spec` when
+`contract` is absent, at `/spec/contract` when `outputs` is absent, and at
+`/spec/contract/outputs` when it is empty.
 
 <a id="COMP-EXT-004"></a>**`COMP-EXT-004`**: An `EXTERNAL` component has no
 endpoints, so an `endpoint` origin, or a template reading one, fails with
@@ -586,8 +623,17 @@ start one.
 `contract.inputs` and `contract.outputs` are named maps. Keys match
 `^[a-z][a-zA-Z0-9]{0,63}$`.
 
-<a id="COMP-DESC-001"></a>**`COMP-DESC-001`**: Every input and output requires a
-non-empty description, and every value input and every output a logical schema.
+<a id="COMP-DESC-001"></a>**`COMP-DESC-001`**: A `description` on an input or
+output, when present, is non-empty, and every value input and every output
+declares a logical schema. These are structural rules.
+
+<a id="COMP-DESC-004"></a>**`COMP-DESC-004`**: A published component MUST
+describe every input and output. The description is the single place a value is
+explained, and a blueprint parameter shows it rather than carrying its own
+([ADR 0026](../../../docs/adr/0026-a-component-declares-requirements.md) §2).
+One without is rejected in the `capability` phase with
+`ERR_DESCRIPTION_REQUIRED` at the input or output, for the reason
+[`COMP-DESC-003`](#COMP-DESC-003) gives.
 
 ### <a id="inputs"></a>6.1 Inputs
 
@@ -596,7 +642,8 @@ input**, which declares `connection` ([§6.4](#connection-requirements)). The ke
 that is present says which: declaring neither is `ERR_MISSING_FIELD`, and
 declaring both is `ERR_INVALID_VALUE`. These are structural rules.
 
-A value input declares `schema` and `description`, and optionally `required`
+A value input declares `schema`, a `description` it needs before it is
+published ([`COMP-DESC-004`](#COMP-DESC-004)), and optionally `required`
 (default true), `default`, `sensitive` (default false), `presentationHint` and
 `target`.
 An input of a workload component requires `target.envVarKey`, the environment
@@ -806,11 +853,12 @@ sensitivity propagation and secret-publication prohibitions apply.
 
 Core's phases and explicit coverage statuses apply. Components are structurally
 validated before semantic checks. Publication requires the publication profile;
-workload execution additionally requires blueprint resolution and admission. Two
-rules here fall on the publication side of that line and nowhere earlier:
+workload execution additionally requires blueprint resolution and admission.
+Some rules here fall on the publication side of that line and nowhere earlier:
 [`COMP-ID-001`](#COMP-ID-001), because the lineage is a fact the catalog holds,
-and [`COMP-DESC-003`](#COMP-DESC-003), because an unwritten description is only
-a defect in a component someone is trying to publish.
+and [`COMP-DESC-003`](#COMP-DESC-003) with the obligations
+[§5](#publication-obligations) lists, because an unwritten description or an
+unchosen image is only a defect in a component someone is trying to publish.
 
 ## <a id="diagnostics"></a>8. Diagnostics
 
@@ -832,7 +880,12 @@ Core diagnostics also apply.
 | `ERR_VALUE_CONSTRAINT` | `semantic`, `resolution` | Known value or output origin violates a contract. |
 | `ERR_SECRET_LITERAL` | `semantic` | Authored literal supplies a sensitive contract. |
 | `ERR_VERSION_NOT_MONOTONIC` | `capability` | Published component revision does not increase. |
-| `ERR_DESCRIPTION_REQUIRED` | `capability` | Publication requires a description this document does not carry. |
+| `ERR_DESCRIPTION_REQUIRED` | `capability` | Publication requires a description this document, or one of its inputs or outputs, does not carry. |
+| `ERR_WORKLOAD_REQUIRED` | `capability` | Publication requires a workload of a `SERVICE`, `WORKER` or `JOB`. |
+| `ERR_SOURCE_REQUIRED` | `capability` | Publication requires a workload source. |
+| `ERR_ENDPOINT_REQUIRED` | `capability` | Publication requires an endpoint of a `SERVICE`. |
+| `ERR_COMMAND_REQUIRED` | `capability` | Publication requires a command of a `JOB`. |
+| `ERR_OUTPUT_REQUIRED` | `capability` | Publication requires an output of an `EXTERNAL` component. |
 | `ERR_ENV_ENCODING` | `resolution` | Value cannot be encoded into an environment variable. |
 
 ## <a id="conformance"></a>9. Conformance
