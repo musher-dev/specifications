@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/musher-dev/specifications/compare/component/v1.2.0...component/v1.3.0) (2026-09-24)
+
+
+### Additions
+
+* **component:** make the runtime minimums publication obligations ([d66fbbd](https://github.com/musher-dev/specifications/commit/d66fbbdf7d016f0a928b416daf6f21a83ce2cdaf))
+
 ## [1.2.0](https://github.com/musher-dev/specifications/compare/component/v1.1.0...component/v1.2.0) (2026-09-23)
 
 
