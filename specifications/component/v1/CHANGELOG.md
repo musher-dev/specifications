@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/musher-dev/specifications/compare/component/v1.3.0...component/v1.4.0) (2026-09-24)
+
+
+### Additions
+
+* **component:** trust policy for HTTPS endpoints, probe statuses and probe auth ([5723414](https://github.com/musher-dev/specifications/commit/57234147b26e671225b6255ab05fcb859631a19c))
+
 ## [1.3.0](https://github.com/musher-dev/specifications/compare/component/v1.2.0...component/v1.3.0) (2026-09-24)
 
 
