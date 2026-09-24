@@ -1,10 +1,7 @@
 {
   "id": "structural-034-service-with-empty-endpoints",
   "phase": "structural",
-  "expected": "fail",
+  "expected": "pass",
   "clause": "specifications/component/v1/spec.md#workload",
-  "requirements": [
-    "COMP-TYPE-002"
-  ],
-  "summary": "A SERVICE declaring an empty endpoints mapping is rejected."
+  "summary": "A SERVICE whose endpoints mapping is empty is structurally valid: the obligation is COMP-TYPE-002’s, at publication."
 }

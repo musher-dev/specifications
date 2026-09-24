@@ -330,7 +330,7 @@
       ],
       "properties": {
         "description": {
-          "$comment": "spec.md §6 COMP-DESC-001. REQUIRED, and the component is its only home: a blueprint parameter carries no description of its own and shows this one, so a value is described once, by the document that needs it.",
+          "$comment": "spec.md §6 COMP-DESC-001 and COMP-DESC-004. A published component describes every input (COMP-DESC-004, capability), and the component is its only home: a blueprint parameter carries no description of its own and shows this one, so a value is described once, by the document that needs it. Absent is a draft still being written; present and empty is never valid.",
           "description": "What this input means.",
           "minLength": 1,
           "type": "string"
@@ -373,9 +373,6 @@
           "description": "The connection this input stands for. Only an EXTERNAL component declares one."
         }
       },
-      "required": [
-        "description"
-      ],
       "type": "object",
       "x-additionalPropertiesName": "inputName"
     },
@@ -451,7 +448,6 @@
         }
       },
       "required": [
-        "description",
         "schema",
         "from"
       ],
@@ -649,7 +645,7 @@
       "additionalProperties": false,
       "allOf": [
         {
-          "$comment": "spec.md §5. `type` is the category and selects which fields apply. EXTERNAL is a node this platform does not run: it has no workload, so its inputs have no environment target, and it is the only kind of component that declares a connection input, and it exists to publish values another node consumes, so an absent contract is a missing field and an empty outputs mapping an invalid value. Written as if/then over properties declared once, so every default beneath stays within the effective-value resolution ADR 0008 requires.",
+          "$comment": "spec.md §5. `type` is the category and selects which fields apply. EXTERNAL is a node this platform does not run: it has no workload, so its inputs have no environment target, and it is the only kind of component that declares a connection input. What a component needs before it can be published (a workload, a source, an endpoint, a command, an output) is a capability-phase obligation (spec.md §5), not a structural rule, so an unfinished component still validates. Written as if/then over properties declared once, so every default beneath stays within the effective-value resolution ADR 0008 requires.",
           "if": {
             "properties": {
               "type": {
@@ -665,9 +661,6 @@
               "workload": false,
               "contract": {
                 "properties": {
-                  "outputs": {
-                    "minProperties": 1
-                  },
                   "inputs": {
                     "additionalProperties": {
                       "properties": {
@@ -675,15 +668,9 @@
                       }
                     }
                   }
-                },
-                "required": [
-                  "outputs"
-                ]
+                }
               }
-            },
-            "required": [
-              "contract"
-            ]
+            }
           },
           "else": {
             "properties": {
@@ -704,41 +691,11 @@
                   }
                 }
               }
-            },
-            "required": [
-              "workload"
-            ]
-          }
-        },
-        {
-          "$comment": "spec.md §5. A SERVICE is request-driven, so it declares at least one endpoint. An absent block is a missing field and an empty one an invalid value.",
-          "if": {
-            "properties": {
-              "type": {
-                "const": "SERVICE"
-              }
-            },
-            "required": [
-              "type"
-            ]
-          },
-          "then": {
-            "properties": {
-              "workload": {
-                "properties": {
-                  "endpoints": {
-                    "minProperties": 1
-                  }
-                },
-                "required": [
-                  "endpoints"
-                ]
-              }
             }
           }
         },
         {
-          "$comment": "spec.md §5. A JOB runs to completion: it has nothing to run without a command, and it serves nothing, so it declares no endpoint and no probe. Only a JOB may carry a schedule.",
+          "$comment": "spec.md §5. A JOB runs to completion and serves nothing, so it declares no endpoint and no probe. Only a JOB may carry a schedule. Its command is a publication obligation (spec.md §5).",
           "if": {
             "properties": {
               "type": {
@@ -753,13 +710,9 @@
             "properties": {
               "workload": {
                 "properties": {
-                  "command": true,
                   "endpoints": false,
                   "health": false
-                },
-                "required": [
-                  "command"
-                ]
+                }
               }
             }
           },
@@ -791,7 +744,7 @@
         },
         "workload": {
           "$ref": "#/$defs/ComponentWorkload",
-          "description": "How the platform runs the component: source, command, endpoints, environment, storage and health. Required unless type is EXTERNAL, and forbidden when it is."
+          "description": "How the platform runs the component: source, command, endpoints, environment, storage and health. A published SERVICE, WORKER or JOB carries one; forbidden when type is EXTERNAL."
         }
       },
       "required": [
@@ -1163,7 +1116,7 @@
       "properties": {
         "command": {
           "$comment": "spec.md §5. Exec form: each item is one argument and no shell parses them. It replaces the image CMD and keeps its ENTRYPOINT, which is what `command` means in Docker and Compose.",
-          "description": "Arguments the workload runs, as a list, with no shell. Replaces the image CMD and keeps its ENTRYPOINT. Required for a JOB.",
+          "description": "Arguments the workload runs, as a list, with no shell. Replaces the image CMD and keeps its ENTRYPOINT. A published JOB carries one.",
           "items": {
             "type": "string"
           },
@@ -1174,7 +1127,7 @@
           "additionalProperties": {
             "$ref": "#/$defs/ComponentEndpoint"
           },
-          "description": "Named ports the workload listens on. Required on a SERVICE, optional on a WORKER (never exposed publicly), forbidden on a JOB.",
+          "description": "Named ports the workload listens on. A published SERVICE declares at least one; optional on a WORKER (never exposed publicly), forbidden on a JOB.",
           "propertyNames": {
             "$comment": "spec.md §5.2. An endpoint name is referenced by probes, outputs and blueprint exposure, and is composed into a DNS label beside other slugs rather than being one. Alphanumeric keeps any hyphen separator unambiguous; 20 characters leave room in the 63-character label for what it composes with.",
             "pattern": "^[a-z][a-z0-9]{0,19}$"
@@ -1191,7 +1144,7 @@
         },
         "source": {
           "$ref": "#/$defs/ComponentSource",
-          "description": "Where the workload image comes from: a pinned image, or a Git repository the platform builds."
+          "description": "Where the workload image comes from: an image, or a Git repository the platform builds. A published workload carries one."
         },
         "volumes": {
           "additionalProperties": {
@@ -1204,9 +1157,6 @@
           "type": "object"
         }
       },
-      "required": [
-        "source"
-      ],
       "type": "object"
     }
   }

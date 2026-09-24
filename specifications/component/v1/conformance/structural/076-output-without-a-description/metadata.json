@@ -1,10 +1,7 @@
 {
   "id": "structural-076-output-without-a-description",
   "phase": "structural",
-  "expected": "fail",
+  "expected": "pass",
   "clause": "specifications/component/v1/spec.md#contract",
-  "requirements": [
-    "COMP-DESC-001"
-  ],
-  "summary": "An output declaring no description is rejected."
+  "summary": "An output that does not yet declare a description is structurally valid: the obligation is COMP-DESC-004’s, at publication."
 }

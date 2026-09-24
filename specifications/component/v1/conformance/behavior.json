@@ -251,6 +251,412 @@
     }
   },
   {
+    "id": "document-profile-accepts-an-unfinished-component",
+    "profile": "resolution",
+    "operation": "validate",
+    "requirements": [
+      "COMP-TYPE-006"
+    ],
+    "input": {
+      "specVersion": "v1",
+      "kind": "COMPONENT",
+      "metadata": {
+        "revision": 1,
+        "description": "Synthetic conformance fixture component."
+      },
+      "spec": {
+        "type": "SERVICE"
+      }
+    },
+    "expect": {
+      "/status": "VALID",
+      "/validationProfile": "document"
+    }
+  },
+  {
+    "id": "publication-needs-a-workload",
+    "profile": "resolution",
+    "operation": "validate",
+    "requirements": [
+      "COMP-TYPE-006"
+    ],
+    "input": {
+      "specVersion": "v1",
+      "kind": "COMPONENT",
+      "metadata": {
+        "revision": 1,
+        "description": "Synthetic conformance fixture component."
+      },
+      "spec": {
+        "type": "SERVICE"
+      }
+    },
+    "context": {
+      "validationProfile": "publication"
+    },
+    "expect": {
+      "/status": "INVALID",
+      "/phase": "capability"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_WORKLOAD_REQUIRED",
+        "path": "/spec",
+        "phase": "capability"
+      }
+    ]
+  },
+  {
+    "id": "publication-needs-a-source",
+    "profile": "resolution",
+    "operation": "validate",
+    "requirements": [
+      "COMP-SRC-004"
+    ],
+    "input": {
+      "specVersion": "v1",
+      "kind": "COMPONENT",
+      "metadata": {
+        "revision": 1,
+        "description": "Synthetic conformance fixture component."
+      },
+      "spec": {
+        "type": "WORKER",
+        "workload": {}
+      }
+    },
+    "context": {
+      "validationProfile": "publication"
+    },
+    "expect": {
+      "/status": "INVALID",
+      "/phase": "capability"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_SOURCE_REQUIRED",
+        "path": "/spec/workload",
+        "phase": "capability"
+      }
+    ]
+  },
+  {
+    "id": "publication-needs-a-service-endpoint",
+    "profile": "resolution",
+    "operation": "validate",
+    "requirements": [
+      "COMP-TYPE-002"
+    ],
+    "input": {
+      "specVersion": "v1",
+      "kind": "COMPONENT",
+      "metadata": {
+        "revision": 1,
+        "description": "Synthetic conformance fixture component."
+      },
+      "spec": {
+        "type": "SERVICE",
+        "workload": {
+          "source": {
+            "image": "example/worker:1"
+          }
+        }
+      }
+    },
+    "context": {
+      "validationProfile": "publication"
+    },
+    "expect": {
+      "/status": "INVALID",
+      "/phase": "capability"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_ENDPOINT_REQUIRED",
+        "path": "/spec/workload",
+        "phase": "capability"
+      }
+    ]
+  },
+  {
+    "id": "publication-needs-a-non-empty-endpoints-mapping",
+    "profile": "resolution",
+    "operation": "validate",
+    "requirements": [
+      "COMP-TYPE-002"
+    ],
+    "input": {
+      "specVersion": "v1",
+      "kind": "COMPONENT",
+      "metadata": {
+        "revision": 1,
+        "description": "Synthetic conformance fixture component."
+      },
+      "spec": {
+        "type": "SERVICE",
+        "workload": {
+          "source": {
+            "image": "example/worker:1"
+          },
+          "endpoints": {}
+        }
+      }
+    },
+    "context": {
+      "validationProfile": "publication"
+    },
+    "expect": {
+      "/status": "INVALID",
+      "/phase": "capability"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_ENDPOINT_REQUIRED",
+        "path": "/spec/workload/endpoints",
+        "phase": "capability"
+      }
+    ]
+  },
+  {
+    "id": "publication-needs-a-job-command",
+    "profile": "resolution",
+    "operation": "validate",
+    "requirements": [
+      "COMP-TYPE-007"
+    ],
+    "input": {
+      "specVersion": "v1",
+      "kind": "COMPONENT",
+      "metadata": {
+        "revision": 1,
+        "description": "Synthetic conformance fixture component."
+      },
+      "spec": {
+        "type": "JOB",
+        "workload": {
+          "source": {
+            "image": "example/worker:1"
+          }
+        }
+      }
+    },
+    "context": {
+      "validationProfile": "publication"
+    },
+    "expect": {
+      "/status": "INVALID",
+      "/phase": "capability"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_COMMAND_REQUIRED",
+        "path": "/spec/workload",
+        "phase": "capability"
+      }
+    ]
+  },
+  {
+    "id": "publication-needs-an-external-contract",
+    "profile": "resolution",
+    "operation": "validate",
+    "requirements": [
+      "COMP-EXT-003"
+    ],
+    "input": {
+      "specVersion": "v1",
+      "kind": "COMPONENT",
+      "metadata": {
+        "revision": 1,
+        "description": "Synthetic conformance fixture component."
+      },
+      "spec": {
+        "type": "EXTERNAL"
+      }
+    },
+    "context": {
+      "validationProfile": "publication"
+    },
+    "expect": {
+      "/status": "INVALID",
+      "/phase": "capability"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_OUTPUT_REQUIRED",
+        "path": "/spec",
+        "phase": "capability"
+      }
+    ]
+  },
+  {
+    "id": "publication-needs-external-outputs",
+    "profile": "resolution",
+    "operation": "validate",
+    "requirements": [
+      "COMP-EXT-003"
+    ],
+    "input": {
+      "specVersion": "v1",
+      "kind": "COMPONENT",
+      "metadata": {
+        "revision": 1,
+        "description": "Synthetic conformance fixture component."
+      },
+      "spec": {
+        "type": "EXTERNAL",
+        "contract": {
+          "inputs": {}
+        }
+      }
+    },
+    "context": {
+      "validationProfile": "publication"
+    },
+    "expect": {
+      "/status": "INVALID",
+      "/phase": "capability"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_OUTPUT_REQUIRED",
+        "path": "/spec/contract",
+        "phase": "capability"
+      }
+    ]
+  },
+  {
+    "id": "publication-needs-a-non-empty-outputs-mapping",
+    "profile": "resolution",
+    "operation": "validate",
+    "requirements": [
+      "COMP-EXT-003"
+    ],
+    "input": {
+      "specVersion": "v1",
+      "kind": "COMPONENT",
+      "metadata": {
+        "revision": 1,
+        "description": "Synthetic conformance fixture component."
+      },
+      "spec": {
+        "type": "EXTERNAL",
+        "contract": {
+          "outputs": {}
+        }
+      }
+    },
+    "context": {
+      "validationProfile": "publication"
+    },
+    "expect": {
+      "/status": "INVALID",
+      "/phase": "capability"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_OUTPUT_REQUIRED",
+        "path": "/spec/contract/outputs",
+        "phase": "capability"
+      }
+    ]
+  },
+  {
+    "id": "publication-needs-described-inputs",
+    "profile": "resolution",
+    "operation": "validate",
+    "requirements": [
+      "COMP-DESC-004"
+    ],
+    "input": {
+      "specVersion": "v1",
+      "kind": "COMPONENT",
+      "metadata": {
+        "revision": 1,
+        "description": "Synthetic conformance fixture component."
+      },
+      "spec": {
+        "type": "WORKER",
+        "workload": {
+          "source": {
+            "image": "example/worker:1"
+          }
+        },
+        "contract": {
+          "inputs": {
+            "region": {
+              "schema": {
+                "type": "string"
+              },
+              "target": {
+                "envVarKey": "REGION"
+              }
+            }
+          },
+          "outputs": {}
+        }
+      }
+    },
+    "context": {
+      "validationProfile": "publication"
+    },
+    "expect": {
+      "/status": "INVALID",
+      "/phase": "capability"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_DESCRIPTION_REQUIRED",
+        "path": "/spec/contract/inputs/region",
+        "phase": "capability"
+      }
+    ]
+  },
+  {
+    "id": "publication-needs-described-outputs",
+    "profile": "resolution",
+    "operation": "validate",
+    "requirements": [
+      "COMP-DESC-004"
+    ],
+    "input": {
+      "specVersion": "v1",
+      "kind": "COMPONENT",
+      "metadata": {
+        "revision": 1,
+        "description": "Synthetic conformance fixture component."
+      },
+      "spec": {
+        "type": "EXTERNAL",
+        "contract": {
+          "outputs": {
+            "region": {
+              "schema": {
+                "type": "string"
+              },
+              "from": {
+                "value": "eu"
+              }
+            }
+          }
+        }
+      }
+    },
+    "context": {
+      "validationProfile": "publication"
+    },
+    "expect": {
+      "/status": "INVALID",
+      "/phase": "capability"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_DESCRIPTION_REQUIRED",
+        "path": "/spec/contract/outputs/region",
+        "phase": "capability"
+      }
+    ]
+  },
+  {
     "id": "constant-template-constraint",
     "profile": "resolution",
     "operation": "validate",

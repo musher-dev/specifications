@@ -122,6 +122,50 @@ export function constantTemplate(from: Json | undefined): string | undefined {
   if (!scanned.failures.length && !scanned.references.length)
     return template.replaceAll('$${{', '${{')
 }
+/**
+ * Component §4 and §5: what a component must carry before it is published.
+ *
+ * Each is a `capability` rule, because absent and not written yet are the same
+ * bytes and only a publisher can tell them apart. `metadata: false` leaves out
+ * COMP-DESC-003, which the blueprint dependency check does not apply
+ * (blueprint §4.1).
+ */
+export function componentObligations(document: Json, { metadata = true } = {}): Diagnostic[] {
+  const out: Diagnostic[] = []
+  const obligation = (code: string, path: string) =>
+    out.push({ code, path, message: code, phase: 'capability' })
+  if (metadata && at(document, 'metadata', 'description') === undefined)
+    obligation('ERR_DESCRIPTION_REQUIRED', '/metadata')
+  const spec = record(at(document, 'spec')),
+    type = spec.type
+  // The object that lacks a field is where its absence is reported; a field
+  // that is present and empty is reported at itself.
+  if (type === 'EXTERNAL') {
+    const contract = spec.contract
+    if (!isObject(contract)) obligation('ERR_OUTPUT_REQUIRED', '/spec')
+    else if (!isObject(contract.outputs)) obligation('ERR_OUTPUT_REQUIRED', '/spec/contract')
+    else if (!Object.keys(contract.outputs).length)
+      obligation('ERR_OUTPUT_REQUIRED', '/spec/contract/outputs')
+  } else if (typeof type === 'string') {
+    const workload = spec.workload
+    if (!isObject(workload)) obligation('ERR_WORKLOAD_REQUIRED', '/spec')
+    else {
+      if (workload.source === undefined) obligation('ERR_SOURCE_REQUIRED', '/spec/workload')
+      if (type === 'SERVICE') {
+        if (!isObject(workload.endpoints)) obligation('ERR_ENDPOINT_REQUIRED', '/spec/workload')
+        else if (!Object.keys(workload.endpoints).length)
+          obligation('ERR_ENDPOINT_REQUIRED', '/spec/workload/endpoints')
+      }
+      if (type === 'JOB' && workload.command === undefined)
+        obligation('ERR_COMMAND_REQUIRED', '/spec/workload')
+    }
+  }
+  for (const direction of ['inputs', 'outputs'])
+    for (const [name, value] of Object.entries(record(at(spec.contract, direction))))
+      if (at(value, 'description') === undefined)
+        obligation('ERR_DESCRIPTION_REQUIRED', `/spec/contract/${direction}/${token(name)}`)
+  return out
+}
 export function componentDiagnostics(document: Json): Diagnostic[] {
   const out: Diagnostic[] = []
   const workload = record(at(document, 'spec', 'workload'))
@@ -608,7 +652,10 @@ export function semanticReport(
       'errors' in parsed ||
       at(parsed.value, 'kind') !== 'COMPONENT' ||
       (context.checkComponent && !context.checkComponent(bytes)) ||
-      (!('errors' in parsed) && componentDiagnostics(parsed.value).length)
+      (!('errors' in parsed) && componentDiagnostics(parsed.value).length) ||
+      // A node deploys a finished component. Its own metadata description is
+      // the one obligation a blueprint does not ask of it (blueprint §4.1).
+      (!('errors' in parsed) && componentObligations(parsed.value, { metadata: false }).length)
     ) {
       issue(out, 'ERR_INVALID_DEPENDENCY', path)
       continue

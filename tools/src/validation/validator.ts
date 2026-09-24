@@ -17,7 +17,12 @@ import { discoverKinds, type Family, isObject, type Json } from '../lib/layout.t
 import { familyBundle } from '../schema/bundle.ts'
 import { strictAjv } from '../schema/lint.ts'
 import { type Diagnostic, type Phase, parseDocument, parseDocumentBytes } from './document.ts'
-import { type DeferredObligation, type SemanticContext, semanticReport } from './semantic.ts'
+import {
+  componentObligations,
+  type DeferredObligation,
+  type SemanticContext,
+  semanticReport,
+} from './semantic.ts'
 
 export type { Diagnostic, Phase }
 // Re-exported so callers keep one import for the pipeline. The parser phase
@@ -93,14 +98,15 @@ export function compileFamily(family: Family): ValidateFunction {
  * The publication obligations this runner can decide from the document alone.
  *
  * `capability` is the server's phase, and most of what it decides needs a
- * catalog this runner does not have. A description and a blueprint's first node
- * are the exceptions: the field is right there, and what makes each rule
- * `capability` is not that deciding it needs the network but that only a
- * publisher can tell an absent one from one its author has not written yet
- * (component v1 §4, blueprint v1 §3 and §4).
+ * catalog this runner does not have. A description, a component's runtime
+ * minimums and a blueprint's first node are the exceptions: the field is right
+ * there, and what makes each rule `capability` is not that deciding it needs the
+ * network but that only a publisher can tell an absent one from one its author
+ * has not written yet (component v1 §4 and §5, blueprint v1 §3 and §4).
  */
 function publicationDiagnostics(family: Family, document: Json): Diagnostic[] {
-  if (family.name !== 'component' && family.name !== 'blueprint') return []
+  if (family.name === 'component') return componentObligations(document)
+  if (family.name !== 'blueprint') return []
   const out: Diagnostic[] = []
   const obligation = (code: string, path: string) =>
     out.push({ code, path, message: code, phase: 'capability' })
@@ -108,12 +114,7 @@ function publicationDiagnostics(family: Family, document: Json): Diagnostic[] {
   if (!isObject(metadata) || metadata.description === undefined)
     obligation('ERR_DESCRIPTION_REQUIRED', '/metadata')
   const spec = isObject(document) ? document.spec : undefined
-  if (
-    family.name === 'blueprint' &&
-    isObject(spec) &&
-    isObject(spec.components) &&
-    Object.keys(spec.components).length === 0
-  )
+  if (isObject(spec) && isObject(spec.components) && Object.keys(spec.components).length === 0)
     obligation('ERR_NODE_REQUIRED', '/spec/components')
   return out
 }
