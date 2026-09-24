@@ -252,6 +252,20 @@ supplied contract or digest mismatch is INVALID. Every rule that reads the
 component a node deploys is deferred, not passed, while that component is
 unavailable.
 
+<a id="BP-REF-003"></a>**`BP-REF-003`**: The component a node deploys MUST meet
+component's publication obligations
+([component §5](../../component/v1/spec.md#publication-obligations)), whether it
+is published or repo-local. A component may be stored unfinished, but a node
+deploys it as it will run: one with no workload, source, endpoint, command or
+output has nothing to run, and an input with no description gives the installer
+nothing to read ([§5.4](#install-form)). A component that misses one is
+`ERR_INVALID_DEPENDENCY` at the node's `componentRef`, semantic, in every
+profile, as it was while those obligations were structural rules. The
+component's own `metadata.description`
+([`COMP-DESC-003`](../../component/v1/spec.md#COMP-DESC-003)) is the one
+exception: a node has deployed a component without one since component v1.1.0
+made it optional, and v1 keeps accepting it.
+
 [`BP-ID-003`](#BP-ID-003) requires every component document in the item to be
 referenced. That rule, like every item-scoped check, cannot complete for a
 standalone document without an item root ([§3.1](#item-directory)).
@@ -754,7 +768,7 @@ Core and component diagnostics apply, with these additions:
 |---|---|---|
 | `ERR_COMPONENT_NOT_FOUND` | `semantic` | Local component file is absent. |
 | `ERR_REFERENCE_ESCAPE` | `semantic` | Component reference escapes the item. |
-| `ERR_INVALID_DEPENDENCY` | `semantic` | Supplied contract is invalid or fails identity/digest verification. |
+| `ERR_INVALID_DEPENDENCY` | `semantic` | Supplied contract is invalid, fails identity/digest verification, or misses a component publication obligation. |
 | `ERR_CONFLICTING_NODE_COMPUTE` | `semantic` | A node whose component runs carries no compute, or an external node carries some. |
 | `ERR_UNKNOWN_NODE` | `semantic` | Binding names no node. |
 | `ERR_NODE_REQUIRED` | `capability` | Publication requires a node this blueprint does not declare. |

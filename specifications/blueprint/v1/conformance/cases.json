@@ -526,6 +526,21 @@
       "id": "semantic-072-parameter-source-unclosed-reference",
       "phase": "semantic",
       "path": "semantic/072-parameter-source-unclosed-reference"
+    },
+    {
+      "id": "semantic-073-node-deploys-an-unfinished-component",
+      "phase": "semantic",
+      "path": "semantic/073-node-deploys-an-unfinished-component"
+    },
+    {
+      "id": "semantic-074-node-deploys-an-undescribed-input",
+      "phase": "semantic",
+      "path": "semantic/074-node-deploys-an-undescribed-input"
+    },
+    {
+      "id": "semantic-075-node-deploys-a-component-without-a-metadata-description",
+      "phase": "semantic",
+      "path": "semantic/075-node-deploys-a-component-without-a-metadata-description"
     }
   ]
 }
