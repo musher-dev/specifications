@@ -1,0 +1,11 @@
+{
+  "id": "semantic-073-node-deploys-an-unfinished-component",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#component-reference",
+  "requirements": [
+    "BP-REF-003"
+  ],
+  "summary": "A node deploying a component with no workload is ERR_INVALID_DEPENDENCY: a component may be stored unfinished, but a node deploys it as it will run.",
+  "document": "app/blueprint.yaml"
+}

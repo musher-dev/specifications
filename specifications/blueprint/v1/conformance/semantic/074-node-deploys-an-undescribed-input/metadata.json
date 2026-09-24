@@ -1,0 +1,11 @@
+{
+  "id": "semantic-074-node-deploys-an-undescribed-input",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#component-reference",
+  "requirements": [
+    "BP-REF-003"
+  ],
+  "summary": "A node deploying a component with an input no description explains is ERR_INVALID_DEPENDENCY.",
+  "document": "app/blueprint.yaml"
+}

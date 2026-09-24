@@ -8,7 +8,7 @@ contract; this checklist does not define another document dialect.
 ## Pin the released contract
 
 Pin exact releases, never a commit on `main`: `core/v1.0.0`,
-`component/v1.2.0` and `blueprint/v1.3.0`, plus `listing/v1.0.0` where the
+`component/v1.3.0` and `blueprint/v1.4.0`, plus `listing/v1.0.0` where the
 catalog reads listings. Earlier component and blueprint releases were withdrawn
 from the compatibility guarantee by
 [ADR 0033](adr/0033-inputs-are-the-only-way-into-a-component.md) §5; migrate
@@ -117,3 +117,15 @@ component. Every change is mechanical:
 
 The console's component editor shows one list, Inputs. It no longer has a
 separate environment-variables panel.
+
+## Storing unfinished components (component v1.3.0 and blueprint v1.4.0)
+
+A component with only a `type` is now a valid document, so an editor can create
+one in a click and store every intermediate state. What a component needs before
+it runs (a workload, a source, an endpoint for a `SERVICE`, a command for a
+`JOB`, an output for an `EXTERNAL` component, and a description on every input
+and output) is checked at publication instead, each with its own `capability`
+code ([component §5](../specifications/component/v1/spec.md#publication-obligations)).
+Validate drafts with the `document` profile and publish with `publication`.
+A blueprint node still deploys only a finished component
+([`BP-REF-003`](../specifications/blueprint/v1/spec.md#BP-REF-003)).
