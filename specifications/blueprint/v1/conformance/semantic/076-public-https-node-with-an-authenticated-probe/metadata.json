@@ -1,0 +1,12 @@
+{
+  "id": "semantic-076-public-https-node-with-an-authenticated-probe",
+  "phase": "semantic",
+  "expected": "pass",
+  "clause": "specifications/blueprint/v1/spec.md#node-compute",
+  "requirements": [
+    "BP-NODE-005",
+    "COMP-EP-003"
+  ],
+  "summary": "A PUBLIC HTTPS endpoint with an unverified certificate is exposed behind an authenticated readiness probe whose password a parameter supplies.",
+  "document": "app/blueprint.yaml"
+}

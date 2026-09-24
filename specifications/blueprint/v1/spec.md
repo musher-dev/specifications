@@ -390,6 +390,12 @@ Each diagnostic anchors at `exposure/<endpoint>`, except that
 `ERR_ENDPOINT_NOT_PUBLIC` for an endpoint left out of `exposure` anchors at the
 node's `componentRef`. These are semantic rules.
 
+Exposure decides who reaches an endpoint, and the component decides how the
+platform connects to it. Traffic for a `PUBLIC` endpoint reaches the workload
+over the endpoint's `protocol` and trust policy, the same ones its probes use
+([component `COMP-EP-007`](../../component/v1/spec.md#COMP-EP-007)), whatever
+scheme the public used to reach the platform.
+
 ### <a id="placement-constraints"></a><a id="advanced-constraints"></a>4.4 Placement constraints
 
 Placement constraints narrow the hosts eligible for the selected compute
