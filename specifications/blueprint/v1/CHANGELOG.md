@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/musher-dev/specifications/compare/blueprint/v1.4.0...blueprint/v1.5.0) (2026-09-24)
+
+
+### Additions
+
+* **blueprint:** expose HTTPS endpoints over the component's trust policy ([#128](https://github.com/musher-dev/specifications/issues/128)) ([ebb426c](https://github.com/musher-dev/specifications/commit/ebb426cdaa585dbd3bfa997cbf7d5c36ef276770)), closes [#125](https://github.com/musher-dev/specifications/issues/125)
+
 ## [1.4.0](https://github.com/musher-dev/specifications/compare/blueprint/v1.3.0...blueprint/v1.4.0) (2026-09-24)
 
 
