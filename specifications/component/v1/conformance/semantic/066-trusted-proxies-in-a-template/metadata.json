@@ -1,0 +1,10 @@
+{
+  "id": "semantic-066-trusted-proxies-in-a-template",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#endpoints",
+  "requirements": [
+    "COMP-EP-012"
+  ],
+  "summary": "A template produces a string, and an array has no text form in one."
+}

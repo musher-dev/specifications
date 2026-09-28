@@ -1059,6 +1059,30 @@ const UNPINNED: ReadonlyMap<string, string> = new Map([
     'Skipping a run due while the previous one executes is a runtime obligation of the ' +
       'scheduler; no document phase or behavioural operation observes a run',
   ],
+  [
+    'BP-ACCESS-002',
+    'Authenticating and authorizing a viewer before forwarding, and refusing when that ' +
+      'state is unavailable, are runtime obligations of the platform edge; no document ' +
+      'phase or behavioural operation observes a request',
+  ],
+  [
+    'BP-ACCESS-003',
+    'Removing inbound identity and forwarding headers, setting the identity header and ' +
+      'preserving Host, Origin, Authorization and application cookies are runtime ' +
+      'obligations of the proxy; no document phase or behavioural operation observes a request',
+  ],
+  [
+    'BP-ACCESS-004',
+    'That the trusted proxy CIDRs cover the observed peer and no other origin is a fact ' +
+      "of the platform's network; resolution checks their grammar (BP-ACCESS-001) but no " +
+      'operation observes a connection',
+  ],
+  [
+    'BP-ACCESS-005',
+    'Bounding how long an admitted connection outlives its authorization is a runtime ' +
+      'obligation of the platform; no document phase or behavioural operation observes a ' +
+      'connection',
+  ],
 ])
 
 /**

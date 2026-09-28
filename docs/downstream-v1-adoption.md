@@ -8,7 +8,7 @@ contract; this checklist does not define another document dialect.
 ## Pin the released contract
 
 Pin exact releases, never a commit on `main`: `core/v1.0.0`,
-`component/v1.4.0` and `blueprint/v1.5.0`, plus `listing/v1.0.0` where the
+`component/v1.5.0` and `blueprint/v1.6.0`, plus `listing/v1.0.0` where the
 catalog reads listings. Earlier component and blueprint releases were withdrawn
 from the compatibility guarantee by
 [ADR 0033](adr/0033-inputs-are-the-only-way-into-a-component.md) §5; migrate
@@ -155,3 +155,55 @@ An `HTTPS` endpoint can now say how the platform trusts its certificate
 Validate blueprints with blueprint v1.5.0 or later. The v1.4.0 release archive
 carries component v1.3.0 in its dependency closure, so a validator built from
 it rejects a repo-local component using these fields with `ERR_UNKNOWN_FIELD`.
+
+## Authenticated exposure (component v1.5.0 and blueprint v1.6.0)
+
+An exposure can now be an object that says, beside its `visibility`, whether
+the platform signs viewers in (`access: OPEN | AUTHENTICATED`) and whether the
+workload receives each viewer's identity in a header
+(`viewerIdentity: NONE | HEADER`). Bare `PUBLIC` and `PRIVATE` keep their
+meaning. A component reads the header name and the proxy addresses to trust it
+from as two endpoint properties, `viewerIdentityHeader` and `trustedProxyCIDRs`
+([blueprint §4.5](../specifications/blueprint/v1/spec.md#access),
+[component §5.2](../specifications/component/v1/spec.md#viewer-identity),
+[ADR 0034](adr/0034-access-and-viewer-identity-are-part-of-exposure.md)).
+
+- Parse both forms of `exposure.<endpoint>` everywhere it is read, including
+  the pinned resolution record, whose `exposure` copies the authored map. The
+  platform's own ingress already calls the first member `visibility`.
+- Authenticate and authorize every request and WebSocket upgrade to an
+  `AUTHENTICATED` endpoint before forwarding it, against the installation's
+  access policy. Refuse, never forward, when that state is missing or
+  unavailable, and never read an exposure you do not understand as `OPEN`
+  ([`BP-ACCESS-002`](../specifications/blueprint/v1/spec.md#BP-ACCESS-002)).
+- Under `HEADER`, strip inbound copies of the identity header and of
+  `Forwarded`, `X-Forwarded-*` and `X-Real-IP`, then set the identity header to
+  a stable, opaque user identifier, not an email address. Keep `Host`, `Origin`,
+  the request's `Authorization` header and application cookies, and never
+  forward the platform's session cookie
+  ([`BP-ACCESS-003`](../specifications/blueprint/v1/spec.md#BP-ACCESS-003)).
+  The specification leaves the header name to the platform. A name under the
+  edge's existing `x-platform-*` strip, such as `x-platform-user`, is covered by
+  it at the edge, but every later hop that can add headers must strip it too.
+- Supply `viewerIdentityHeader` and `trustedProxyCIDRs` as public routing facts
+  of the endpoint allocation, before the workload starts. The CIDRs are the
+  addresses the container itself observes as its TCP peer, which on the current
+  hosts is the compute host's proxy through the port publish, not the edge and
+  not loopback. No other workload or tenant may originate traffic from them
+  ([`BP-ACCESS-004`](../specifications/blueprint/v1/spec.md#BP-ACCESS-004)). A
+  missing fact leaves resolution incomplete.
+- Bound, and document, how long an admitted WebSocket outlives a sign-out,
+  expiry or removed permission
+  ([`BP-ACCESS-005`](../specifications/blueprint/v1/spec.md#BP-ACCESS-005)).
+
+For a catalog item such as OpenClaw in trusted-proxy mode, declare outputs
+reading `viewerIdentityHeader` and `trustedProxyCIDRs` from the gateway
+endpoint, bind them back into the node's own inputs, and expose the endpoint with
+`access: AUTHENTICATED` and `viewerIdentity: HEADER`. Remove the placeholder
+CIDR and the header default. The CIDRs arrive in the environment as a compact
+JSON array, which can be written into `gateway.trustedProxies` as it is. What
+the application grants a forwarded viewer, such as OpenClaw's scopes, stays the
+catalog item's decision.
+
+Validate blueprints with blueprint v1.6.0 or later, whose dependency closure
+carries component v1.5.0.

@@ -1,0 +1,10 @@
+{
+  "id": "semantic-062-trusted-proxies-of-a-grpc-endpoint",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#endpoints",
+  "requirements": [
+    "COMP-EP-012"
+  ],
+  "summary": "A GRPC endpoint has no trusted proxy CIDRs, because viewer identity is forwarded only on HTTP, HTTPS and WS."
+}

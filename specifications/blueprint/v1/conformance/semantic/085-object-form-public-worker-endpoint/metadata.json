@@ -1,0 +1,11 @@
+{
+  "id": "semantic-085-object-form-public-worker-endpoint",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#components",
+  "requirements": [
+    "BP-NODE-005"
+  ],
+  "summary": "The object form states visibility, and a WORKER endpoint is never PUBLIC in either form.",
+  "document": "app/blueprint.yaml"
+}

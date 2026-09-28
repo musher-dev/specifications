@@ -1,0 +1,10 @@
+{
+  "id": "structural-061-exposure-object-with-an-unknown-member",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#access",
+  "requirements": [
+    "BP-NODE-006"
+  ],
+  "summary": "The object form is closed; a document names no access policy in v1."
+}

@@ -38,11 +38,19 @@ Every task in [`taskfiles/`](../taskfiles/) runs from this directory as
 
 ## <a id="checks"></a>Checks
 
-`task check` runs these steps in this order. CI runs the same steps across its
-jobs: **Lint** runs `task ci:lint` and `check:types`, **Schema** runs
+`task check` runs these steps in parallel, as Task `deps`: every step reads
+the tree and writes only to a scratch directory of its own, so none depends on
+another's result. Each step's output is printed in one block when it finishes,
+a failing step does not stop the others, and the run fails once all have
+reported. CI runs the same steps across its jobs, in parallel within each:
+**Lint** runs `task ci:lint` and `check:types`, **Schema** runs
 `task ci:test`, and **Site Build** runs `check:published`, then the CI-only
 steps listed [below](#ci-only). Every step must pass before a pull request
 merges.
+
+Two steps also spread their own work across cores. `check:parity` runs its
+Blaze batches concurrently, and `check:compat` replays each release in a
+process of its own; both report in the order they would sequentially.
 
 | Task | What it enforces | Script | Rule IDs |
 |---|---|---|---|

@@ -10,6 +10,14 @@
 
 version: '3'
 
+# The aggregates below run their checks as parallel deps, so each task's output
+# is held until it finishes and printed in one block rather than interleaved.
+# Under GitHub Actions each block is a collapsible log group.
+output:
+  group:
+    begin: '{{if .GITHUB_ACTIONS}}::group::{{end}}task: {{.TASK}}'
+    end: '{{if .GITHUB_ACTIONS}}::endgroup::{{end}}'
+
 vars:
   TOOLS_DIR: tools
   SITE_DIR: site
@@ -54,9 +62,12 @@ tasks:
       - task: setup:tools
       - task: setup:hooks
 
+  # Every check reads the tree and writes only to its own scratch directory, so
+  # they run as parallel deps: a failure in one does not stop the others, and
+  # the run fails once all of them have finished and reported.
   check:
-    desc: Run every check CI runs
-    cmds:
+    desc: Run every check CI runs, in parallel
+    deps:
       - task: check:format
       - task: check:config
       - task: check:rulesets

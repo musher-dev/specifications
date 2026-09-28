@@ -1,0 +1,11 @@
+{
+  "id": "semantic-079-viewer-identity-read-through-a-bare-public-exposure",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#access",
+  "requirements": [
+    "BP-NODE-007"
+  ],
+  "summary": "Bare PUBLIC is OPEN and forwards no identity, so an output reading the trusted proxy CIDRs is rejected at that exposure.",
+  "document": "app/blueprint.yaml"
+}

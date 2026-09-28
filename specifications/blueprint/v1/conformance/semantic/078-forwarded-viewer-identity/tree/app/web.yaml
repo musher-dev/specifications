@@ -1,0 +1,46 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: SERVICE
+  workload:
+    source:
+      image: example/web:1
+    endpoints:
+      web:
+        targetPort: 8080
+        protocol: HTTP
+    health:
+      readiness:
+        http:
+          endpoint: web
+          path: /healthz
+  contract:
+    inputs:
+      identityHeader:
+        description: Header the gateway reads the viewer's identity from.
+        schema: { type: string }
+        target: { envVarKey: GATEWAY_IDENTITY_HEADER }
+      trustedProxies:
+        description: Proxy addresses the gateway accepts the identity header from.
+        schema: { type: array, items: { type: string } }
+        target: { envVarKey: GATEWAY_TRUSTED_PROXIES }
+      publicOrigin:
+        description: Origin the gateway's browser clients connect from.
+        schema: { type: string }
+        target: { envVarKey: GATEWAY_PUBLIC_ORIGIN }
+    outputs:
+      identityHeader:
+        description: Synthetic output.
+        schema: { type: string }
+        from: { endpoint: web, property: viewerIdentityHeader }
+      trustedProxies:
+        description: Synthetic output.
+        schema: { type: array, items: { type: string } }
+        from: { endpoint: web, property: trustedProxyCIDRs }
+      publicURL:
+        description: Synthetic output.
+        schema: { type: string }
+        from: { endpoint: web, property: publicURL }

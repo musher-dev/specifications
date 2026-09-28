@@ -551,6 +551,96 @@
       "id": "semantic-077-literal-bound-to-a-probe-password",
       "phase": "semantic",
       "path": "semantic/077-literal-bound-to-a-probe-password"
+    },
+    {
+      "id": "structural-059-exposure-object-form",
+      "phase": "structural",
+      "path": "structural/059-exposure-object-form"
+    },
+    {
+      "id": "structural-060-exposure-object-without-visibility",
+      "phase": "structural",
+      "path": "structural/060-exposure-object-without-visibility"
+    },
+    {
+      "id": "structural-061-exposure-object-with-an-unknown-member",
+      "phase": "structural",
+      "path": "structural/061-exposure-object-with-an-unknown-member"
+    },
+    {
+      "id": "structural-062-access-on-a-private-endpoint",
+      "phase": "structural",
+      "path": "structural/062-access-on-a-private-endpoint"
+    },
+    {
+      "id": "structural-063-viewer-identity-on-a-private-endpoint",
+      "phase": "structural",
+      "path": "structural/063-viewer-identity-on-a-private-endpoint"
+    },
+    {
+      "id": "structural-064-forwarded-identity-without-authentication",
+      "phase": "structural",
+      "path": "structural/064-forwarded-identity-without-authentication"
+    },
+    {
+      "id": "structural-065-forwarded-identity-on-an-open-endpoint",
+      "phase": "structural",
+      "path": "structural/065-forwarded-identity-on-an-open-endpoint"
+    },
+    {
+      "id": "structural-066-unknown-access-term",
+      "phase": "structural",
+      "path": "structural/066-unknown-access-term"
+    },
+    {
+      "id": "semantic-078-forwarded-viewer-identity",
+      "phase": "semantic",
+      "path": "semantic/078-forwarded-viewer-identity"
+    },
+    {
+      "id": "semantic-079-viewer-identity-read-through-a-bare-public-exposure",
+      "phase": "semantic",
+      "path": "semantic/079-viewer-identity-read-through-a-bare-public-exposure"
+    },
+    {
+      "id": "semantic-080-viewer-identity-read-from-an-unexposed-endpoint",
+      "phase": "semantic",
+      "path": "semantic/080-viewer-identity-read-from-an-unexposed-endpoint"
+    },
+    {
+      "id": "semantic-081-viewer-identity-read-behind-authentication-alone",
+      "phase": "semantic",
+      "path": "semantic/081-viewer-identity-read-behind-authentication-alone"
+    },
+    {
+      "id": "semantic-082-authenticated-access-without-identity",
+      "phase": "semantic",
+      "path": "semantic/082-authenticated-access-without-identity"
+    },
+    {
+      "id": "semantic-083-authenticated-access-to-a-tcp-endpoint",
+      "phase": "semantic",
+      "path": "semantic/083-authenticated-access-to-a-tcp-endpoint"
+    },
+    {
+      "id": "semantic-084-authenticated-access-to-a-grpc-endpoint",
+      "phase": "semantic",
+      "path": "semantic/084-authenticated-access-to-a-grpc-endpoint"
+    },
+    {
+      "id": "semantic-085-object-form-public-worker-endpoint",
+      "phase": "semantic",
+      "path": "semantic/085-object-form-public-worker-endpoint"
+    },
+    {
+      "id": "semantic-086-object-form-public-service-without-readiness",
+      "phase": "semantic",
+      "path": "semantic/086-object-form-public-service-without-readiness"
+    },
+    {
+      "id": "semantic-087-public-property-of-an-object-form-private-endpoint",
+      "phase": "semantic",
+      "path": "semantic/087-public-property-of-an-object-form-private-endpoint"
     }
   ]
 }

@@ -1,0 +1,10 @@
+{
+  "id": "semantic-064-trusted-proxies-into-a-string-output",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#endpoints",
+  "requirements": [
+    "COMP-EP-012"
+  ],
+  "summary": "Trusted proxy CIDRs are an array, so an output reading them cannot declare a string schema."
+}

@@ -1,0 +1,10 @@
+{
+  "id": "structural-062-access-on-a-private-endpoint",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#access",
+  "requirements": [
+    "BP-NODE-006"
+  ],
+  "summary": "Access applies only to a PUBLIC endpoint."
+}

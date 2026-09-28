@@ -1,8 +1,8 @@
 # Every gate this repository runs, under the `check` namespace.
 #
 # The aggregate entry point is `task check`, defined in the root Taskfile.yml:
-# it runs all of these in the order CI does -- cheap static checks first, then
-# the normative gates, then the ones that need git history.
+# it runs all of these at once, as parallel deps. None may depend on another's
+# result or write outside a scratch directory of its own.
 #
 # Each check names its config with the tool's own flag. Default discovery is
 # never relied on -- see .config/README.md and docs/adr/0011.

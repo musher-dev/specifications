@@ -654,7 +654,7 @@
         "endpoint": {
           "type": "string",
           "pattern": "^[a-z][a-z0-9]{0,19}$",
-          "description": "Own endpoint whose allocated address property is read."
+          "description": "Own endpoint whose property is read."
         },
         "input": {
           "type": "string",
@@ -663,7 +663,7 @@
           "description": "Own input forwarded as this output, keeping its sensitivity."
         },
         "property": {
-          "description": "Address property of the named endpoint.",
+          "description": "Property of the named endpoint: an allocated address, or the viewer identity header and trusted proxy CIDRs of an endpoint whose blueprint exposure forwards viewer identity.",
           "enum": [
             "publicURL",
             "publicHostname",
@@ -671,7 +671,9 @@
             "publicPort",
             "privateHostname",
             "privatePort",
-            "privateAddress"
+            "privateAddress",
+            "viewerIdentityHeader",
+            "trustedProxyCIDRs"
           ],
           "type": "string"
         },

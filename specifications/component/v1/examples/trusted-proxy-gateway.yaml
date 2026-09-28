@@ -1,0 +1,68 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Web gateway that signs viewers in by trusting the identity header the platform forwards.
+spec:
+  type: SERVICE
+  workload:
+    source:
+      image: example/gateway:2026.9.6
+    endpoints:
+      web:
+        targetPort: 18789
+        protocol: HTTP
+    health:
+      readiness:
+        http:
+          endpoint: web
+          path: /healthz
+  contract:
+    inputs:
+      identityHeader:
+        description: Request header the gateway reads the signed-in viewer from.
+        schema:
+          type: string
+        target:
+          envVarKey: GATEWAY_IDENTITY_HEADER
+      trustedProxies:
+        description: Proxy addresses the gateway accepts that header from, as a JSON array of CIDRs.
+        schema:
+          type: array
+          items:
+            type: string
+        target:
+          envVarKey: GATEWAY_TRUSTED_PROXIES
+      publicOrigin:
+        description: Origin the gateway's browser clients connect from.
+        schema:
+          type: string
+        target:
+          envVarKey: GATEWAY_PUBLIC_ORIGIN
+    # The platform owns these facts. Reading them through outputs, rather than
+    # defaulting the inputs above, means every blueprint deploying this
+    # component must forward viewer identity on `web`.
+    outputs:
+      identityHeader:
+        description: Header carrying the signed-in viewer's identity.
+        schema:
+          type: string
+        from:
+          endpoint: web
+          property: viewerIdentityHeader
+      trustedProxies:
+        description: Addresses the forwarded traffic arrives from.
+        schema:
+          type: array
+          items:
+            type: string
+        from:
+          endpoint: web
+          property: trustedProxyCIDRs
+      publicURL:
+        description: Public URL of the gateway.
+        schema:
+          type: string
+        from:
+          endpoint: web
+          property: publicURL

@@ -230,7 +230,7 @@ components:
 | `bindings` | The supplier of each input | [§4.2](#bindings) |
 | `compute` | The compute profile and its placement pins | [§4.3](#node-compute), [§4.4](#placement-constraints) |
 | `volumes` | The storage allocated to each volume | [§4.3](#node-compute) |
-| `exposure` | The exposure of each endpoint | [§4.3](#node-compute) |
+| `exposure` | The exposure of each endpoint, and who may reach it | [§4.3](#node-compute), [§4.5](#access) |
 
 ### <a id="component-reference"></a>4.1 Component reference
 
@@ -369,7 +369,9 @@ terms follow the same grammar and the same catalog rules as placement terms
 ([§4.4](#placement-constraints)).
 
 **Exposure.** <a id="BP-NODE-005"></a>**`BP-NODE-005`**: `exposure.<endpoint>`
-is `PUBLIC` or `PRIVATE`, and an endpoint left out is `PRIVATE`. The component
+is `PUBLIC` or `PRIVATE`, or the object form [§4.5](#access) defines, whose
+`visibility` is one of the two. An endpoint left out is `PRIVATE`. The rules
+below read the endpoint's visibility, whichever form states it. The component
 constrains the choice:
 
 - A key naming no endpoint of the component fails with `ERR_UNKNOWN_ENDPOINT`.
@@ -423,6 +425,128 @@ term or no eligible host rejects capability admission; neither is silently
 ignored. The selected profile version and allocations are pinned by the
 resolution record. A future meaning change to a pin is a specification change,
 even if its spelling still passes structural validation.
+
+### <a id="access"></a>4.5 Access and viewer identity
+
+An exposure answers three questions. Can the endpoint be reached from outside
+the installation? Must the platform sign a viewer in before forwarding a
+request? And does the workload learn who the viewer is? The bare form answers
+only the first; the object form answers all three:
+
+```yaml
+exposure:
+  web:
+    visibility: PUBLIC
+    access: AUTHENTICATED
+    viewerIdentity: HEADER
+```
+
+| Member | Values | Absent |
+|---|---|---|
+| `visibility` | `PUBLIC`, `PRIVATE` | REQUIRED |
+| `access` | `OPEN`: every request is forwarded. `AUTHENTICATED`: only viewers the installation's access policy authorizes | `OPEN` |
+| `viewerIdentity` | `NONE`: nothing is forwarded about the viewer. `HEADER`: the viewer's identity, in a request header | `NONE` |
+
+Bare `PUBLIC` is `{ visibility: PUBLIC }`, and so
+`{ visibility: PUBLIC, access: OPEN, viewerIdentity: NONE }`; bare `PRIVATE` is
+`{ visibility: PRIVATE }`. Public does not mean anonymous, and private does not
+mean authenticated: `AUTHENTICATED` protects a workload that never reads an
+identity, and a `PRIVATE` endpoint serves the platform and sibling nodes, which
+the platform's sign-in is not in front of.
+
+<a id="BP-NODE-006"></a>**`BP-NODE-006`**: The object form is closed, and
+requires `visibility`: an absent one is `ERR_MISSING_FIELD` at the endpoint's
+exposure, and an unknown member is `ERR_UNKNOWN_FIELD` there. `access` and
+`viewerIdentity` apply only to `PUBLIC`, so either one under `PRIVATE` is
+`ERR_INVALID_VALUE` at that member. `HEADER` requires `AUTHENTICATED`, because an
+identity the platform has not verified is one the caller supplied, so
+`viewerIdentity: HEADER` without `access: AUTHENTICATED` is `ERR_INVALID_VALUE`
+at `viewerIdentity`. These are structural rules.
+
+<a id="BP-NODE-007"></a>**`BP-NODE-007`**: The component constrains access as
+it constrains exposure:
+
+- A sign-in and a request header exist only on `HTTP`, `HTTPS` and `WS`, so
+  `access: AUTHENTICATED` on an endpoint of any other protocol fails with
+  `ERR_ENDPOINT_NOT_HTTP` at `exposure/<endpoint>/access`.
+- An output the component derives from `viewerIdentityHeader` or
+  `trustedProxyCIDRs` ([component §5.2](../../component/v1/spec.md#viewer-identity))
+  requires that endpoint's `viewerIdentity` to be `HEADER`, otherwise
+  `ERR_VIEWER_IDENTITY_NOT_FORWARDED`. It anchors as `ERR_ENDPOINT_NOT_PUBLIC`
+  does: at `exposure/<endpoint>`, or at the node's `componentRef` for an
+  endpoint left out of `exposure`.
+
+These are semantic rules. A workload that needs the two values binds the
+outputs that read them back into its own inputs. That is a discovery
+dependency on allocated facts, not a value cycle
+([`BP-CONN-002`](#BP-CONN-002)):
+
+```yaml
+components:
+  web:
+    componentRef: ./components/web.yaml
+    compute: { profile: general.standard.small }
+    exposure:
+      web: { visibility: PUBLIC, access: AUTHENTICATED, viewerIdentity: HEADER }
+    bindings:
+      identityHeader: { node: web, output: identityHeader }
+      trustedProxies: { node: web, output: trustedProxies }
+```
+
+<a id="BP-ACCESS-001"></a>**`BP-ACCESS-001`**: The public routing facts of an
+endpoint allocation
+([component §5.2](../../component/v1/spec.md#endpoints)) carry
+`viewerIdentityHeader` and `trustedProxyCIDRs` only when that endpoint's
+`viewerIdentity` is `HEADER`. The header name is a lowercase field name of 1 to
+128 characters, RFC 9110 `tchar`s only, and never `authorization`,
+`connection`, `content-length`, `cookie`, `forwarded`, `host`, `keep-alive`,
+`origin`, `proxy-authorization`, `proxy-connection`, `te`, `trailer`,
+`transfer-encoding`, `upgrade`, `x-real-ip` or a name beginning
+`x-forwarded-`. The CIDRs are a non-empty list without repeats, each an IPv4
+prefix in dotted decimal without leading zeros or an IPv6 prefix in RFC 5952
+text, with a prefix length of at least 1 and no host bits set: a list that
+trusts every address is not a trust decision. A fact on another endpoint, or one
+breaking this grammar, is `ERR_INVALID_RESOLUTION_CONTEXT` in the `allocation`
+stage. A fact the context does not supply leaves the value that reads it
+unresolved, and resolution INCOMPLETE; no implementation supplies a fallback.
+
+The rest of this section is what the platform does for an endpoint whose access
+is `AUTHENTICATED`. No document phase observes a forwarded request, so these
+requirements are verified against implementations, not documents.
+
+<a id="BP-ACCESS-002"></a>**`BP-ACCESS-002`**: The platform MUST authenticate
+the viewer, and authorize them against the installation's access policy, before
+it forwards any request, on HTTP requests and WebSocket upgrades alike. The
+policy belongs to the installation and is resolved in its owning organization
+and project; no document names a principal, role or policy in v1. When the
+authentication or authorization state it needs is missing, unknown or
+unavailable, the platform MUST refuse the request and MUST NOT forward it. An
+implementation that does not understand `AUTHENTICATED` MUST reject the
+exposure rather than treat it as `OPEN`. Health probes reach the workload
+directly ([component §5.4](../../component/v1/spec.md#health)) and are not
+subject to viewer authentication.
+
+<a id="BP-ACCESS-003"></a>**`BP-ACCESS-003`**: Under `viewerIdentity: HEADER`,
+the platform MUST remove every inbound copy of the identity header, and of
+`Forwarded`, `X-Forwarded-*` and `X-Real-IP`, before it sets its own, on HTTP
+requests and WebSocket upgrades alike. The identity it sets is a stable, opaque
+identifier of the authenticated viewer, never an email address and never a
+credential. It MUST preserve the validated `Host`, the `Origin`, and the
+request's own `Authorization` header and application cookies, and MUST NOT
+forward its own session credential to the workload. Under `viewerIdentity: NONE`
+it forwards no identity header.
+
+<a id="BP-ACCESS-004"></a>**`BP-ACCESS-004`**: `trustedProxyCIDRs` MUST cover
+every address the workload observes as the peer of traffic the platform
+forwards to it, and no address from which another workload, another tenant or
+the public can open a connection to it. The values are allocated before the
+workload starts ([`BP-RESOLVE-001`](#BP-RESOLVE-001)), and a change to them is
+a change of allocation, so a new snapshot and a new record.
+
+<a id="BP-ACCESS-005"></a>**`BP-ACCESS-005`**: The platform MUST bound how long
+a connection it admitted, such as an upgraded WebSocket, may outlive the
+authorization that admitted it, after a sign-out, an expiry or a withdrawn
+permission, and MUST document that bound.
 
 ## <a id="parameters"></a>5. Installation parameters
 
@@ -787,6 +911,7 @@ Core and component diagnostics apply, with these additions:
 | `ERR_UNBOUND_PARAMETER` | `semantic` | No binding names the parameter. |
 | `ERR_UNSATISFIED_REQUIRED_INPUT` | `semantic`, `resolution` | Required input has no binding or default. |
 | `ERR_ENDPOINT_NOT_PUBLIC` | `semantic` | Output requires exposure not selected by the blueprint. |
+| `ERR_VIEWER_IDENTITY_NOT_FORWARDED` | `semantic` | Output reads a viewer identity property of an endpoint whose exposure does not forward viewer identity. |
 | `ERR_UNKNOWN_ENUM_MEMBER` | `semantic` | UI label names no enum member. |
 | `ERR_INVALID_PARAMETER_SOURCE` | `semantic` | A parameter's `from` is not one whole reference. |
 | `ERR_INVALID_VOLUME_ALLOCATION` | `semantic` | Volume allocation is absent, unknown or below minimum. |
@@ -810,8 +935,10 @@ credential lifecycle observations. A skipped case is never passed.
 ## <a id="known-debt"></a>9. Unsupported capabilities
 
 Cross-installation component instances, conditional node sets, runtime job
-outputs, startup dependency graphs, recursive templates and arbitrary provider
-maps are unsupported. Their declarations are rejected.
+outputs, startup dependency graphs, recursive templates, arbitrary provider
+maps, a document naming the principals, roles or policy an `AUTHENTICATED`
+endpoint admits, and `AUTHENTICATED` access to a `GRPC`, `TCP` or `UDP`
+endpoint are unsupported. Their declarations are rejected.
 
 ## <a id="security"></a>10. Security considerations
 
@@ -821,3 +948,10 @@ references select organization data the installation is authorized to read;
 they never grant access by themselves. No validation phase fetches a
 document-chosen URL. Resolved secrets remain in private materialization channels
 and cannot appear in diagnostics or exported resolution records.
+
+A `PUBLIC` endpoint whose access is `OPEN` is reachable by anyone with its
+address, and an identity header on one would be whatever the caller wrote. That
+is why a component that reads the viewer identity properties cannot be deployed
+without `viewerIdentity: HEADER` ([`BP-NODE-007`](#BP-NODE-007)), and why the
+platform refuses, rather than forwards, a request it cannot authorize
+([`BP-ACCESS-002`](#BP-ACCESS-002)).

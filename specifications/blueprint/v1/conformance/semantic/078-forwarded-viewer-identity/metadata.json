@@ -1,0 +1,15 @@
+{
+  "id": "semantic-078-forwarded-viewer-identity",
+  "phase": "semantic",
+  "expected": "pass",
+  "clause": "specifications/blueprint/v1/spec.md#components",
+  "requirements": [
+    "BP-NODE-005",
+    "BP-NODE-006",
+    "BP-NODE-007",
+    "BP-CONN-002",
+    "COMP-EP-012"
+  ],
+  "summary": "A workload behind the platform sign-in binds its own viewer identity header, trusted proxy CIDRs and public URL back into its inputs.",
+  "document": "app/blueprint.yaml"
+}

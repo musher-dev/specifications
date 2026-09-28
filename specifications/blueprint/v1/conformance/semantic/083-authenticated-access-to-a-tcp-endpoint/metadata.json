@@ -1,0 +1,11 @@
+{
+  "id": "semantic-083-authenticated-access-to-a-tcp-endpoint",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#access",
+  "requirements": [
+    "BP-NODE-007"
+  ],
+  "summary": "A TCP endpoint has no sign-in, so AUTHENTICATED access to it is rejected at access.",
+  "document": "app/blueprint.yaml"
+}

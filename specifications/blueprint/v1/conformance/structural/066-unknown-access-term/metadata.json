@@ -1,0 +1,10 @@
+{
+  "id": "structural-066-unknown-access-term",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#access",
+  "requirements": [
+    "BP-NODE-006"
+  ],
+  "summary": "Access is OPEN or AUTHENTICATED; an unknown term is rejected, not ignored."
+}

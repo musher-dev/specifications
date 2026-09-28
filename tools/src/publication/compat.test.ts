@@ -10,7 +10,7 @@ import { afterEach, describe, expect, test } from 'bun:test'
 import { discoverKinds, Failures, familyPaths, LayoutError, REPO_ROOT } from '../lib/layout.ts'
 import { FixtureRepo } from '../testing/fixture.ts'
 import { Pipeline } from '../testing/pipeline.ts'
-import { replayAll, replayRelease, WITHDRAWN } from './compat.ts'
+import { replayAll, replayConcurrently, replayRelease, WITHDRAWN } from './compat.ts'
 import { readLedger, taggedEntries } from './ledger.ts'
 
 const COMPONENT = familyPaths('component', 'v1')
@@ -88,6 +88,24 @@ describe('replayRelease', () => {
       const failures = new Failures()
       expect(replayAll(fx.root, failures)).toEqual({ replayed: 1, checked: 2 })
       expect(failures.count).toBe(0)
+    })
+  })
+
+  describe('replayConcurrently', () => {
+    test('replays each release in a process of its own, with the same result', async () => {
+      const fx = cut()
+      const failures = new Failures()
+      expect(await replayConcurrently(fx.root, failures)).toEqual(
+        replayAll(fx.root, new Failures()),
+      )
+      expect(failures.count).toBe(0)
+    })
+
+    test("a release tag lacking its corpus still throws the child's LayoutError", async () => {
+      const fx = cut('conformance')
+      const error = await replayConcurrently(fx.root, new Failures()).catch((e: unknown) => e)
+      expect(error).toBeInstanceOf(LayoutError)
+      expect((error as Error).message).toContain(COMPONENT.conformance)
     })
   })
 })

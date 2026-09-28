@@ -1,0 +1,30 @@
+specVersion: v1
+kind: BLUEPRINT
+metadata:
+  slug: signed-in-gateway
+  revision: 1
+  description: A web gateway behind the platform's sign-in, receiving each viewer's identity in a header.
+spec:
+  parameters: {}
+  components:
+    gateway:
+      componentRef: ./components/trusted-proxy-gateway.yaml
+      compute:
+        profile: general.standard.small
+      exposure:
+        web:
+          visibility: PUBLIC
+          access: AUTHENTICATED
+          viewerIdentity: HEADER
+      # The node binds its own outputs back into its inputs: a discovery
+      # dependency on allocated facts, not a value cycle.
+      bindings:
+        identityHeader:
+          node: gateway
+          output: identityHeader
+        trustedProxies:
+          node: gateway
+          output: trustedProxies
+        publicOrigin:
+          node: gateway
+          output: publicURL

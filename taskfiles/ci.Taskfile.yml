@@ -5,7 +5,8 @@
 # same job locally, instead of only in YAML nobody executes before pushing.
 #
 # `task check` runs everything; these two are its split into the Lint and
-# Schema jobs. Every check in either must also be in `check`.
+# Schema jobs. Every check in either must also be in `check`. Like `check`,
+# each runs its checks as parallel deps.
 #
 # The leading colon on each reference is load-bearing: inside an included
 # taskfile a bare `task: check:format` resolves within this file's own
@@ -15,7 +16,7 @@ version: '3'
 tasks:
   lint:
     desc: Lint suite as run in CI
-    cmds:
+    deps:
       - task: :check:format
       - task: :check:config
       - task: :check:rulesets
@@ -30,7 +31,7 @@ tasks:
 
   test:
     desc: Schema and conformance suite as run in CI
-    cmds:
+    deps:
       - task: :check:schema
       - task: :check:generated
       - task: :check:examples
