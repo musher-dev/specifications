@@ -20,8 +20,9 @@
  *
  * NON-NORMATIVE, like everything under tools/.
  */
-import { spawnSync } from 'node:child_process'
+import { spawn } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { availableParallelism } from 'node:os'
 import { join, resolve } from 'node:path'
 import {
   discoverFamilies,
@@ -57,6 +58,28 @@ interface Subject {
  * Twenty is comfortably inside that and still amortises the startup.
  */
 const BATCH = 20
+
+/**
+ * Batches in flight at once. Each is its own process, so they run on separate
+ * cores; beyond the core count they only contend with each other.
+ */
+const CONCURRENCY = Math.max(1, availableParallelism())
+
+/** Run one CLI invocation to completion, collecting what it printed. */
+function run(args: string[]): Promise<{ status: number | null; output: string }> {
+  return new Promise((done, fail) => {
+    const child = spawn(CLI, args, { cwd: REPO_ROOT, stdio: ['ignore', 'pipe', 'pipe'] })
+    let output = ''
+    child.stdout.setEncoding('utf8').on('data', (text: string) => {
+      output += text
+    })
+    child.stderr.setEncoding('utf8').on('data', (text: string) => {
+      output += text
+    })
+    child.on('error', fail)
+    child.on('close', (status) => done({ status, output }))
+  })
+}
 
 /** A rejected instance is announced on its own line. */
 const FAIL_LINE = /^fail:\s*(.+)$/
@@ -106,39 +129,42 @@ export function parseRejections(output: string, instances: string[], cwd: string
 }
 
 /** Ask Blaze about a family's subjects, returning the set it rejected. */
-function blazeRejects(schema: string, instances: string[]): Set<string> {
-  const rejected = new Set<string>()
+async function blazeRejects(schema: string, instances: string[]): Promise<Set<string>> {
+  const chunks: string[][] = []
+  for (let start = 0; start < instances.length; start += BATCH)
+    chunks.push(instances.slice(start, start + BATCH))
 
-  for (let start = 0; start < instances.length; start += BATCH) {
-    const chunk = instances.slice(start, start + BATCH)
-    // `--continue` because `validate` otherwise stops at the first instance of
-    // the batch that fails, and a batch is what makes this check affordable.
-    // `cwd` is pinned so the paths it prints resolve against a known directory
-    // rather than against wherever the task runner happened to start.
-    const result = spawnSync(CLI, ['validate', '--continue', schema, ...chunk], {
-      cwd: REPO_ROOT,
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'pipe'],
-    })
-    const output = `${result.stdout ?? ''}${result.stderr ?? ''}`
-
-    if (result.status !== 0 && result.status !== 2) {
-      throw new Error(`jsonschema validate exited ${result.status} — ${output.trim()}`)
+  // `--continue` because `validate` otherwise stops at the first instance of
+  // the batch that fails, and a batch is what makes this check affordable.
+  // `cwd` is pinned so the paths it prints resolve against a known directory
+  // rather than against wherever the task runner happened to start.
+  const ask = async (chunk: string[]): Promise<Set<string>> => {
+    const { status, output } = await run(['validate', '--continue', schema, ...chunk])
+    if (status !== 0 && status !== 2) {
+      throw new Error(`jsonschema validate exited ${status} — ${output.trim()}`)
     }
-
     const named = parseRejections(output, chunk, REPO_ROOT)
-
     // A rejection the output does not name would silently become an agreement.
     // If the CLI's output shape ever changes, fail rather than pass everything.
-    if (result.status === 2 && named.size === 0) {
+    if (status === 2 && named.size === 0) {
       throw new Error(`jsonschema validate reported failure but named no file — ${output.trim()}`)
     }
-
-    for (const path of named) rejected.add(path)
+    return named
   }
 
+  // A fixed pool of workers, each taking the next chunk until none is left.
+  const rejected = new Set<string>()
+  let next = 0
+  const worker = async (): Promise<void> => {
+    while (next < chunks.length) {
+      const chunk = chunks[next++] as string[]
+      for (const path of await ask(chunk)) rejected.add(path)
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(CONCURRENCY, chunks.length) }, worker))
   return rejected
 }
+
 /**
  * Structural subjects: every example, plus every conformance case whose
  * document can be validated on its own.
@@ -187,7 +213,7 @@ function subjectsFor(family: Family): Subject[] {
   return subjects
 }
 
-function main(): void {
+async function main(): Promise<void> {
   if (!existsSync(CLI)) {
     reportAbsentCli('check:parity', CLI)
     return
@@ -209,7 +235,7 @@ function main(): void {
       (subject) => !('errors' in parseDocument(readFileSync(subject.path, 'utf8'))),
     )
     console.log(`  · ${family.name}/${family.major}: asking Blaze about ${subjects.length}…`)
-    const rejected = blazeRejects(
+    const rejected = await blazeRejects(
       bundlePath,
       subjects.map((subject) => subject.path),
     )
@@ -248,4 +274,4 @@ function main(): void {
   )
 }
 
-if (import.meta.main) main()
+if (import.meta.main) await main()

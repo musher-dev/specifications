@@ -1,6 +1,8 @@
 /** Historical acceptance, effective values and observable behavior under pinned context. */
+
+import { spawn } from 'node:child_process'
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { availableParallelism, tmpdir } from 'node:os'
 import { dirname, isAbsolute, join, relative } from 'node:path'
 import { runBehaviorCases } from '../conformance/behavior.ts'
 import {
@@ -264,6 +266,30 @@ export function replayRelease(
   }
 }
 
+/** A release to replay, or the reason it is not replayed. */
+type Planned =
+  | { readonly replay: true; readonly recorded: RecordedRelease; readonly family: Family }
+  | { readonly replay: false; readonly note: string }
+
+/** Decide, for every tagged release, whether it is replayed and against which family. */
+function plan(repoRoot: string): Planned[] {
+  const families = new Map(discoverFamilies(repoRoot).map((f) => [`${f.name}/${f.major}`, f]))
+  return taggedEntries(repoRoot, readLedger(repoRoot)).map((recorded): Planned => {
+    const { release } = recorded
+    if (WITHDRAWN.get(release.tag) === recorded.entry.tree)
+      return { replay: false, note: `${release.tag}: withdrawn by ADR 0033 §5, not replayed` }
+    const family = families.get(`${release.family}/${release.major}`)
+    // A retired family still has published versions, but no current schema to
+    // replay them against. Say so rather than counting it as clean.
+    if (family === undefined)
+      return {
+        replay: false,
+        note: `${release.tag}: no ${release.family}/${release.major} in the working tree`,
+      }
+    return { replay: true, recorded, family }
+  })
+}
+
 /**
  * Replay every release against the working tree's schemas.
  *
@@ -274,38 +300,129 @@ export function replayAll(
   repoRoot: string,
   failures: Failures,
 ): { replayed: number; checked: number } {
-  const families = new Map(discoverFamilies(repoRoot).map((f) => [`${f.name}/${f.major}`, f]))
-
   let replayed = 0
   let checked = 0
-
-  for (const recorded of taggedEntries(repoRoot, readLedger(repoRoot))) {
-    const { release } = recorded
-    if (WITHDRAWN.get(release.tag) === recorded.entry.tree) {
-      console.log(`  · ${release.tag}: withdrawn by ADR 0033 §5, not replayed`)
+  for (const planned of plan(repoRoot)) {
+    if (!planned.replay) {
+      console.log(`  · ${planned.note}`)
       continue
     }
-    const family = families.get(`${release.family}/${release.major}`)
-    if (family === undefined) {
-      // A retired family still has published versions, but no current schema to
-      // replay them against. Say so rather than counting it as clean.
-      console.log(`  · ${release.tag}: no ${release.family}/${release.major} in the working tree`)
-      continue
-    }
-    const count = replayRelease(repoRoot, family, recorded, failures)
-    console.log(`  ✓ ${release.tag}: ${count} document(s) replayed`)
+    const count = replayRelease(repoRoot, planned.family, planned.recorded, failures)
+    console.log(`  ✓ ${planned.recorded.release.tag}: ${count} document(s) replayed`)
     replayed += count
     checked += 1
   }
-
   return { replayed, checked }
 }
 
-function main(): void {
+/** What one release's replay reports back to the process that asked for it. */
+interface Replayed {
+  readonly count: number
+  readonly failures: readonly string[]
+  readonly layoutError?: string
+}
+
+const RELEASE_FLAG = '--release'
+const ROOT_FLAG = '--root'
+
+/** Replay one release in this process and print its result as one line of JSON. */
+function replayOne(repoRoot: string, tag: string): void {
+  const planned = plan(repoRoot).find((p) => p.replay && p.recorded.release.tag === tag)
+  if (planned === undefined || !planned.replay) throw new Error(`${tag} is not a replayed release`)
+  const failures = new Failures()
+  let result: Replayed
+  try {
+    const count = replayRelease(repoRoot, planned.family, planned.recorded, failures)
+    result = { count, failures: failures.messages }
+  } catch (error) {
+    if (!(error instanceof LayoutError)) throw error
+    result = { count: 0, failures: [], layoutError: error.message }
+  }
+  console.log(JSON.stringify(result))
+}
+
+/**
+ * Replay each release in a process of its own, a core's worth at a time.
+ *
+ * A release's replay rebuilds its corpus in a scratch directory and shares
+ * nothing with another's, and each one is minutes of synchronous validation,
+ * so separate processes are what let them use more than one core. The result
+ * is the one `replayAll` gives, reported in ledger order.
+ */
+export async function replayConcurrently(
+  repoRoot: string,
+  failures: Failures,
+): Promise<{ replayed: number; checked: number }> {
+  const planned = plan(repoRoot)
+  const replays = planned.flatMap((p) => (p.replay ? [p.recorded.release.tag] : []))
+  const results = new Map<string, Replayed>()
+  const ask = (tag: string): Promise<Replayed> =>
+    new Promise((done, fail) => {
+      const child = spawn(
+        process.execPath,
+        [import.meta.path, ROOT_FLAG, repoRoot, RELEASE_FLAG, tag],
+        {
+          cwd: process.cwd(),
+          stdio: ['ignore', 'pipe', 'inherit'],
+        },
+      )
+      let output = ''
+      child.stdout.setEncoding('utf8').on('data', (text: string) => {
+        output += text
+      })
+      child.on('error', fail)
+      child.on('close', (status) => {
+        const line = output.trim().split('\n').pop() ?? ''
+        if (status !== 0) return fail(new Error(`${tag}: replay exited ${status}`))
+        try {
+          done(JSON.parse(line) as Replayed)
+        } catch {
+          fail(new Error(`${tag}: replay printed no result — ${output.trim()}`))
+        }
+      })
+    })
+  let next = 0
+  const worker = async (): Promise<void> => {
+    while (next < replays.length) {
+      const tag = replays[next++] as string
+      results.set(tag, await ask(tag))
+    }
+  }
+  const pool = Math.max(1, Math.min(availableParallelism(), replays.length))
+  await Promise.all(Array.from({ length: pool }, worker))
+
+  let replayed = 0
+  let checked = 0
+  for (const p of planned) {
+    if (!p.replay) {
+      console.log(`  · ${p.note}`)
+      continue
+    }
+    const tag = p.recorded.release.tag
+    const result = results.get(tag) as Replayed
+    if (result.layoutError !== undefined) throw new LayoutError(result.layoutError)
+    for (const message of result.failures) failures.add(message)
+    console.log(`  ✓ ${tag}: ${result.count} document(s) replayed`)
+    replayed += result.count
+    checked += 1
+  }
+  return { replayed, checked }
+}
+
+async function main(): Promise<void> {
+  const flag = process.argv.indexOf(RELEASE_FLAG)
+  if (flag !== -1) {
+    const root = process.argv.indexOf(ROOT_FLAG)
+    replayOne(
+      root === -1 ? REPO_ROOT : String(process.argv[root + 1]),
+      String(process.argv[flag + 1]),
+    )
+    return
+  }
   const failures = new Failures()
   let result: { replayed: number; checked: number }
   try {
-    result = replayAll(REPO_ROOT, failures)
+    result = await replayConcurrently(REPO_ROOT, failures)
   } catch (error) {
     // A release whose tag lacks a path the layout names: one line, not a trace.
     if (error instanceof LayoutError) failCli(error)
@@ -320,4 +437,4 @@ function main(): void {
   )
 }
 
-if (import.meta.main) main()
+if (import.meta.main) await main()
