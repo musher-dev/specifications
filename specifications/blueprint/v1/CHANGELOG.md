@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.6.0](https://github.com/musher-dev/specifications/compare/blueprint/v1.5.0...blueprint/v1.6.0) (2026-09-28)
+
+
+### Additions
+
+* **blueprint:** authenticated exposure with forwarded viewer identity ([358e979](https://github.com/musher-dev/specifications/commit/358e9798f185cbb4b2722d6bce6817a6e5be0bbb))
+* **component:** viewer identity header and trusted proxy CIDRs endpoint properties ([358e979](https://github.com/musher-dev/specifications/commit/358e9798f185cbb4b2722d6bce6817a6e5be0bbb))
+
 ## [1.5.0](https://github.com/musher-dev/specifications/compare/blueprint/v1.4.0...blueprint/v1.5.0) (2026-09-24)
 
 
