@@ -1,0 +1,11 @@
+{
+  "id": "semantic-081-viewer-identity-read-behind-authentication-alone",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#access",
+  "requirements": [
+    "BP-NODE-007"
+  ],
+  "summary": "AUTHENTICATED without viewerIdentity HEADER signs viewers in but forwards no identity.",
+  "document": "app/blueprint.yaml"
+}

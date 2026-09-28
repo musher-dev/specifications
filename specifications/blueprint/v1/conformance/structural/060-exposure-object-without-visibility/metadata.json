@@ -1,0 +1,10 @@
+{
+  "id": "structural-060-exposure-object-without-visibility",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#access",
+  "requirements": [
+    "BP-NODE-006"
+  ],
+  "summary": "The object form requires visibility."
+}

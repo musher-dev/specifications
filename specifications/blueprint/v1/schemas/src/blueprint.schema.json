@@ -119,6 +119,82 @@
       ],
       "type": "object"
     },
+    "BlueprintExposure": {
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "visibility": {
+                "const": "PRIVATE"
+              }
+            },
+            "required": [
+              "visibility"
+            ]
+          },
+          "then": {
+            "properties": {
+              "access": false,
+              "viewerIdentity": false
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "access": {
+                "const": "AUTHENTICATED"
+              }
+            },
+            "required": [
+              "access"
+            ]
+          },
+          "else": {
+            "properties": {
+              "viewerIdentity": {
+                "const": "NONE"
+              }
+            }
+          }
+        }
+      ],
+      "description": "Exposure of one endpoint in the object form: its visibility, and whether the platform authenticates viewers and forwards their identity. Bare PUBLIC or PRIVATE is the object form with only visibility.",
+      "properties": {
+        "access": {
+          "default": "OPEN",
+          "description": "Whether the platform authenticates and authorizes a viewer before forwarding: OPEN forwards every request, and AUTHENTICATED admits only viewers the installation's access policy authorizes. PUBLIC only; AUTHENTICATED requires an HTTP, HTTPS or WS endpoint.",
+          "enum": [
+            "OPEN",
+            "AUTHENTICATED"
+          ],
+          "type": "string"
+        },
+        "viewerIdentity": {
+          "default": "NONE",
+          "description": "Whether the workload receives the authenticated viewer's identity: NONE, or HEADER, in the request header the endpoint's viewerIdentityHeader names. HEADER requires access AUTHENTICATED.",
+          "enum": [
+            "NONE",
+            "HEADER"
+          ],
+          "type": "string"
+        },
+        "visibility": {
+          "description": "Whether the endpoint can be reached from outside the installation.",
+          "enum": [
+            "PUBLIC",
+            "PRIVATE"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "visibility"
+      ],
+      "type": "object",
+      "$comment": "spec.md §4.3 / ADR 0034 §1-§2. A bare PUBLIC or PRIVATE, or the object form. Bare PUBLIC is { visibility: PUBLIC } with every default: access OPEN, viewerIdentity NONE. access and viewerIdentity apply only to PUBLIC, and HEADER requires AUTHENTICATED (BP-NODE-006)."
+    },
     "BlueprintMetadata": {
       "additionalProperties": false,
       "description": "Identity and description of a blueprint document. The blueprint carries the item’s revision; its sibling listing carries none. See spec.md §3.",
@@ -210,10 +286,17 @@
             "pattern": "^[a-z][a-z0-9]{0,19}$"
           },
           "additionalProperties": {
-            "type": "string",
-            "enum": [
-              "PUBLIC",
-              "PRIVATE"
+            "oneOf": [
+              {
+                "enum": [
+                  "PUBLIC",
+                  "PRIVATE"
+                ],
+                "type": "string"
+              },
+              {
+                "$ref": "#/$defs/BlueprintExposure"
+              }
             ]
           },
           "description": "Exposure of each of the component’s endpoints, keyed by endpoint name; an endpoint left out is PRIVATE. A WORKER endpoint is never PUBLIC.",
@@ -533,9 +616,17 @@
         "exposure": {
           "type": "object",
           "additionalProperties": {
-            "enum": [
-              "PUBLIC",
-              "PRIVATE"
+            "oneOf": [
+              {
+                "enum": [
+                  "PUBLIC",
+                  "PRIVATE"
+                ],
+                "type": "string"
+              },
+              {
+                "$ref": "#/$defs/BlueprintExposure"
+              }
             ]
           },
           "x-additionalPropertiesName": "endpointName"

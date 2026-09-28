@@ -816,6 +816,41 @@
       "id": "semantic-059-trust-bundle-reads-an-optional-input",
       "phase": "semantic",
       "path": "semantic/059-trust-bundle-reads-an-optional-input"
+    },
+    {
+      "id": "semantic-060-viewer-identity-properties",
+      "phase": "semantic",
+      "path": "semantic/060-viewer-identity-properties"
+    },
+    {
+      "id": "semantic-061-viewer-identity-header-of-a-tcp-endpoint",
+      "phase": "semantic",
+      "path": "semantic/061-viewer-identity-header-of-a-tcp-endpoint"
+    },
+    {
+      "id": "semantic-062-trusted-proxies-of-a-grpc-endpoint",
+      "phase": "semantic",
+      "path": "semantic/062-trusted-proxies-of-a-grpc-endpoint"
+    },
+    {
+      "id": "semantic-063-worker-reads-a-viewer-identity-header",
+      "phase": "semantic",
+      "path": "semantic/063-worker-reads-a-viewer-identity-header"
+    },
+    {
+      "id": "semantic-064-trusted-proxies-into-a-string-output",
+      "phase": "semantic",
+      "path": "semantic/064-trusted-proxies-into-a-string-output"
+    },
+    {
+      "id": "semantic-065-trusted-proxies-into-an-array-of-integers",
+      "phase": "semantic",
+      "path": "semantic/065-trusted-proxies-into-an-array-of-integers"
+    },
+    {
+      "id": "semantic-066-trusted-proxies-in-a-template",
+      "phase": "semantic",
+      "path": "semantic/066-trusted-proxies-in-a-template"
     }
   ]
 }

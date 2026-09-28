@@ -1,0 +1,11 @@
+{
+  "id": "structural-059-exposure-object-form",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/blueprint/v1/spec.md#components",
+  "requirements": [
+    "BP-NODE-005",
+    "BP-NODE-006"
+  ],
+  "summary": "The object form states visibility, access and viewer identity, and states visibility alone."
+}

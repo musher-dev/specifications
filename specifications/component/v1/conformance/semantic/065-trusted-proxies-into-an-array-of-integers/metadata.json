@@ -1,0 +1,10 @@
+{
+  "id": "semantic-065-trusted-proxies-into-an-array-of-integers",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#endpoints",
+  "requirements": [
+    "COMP-EP-012"
+  ],
+  "summary": "Trusted proxy CIDRs are strings, so an array output reading them declares string items."
+}

@@ -1,0 +1,11 @@
+{
+  "id": "semantic-087-public-property-of-an-object-form-private-endpoint",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#components",
+  "requirements": [
+    "BP-NODE-005"
+  ],
+  "summary": "An endpoint whose object form says PRIVATE has no public URL, as bare PRIVATE does not.",
+  "document": "app/blueprint.yaml"
+}

@@ -369,7 +369,7 @@ are never public ([`COMP-TYPE-003`](#COMP-TYPE-003)).
 endpoint, including on a single-endpoint workload. There is no primary endpoint.
 An unknown name fails with `ERR_UNKNOWN_ENDPOINT`.
 
-Component owns the following address properties. Addresses are allocated before
+Component owns the following endpoint properties. They are allocated before
 workloads start; they do not assert readiness.
 
 | Property | Logical type | Meaning |
@@ -381,6 +381,8 @@ workloads start; they do not assert readiness.
 | publicHostname | string | Hostname portion of that URL |
 | publicAddress | string | Allocated TCP/UDP host:port, with IPv6 hosts bracketed |
 | publicPort | integer | Allocated TCP/UDP edge port |
+| viewerIdentityHeader | string | Lowercase name of the request header carrying the authenticated viewer's identity |
+| trustedProxyCIDRs | array of string | CIDRs covering every address the workload observes as the immediate peer of forwarded traffic |
 
 <a id="COMP-EP-004"></a>**`COMP-EP-004`**: A public property is read only from an
 endpoint whose protocol has that address family. `publicURL` and
@@ -396,9 +398,41 @@ in blueprint ([blueprint §4.3](../../blueprint/v1/spec.md#node-compute)). The
 allocation context supplies the public URL scheme and routing address; a
 validator MUST NOT invent them.
 
+<a id="viewer-identity"></a>**Viewer identity.** A blueprint can expose an
+endpoint so that the platform signs its viewers in and forwards each viewer's
+identity to the workload in a request header
+([blueprint §4.3](../../blueprint/v1/spec.md#access)). A workload that trusts
+that header needs two facts only the platform has: the header's name,
+`viewerIdentityHeader`, and the addresses forwarded traffic arrives from,
+`trustedProxyCIDRs`. The addresses are the ones the workload itself observes as
+its TCP peer, which need not be any public or edge address. The identity is a
+stable, opaque identifier of the viewer, never an email address and never a
+credential.
+
+<a id="COMP-EP-012"></a>**`COMP-EP-012`**: `viewerIdentityHeader` and
+`trustedProxyCIDRs` are read only from an `HTTP`, `HTTPS` or `WS` endpoint,
+and otherwise fail with `ERR_ENDPOINT_NOT_HTTP`. They exist only on an endpoint a
+blueprint exposes, so a `WORKER` reading either fails with
+`ERR_ENDPOINT_NOT_EXPOSABLE`, as [`COMP-TYPE-003`](#COMP-TYPE-003) says of a
+public property. `trustedProxyCIDRs` is an array: an output reading it declares
+an `array` schema whose `items` are `string`, otherwise `ERR_VALUE_CONSTRAINT`
+at the output's `schema`, and a `template` reading it fails with
+`ERR_VALUE_CONSTRAINT` at `from/template`, because a template produces a string.
+The other diagnostics anchor as [`COMP-EP-004`](#COMP-EP-004)'s do, and these
+are semantic rules.
+
+Reading either property requires the blueprint to forward viewer identity on
+that endpoint, otherwise `ERR_VIEWER_IDENTITY_NOT_FORWARDED` in blueprint. A
+workload that trusts the identity header obtains both values through such
+outputs, never from a literal or an input's `default`, so that no node can deploy
+it where the header is not the platform's ([§11](#security)).
+
 An authoritative endpoint allocation has opaque `identity` and `version`, an
 optional `privateHostname`, and optional public routing facts: `hostname`,
-`port`, `scheme` and `path`. Public routing requires `PUBLIC` exposure. The
+`port`, `scheme` and `path`, and, on an endpoint that forwards viewer
+identity, `viewerIdentityHeader` and `trustedProxyCIDRs`
+([blueprint `BP-ACCESS-001`](../../blueprint/v1/spec.md#BP-ACCESS-001)). Public
+routing requires `PUBLIC` exposure. The
 public scheme is http, https, ws or wss, and the port is 1–65535. Hostnames
 cannot carry credentials, a port, a path, query or fragment. Paths start with
 `/` and carry no query, fragment, whitespace or backslash. TCP and UDP require
@@ -852,7 +886,8 @@ endpoint selection. A declared endpoint followed by a property outside
 Escapes and non-recursive substitution follow
 [core](../../core/v1/spec.md#reference-grammar). A template produces a string.
 An `endpoint` origin reading `privatePort` or `publicPort` produces an integer,
-and one reading any other property produces a string. Values are checked
+one reading `trustedProxyCIDRs` produces an array of strings, and one reading any
+other property produces a string. Values are checked
 against output schemas. Values produced by a job at run time are unsupported.
 
 ### <a id="value-schema"></a>6.3 Logical schemas
@@ -986,10 +1021,10 @@ Core diagnostics also apply.
 |---|---|---|
 | `ERR_CONFLICTING_ENV_KEY` | `semantic` | Environment destination claimed twice. |
 | `ERR_UNKNOWN_ENDPOINT` | `semantic` | Endpoint absent or not explicitly named. |
-| `ERR_ENDPOINT_NOT_HTTP` | `semantic` | Endpoint cannot supply this HTTP operation. |
+| `ERR_ENDPOINT_NOT_HTTP` | `semantic` | Endpoint cannot supply this HTTP operation or viewer identity property. |
 | `ERR_ENDPOINT_NOT_L4` | `semantic` | Endpoint cannot supply an edge address. |
 | `ERR_UNKNOWN_ADDRESS_PROPERTY` | `semantic` | Template reads a property §5.2 does not define. |
-| `ERR_ENDPOINT_NOT_EXPOSABLE` | `semantic` | A `WORKER` endpoint is exposed `PUBLIC`, or a `WORKER` output reads a public property. |
+| `ERR_ENDPOINT_NOT_EXPOSABLE` | `semantic` | A `WORKER` endpoint is exposed `PUBLIC`, or a `WORKER` output reads a public or viewer identity property. |
 | `ERR_INVALID_SCHEDULE` | `semantic` | A cron field is outside §5.7's grammar or range. |
 | `ERR_UNKNOWN_INPUT_REFERENCE` | `semantic` | An output, trust bundle or probe credential names no own input, or an output reads a connection input without the member §6.2 requires. |
 | `ERR_OUTPUT_NOT_PRODUCIBLE` | `semantic` | Output forwards an optional input that has no default. |
@@ -1019,6 +1054,7 @@ outcomes as defined in [the conformance contract](../../../docs/conformance.md).
 Runtime-emitted outputs, arbitrary expressions, recursive substitution,
 provider-specific configuration maps, non-HTTP health mechanisms, TLS on the hop
 to a WebSocket or gRPC workload, probe request headers other than credentials,
+signed viewer identity assertions, forwarded viewer roles or scopes,
 schedule time zones and ordering a job against other nodes are unsupported. Reject
 unsupported declarations. Adding them requires defined semantics and
 conformance evidence.
@@ -1042,3 +1078,12 @@ whose certificate cannot be verified, and prefer `BUNDLE` wherever the
 certificate is known in advance. Probe credentials are sent on probes only
 ([`COMP-EP-011`](#COMP-EP-011)), so an endpoint's own authentication still
 guards the traffic the platform forwards to it.
+
+A workload that reads a viewer's identity from `viewerIdentityHeader`
+([§5.2](#viewer-identity)) MUST accept that header only on a connection whose
+peer address is in `trustedProxyCIDRs`. Anything else that can reach the port can
+set the header. The component reads both values through its own outputs, and a
+literal or a default in their place goes stale when the platform's proxies move,
+and deploys wherever a blueprint forgets to forward identity. Probes reach the
+workload directly and carry no viewer identity, so a health path must answer
+without one.

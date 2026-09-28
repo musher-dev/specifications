@@ -1,0 +1,10 @@
+{
+  "id": "semantic-061-viewer-identity-header-of-a-tcp-endpoint",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#endpoints",
+  "requirements": [
+    "COMP-EP-012"
+  ],
+  "summary": "A TCP endpoint has no viewer identity header."
+}

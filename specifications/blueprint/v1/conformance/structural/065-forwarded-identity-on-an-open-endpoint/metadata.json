@@ -1,0 +1,10 @@
+{
+  "id": "structural-065-forwarded-identity-on-an-open-endpoint",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#access",
+  "requirements": [
+    "BP-NODE-006"
+  ],
+  "summary": "HEADER requires AUTHENTICATED, so an explicitly OPEN endpoint cannot forward identity."
+}

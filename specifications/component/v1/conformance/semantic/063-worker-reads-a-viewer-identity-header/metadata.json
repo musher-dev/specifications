@@ -1,0 +1,10 @@
+{
+  "id": "semantic-063-worker-reads-a-viewer-identity-header",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#endpoints",
+  "requirements": [
+    "COMP-EP-012"
+  ],
+  "summary": "A WORKER endpoint is never exposed, so it never has a viewer identity header."
+}

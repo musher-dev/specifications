@@ -23,7 +23,14 @@ import {
   resolveConnections,
 } from './connections.ts'
 import { type Diagnostic, type Phase, parseDocumentBytes } from './document.ts'
-import { at, record, type SemanticContext, semanticReport, token } from './semantic.ts'
+import {
+  at,
+  effectiveExposure,
+  record,
+  type SemanticContext,
+  semanticReport,
+  token,
+} from './semantic.ts'
 import { compileFamily } from './validator.ts'
 import { boundedValue, encodeEnvironment, valueFits } from './values.ts'
 
@@ -37,6 +44,106 @@ function validHostname(hostname: string): boolean {
   } catch {
     return false
   }
+}
+/**
+ * Headers the platform owns or must pass through untouched, which therefore
+ * cannot carry a viewer's identity (blueprint §4.3, BP-ACCESS-001).
+ */
+const RESERVED_HEADERS = new Set([
+  'authorization',
+  'connection',
+  'content-length',
+  'cookie',
+  'forwarded',
+  'host',
+  'keep-alive',
+  'origin',
+  'proxy-authorization',
+  'proxy-connection',
+  'te',
+  'trailer',
+  'transfer-encoding',
+  'upgrade',
+  'x-real-ip',
+])
+/** A lowercase RFC 9110 field name of at most 128 characters that no rule reserves. */
+export function validIdentityHeader(name: unknown): boolean {
+  return (
+    typeof name === 'string' &&
+    /^[a-z0-9!#$%&'*+.^_`|~-]{1,128}$/.test(name) &&
+    !RESERVED_HEADERS.has(name) &&
+    !name.startsWith('x-forwarded-')
+  )
+}
+function ipv4(text: string): bigint | undefined {
+  const parts = text.split('.')
+  if (parts.length !== 4 || !parts.every((p) => /^(0|[1-9][0-9]{0,2})$/.test(p) && Number(p) < 256))
+    return
+  return parts.reduce((n, p) => (n << 8n) | BigInt(p), 0n)
+}
+function ipv6(text: string): bigint | undefined {
+  const halves = text.split('::')
+  if (halves.length > 2) return
+  const groups = halves.map((h) => (h === '' ? [] : h.split(':')))
+  const count = groups.reduce((n, g) => n + g.length, 0)
+  if (halves.length === 1 ? count !== 8 : count > 7) return
+  const all = [...(groups[0] ?? []), ...Array(8 - count).fill('0'), ...(groups[1] ?? [])]
+  if (!all.every((g) => /^[0-9a-f]{1,4}$/.test(g))) return
+  return all.reduce((n, g) => (n << 16n) | BigInt(parseInt(g, 16)), 0n)
+}
+/** RFC 5952: lowercase, no leading zeros, the longest run of two or more zero groups as `::`. */
+function ipv6Text(value: bigint): string {
+  const groups = Array.from({ length: 8 }, (_, i) =>
+    Number((value >> BigInt(112 - 16 * i)) & 0xffffn).toString(16),
+  )
+  let best = -1,
+    length = 1
+  for (let i = 0; i < 8; i++) {
+    let j = i
+    while (j < 8 && groups[j] === '0') j++
+    if (j - i > length) [best, length] = [i, j - i]
+  }
+  if (best < 0) return groups.join(':')
+  return `${groups.slice(0, best).join(':')}::${groups.slice(best + length).join(':')}`
+}
+/**
+ * A canonical CIDR: an IPv4 prefix in dotted decimal or an IPv6 prefix in
+ * RFC 5952 text, a prefix length of at least 1, and no host bits set.
+ */
+export function canonicalCIDR(cidr: unknown): boolean {
+  if (typeof cidr !== 'string') return false
+  const [address = '', length = '', ...rest] = cidr.split('/')
+  if (rest.length || !/^[1-9][0-9]{0,2}$/.test(length)) return false
+  const v6 = address.includes(':')
+  const bits = v6 ? 128 : 32
+  const value = v6 ? ipv6(address) : ipv4(address)
+  const prefix = Number(length)
+  if (value === undefined || prefix > bits) return false
+  if (value & ((1n << BigInt(bits - prefix)) - 1n)) return false
+  return !v6 || ipv6Text(value) === address
+}
+/**
+ * BP-ACCESS-001: the viewer identity facts exist only on an endpoint whose
+ * exposure forwards identity, and each one supplied is well formed. One that is
+ * absent is not an error here: a read of it is deferred, so resolution stays
+ * incomplete rather than inventing a value.
+ */
+function viewerFacts(
+  pub: NonNullable<EndpointAllocation['public']>,
+  viewerIdentity: 'NONE' | 'HEADER',
+): boolean {
+  const header = pub.viewerIdentityHeader,
+    cidrs = pub.trustedProxyCIDRs as unknown
+  if (header === undefined && cidrs === undefined) return true
+  if (viewerIdentity !== 'HEADER') return false
+  if (header !== undefined && !validIdentityHeader(header)) return false
+  return (
+    cidrs === undefined ||
+    (Array.isArray(cidrs) &&
+      cidrs.length > 0 &&
+      cidrs.every(canonicalCIDR) &&
+      new Set(cidrs).size === cidrs.length)
+  )
 }
 export interface ResolvedValue {
   readonly value: Json
@@ -53,6 +160,8 @@ export interface EndpointAllocation {
     readonly port?: number
     readonly scheme?: string
     readonly path?: string
+    readonly viewerIdentityHeader?: string
+    readonly trustedProxyCIDRs?: readonly string[]
   }
 }
 export interface InstallationContext extends SemanticContext {
@@ -192,7 +301,17 @@ export function resolveInstallation(
         (allocation.privateHostname !== undefined && !validHostname(allocation.privateHostname)) ||
         (pub &&
           (!validHostname(pub.hostname) ||
-            Object.keys(pub).some((key) => !['hostname', 'port', 'scheme', 'path'].includes(key)) ||
+            Object.keys(pub).some(
+              (key) =>
+                ![
+                  'hostname',
+                  'port',
+                  'scheme',
+                  'path',
+                  'viewerIdentityHeader',
+                  'trustedProxyCIDRs',
+                ].includes(key),
+            ) ||
             (pub.port !== undefined &&
               (!Number.isInteger(pub.port) || pub.port < 1 || pub.port > 65535)) ||
             (pub.scheme !== undefined && !['http', 'https', 'ws', 'wss'].includes(pub.scheme)) ||
@@ -200,7 +319,11 @@ export function resolveInstallation(
               (typeof pub.path !== 'string' ||
                 !pub.path.startsWith('/') ||
                 /[?#\\\s]/.test(pub.path))) ||
-            at(nodes[node], 'exposure', name) !== 'PUBLIC'))
+            !viewerFacts(
+              pub,
+              effectiveExposure(at(nodes[node], 'exposure'), name).viewerIdentity,
+            ) ||
+            effectiveExposure(at(nodes[node], 'exposure'), name).visibility !== 'PUBLIC'))
       )
         fail(
           'ERR_INVALID_RESOLUTION_CONTEXT',
@@ -260,6 +383,9 @@ export function resolveInstallation(
     else if (property === 'publicPort') value = allocation?.public?.port
     else if (property === 'publicAddress' && allocation?.public?.port)
       value = `${addressHost(allocation.public.hostname)}:${allocation.public.port}`
+    else if (property === 'viewerIdentityHeader') value = allocation?.public?.viewerIdentityHeader
+    else if (property === 'trustedProxyCIDRs')
+      value = allocation?.public?.trustedProxyCIDRs as Json | undefined
     else if (property === 'publicURL' && allocation?.public?.scheme) {
       const p = allocation.public
       value = `${p.scheme}://${addressHost(p.hostname)}${p.port === undefined ? '' : ':' + p.port}${(p.path ?? '').replace(/\/+$/, '')}`

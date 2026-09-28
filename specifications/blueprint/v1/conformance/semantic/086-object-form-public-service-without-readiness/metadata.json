@@ -1,0 +1,11 @@
+{
+  "id": "semantic-086-object-form-public-service-without-readiness",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#components",
+  "requirements": [
+    "BP-NODE-005"
+  ],
+  "summary": "A PUBLIC HTTP-family endpoint in the object form requires a readiness probe, as bare PUBLIC does.",
+  "document": "app/blueprint.yaml"
+}

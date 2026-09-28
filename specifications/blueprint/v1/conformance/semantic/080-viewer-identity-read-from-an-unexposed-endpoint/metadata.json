@@ -1,0 +1,11 @@
+{
+  "id": "semantic-080-viewer-identity-read-from-an-unexposed-endpoint",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#access",
+  "requirements": [
+    "BP-NODE-007"
+  ],
+  "summary": "An endpoint left out of exposure forwards no identity, and the diagnostic anchors at the node componentRef.",
+  "document": "app/blueprint.yaml"
+}

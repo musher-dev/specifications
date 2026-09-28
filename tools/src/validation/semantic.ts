@@ -50,15 +50,69 @@ const keysOf = (value: Json | undefined) => Object.keys(record(value))
 export const token = (value: string) => value.replaceAll('~', '~0').replaceAll('/', '~1')
 const issue = (out: Diagnostic[], code: string, path: string) =>
   out.push({ code, path, message: code, phase: 'semantic' })
-export const ADDRESS_PROPERTIES = [
-  'publicURL',
-  'publicHostname',
-  'publicAddress',
-  'publicPort',
-  'privateHostname',
-  'privatePort',
-  'privateAddress',
-]
+/**
+ * Component §5.2's endpoint properties. `protocols` is the set an endpoint's
+ * protocol must be in (COMP-EP-004, COMP-EP-012), `requires` is the exposure a
+ * blueprint must select before the property exists (BP-NODE-005, BP-NODE-007),
+ * and `type` is the logical type an `endpoint` origin produces.
+ */
+export interface AddressProperty {
+  readonly protocols?: readonly string[]
+  readonly mismatch?: string
+  readonly requires?: 'PUBLIC' | 'VIEWER_IDENTITY'
+  readonly type: 'string' | 'integer' | 'array'
+}
+const HTTP_FAMILY = ['HTTP', 'HTTPS', 'WS', 'GRPC']
+const L4 = ['TCP', 'UDP']
+const VIEWER = ['HTTP', 'HTTPS', 'WS']
+const publicHTTP = {
+  protocols: HTTP_FAMILY,
+  mismatch: 'ERR_ENDPOINT_NOT_HTTP',
+  requires: 'PUBLIC',
+} as const
+const publicL4 = { protocols: L4, mismatch: 'ERR_ENDPOINT_NOT_L4', requires: 'PUBLIC' } as const
+const viewer = {
+  protocols: VIEWER,
+  mismatch: 'ERR_ENDPOINT_NOT_HTTP',
+  requires: 'VIEWER_IDENTITY',
+} as const
+export const ADDRESS_PROPERTIES: Readonly<Record<string, AddressProperty>> = {
+  publicURL: { ...publicHTTP, type: 'string' },
+  publicHostname: { ...publicHTTP, type: 'string' },
+  publicAddress: { ...publicL4, type: 'string' },
+  publicPort: { ...publicL4, type: 'integer' },
+  privateHostname: { type: 'string' },
+  privatePort: { type: 'integer' },
+  privateAddress: { type: 'string' },
+  viewerIdentityHeader: { ...viewer, type: 'string' },
+  trustedProxyCIDRs: { ...viewer, type: 'array' },
+}
+/**
+ * Blueprint §4.3: an exposure is a bare `PUBLIC` or `PRIVATE`, or the object
+ * form, and an endpoint left out is `PRIVATE`. Bare `PUBLIC` is the object form
+ * with every default, so every rule reads this rather than the authored value.
+ */
+export interface Exposure {
+  readonly visibility: 'PUBLIC' | 'PRIVATE'
+  readonly access: 'OPEN' | 'AUTHENTICATED'
+  readonly viewerIdentity: 'NONE' | 'HEADER'
+}
+export function effectiveExposure(exposures: Json | undefined, endpoint: string): Exposure {
+  const authored = Object.hasOwn(record(exposures), endpoint)
+    ? record(exposures)[endpoint]
+    : undefined
+  const visibility =
+    (typeof authored === 'string' ? authored : at(authored, 'visibility')) === 'PUBLIC'
+      ? 'PUBLIC'
+      : 'PRIVATE'
+  return {
+    visibility,
+    access: at(authored, 'access') === 'AUTHENTICATED' ? 'AUTHENTICATED' : 'OPEN',
+    viewerIdentity: at(authored, 'viewerIdentity') === 'HEADER' ? 'HEADER' : 'NONE',
+  }
+}
+export const addressProperty = (property: string): AddressProperty | undefined =>
+  Object.hasOwn(ADDRESS_PROPERTIES, property) ? ADDRESS_PROPERTIES[property] : undefined
 export function endpointProblem(
   component: Json,
   endpoint: string,
@@ -67,13 +121,14 @@ export function endpointProblem(
   const declared = at(component, 'spec', 'workload', 'endpoints', endpoint)
   if (!declared) return 'ERR_UNKNOWN_ENDPOINT'
   // COMP-REF-001: a declared endpoint, then a property §5.2 does not define.
-  if (!ADDRESS_PROPERTIES.includes(property)) return 'ERR_UNKNOWN_ADDRESS_PROPERTY'
-  // COMP-EP-004: a public property exists only in its endpoint's address family.
-  const http = ['HTTP', 'HTTPS', 'WS', 'GRPC'].includes(String(at(declared, 'protocol')))
-  if (['publicURL', 'publicHostname'].includes(property) && !http) return 'ERR_ENDPOINT_NOT_HTTP'
-  if (['publicAddress', 'publicPort'].includes(property) && http) return 'ERR_ENDPOINT_NOT_L4'
-  // COMP-TYPE-003: a WORKER endpoint is never PUBLIC, so its public address never exists.
-  if (property.startsWith('public') && at(component, 'spec', 'type') === 'WORKER')
+  const known = addressProperty(property)
+  if (!known) return 'ERR_UNKNOWN_ADDRESS_PROPERTY'
+  // COMP-EP-004, COMP-EP-012: a property exists only on the protocols that carry it.
+  if (known.protocols && !known.protocols.includes(String(at(declared, 'protocol'))))
+    return known.mismatch
+  // COMP-TYPE-003, COMP-EP-012: a WORKER endpoint is never PUBLIC, so nothing
+  // that exists only on an exposed endpoint exists on it.
+  if (known.requires && at(component, 'spec', 'type') === 'WORKER')
     return 'ERR_ENDPOINT_NOT_EXPOSABLE'
   return undefined
 }
@@ -324,14 +379,19 @@ export function componentDiagnostics(document: Json): Diagnostic[] {
         const problem = endpointProblem(document, ref.endpoint, ref.property)
         if (problem)
           issue(out, problem, path + (template === undefined ? '/from' : '/from/template'))
+        // COMP-EP-012: a template produces a string, and an array has no text form in one.
+        else if (template !== undefined && addressProperty(ref.property)?.type === 'array')
+          issue(out, 'ERR_VALUE_CONSTRAINT', path + '/from/template')
       }
       if (template !== undefined && at(v.schema, 'type') !== 'string')
         issue(out, 'ERR_VALUE_CONSTRAINT', path + '/schema')
       if (typeof from.endpoint === 'string') {
-        const type = String(from.property).endsWith('Port') ? 'integer' : 'string'
+        const type = addressProperty(String(from.property))?.type ?? 'string'
+        const declared = at(v.schema, 'type')
         if (
-          at(v.schema, 'type') !== type &&
-          !(type === 'integer' && at(v.schema, 'type') === 'number')
+          type === 'array'
+            ? declared !== 'array' || at(v.schema, 'items', 'type') !== 'string'
+            : declared !== type && !(type === 'integer' && declared === 'number')
         )
           issue(out, 'ERR_VALUE_CONSTRAINT', path + '/schema')
       }
@@ -747,17 +807,24 @@ export function semanticReport(
         )
           issue(out, 'ERR_INVALID_VOLUME_ALLOCATION', base + '/volumes/' + token(volume))
       }
-      for (const [endpoint, exposure] of Object.entries(record(n.exposure))) {
+      for (const endpoint of Object.keys(record(n.exposure))) {
         const e = at(workload, 'endpoints', endpoint)
-        if (!e) issue(out, 'ERR_UNKNOWN_ENDPOINT', base + '/exposure/' + token(endpoint))
-        else if (exposure === 'PUBLIC' && category === 'WORKER')
-          issue(out, 'ERR_ENDPOINT_NOT_EXPOSABLE', base + '/exposure/' + token(endpoint))
-        else if (
-          exposure === 'PUBLIC' &&
-          ['HTTP', 'HTTPS', 'WS', 'GRPC'].includes(String(at(e, 'protocol'))) &&
-          !at(workload, 'health', 'readiness', 'http')
-        )
-          issue(out, 'ERR_READINESS_REQUIRED', base + '/exposure/' + token(endpoint))
+        const exposure = effectiveExposure(n.exposure, endpoint)
+        const where = base + '/exposure/' + token(endpoint)
+        if (!e) issue(out, 'ERR_UNKNOWN_ENDPOINT', where)
+        else if (exposure.visibility === 'PUBLIC' && category === 'WORKER')
+          issue(out, 'ERR_ENDPOINT_NOT_EXPOSABLE', where)
+        else {
+          if (
+            exposure.visibility === 'PUBLIC' &&
+            HTTP_FAMILY.includes(String(at(e, 'protocol'))) &&
+            !at(workload, 'health', 'readiness', 'http')
+          )
+            issue(out, 'ERR_READINESS_REQUIRED', where)
+          // BP-NODE-007: sign-in and a request header exist only on HTTP, HTTPS and WS.
+          if (exposure.access === 'AUTHENTICATED' && !VIEWER.includes(String(at(e, 'protocol'))))
+            issue(out, 'ERR_ENDPOINT_NOT_HTTP', where + '/access')
+        }
       }
       for (const [output, v] of Object.entries(outputs)) {
         const from = record(at(v, 'from'))
@@ -765,14 +832,24 @@ export function semanticReport(
           `${name}:out:${output}`,
           typeof from.input === 'string' ? [`${name}:in:${from.input}`] : [],
         )
-        for (const ref of sourceEndpoints(from))
-          if (ref.property.startsWith('public') && at(n.exposure, ref.endpoint) !== 'PUBLIC')
+        for (const ref of sourceEndpoints(from)) {
+          const requires = addressProperty(ref.property)?.requires
+          const exposure = effectiveExposure(n.exposure, ref.endpoint)
+          // BP-NODE-005 and BP-NODE-007: an output reading a property that only an
+          // exposed, or an identity-forwarding, endpoint has.
+          const code =
+            requires === 'PUBLIC' && exposure.visibility !== 'PUBLIC'
+              ? 'ERR_ENDPOINT_NOT_PUBLIC'
+              : requires === 'VIEWER_IDENTITY' && exposure.viewerIdentity !== 'HEADER'
+                ? 'ERR_VIEWER_IDENTITY_NOT_FORWARDED'
+                : undefined
+          if (code)
             out.push({
-              code: 'ERR_ENDPOINT_NOT_PUBLIC',
+              code,
               path: Object.hasOwn(record(n.exposure), ref.endpoint)
                 ? base + '/exposure/' + token(ref.endpoint)
                 : base + '/componentRef',
-              message: 'ERR_ENDPOINT_NOT_PUBLIC',
+              message: code,
               phase: 'semantic',
               related: [
                 {
@@ -781,6 +858,7 @@ export function semanticReport(
                 },
               ],
             })
+        }
       }
       for (const [input, v] of Object.entries(inputs)) {
         dependencies.set(`${name}:in:${input}`, [])

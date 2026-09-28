@@ -3003,5 +3003,408 @@
       "/observations/0/status": "DENIED",
       "/persisted": 0
     }
+  },
+  {
+    "id": "resolution-viewer-identity-facts",
+    "profile": "resolution",
+    "operation": "resolve",
+    "document": "app/blueprint.yaml",
+    "requirements": [
+      "BP-ACCESS-001",
+      "BP-CONN-002"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"exposure\":{\"web\":{\"visibility\":\"PUBLIC\",\"access\":\"AUTHENTICATED\",\"viewerIdentity\":\"HEADER\"}},\"bindings\":{\"identityHeader\":{\"node\":\"web\",\"output\":\"identityHeader\"},\"trustedProxies\":{\"node\":\"web\",\"output\":\"trustedProxies\"}}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/service:1\"},\"endpoints\":{\"web\":{\"targetPort\":8080,\"protocol\":\"HTTP\"}},\"health\":{\"readiness\":{\"http\":{\"endpoint\":\"web\",\"path\":\"/healthz\"}}}},\"contract\":{\"inputs\":{\"identityHeader\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"GATEWAY_IDENTITY_HEADER\"}},\"trustedProxies\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"target\":{\"envVarKey\":\"GATEWAY_TRUSTED_PROXIES\"}}},\"outputs\":{\"identityHeader\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"endpoint\":\"web\",\"property\":\"viewerIdentityHeader\"}},\"trustedProxies\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"from\":{\"endpoint\":\"web\",\"property\":\"trustedProxyCIDRs\"}}}}}}"
+    },
+    "context": {
+      "allocations": {
+        "web": {
+          "web": {
+            "identity": "allocation-1",
+            "version": "1",
+            "public": {
+              "hostname": "example.invalid",
+              "scheme": "https",
+              "viewerIdentityHeader": "x-platform-user",
+              "trustedProxyCIDRs": [
+                "10.88.0.0/16",
+                "fd00:88::/64"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "VALID",
+      "/outputs/web:out:identityHeader/value": "x-platform-user",
+      "/outputs/web:out:trustedProxies/value": [
+        "10.88.0.0/16",
+        "fd00:88::/64"
+      ],
+      "/environment/web/GATEWAY_IDENTITY_HEADER/value": "x-platform-user",
+      "/environment/web/GATEWAY_TRUSTED_PROXIES/value": "[\"10.88.0.0/16\",\"fd00:88::/64\"]"
+    }
+  },
+  {
+    "id": "resolution-viewer-identity-facts-absent",
+    "profile": "resolution",
+    "operation": "resolve",
+    "document": "app/blueprint.yaml",
+    "requirements": [
+      "BP-ACCESS-001"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"exposure\":{\"web\":{\"visibility\":\"PUBLIC\",\"access\":\"AUTHENTICATED\",\"viewerIdentity\":\"HEADER\"}},\"bindings\":{\"identityHeader\":{\"node\":\"web\",\"output\":\"identityHeader\"},\"trustedProxies\":{\"node\":\"web\",\"output\":\"trustedProxies\"}}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/service:1\"},\"endpoints\":{\"web\":{\"targetPort\":8080,\"protocol\":\"HTTP\"}},\"health\":{\"readiness\":{\"http\":{\"endpoint\":\"web\",\"path\":\"/healthz\"}}}},\"contract\":{\"inputs\":{\"identityHeader\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"GATEWAY_IDENTITY_HEADER\"}},\"trustedProxies\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"target\":{\"envVarKey\":\"GATEWAY_TRUSTED_PROXIES\"}}},\"outputs\":{\"identityHeader\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"endpoint\":\"web\",\"property\":\"viewerIdentityHeader\"}},\"trustedProxies\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"from\":{\"endpoint\":\"web\",\"property\":\"trustedProxyCIDRs\"}}}}}}"
+    },
+    "context": {
+      "allocations": {
+        "web": {
+          "web": {
+            "identity": "allocation-1",
+            "version": "1",
+            "public": {
+              "hostname": "example.invalid",
+              "scheme": "https"
+            }
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "INCOMPLETE"
+    }
+  },
+  {
+    "id": "resolution-rejects-viewer-identity-facts-without-forwarding",
+    "profile": "resolution",
+    "operation": "resolve",
+    "document": "app/blueprint.yaml",
+    "requirements": [
+      "BP-ACCESS-001"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"exposure\":{\"web\":{\"visibility\":\"PUBLIC\",\"access\":\"AUTHENTICATED\"}},\"bindings\":{}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/service:1\"},\"endpoints\":{\"web\":{\"targetPort\":8080,\"protocol\":\"HTTP\"}},\"health\":{\"readiness\":{\"http\":{\"endpoint\":\"web\",\"path\":\"/healthz\"}}}},\"contract\":{\"inputs\":{},\"outputs\":{\"url\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"endpoint\":\"web\",\"property\":\"publicURL\"}}}}}}"
+    },
+    "context": {
+      "allocations": {
+        "web": {
+          "web": {
+            "identity": "allocation-1",
+            "version": "1",
+            "public": {
+              "hostname": "example.invalid",
+              "scheme": "https",
+              "viewerIdentityHeader": "x-platform-user",
+              "trustedProxyCIDRs": [
+                "10.88.0.0/16",
+                "fd00:88::/64"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_INVALID_RESOLUTION_CONTEXT",
+        "phase": "resolution",
+        "stage": "allocation"
+      }
+    ]
+  },
+  {
+    "id": "resolution-rejects-empty-trusted-proxies",
+    "profile": "resolution",
+    "operation": "resolve",
+    "document": "app/blueprint.yaml",
+    "requirements": [
+      "BP-ACCESS-001"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"exposure\":{\"web\":{\"visibility\":\"PUBLIC\",\"access\":\"AUTHENTICATED\",\"viewerIdentity\":\"HEADER\"}},\"bindings\":{\"identityHeader\":{\"node\":\"web\",\"output\":\"identityHeader\"},\"trustedProxies\":{\"node\":\"web\",\"output\":\"trustedProxies\"}}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/service:1\"},\"endpoints\":{\"web\":{\"targetPort\":8080,\"protocol\":\"HTTP\"}},\"health\":{\"readiness\":{\"http\":{\"endpoint\":\"web\",\"path\":\"/healthz\"}}}},\"contract\":{\"inputs\":{\"identityHeader\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"GATEWAY_IDENTITY_HEADER\"}},\"trustedProxies\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"target\":{\"envVarKey\":\"GATEWAY_TRUSTED_PROXIES\"}}},\"outputs\":{\"identityHeader\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"endpoint\":\"web\",\"property\":\"viewerIdentityHeader\"}},\"trustedProxies\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"from\":{\"endpoint\":\"web\",\"property\":\"trustedProxyCIDRs\"}}}}}}"
+    },
+    "context": {
+      "allocations": {
+        "web": {
+          "web": {
+            "identity": "allocation-1",
+            "version": "1",
+            "public": {
+              "hostname": "example.invalid",
+              "scheme": "https",
+              "viewerIdentityHeader": "x-platform-user",
+              "trustedProxyCIDRs": []
+            }
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_INVALID_RESOLUTION_CONTEXT",
+        "phase": "resolution",
+        "stage": "allocation"
+      }
+    ]
+  },
+  {
+    "id": "resolution-rejects-trusted-proxy-with-host-bits",
+    "profile": "resolution",
+    "operation": "resolve",
+    "document": "app/blueprint.yaml",
+    "requirements": [
+      "BP-ACCESS-001"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"exposure\":{\"web\":{\"visibility\":\"PUBLIC\",\"access\":\"AUTHENTICATED\",\"viewerIdentity\":\"HEADER\"}},\"bindings\":{\"identityHeader\":{\"node\":\"web\",\"output\":\"identityHeader\"},\"trustedProxies\":{\"node\":\"web\",\"output\":\"trustedProxies\"}}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/service:1\"},\"endpoints\":{\"web\":{\"targetPort\":8080,\"protocol\":\"HTTP\"}},\"health\":{\"readiness\":{\"http\":{\"endpoint\":\"web\",\"path\":\"/healthz\"}}}},\"contract\":{\"inputs\":{\"identityHeader\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"GATEWAY_IDENTITY_HEADER\"}},\"trustedProxies\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"target\":{\"envVarKey\":\"GATEWAY_TRUSTED_PROXIES\"}}},\"outputs\":{\"identityHeader\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"endpoint\":\"web\",\"property\":\"viewerIdentityHeader\"}},\"trustedProxies\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"from\":{\"endpoint\":\"web\",\"property\":\"trustedProxyCIDRs\"}}}}}}"
+    },
+    "context": {
+      "allocations": {
+        "web": {
+          "web": {
+            "identity": "allocation-1",
+            "version": "1",
+            "public": {
+              "hostname": "example.invalid",
+              "scheme": "https",
+              "viewerIdentityHeader": "x-platform-user",
+              "trustedProxyCIDRs": [
+                "10.88.0.1/16"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_INVALID_RESOLUTION_CONTEXT",
+        "phase": "resolution",
+        "stage": "allocation"
+      }
+    ]
+  },
+  {
+    "id": "resolution-rejects-trusted-proxy-for-every-address",
+    "profile": "resolution",
+    "operation": "resolve",
+    "document": "app/blueprint.yaml",
+    "requirements": [
+      "BP-ACCESS-001"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"exposure\":{\"web\":{\"visibility\":\"PUBLIC\",\"access\":\"AUTHENTICATED\",\"viewerIdentity\":\"HEADER\"}},\"bindings\":{\"identityHeader\":{\"node\":\"web\",\"output\":\"identityHeader\"},\"trustedProxies\":{\"node\":\"web\",\"output\":\"trustedProxies\"}}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/service:1\"},\"endpoints\":{\"web\":{\"targetPort\":8080,\"protocol\":\"HTTP\"}},\"health\":{\"readiness\":{\"http\":{\"endpoint\":\"web\",\"path\":\"/healthz\"}}}},\"contract\":{\"inputs\":{\"identityHeader\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"GATEWAY_IDENTITY_HEADER\"}},\"trustedProxies\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"target\":{\"envVarKey\":\"GATEWAY_TRUSTED_PROXIES\"}}},\"outputs\":{\"identityHeader\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"endpoint\":\"web\",\"property\":\"viewerIdentityHeader\"}},\"trustedProxies\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"from\":{\"endpoint\":\"web\",\"property\":\"trustedProxyCIDRs\"}}}}}}"
+    },
+    "context": {
+      "allocations": {
+        "web": {
+          "web": {
+            "identity": "allocation-1",
+            "version": "1",
+            "public": {
+              "hostname": "example.invalid",
+              "scheme": "https",
+              "viewerIdentityHeader": "x-platform-user",
+              "trustedProxyCIDRs": [
+                "0.0.0.0/0"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_INVALID_RESOLUTION_CONTEXT",
+        "phase": "resolution",
+        "stage": "allocation"
+      }
+    ]
+  },
+  {
+    "id": "resolution-rejects-repeated-trusted-proxy",
+    "profile": "resolution",
+    "operation": "resolve",
+    "document": "app/blueprint.yaml",
+    "requirements": [
+      "BP-ACCESS-001"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"exposure\":{\"web\":{\"visibility\":\"PUBLIC\",\"access\":\"AUTHENTICATED\",\"viewerIdentity\":\"HEADER\"}},\"bindings\":{\"identityHeader\":{\"node\":\"web\",\"output\":\"identityHeader\"},\"trustedProxies\":{\"node\":\"web\",\"output\":\"trustedProxies\"}}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/service:1\"},\"endpoints\":{\"web\":{\"targetPort\":8080,\"protocol\":\"HTTP\"}},\"health\":{\"readiness\":{\"http\":{\"endpoint\":\"web\",\"path\":\"/healthz\"}}}},\"contract\":{\"inputs\":{\"identityHeader\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"GATEWAY_IDENTITY_HEADER\"}},\"trustedProxies\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"target\":{\"envVarKey\":\"GATEWAY_TRUSTED_PROXIES\"}}},\"outputs\":{\"identityHeader\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"endpoint\":\"web\",\"property\":\"viewerIdentityHeader\"}},\"trustedProxies\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"from\":{\"endpoint\":\"web\",\"property\":\"trustedProxyCIDRs\"}}}}}}"
+    },
+    "context": {
+      "allocations": {
+        "web": {
+          "web": {
+            "identity": "allocation-1",
+            "version": "1",
+            "public": {
+              "hostname": "example.invalid",
+              "scheme": "https",
+              "viewerIdentityHeader": "x-platform-user",
+              "trustedProxyCIDRs": [
+                "10.88.0.0/16",
+                "10.88.0.0/16"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_INVALID_RESOLUTION_CONTEXT",
+        "phase": "resolution",
+        "stage": "allocation"
+      }
+    ]
+  },
+  {
+    "id": "resolution-rejects-non-canonical-ipv6-trusted-proxy",
+    "profile": "resolution",
+    "operation": "resolve",
+    "document": "app/blueprint.yaml",
+    "requirements": [
+      "BP-ACCESS-001"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"exposure\":{\"web\":{\"visibility\":\"PUBLIC\",\"access\":\"AUTHENTICATED\",\"viewerIdentity\":\"HEADER\"}},\"bindings\":{\"identityHeader\":{\"node\":\"web\",\"output\":\"identityHeader\"},\"trustedProxies\":{\"node\":\"web\",\"output\":\"trustedProxies\"}}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/service:1\"},\"endpoints\":{\"web\":{\"targetPort\":8080,\"protocol\":\"HTTP\"}},\"health\":{\"readiness\":{\"http\":{\"endpoint\":\"web\",\"path\":\"/healthz\"}}}},\"contract\":{\"inputs\":{\"identityHeader\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"GATEWAY_IDENTITY_HEADER\"}},\"trustedProxies\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"target\":{\"envVarKey\":\"GATEWAY_TRUSTED_PROXIES\"}}},\"outputs\":{\"identityHeader\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"endpoint\":\"web\",\"property\":\"viewerIdentityHeader\"}},\"trustedProxies\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"from\":{\"endpoint\":\"web\",\"property\":\"trustedProxyCIDRs\"}}}}}}"
+    },
+    "context": {
+      "allocations": {
+        "web": {
+          "web": {
+            "identity": "allocation-1",
+            "version": "1",
+            "public": {
+              "hostname": "example.invalid",
+              "scheme": "https",
+              "viewerIdentityHeader": "x-platform-user",
+              "trustedProxyCIDRs": [
+                "fd00:88:0:0::/64"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_INVALID_RESOLUTION_CONTEXT",
+        "phase": "resolution",
+        "stage": "allocation"
+      }
+    ]
+  },
+  {
+    "id": "resolution-rejects-reserved-identity-header",
+    "profile": "resolution",
+    "operation": "resolve",
+    "document": "app/blueprint.yaml",
+    "requirements": [
+      "BP-ACCESS-001"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"exposure\":{\"web\":{\"visibility\":\"PUBLIC\",\"access\":\"AUTHENTICATED\",\"viewerIdentity\":\"HEADER\"}},\"bindings\":{\"identityHeader\":{\"node\":\"web\",\"output\":\"identityHeader\"},\"trustedProxies\":{\"node\":\"web\",\"output\":\"trustedProxies\"}}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/service:1\"},\"endpoints\":{\"web\":{\"targetPort\":8080,\"protocol\":\"HTTP\"}},\"health\":{\"readiness\":{\"http\":{\"endpoint\":\"web\",\"path\":\"/healthz\"}}}},\"contract\":{\"inputs\":{\"identityHeader\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"GATEWAY_IDENTITY_HEADER\"}},\"trustedProxies\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"target\":{\"envVarKey\":\"GATEWAY_TRUSTED_PROXIES\"}}},\"outputs\":{\"identityHeader\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"endpoint\":\"web\",\"property\":\"viewerIdentityHeader\"}},\"trustedProxies\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"from\":{\"endpoint\":\"web\",\"property\":\"trustedProxyCIDRs\"}}}}}}"
+    },
+    "context": {
+      "allocations": {
+        "web": {
+          "web": {
+            "identity": "allocation-1",
+            "version": "1",
+            "public": {
+              "hostname": "example.invalid",
+              "scheme": "https",
+              "viewerIdentityHeader": "x-forwarded-user",
+              "trustedProxyCIDRs": [
+                "10.88.0.0/16",
+                "fd00:88::/64"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_INVALID_RESOLUTION_CONTEXT",
+        "phase": "resolution",
+        "stage": "allocation"
+      }
+    ]
+  },
+  {
+    "id": "resolution-rejects-uppercase-identity-header",
+    "profile": "resolution",
+    "operation": "resolve",
+    "document": "app/blueprint.yaml",
+    "requirements": [
+      "BP-ACCESS-001"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"exposure\":{\"web\":{\"visibility\":\"PUBLIC\",\"access\":\"AUTHENTICATED\",\"viewerIdentity\":\"HEADER\"}},\"bindings\":{\"identityHeader\":{\"node\":\"web\",\"output\":\"identityHeader\"},\"trustedProxies\":{\"node\":\"web\",\"output\":\"trustedProxies\"}}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/service:1\"},\"endpoints\":{\"web\":{\"targetPort\":8080,\"protocol\":\"HTTP\"}},\"health\":{\"readiness\":{\"http\":{\"endpoint\":\"web\",\"path\":\"/healthz\"}}}},\"contract\":{\"inputs\":{\"identityHeader\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"GATEWAY_IDENTITY_HEADER\"}},\"trustedProxies\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"target\":{\"envVarKey\":\"GATEWAY_TRUSTED_PROXIES\"}}},\"outputs\":{\"identityHeader\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"endpoint\":\"web\",\"property\":\"viewerIdentityHeader\"}},\"trustedProxies\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"from\":{\"endpoint\":\"web\",\"property\":\"trustedProxyCIDRs\"}}}}}}"
+    },
+    "context": {
+      "allocations": {
+        "web": {
+          "web": {
+            "identity": "allocation-1",
+            "version": "1",
+            "public": {
+              "hostname": "example.invalid",
+              "scheme": "https",
+              "viewerIdentityHeader": "X-Platform-User",
+              "trustedProxyCIDRs": [
+                "10.88.0.0/16",
+                "fd00:88::/64"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_INVALID_RESOLUTION_CONTEXT",
+        "phase": "resolution",
+        "stage": "allocation"
+      }
+    ]
   }
 ]
