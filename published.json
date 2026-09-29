@@ -111,6 +111,14 @@
       },
       "tree": "9bd4c6fb19e00a1e4f56eff97bf0787ec91d05cb"
     },
+    "component/v1.6.0": {
+      "bundleSha256": "f8ed1c8b0076705438f8ac3442a1c3365a056ef93a7bc1eef07c12d855d19fa1",
+      "path": "specifications/component/v1",
+      "requires": {
+        "core": "1.1.0"
+      },
+      "tree": "bad91a0d514adc8a5fd0ee24e00a01da06b3aedc"
+    },
     "core/v1.0.0": {
       "bundleSha256": null,
       "path": "specifications/core/v1",
