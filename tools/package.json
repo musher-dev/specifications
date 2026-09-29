@@ -24,7 +24,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.14",
-    "@sourcemeta/jsonschema": "^16.12.0",
+    "@sourcemeta/jsonschema": "^17.0.0",
     "@types/bun": "1.4.2",
     "@types/commonmark": "0.27.10",
     "cspell": "10",
