@@ -9,7 +9,7 @@ import { readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { FixtureRepo } from '../testing/fixture.ts'
-import { git, gitEnvironment } from './git.ts'
+import { git, gitEnvironment, readBlobAtRef } from './git.ts'
 
 describe('gitEnvironment', () => {
   test('ignores the global and system config', () => {
@@ -140,4 +140,32 @@ test('hook Git environment cannot redirect fixture commits, tags, index or confi
   } finally {
     original.cleanup()
   }
+})
+
+describe('readBlobAtRef', () => {
+  test('returns every byte of a blob larger than a pipe buffer', () => {
+    const fixture = new FixtureRepo()
+    try {
+      // 200 KiB, several times any pipe or read-chunk size, with a line number
+      // on every line so a short read cannot equal the original by accident.
+      const lines = Array.from({ length: 4096 }, (_, i) => `line ${i} ${'x'.repeat(40)}`)
+      const contents = `${lines.join('\n')}\n`
+      fixture.writeFile('large.md', contents)
+      fixture.commit('large blob')
+      expect(readBlobAtRef(fixture.root, 'HEAD', 'large.md')?.toString('utf8')).toBe(contents)
+    } finally {
+      fixture.cleanup()
+    }
+  })
+
+  test('returns null for a path the ref does not carry', () => {
+    const fixture = new FixtureRepo()
+    try {
+      fixture.writeFile('present.md', 'here\n')
+      fixture.commit('one file')
+      expect(readBlobAtRef(fixture.root, 'HEAD', 'absent.md')).toBeNull()
+    } finally {
+      fixture.cleanup()
+    }
+  })
 })
