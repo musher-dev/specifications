@@ -1,0 +1,10 @@
+{
+  "id": "structural-079-unknown-hash-algorithm",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#parameters",
+  "requirements": [
+    "BP-PARAM-010"
+  ],
+  "summary": "The hash algorithms are BCRYPT and ARGON2ID."
+}

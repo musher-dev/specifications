@@ -1,0 +1,10 @@
+{
+  "id": "structural-146-exempt-path-under-the-platform-prefix",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#endpoints",
+  "requirements": [
+    "COMP-EP-016"
+  ],
+  "summary": "The platform serves its sign-in under /.musher, so no path lies there."
+}

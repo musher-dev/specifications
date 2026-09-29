@@ -1,0 +1,11 @@
+{
+  "id": "semantic-067-viewer-identity-mode-properties",
+  "phase": "semantic",
+  "expected": "pass",
+  "clause": "specifications/component/v1/spec.md#endpoints",
+  "requirements": [
+    "COMP-EP-012",
+    "COMP-EP-014"
+  ],
+  "summary": "An HTTP endpoint that is an OpenID Connect client supplies the claim header, assertion and client properties, the secret into a sensitive output, and a redirect URI through a template."
+}

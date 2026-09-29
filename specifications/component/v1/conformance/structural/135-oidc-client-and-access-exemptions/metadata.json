@@ -1,0 +1,12 @@
+{
+  "id": "structural-135-oidc-client-and-access-exemptions",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v1/spec.md#endpoints",
+  "requirements": [
+    "COMP-EP-013",
+    "COMP-EP-015",
+    "COMP-EP-016"
+  ],
+  "summary": "An HTTP endpoint declares OpenID Connect redirect paths, and the paths and bearer requests it takes without a viewer."
+}

@@ -1,0 +1,11 @@
+{
+  "id": "semantic-098-bcrypt-of-a-source-too-long",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#value-sources",
+  "requirements": [
+    "BP-PARAM-012"
+  ],
+  "summary": "bcrypt reads 72 bytes, and 40 random bytes in hex are 80.",
+  "document": "app/blueprint.yaml"
+}

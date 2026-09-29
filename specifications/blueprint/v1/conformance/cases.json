@@ -641,6 +641,146 @@
       "id": "semantic-087-public-property-of-an-object-form-private-endpoint",
       "phase": "semantic",
       "path": "semantic/087-public-property-of-an-object-form-private-endpoint"
+    },
+    {
+      "id": "structural-068-assertion-without-authentication",
+      "phase": "structural",
+      "path": "structural/068-assertion-without-authentication"
+    },
+    {
+      "id": "structural-069-oidc-on-an-open-endpoint",
+      "phase": "structural",
+      "path": "structural/069-oidc-on-an-open-endpoint"
+    },
+    {
+      "id": "structural-070-claims-without-an-identity-mode",
+      "phase": "structural",
+      "path": "structural/070-claims-without-an-identity-mode"
+    },
+    {
+      "id": "structural-071-claims-on-a-private-endpoint",
+      "phase": "structural",
+      "path": "structural/071-claims-on-a-private-endpoint"
+    },
+    {
+      "id": "structural-072-exemptions-under-open-access",
+      "phase": "structural",
+      "path": "structural/072-exemptions-under-open-access"
+    },
+    {
+      "id": "structural-073-unknown-claim",
+      "phase": "structural",
+      "path": "structural/073-unknown-claim"
+    },
+    {
+      "id": "structural-074-unknown-exemption",
+      "phase": "structural",
+      "path": "structural/074-unknown-exemption"
+    },
+    {
+      "id": "structural-075-repeated-claim",
+      "phase": "structural",
+      "path": "structural/075-repeated-claim"
+    },
+    {
+      "id": "structural-076-hash-beside-a-generator",
+      "phase": "structural",
+      "path": "structural/076-hash-beside-a-generator"
+    },
+    {
+      "id": "structural-077-hash-with-a-form-field",
+      "phase": "structural",
+      "path": "structural/077-hash-with-a-form-field"
+    },
+    {
+      "id": "structural-078-hash-without-an-algorithm",
+      "phase": "structural",
+      "path": "structural/078-hash-without-an-algorithm"
+    },
+    {
+      "id": "structural-079-unknown-hash-algorithm",
+      "phase": "structural",
+      "path": "structural/079-unknown-hash-algorithm"
+    },
+    {
+      "id": "semantic-089-assertion-read-under-header",
+      "phase": "semantic",
+      "path": "semantic/089-assertion-read-under-header"
+    },
+    {
+      "id": "semantic-090-claim-header-read-without-the-claim",
+      "phase": "semantic",
+      "path": "semantic/090-claim-header-read-without-the-claim"
+    },
+    {
+      "id": "semantic-091-oidc-client-read-under-assertion",
+      "phase": "semantic",
+      "path": "semantic/091-oidc-client-read-under-assertion"
+    },
+    {
+      "id": "semantic-092-oidc-for-an-endpoint-that-is-no-client",
+      "phase": "semantic",
+      "path": "semantic/092-oidc-for-an-endpoint-that-is-no-client"
+    },
+    {
+      "id": "semantic-093-path-exemption-the-component-does-not-declare",
+      "phase": "semantic",
+      "path": "semantic/093-path-exemption-the-component-does-not-declare"
+    },
+    {
+      "id": "semantic-094-bearer-exemption-without-the-component-opt-in",
+      "phase": "semantic",
+      "path": "semantic/094-bearer-exemption-without-the-component-opt-in"
+    },
+    {
+      "id": "semantic-095-unknown-deployment-fact",
+      "phase": "semantic",
+      "path": "semantic/095-unknown-deployment-fact"
+    },
+    {
+      "id": "semantic-096-hash-of-a-submitted-parameter",
+      "phase": "semantic",
+      "path": "semantic/096-hash-of-a-submitted-parameter"
+    },
+    {
+      "id": "semantic-097-hash-of-an-undeclared-parameter",
+      "phase": "semantic",
+      "path": "semantic/097-hash-of-an-undeclared-parameter"
+    },
+    {
+      "id": "semantic-098-bcrypt-of-a-source-too-long",
+      "phase": "semantic",
+      "path": "semantic/098-bcrypt-of-a-source-too-long"
+    },
+    {
+      "id": "semantic-099-hashed-source-without-a-form-label",
+      "phase": "semantic",
+      "path": "semantic/099-hashed-source-without-a-form-label"
+    },
+    {
+      "id": "semantic-100-hash-into-an-integer-input",
+      "phase": "semantic",
+      "path": "semantic/100-hash-into-an-integer-input"
+    },
+    {
+      "id": "structural-080-hash-and-deployment-fact-parameters",
+      "phase": "structural",
+      "path": "structural/080-hash-and-deployment-fact-parameters"
+    },
+    {
+      "id": "structural-067-identity-modes-claims-and-exemptions",
+      "phase": "structural",
+      "path": "structural/067-identity-modes-claims-and-exemptions"
+    },
+    {
+      "id": "semantic-101-hashed-password-and-installer-email",
+      "phase": "semantic",
+      "path": "semantic/101-hashed-password-and-installer-email"
+    },
+    {
+      "id": "semantic-088-oidc-client-with-claims-and-exemptions",
+      "phase": "semantic",
+      "path": "semantic/088-oidc-client-with-claims-and-exemptions"
     }
   ]
 }

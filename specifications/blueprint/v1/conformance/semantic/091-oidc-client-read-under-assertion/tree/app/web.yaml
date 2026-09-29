@@ -1,0 +1,32 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: SERVICE
+  workload:
+    source:
+      image: example/web:1
+    endpoints:
+      web:
+        targetPort: 8080
+        protocol: HTTP
+        oidc:
+          redirectPaths: [/callback]
+    health:
+      readiness:
+        http:
+          endpoint: web
+          path: /healthz
+  contract:
+    inputs:
+      clientID:
+        description: Synthetic input.
+        schema: { type: string }
+        target: { envVarKey: CLIENT_ID }
+    outputs:
+      clientID:
+        description: Synthetic output.
+        schema: { type: string }
+        from: { endpoint: web, property: oidcClientID }

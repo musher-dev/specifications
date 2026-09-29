@@ -1,0 +1,10 @@
+{
+  "id": "semantic-071-assertion-keys-of-a-grpc-endpoint",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#endpoints",
+  "requirements": [
+    "COMP-EP-012"
+  ],
+  "summary": "A gRPC endpoint has no viewer assertion."
+}

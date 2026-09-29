@@ -1083,6 +1083,37 @@ const UNPINNED: ReadonlyMap<string, string> = new Map([
       'obligation of the platform; no document phase or behavioural operation observes a ' +
       'connection',
   ],
+  [
+    'BP-ACCESS-006',
+    "That one person has one subject across an installation's identity modes and its " +
+      'installer facts, and that a released email is verified, are facts of the platform ' +
+      'identity service; resolution reads the facts it is given but cannot observe a person',
+  ],
+  [
+    'BP-ACCESS-007',
+    "Signing, audience and lifetime of a viewer assertion and the key set's retention are " +
+      'runtime obligations of the platform edge; no document phase or behavioural operation ' +
+      'observes a request or a key set',
+  ],
+  [
+    'BP-ACCESS-008',
+    'Registering redirect URIs, the authorization code flow, admission at the issuer and ' +
+      'client revocation are runtime obligations of the platform OpenID Connect issuer; ' +
+      'resolution checks the client registration it is given (BP-ACCESS-001) but no ' +
+      'operation observes the issuer',
+  ],
+  [
+    'BP-ACCESS-009',
+    'Matching a request path against exempt paths, and refusing to exempt one it could ' +
+      'read two ways, is a runtime obligation of the platform edge; the path grammar is ' +
+      'pinned by component cases (COMP-EP-016), but no operation observes a request',
+  ],
+  [
+    'BP-ACCESS-010',
+    'Forwarding a bearer request without a viewer session, and identifying one with a ' +
+      'session, is a runtime obligation of the platform edge; no document phase or ' +
+      'behavioural operation observes a request',
+  ],
 ])
 
 /**

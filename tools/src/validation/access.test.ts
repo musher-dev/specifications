@@ -5,11 +5,12 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import {
   canonicalCIDR,
+  hashFormat,
   type RecordContext,
   resolutionRecord,
   validIdentityHeader,
 } from './resolution.ts'
-import { effectiveExposure } from './semantic.ts'
+import { addressProperty, effectiveExposure, encodedLength, forwards } from './semantic.ts'
 
 const roots: string[] = []
 afterEach(() => {
@@ -73,10 +74,63 @@ test('bare exposure is shorthand for the object form with every default', () => 
     visibility: 'PUBLIC',
     access: 'OPEN',
     viewerIdentity: 'NONE',
+    viewerClaims: [],
+    accessExemptions: [],
   })
   expect(effectiveExposure(exposures, 'hidden').visibility).toBe('PRIVATE')
   expect(effectiveExposure(exposures, 'absent').visibility).toBe('PRIVATE')
-  expect(effectiveExposure(exposures, 'signedIn')).toEqual(exposures.signedIn)
+  expect(effectiveExposure(exposures, 'signedIn')).toEqual({
+    ...exposures.signedIn,
+    viewerClaims: [],
+    accessExemptions: [],
+  })
+})
+
+test('a viewer identity property exists under its own mode, and a claim header under its claim', () => {
+  const exposure = effectiveExposure(
+    {
+      web: {
+        visibility: 'PUBLIC',
+        access: 'AUTHENTICATED',
+        viewerIdentity: 'HEADER',
+        viewerClaims: ['NAME'],
+      },
+    },
+    'web',
+  )
+  const reads = (property: string) => forwards(exposure, addressProperty(property)!)
+  expect(reads('viewerIdentityHeader')).toBe(true)
+  expect(reads('viewerNameHeader')).toBe(true)
+  expect(reads('viewerEmailHeader')).toBe(false)
+  expect(reads('viewerAssertionHeader')).toBe(false)
+  expect(reads('oidcClientID')).toBe(false)
+  expect(addressProperty('oidcClientSecret')?.sensitive).toBe(true)
+  expect(addressProperty('oidcClientID')?.sensitive).toBeUndefined()
+})
+
+test('bcrypt reads 72 bytes, so a source must encode to 72 characters or fewer', () => {
+  expect(encodedLength(undefined)).toBe(64)
+  expect(encodedLength({ byteLength: 36 })).toBe(72)
+  expect(encodedLength({ byteLength: 37 })).toBe(74)
+  expect(encodedLength({ byteLength: 54, encoding: 'BASE64' })).toBe(72)
+  expect(encodedLength({ byteLength: 55, encoding: 'BASE64' })).toBe(76)
+  expect(encodedLength({ byteLength: 54, encoding: 'BASE64URL' })).toBe(72)
+  expect(encodedLength({ byteLength: 55, encoding: 'BASE64URL' })).toBe(74)
+})
+
+test('a stored hash has the one format its algorithm produces', () => {
+  const bcrypt = '$2b$12$' + './' + 'Ab9'.repeat(17)
+  const argon =
+    '$argon2id$v=19$m=19456,t=2,p=1$c29tZXNhbHRzb21lc2FsdA$' +
+    'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8'
+  expect(hashFormat('BCRYPT').test(bcrypt)).toBe(true)
+  expect(hashFormat('ARGON2ID').test(argon)).toBe(true)
+  expect(hashFormat('BCRYPT').test(argon)).toBe(false)
+  expect(hashFormat('ARGON2ID').test(bcrypt)).toBe(false)
+  // Another cost, or another variant, is another format.
+  expect(hashFormat('BCRYPT').test(bcrypt.replace('$12$', '$10$'))).toBe(false)
+  expect(hashFormat('BCRYPT').test(bcrypt.replace('$2b$', '$2a$'))).toBe(false)
+  expect(hashFormat('ARGON2ID').test(argon.replace('t=2', 't=3'))).toBe(false)
 })
 
 test('a resolution record carries the object form of an exposure', () => {

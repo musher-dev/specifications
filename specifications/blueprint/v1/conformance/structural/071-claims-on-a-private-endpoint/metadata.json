@@ -1,0 +1,10 @@
+{
+  "id": "structural-071-claims-on-a-private-endpoint",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#access",
+  "requirements": [
+    "BP-NODE-006"
+  ],
+  "summary": "Released claims apply only to a PUBLIC endpoint."
+}

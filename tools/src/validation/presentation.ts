@@ -33,10 +33,18 @@ export function formControls(blueprint: Json, components: ReadonlyMap<string, Js
   for (const [name, parameter] of Object.entries(record(at(blueprint, 'spec', 'parameters')))) {
     const p = record(parameter),
       ui = record(p.ui)
-    // Blueprint §5.4: generated values and variables are never form fields. A
-    // connection is offered as a whole selection, never as its members.
+    // Blueprint §5.4: generated values, hashes, variables and deployment facts are
+    // never editable fields. A connection is offered as a whole selection, never
+    // as its members.
     const source = parameterSource(p)
-    if (!p.ui || p.generator || source?.namespace === 'variables') continue
+    if (
+      !p.ui ||
+      p.generator ||
+      p.hash ||
+      source?.namespace === 'variables' ||
+      source?.namespace === 'deployment'
+    )
+      continue
     const receivers: Record<string, Json>[] = []
     for (const [node, n] of Object.entries(record(at(blueprint, 'spec', 'components'))).sort())
       for (const [key, b] of Object.entries(record(at(n, 'bindings'))).sort())

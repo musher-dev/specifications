@@ -54,12 +54,19 @@ const issue = (out: Diagnostic[], code: string, path: string) =>
  * Component §5.2's endpoint properties. `protocols` is the set an endpoint's
  * protocol must be in (COMP-EP-004, COMP-EP-012), `requires` is the exposure a
  * blueprint must select before the property exists (BP-NODE-005, BP-NODE-007),
- * and `type` is the logical type an `endpoint` origin produces.
+ * `mode` and `claim` are the viewer identity mode and released claim a viewer
+ * identity property belongs to, `sensitive` marks a platform-issued secret, and
+ * `type` is the logical type an `endpoint` origin produces.
  */
+export type ViewerMode = 'HEADER' | 'ASSERTION' | 'OIDC'
+export type ViewerClaim = 'EMAIL' | 'NAME'
 export interface AddressProperty {
   readonly protocols?: readonly string[]
   readonly mismatch?: string
   readonly requires?: 'PUBLIC' | 'VIEWER_IDENTITY'
+  readonly mode?: ViewerMode
+  readonly claim?: ViewerClaim
+  readonly sensitive?: boolean
   readonly type: 'string' | 'integer' | 'array'
 }
 const HTTP_FAMILY = ['HTTP', 'HTTPS', 'WS', 'GRPC']
@@ -71,11 +78,14 @@ const publicHTTP = {
   requires: 'PUBLIC',
 } as const
 const publicL4 = { protocols: L4, mismatch: 'ERR_ENDPOINT_NOT_L4', requires: 'PUBLIC' } as const
-const viewer = {
-  protocols: VIEWER,
-  mismatch: 'ERR_ENDPOINT_NOT_HTTP',
-  requires: 'VIEWER_IDENTITY',
-} as const
+const viewer = (mode: ViewerMode, claim?: ViewerClaim) =>
+  ({
+    protocols: VIEWER,
+    mismatch: 'ERR_ENDPOINT_NOT_HTTP',
+    requires: 'VIEWER_IDENTITY',
+    mode,
+    ...(claim ? { claim } : {}),
+  }) as const
 export const ADDRESS_PROPERTIES: Readonly<Record<string, AddressProperty>> = {
   publicURL: { ...publicHTTP, type: 'string' },
   publicHostname: { ...publicHTTP, type: 'string' },
@@ -84,19 +94,33 @@ export const ADDRESS_PROPERTIES: Readonly<Record<string, AddressProperty>> = {
   privateHostname: { type: 'string' },
   privatePort: { type: 'integer' },
   privateAddress: { type: 'string' },
-  viewerIdentityHeader: { ...viewer, type: 'string' },
-  trustedProxyCIDRs: { ...viewer, type: 'array' },
+  viewerIdentityHeader: { ...viewer('HEADER'), type: 'string' },
+  trustedProxyCIDRs: { ...viewer('HEADER'), type: 'array' },
+  viewerEmailHeader: { ...viewer('HEADER', 'EMAIL'), type: 'string' },
+  viewerNameHeader: { ...viewer('HEADER', 'NAME'), type: 'string' },
+  viewerAssertionHeader: { ...viewer('ASSERTION'), type: 'string' },
+  viewerAssertionIssuer: { ...viewer('ASSERTION'), type: 'string' },
+  viewerAssertionAudience: { ...viewer('ASSERTION'), type: 'string' },
+  viewerAssertionKeysURL: { ...viewer('ASSERTION'), type: 'string' },
+  oidcIssuerURL: { ...viewer('OIDC'), type: 'string' },
+  oidcClientID: { ...viewer('OIDC'), type: 'string' },
+  oidcClientSecret: { ...viewer('OIDC'), sensitive: true, type: 'string' },
 }
 /**
- * Blueprint §4.3: an exposure is a bare `PUBLIC` or `PRIVATE`, or the object
+ * Blueprint §4.5: an exposure is a bare `PUBLIC` or `PRIVATE`, or the object
  * form, and an endpoint left out is `PRIVATE`. Bare `PUBLIC` is the object form
  * with every default, so every rule reads this rather than the authored value.
  */
 export interface Exposure {
   readonly visibility: 'PUBLIC' | 'PRIVATE'
   readonly access: 'OPEN' | 'AUTHENTICATED'
-  readonly viewerIdentity: 'NONE' | 'HEADER'
+  readonly viewerIdentity: 'NONE' | ViewerMode
+  readonly viewerClaims: readonly ViewerClaim[]
+  readonly accessExemptions: readonly ('PATHS' | 'BEARER')[]
 }
+const MODES: readonly string[] = ['HEADER', 'ASSERTION', 'OIDC']
+const list = <T extends string>(value: Json | undefined, members: readonly T[]): T[] =>
+  Array.isArray(value) ? members.filter((m) => value.includes(m)) : []
 export function effectiveExposure(exposures: Json | undefined, endpoint: string): Exposure {
   const authored = Object.hasOwn(record(exposures), endpoint)
     ? record(exposures)[endpoint]
@@ -105,12 +129,20 @@ export function effectiveExposure(exposures: Json | undefined, endpoint: string)
     (typeof authored === 'string' ? authored : at(authored, 'visibility')) === 'PUBLIC'
       ? 'PUBLIC'
       : 'PRIVATE'
+  const mode = at(authored, 'viewerIdentity')
   return {
     visibility,
     access: at(authored, 'access') === 'AUTHENTICATED' ? 'AUTHENTICATED' : 'OPEN',
-    viewerIdentity: at(authored, 'viewerIdentity') === 'HEADER' ? 'HEADER' : 'NONE',
+    viewerIdentity:
+      typeof mode === 'string' && MODES.includes(mode) ? (mode as ViewerMode) : 'NONE',
+    viewerClaims: list(at(authored, 'viewerClaims'), ['EMAIL', 'NAME'] as const),
+    accessExemptions: list(at(authored, 'accessExemptions'), ['PATHS', 'BEARER'] as const),
   }
 }
+/** BP-NODE-007: whether an exposure forwards what a viewer identity property describes. */
+export const forwards = (exposure: Exposure, property: AddressProperty): boolean =>
+  exposure.viewerIdentity === property.mode &&
+  (property.claim === undefined || exposure.viewerClaims.includes(property.claim))
 export const addressProperty = (property: string): AddressProperty | undefined =>
   Object.hasOwn(ADDRESS_PROPERTIES, property) ? ADDRESS_PROPERTIES[property] : undefined
 export function endpointProblem(
@@ -130,6 +162,9 @@ export function endpointProblem(
   // that exists only on an exposed endpoint exists on it.
   if (known.requires && at(component, 'spec', 'type') === 'WORKER')
     return 'ERR_ENDPOINT_NOT_EXPOSABLE'
+  // COMP-EP-014: an OpenID Connect client's facts exist only where one is declared.
+  if (known.mode === 'OIDC' && at(declared, 'oidc') === undefined)
+    return 'ERR_ENDPOINT_NOT_OIDC_CLIENT'
   return undefined
 }
 const CRON_FIELDS: readonly (readonly [number, number])[] = [
@@ -676,6 +711,16 @@ export interface SemanticReport {
   componentDigests: Map<string, string>
   valueOrder?: string[]
 }
+/** bcrypt reads at most this many bytes of its input and ignores the rest. */
+const BCRYPT_INPUT_BYTES = 72
+/** BP-PARAM-004: the length of the string a generator produces. */
+export function encodedLength(generator: Json | undefined): number {
+  const bytes = Number(at(generator, 'byteLength') ?? 32)
+  const encoding = at(generator, 'encoding') ?? 'HEX'
+  if (encoding === 'BASE64') return 4 * Math.ceil(bytes / 3)
+  if (encoding === 'BASE64URL') return Math.ceil((4 * bytes) / 3)
+  return 2 * bytes
+}
 export function semanticReport(
   family: Pick<Family, 'name'>,
   document: Json,
@@ -824,6 +869,20 @@ export function semanticReport(
           // BP-NODE-007: sign-in and a request header exist only on HTTP, HTTPS and WS.
           if (exposure.access === 'AUTHENTICATED' && !VIEWER.includes(String(at(e, 'protocol'))))
             issue(out, 'ERR_ENDPOINT_NOT_HTTP', where + '/access')
+          // BP-NODE-008: an OpenID Connect client, and each request taken without a
+          // viewer, is one the component declares.
+          if (exposure.viewerIdentity === 'OIDC' && at(e, 'oidc') === undefined)
+            issue(out, 'ERR_ENDPOINT_NOT_OIDC_CLIENT', where + '/viewerIdentity')
+          const exemptions = at(record(n.exposure)[endpoint], 'accessExemptions')
+          if (Array.isArray(exemptions))
+            exemptions.forEach((value, i) => {
+              const declared =
+                value === 'PATHS'
+                  ? at(e, 'accessExemptions', 'paths') !== undefined
+                  : at(e, 'accessExemptions', 'bearer') === true
+              if (!declared)
+                issue(out, 'ERR_EXEMPTION_NOT_DECLARED', `${where}/accessExemptions/${i}`)
+            })
         }
       }
       for (const [output, v] of Object.entries(outputs)) {
@@ -833,14 +892,14 @@ export function semanticReport(
           typeof from.input === 'string' ? [`${name}:in:${from.input}`] : [],
         )
         for (const ref of sourceEndpoints(from)) {
-          const requires = addressProperty(ref.property)?.requires
+          const property = addressProperty(ref.property)
           const exposure = effectiveExposure(n.exposure, ref.endpoint)
           // BP-NODE-005 and BP-NODE-007: an output reading a property that only an
-          // exposed, or an identity-forwarding, endpoint has.
+          // exposed endpoint, or one forwarding that mode and claim, has.
           const code =
-            requires === 'PUBLIC' && exposure.visibility !== 'PUBLIC'
+            property?.requires === 'PUBLIC' && exposure.visibility !== 'PUBLIC'
               ? 'ERR_ENDPOINT_NOT_PUBLIC'
-              : requires === 'VIEWER_IDENTITY' && exposure.viewerIdentity !== 'HEADER'
+              : property?.requires === 'VIEWER_IDENTITY' && !forwards(exposure, property)
                 ? 'ERR_VIEWER_IDENTITY_NOT_FORWARDED'
                 : undefined
           if (code)
@@ -954,11 +1013,30 @@ export function semanticReport(
   for (const [name, p] of Object.entries(parameters)) {
     const receivers = consumers.get(name) ?? [],
       path = '/spec/parameters/' + token(name)
-    const used = Object.values(nodes).some((n) =>
-      Object.values(record(at(n, 'bindings'))).some((b) => at(b, 'parameter') === name),
-    )
+    // BP-PARAM-001: a generated value a hash names, and that carries `ui`, reaches
+    // the installer through disclosure without a binding of its own.
+    const used =
+      Object.values(nodes).some((n) =>
+        Object.values(record(at(n, 'bindings'))).some((b) => at(b, 'parameter') === name),
+      ) ||
+      (at(p, 'generator') !== undefined &&
+        at(p, 'ui') !== undefined &&
+        Object.values(parameters).some((other) => at(other, 'hash', 'parameter') === name))
     if (!used) issue(out, 'ERR_UNBOUND_PARAMETER', path)
     out.push(...parameterSourceDiagnostics(name, p))
+    // BP-PARAM-012: a hash names a generated parameter that bcrypt can read whole.
+    const hashed = at(p, 'hash', 'parameter')
+    if (typeof hashed === 'string') {
+      const source = Object.hasOwn(parameters, hashed) ? parameters[hashed] : undefined
+      if (source === undefined) issue(out, 'ERR_UNKNOWN_PARAMETER', path + '/hash/parameter')
+      else if (at(source, 'generator') === undefined)
+        issue(out, 'ERR_INVALID_HASH_SOURCE', path + '/hash/parameter')
+      else if (
+        at(p, 'hash', 'algorithm') === 'BCRYPT' &&
+        encodedLength(at(source, 'generator')) > BCRYPT_INPUT_BYTES
+      )
+        issue(out, 'ERR_INVALID_HASH_SOURCE', path + '/hash/algorithm')
+    }
     if (
       receivers.length > 1 &&
       receivers.some(
@@ -982,11 +1060,9 @@ export function semanticReport(
         )
       )
         issue(out, 'ERR_UNKNOWN_ENUM_MEMBER', path + '/ui/enumLabels/' + token(member))
-    if (
-      at(p, 'generator') !== undefined &&
-      receivers.some((v) => at(v.schema, 'type') !== 'string')
-    )
-      issue(out, 'ERR_VALUE_CONSTRAINT', path + '/generator')
+    for (const supply of ['generator', 'hash'])
+      if (at(p, supply) !== undefined && receivers.some((v) => at(v.schema, 'type') !== 'string'))
+        issue(out, 'ERR_VALUE_CONSTRAINT', path + '/' + supply)
   }
   // Kahn ordering separates value dependencies from discovery relationships.
   const pending = new Map<string, number>(),

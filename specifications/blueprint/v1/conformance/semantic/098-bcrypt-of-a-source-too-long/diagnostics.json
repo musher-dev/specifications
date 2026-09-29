@@ -1,0 +1,6 @@
+[
+  {
+    "code": "ERR_INVALID_HASH_SOURCE",
+    "path": "/spec/parameters/passwordHash/hash/algorithm"
+  }
+]

@@ -1,0 +1,10 @@
+{
+  "id": "structural-141-exempt-path-with-a-trailing-slash",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#endpoints",
+  "requirements": [
+    "COMP-EP-016"
+  ],
+  "summary": "An endpoint path has no empty segment, so no trailing slash."
+}

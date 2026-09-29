@@ -1,0 +1,10 @@
+{
+  "id": "structural-147-repeated-exempt-path",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#endpoints",
+  "requirements": [
+    "COMP-EP-015"
+  ],
+  "summary": "Exempt paths are unique."
+}

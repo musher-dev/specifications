@@ -1,0 +1,10 @@
+{
+  "id": "structural-139-empty-access-exemptions",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#endpoints",
+  "requirements": [
+    "COMP-EP-015"
+  ],
+  "summary": "Access exemptions name paths, bearer requests, or both."
+}

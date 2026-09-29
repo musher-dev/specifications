@@ -1,0 +1,34 @@
+specVersion: v1
+kind: BLUEPRINT
+metadata:
+  slug: signed-in-workspace
+  revision: 1
+  description: A chat workspace that signs viewers in through the platform's OpenID Connect provider.
+spec:
+  parameters: {}
+  components:
+    workspace:
+      componentRef: ./components/oidc-client-workspace.yaml
+      compute:
+        profile: general.standard.small
+      exposure:
+        web:
+          visibility: PUBLIC
+          access: AUTHENTICATED
+          viewerIdentity: OIDC
+          # The workspace creates accounts with an email and a display name,
+          # so the node releases both. Each is visible here to a reviewer.
+          viewerClaims: [EMAIL, NAME]
+      bindings:
+        issuerURL:
+          node: workspace
+          output: issuerURL
+        clientID:
+          node: workspace
+          output: clientID
+        clientSecret:
+          node: workspace
+          output: clientSecret
+        redirectURI:
+          node: workspace
+          output: redirectURI

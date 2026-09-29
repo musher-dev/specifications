@@ -1,0 +1,81 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Chat workspace that signs viewers in as an OpenID Connect client of the platform.
+spec:
+  type: SERVICE
+  workload:
+    source:
+      image: example/workspace:0.11.4
+    endpoints:
+      web:
+        targetPort: 8080
+        protocol: HTTP
+        # The route the workspace receives the authorization response on. The
+        # platform registers publicURL followed by it as the redirect URI.
+        oidc:
+          redirectPaths: [/oauth/oidc/callback]
+    health:
+      readiness:
+        http:
+          endpoint: web
+          path: /health
+  contract:
+    inputs:
+      issuerURL:
+        description: OpenID Connect provider the workspace signs viewers in with.
+        schema:
+          type: string
+        target:
+          envVarKey: OPENID_PROVIDER_URL
+      clientID:
+        description: Client identifier registered for the workspace.
+        schema:
+          type: string
+        target:
+          envVarKey: OAUTH_CLIENT_ID
+      clientSecret:
+        description: Client secret registered for the workspace.
+        schema:
+          type: string
+        sensitive: true
+        target:
+          envVarKey: OAUTH_CLIENT_SECRET
+      redirectURI:
+        description: Redirect URI the workspace sends with its authorization request.
+        schema:
+          type: string
+        target:
+          envVarKey: OPENID_REDIRECT_URI
+    # The platform issues the client. Reading it through outputs means every
+    # blueprint deploying this component must select viewerIdentity OIDC on `web`.
+    outputs:
+      issuerURL:
+        description: Issuer of the platform's OpenID Connect provider.
+        schema:
+          type: string
+        from:
+          endpoint: web
+          property: oidcIssuerURL
+      clientID:
+        description: Client identifier registered for this endpoint.
+        schema:
+          type: string
+        from:
+          endpoint: web
+          property: oidcClientID
+      clientSecret:
+        description: Client secret registered for this endpoint.
+        schema:
+          type: string
+        sensitive: true
+        from:
+          endpoint: web
+          property: oidcClientSecret
+      redirectURI:
+        description: Redirect URI the platform registered for this endpoint.
+        schema:
+          type: string
+        from:
+          template: "${{ self.endpoints.web.publicURL }}/oauth/oidc/callback"

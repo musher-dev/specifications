@@ -80,7 +80,9 @@ export const connectionMemberContract = (member: string): Record<string, Json> =
 const inputsOf = (component: Json | undefined) =>
   record(at(component, 'spec', 'contract', 'inputs'))
 /** The namespaces a parameter's `from` admits (blueprint BP-REF-001). */
-export const PARAMETER_SOURCE_NAMESPACES = ['variables', 'connections'] as const
+export const PARAMETER_SOURCE_NAMESPACES = ['variables', 'connections', 'deployment'] as const
+/** The paths the `deployment` namespace defines (blueprint BP-PARAM-011). */
+export const DEPLOYMENT_FACT_PATHS = ['installer.identity', 'installer.email', 'installer.name']
 export type ParameterSourceNamespace = (typeof PARAMETER_SOURCE_NAMESPACES)[number]
 /**
  * BP-REF-001: a parameter's `from` is one whole reference, and its namespace
@@ -121,7 +123,12 @@ export function parameterSourceDiagnostics(
         path,
       ),
     )
-  return parameterSource(parameter) ? [] : [diagnostic('ERR_INVALID_PARAMETER_SOURCE', path)]
+  const source = parameterSource(parameter)
+  if (!source) return [diagnostic('ERR_INVALID_PARAMETER_SOURCE', path)]
+  // BP-PARAM-011: `deployment` defines exactly the installer's three facts.
+  if (source.namespace === 'deployment' && !DEPLOYMENT_FACT_PATHS.includes(source.key))
+    return [diagnostic('ERR_UNKNOWN_DEPLOYMENT_FACT', path)]
+  return []
 }
 /**
  * BP-CONNECTION-001: a connection input is bound only by a connection parameter,

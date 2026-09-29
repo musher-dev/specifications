@@ -1,0 +1,11 @@
+{
+  "id": "semantic-094-bearer-exemption-without-the-component-opt-in",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#access",
+  "requirements": [
+    "BP-NODE-008"
+  ],
+  "summary": "A node lets bearer requests through only when the component states every route checks its tokens.",
+  "document": "app/blueprint.yaml"
+}

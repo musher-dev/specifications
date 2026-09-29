@@ -1,0 +1,10 @@
+{
+  "id": "structural-068-assertion-without-authentication",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#access",
+  "requirements": [
+    "BP-NODE-006"
+  ],
+  "summary": "A signed assertion names a viewer only the platform has signed in."
+}

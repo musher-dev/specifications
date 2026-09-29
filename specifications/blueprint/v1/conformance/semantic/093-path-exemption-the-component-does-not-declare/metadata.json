@@ -1,0 +1,11 @@
+{
+  "id": "semantic-093-path-exemption-the-component-does-not-declare",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#access",
+  "requirements": [
+    "BP-NODE-008"
+  ],
+  "summary": "A node exempts only paths the component declares.",
+  "document": "app/blueprint.yaml"
+}

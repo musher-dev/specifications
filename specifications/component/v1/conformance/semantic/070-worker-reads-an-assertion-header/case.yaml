@@ -1,0 +1,21 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: WORKER
+  workload:
+    source:
+      image: example/web:1
+    endpoints:
+      web:
+        targetPort: 8080
+        protocol: HTTP
+  contract:
+    inputs: {}
+    outputs:
+      assertionHeader:
+        description: Synthetic output.
+        schema: { type: string }
+        from: { endpoint: web, property: viewerAssertionHeader }

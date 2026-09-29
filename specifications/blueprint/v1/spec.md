@@ -430,8 +430,10 @@ even if its spelling still passes structural validation.
 
 An exposure answers three questions. Can the endpoint be reached from outside
 the installation? Must the platform sign a viewer in before forwarding a
-request? And does the workload learn who the viewer is? The bare form answers
-only the first; the object form answers all three:
+request? And does the workload learn who the viewer is, and how? The bare form
+answers only the first; the object form answers all three, and says which
+facts about the viewer the workload receives and which requests pass without a
+viewer:
 
 ```yaml
 exposure:
@@ -445,7 +447,9 @@ exposure:
 |---|---|---|
 | `visibility` | `PUBLIC`, `PRIVATE` | REQUIRED |
 | `access` | `OPEN`: every request is forwarded. `AUTHENTICATED`: only viewers the installation's access policy authorizes | `OPEN` |
-| `viewerIdentity` | `NONE`: nothing is forwarded about the viewer. `HEADER`: the viewer's identity, in a request header | `NONE` |
+| `viewerIdentity` | `NONE`: nothing is forwarded about the viewer. `HEADER`: the viewer's identity, in a request header. `ASSERTION`: a signed token naming the viewer, in a request header. `OIDC`: the workload signs viewers in itself, as an OpenID Connect client of the platform | `NONE` |
+| `viewerClaims` | A unique, non-empty list of `EMAIL`, the viewer's verified email address, and `NAME`, their display name | Only the identity |
+| `accessExemptions` | A unique, non-empty list of `PATHS` and `BEARER`: the requests the component declares it takes without a viewer ([`BP-NODE-008`](#BP-NODE-008)) | None |
 
 Bare `PUBLIC` is `{ visibility: PUBLIC }`, and so
 `{ visibility: PUBLIC, access: OPEN, viewerIdentity: NONE }`; bare `PRIVATE` is
@@ -456,12 +460,17 @@ the platform's sign-in is not in front of.
 
 <a id="BP-NODE-006"></a>**`BP-NODE-006`**: The object form is closed, and
 requires `visibility`: an absent one is `ERR_MISSING_FIELD` at the endpoint's
-exposure, and an unknown member is `ERR_UNKNOWN_FIELD` there. `access` and
-`viewerIdentity` apply only to `PUBLIC`, so either one under `PRIVATE` is
-`ERR_INVALID_VALUE` at that member. `HEADER` requires `AUTHENTICATED`, because an
-identity the platform has not verified is one the caller supplied, so
-`viewerIdentity: HEADER` without `access: AUTHENTICATED` is `ERR_INVALID_VALUE`
-at `viewerIdentity`. These are structural rules.
+exposure, and an unknown member is `ERR_UNKNOWN_FIELD` there. Every other member
+applies only to `PUBLIC`, so any of them under `PRIVATE` is `ERR_INVALID_VALUE`
+at that member. Every `viewerIdentity` but `NONE` requires `AUTHENTICATED`,
+because an identity the platform has not verified is one the caller supplied,
+and because the platform keeps refusing a revoked viewer only while it stands in
+front of the workload ([`BP-ACCESS-005`](#BP-ACCESS-005)). So a mode without
+`access: AUTHENTICATED` is `ERR_INVALID_VALUE` at `viewerIdentity`, and so is
+`accessExemptions` at `accessExemptions`. A claim needs a mode to travel in, so
+`viewerClaims` without a `viewerIdentity` other than `NONE` is
+`ERR_INVALID_VALUE` at `viewerClaims`. An empty or repeating list is
+`ERR_INVALID_VALUE` at the list. These are structural rules.
 
 <a id="BP-NODE-007"></a>**`BP-NODE-007`**: The component constrains access as
 it constrains exposure:
@@ -469,15 +478,29 @@ it constrains exposure:
 - A sign-in and a request header exist only on `HTTP`, `HTTPS` and `WS`, so
   `access: AUTHENTICATED` on an endpoint of any other protocol fails with
   `ERR_ENDPOINT_NOT_HTTP` at `exposure/<endpoint>/access`.
-- An output the component derives from `viewerIdentityHeader` or
-  `trustedProxyCIDRs` ([component §5.2](../../component/v1/spec.md#viewer-identity))
-  requires that endpoint's `viewerIdentity` to be `HEADER`, otherwise
-  `ERR_VIEWER_IDENTITY_NOT_FORWARDED`. It anchors as `ERR_ENDPOINT_NOT_PUBLIC`
-  does: at `exposure/<endpoint>`, or at the node's `componentRef` for an
-  endpoint left out of `exposure`.
+- An output the component derives from a viewer identity property
+  ([component §5.2](../../component/v1/spec.md#viewer-identity)) requires that
+  endpoint's `viewerIdentity` to be the mode the property belongs to, and, for
+  `viewerEmailHeader` and `viewerNameHeader`, its `viewerClaims` to hold `EMAIL`
+  or `NAME`; otherwise `ERR_VIEWER_IDENTITY_NOT_FORWARDED`. It anchors as
+  `ERR_ENDPOINT_NOT_PUBLIC` does: at `exposure/<endpoint>`, or at the node's
+  `componentRef` for an endpoint left out of `exposure`.
 
-These are semantic rules. A workload that needs the two values binds the
-outputs that read them back into its own inputs. That is a discovery
+<a id="BP-NODE-008"></a>**`BP-NODE-008`**: The component declares what a node
+may select beyond sign-in:
+
+- `viewerIdentity: OIDC` requires the endpoint to declare `oidc`
+  ([component §5.2](../../component/v1/spec.md#oidc)), otherwise
+  `ERR_ENDPOINT_NOT_OIDC_CLIENT` at `exposure/<endpoint>/viewerIdentity`.
+- `PATHS` in `accessExemptions` requires the endpoint's `accessExemptions` to
+  declare `paths`, and `BEARER` requires it to declare `bearer: true`
+  ([component §5.2](../../component/v1/spec.md#access-exemptions)), otherwise
+  `ERR_EXEMPTION_NOT_DECLARED` at that list entry. Without the component's
+  statement that every route checks its tokens, a node could open a workload
+  that checks nothing.
+
+These and [`BP-NODE-007`](#BP-NODE-007) are semantic rules. A workload that
+needs the values binds the outputs that read them back into its own inputs. That is a discovery
 dependency on allocated facts, not a value cycle
 ([`BP-CONN-002`](#BP-CONN-002)):
 
@@ -495,19 +518,30 @@ components:
 
 <a id="BP-ACCESS-001"></a>**`BP-ACCESS-001`**: The public routing facts of an
 endpoint allocation
-([component §5.2](../../component/v1/spec.md#endpoints)) carry
-`viewerIdentityHeader` and `trustedProxyCIDRs` only when that endpoint's
-`viewerIdentity` is `HEADER`. The header name is a lowercase field name of 1 to
+([component §5.2](../../component/v1/spec.md#endpoints)) carry a viewer identity
+property only when that endpoint's exposure selects the property's mode, and,
+for `viewerEmailHeader` and `viewerNameHeader`, its claim: `viewerIdentityHeader`
+and `trustedProxyCIDRs` under `HEADER`, the header of each released claim under
+`HEADER`, and the four `viewerAssertion*` facts under `ASSERTION`. Every header
+name is a lowercase field name of 1 to
 128 characters, RFC 9110 `tchar`s only, and never `authorization`,
 `connection`, `content-length`, `cookie`, `forwarded`, `host`, `keep-alive`,
 `origin`, `proxy-authorization`, `proxy-connection`, `te`, `trailer`,
 `transfer-encoding`, `upgrade`, `x-real-ip` or a name beginning
-`x-forwarded-`. The CIDRs are a non-empty list without repeats, each an IPv4
+`x-forwarded-`, and no two facts of one endpoint name the same header. The
+CIDRs are a non-empty list without repeats, each an IPv4
 prefix in dotted decimal without leading zeros or an IPv6 prefix in RFC 5952
 text, with a prefix length of at least 1 and no host bits set: a list that
-trusts every address is not a trust decision. A fact on another endpoint, or one
-breaking this grammar, is `ERR_INVALID_RESOLUTION_CONTEXT` in the `allocation`
-stage. A fact the context does not supply leaves the value that reads it
+trusts every address is not a trust decision. `viewerAssertionKeysURL` is an
+absolute `https` URL without credentials, query or fragment, and
+`viewerAssertionIssuer` and `viewerAssertionAudience` are non-empty strings of
+at most 512 characters. An endpoint whose mode is `OIDC` has, beside its routing
+facts and never among them, a client registration: an opaque `identity` and
+`version`, the `issuerURL`, an absolute `https` URL as above, the `clientID`,
+and the `secret`, the last two non-empty strings of at most 512 characters. It
+is private installation state, like a generated credential. A fact on another
+endpoint, or one breaking this grammar, is `ERR_INVALID_RESOLUTION_CONTEXT` in
+the `allocation` stage. A fact the context does not supply leaves the value that reads it
 unresolved, and resolution INCOMPLETE; no implementation supplies a fallback.
 
 The rest of this section is what the platform does for an endpoint whose access
@@ -516,7 +550,9 @@ requirements are verified against implementations, not documents.
 
 <a id="BP-ACCESS-002"></a>**`BP-ACCESS-002`**: The platform MUST authenticate
 the viewer, and authorize them against the installation's access policy, before
-it forwards any request, on HTTP requests and WebSocket upgrades alike. The
+it forwards any request an exemption does not cover
+([`BP-ACCESS-009`](#BP-ACCESS-009), [`BP-ACCESS-010`](#BP-ACCESS-010)), on HTTP
+requests and WebSocket upgrades alike. The
 policy belongs to the installation and is resolved in its owning organization
 and project; no document names a principal, role or policy in v1. When the
 authentication or authorization state it needs is missing, unknown or
@@ -526,15 +562,20 @@ exposure rather than treat it as `OPEN`. Health probes reach the workload
 directly ([component §5.4](../../component/v1/spec.md#health)) and are not
 subject to viewer authentication.
 
-<a id="BP-ACCESS-003"></a>**`BP-ACCESS-003`**: Under `viewerIdentity: HEADER`,
-the platform MUST remove every inbound copy of the identity header, and of
-`Forwarded`, `X-Forwarded-*` and `X-Real-IP`, before it sets its own, on HTTP
-requests and WebSocket upgrades alike. The identity it sets is a stable, opaque
-identifier of the authenticated viewer, never an email address and never a
-credential. It MUST preserve the validated `Host`, the `Origin`, and the
-request's own `Authorization` header and application cookies, and MUST NOT
-forward its own session credential to the workload. Under `viewerIdentity: NONE`
-it forwards no identity header.
+<a id="BP-ACCESS-003"></a>**`BP-ACCESS-003`**: Under `viewerIdentity: HEADER`
+or `ASSERTION`, the platform MUST remove every inbound copy of each header the
+endpoint's facts name, and of `Forwarded`, `X-Forwarded-*` and `X-Real-IP`,
+before it sets its own, on HTTP requests and WebSocket upgrades alike. The
+identity it sets is a stable, opaque identifier of the authenticated viewer,
+never an email address and never a credential. Under `HEADER` it sets the header
+of each released claim too, and omits the email header for a viewer without a
+verified email address. A claim header's value is the claim's UTF-8 text with
+every octet outside visible ASCII, and every `%`, percent-encoded (RFC 3986
+§2.1), so that no value can end a header or be read two ways. It MUST preserve
+the validated `Host`, the `Origin`, and the request's own `Authorization` header
+and application cookies, and MUST NOT forward its own session credential to the
+workload. Under `viewerIdentity: NONE` and `OIDC` it forwards no identity
+header.
 
 <a id="BP-ACCESS-004"></a>**`BP-ACCESS-004`**: `trustedProxyCIDRs` MUST cover
 every address the workload observes as the peer of traffic the platform
@@ -548,11 +589,61 @@ a connection it admitted, such as an upgraded WebSocket, may outlive the
 authorization that admitted it, after a sign-out, an expiry or a withdrawn
 permission, and MUST document that bound.
 
+<a id="BP-ACCESS-006"></a>**`BP-ACCESS-006`**: One person has one subject in one
+installation. The identity a `HEADER` forwards, the `sub` of an assertion and of
+an OpenID Connect ID token, and `deployment.installer.identity`
+([`BP-PARAM-011`](#BP-PARAM-011)) MUST be the same string for the same person
+in the same installation, and MAY differ between installations. A released
+`EMAIL` is an address the platform has verified for the viewer.
+
+<a id="BP-ACCESS-007"></a>**`BP-ACCESS-007`**: Under `ASSERTION`, the platform
+MUST set, on every request and WebSocket upgrade it forwards, a JWS compact
+serialization of a JWT signed with RS256, whose protected header names its key
+in `kid`. Its claims are `iss` and `aud`, equal to the endpoint's
+`viewerAssertionIssuer` and `viewerAssertionAudience`; `sub`; `iat`; `exp`, at
+most 600 seconds after `iat`; and each released claim, as `email` with
+`email_verified` and as `name`. The audience MUST be unique to one endpoint of
+one installation. The key set at `viewerAssertionKeysURL` MUST hold every key
+whose tokens have not yet expired, so a retired key stays published until the
+last token it signed expires.
+
+<a id="BP-ACCESS-008"></a>**`BP-ACCESS-008`**: Under `OIDC`, the platform MUST
+register one confidential client per endpoint of the installation, whose
+redirect URIs are exactly the endpoint's `publicURL` followed by each of its
+`redirectPaths`, compared exactly (RFC 9700 §2.1). A reallocation that changes
+`publicURL` re-registers them. The issuer MUST support the authorization code
+flow with PKCE (`S256`), MUST issue a code only to a viewer the installation's
+access policy authorizes ([`BP-ACCESS-002`](#BP-ACCESS-002)), and releases in
+the ID token and user information only the subject and the released claims; a
+scope asking for more is not refused, and gets no more. Rotating the client
+secret is a change of allocation. Deleting the installation MUST revoke the
+client.
+
+<a id="access-exemptions"></a><a id="BP-ACCESS-009"></a>**`BP-ACCESS-009`**: Under
+`PATHS`, the platform MUST forward a request whose path lies under one of the
+component's exempt paths as it would under `access: OPEN`: without
+authenticating a viewer, with no identity, claim or assertion header, and with
+inbound copies of them removed as [`BP-ACCESS-003`](#BP-ACCESS-003) says. A path
+lies under an exempt path when it equals it, or begins with it followed by `/`,
+so `/webhook` covers `/webhook/abc` and never `/webhooks`. The query takes no
+part in matching. The platform matches the path after decoding percent-encoded
+unreserved characters and removing dot segments (RFC 3986 §6.2.2), forwards the
+path it matched, and MUST NOT exempt a request whose path holds `;`, an encoded
+`/` or `\`, a `\`, a NUL or an empty segment. The platform serves its own
+sign-in under `/.musher` on an endpoint whose access is `AUTHENTICATED`, and no
+exemption reaches it.
+
+<a id="BP-ACCESS-010"></a>**`BP-ACCESS-010`**: Under `BEARER`, the platform MUST
+forward a request that carries no valid viewer session and an `Authorization`
+header of the `Bearer` scheme, with no identity, claim or assertion header, for
+the workload to judge. A request that carries a valid session is authenticated,
+authorized and identified as any other is, whatever else it carries.
+
 ## <a id="parameters"></a>5. Installation parameters
 
 `spec.parameters` lists everything an installation takes from outside the
-documents: values a person submits, generated credentials, organization
-variables and connections. Node bindings only wire what the documents contain
+documents: values a person submits, generated credentials and their hashes,
+organization variables, facts about the deployment, and connections. Node bindings only wire what the documents contain
 ([§4.2](#bindings)), so a value from outside enters as a parameter, and a node
 reaches it by naming the parameter. Parameters are named installation values,
 independent of form presentation.
@@ -561,16 +652,20 @@ A parameter is supplied in exactly one way, and the keys present say which:
 
 | Supply | Declared by | Value |
 |---|---|---|
-| Submitted | No `generator` and no `from`; optional `default` | The value submitted at installation, else `default` |
+| Submitted | No `generator`, `hash` or `from`; optional `default` | The value submitted at installation, else `default` |
 | Generated | `generator` | A persisted random credential ([§5.2](#value-sources)) |
+| Hash | `hash` | A persisted password hash of a generated parameter ([§5.2](#value-sources)) |
 | Variable | `from: "${{ variables.<path> }}"` | One organization variable ([§5.2](#value-sources)) |
+| Deployment fact | `from: "${{ deployment.<path> }}"` | One fact about the installation, captured when it is created ([§5.2](#value-sources)) |
 | Connection | `from: "${{ connections.<path> }}"` | One atomic connection ([§5.3](#atomic-connections)) |
 
 ```yaml
 parameters:
   siteTitle: { ui: { label: Site title }, default: My site }
   dbPassword: { generator: { byteLength: 32, encoding: BASE64URL } }
+  dbPasswordHash: { hash: { parameter: dbPassword, algorithm: BCRYPT } }
   region: { from: "${{ variables.cloud.region }}" }
+  adminEmail: { from: "${{ deployment.installer.email }}" }
   llm: { from: "${{ connections.llm.default }}", ui: { label: Language model } }
 ```
 
@@ -579,9 +674,12 @@ The node in [§4](#components)'s example reaches `siteTitle` through its
 the same way. A node never names a variable or a connection directly.
 
 <a id="BP-PARAM-010"></a>**`BP-PARAM-010`**: A parameter carries at most one of
-`default`, `generator` and `from`. A `default` beside `generator` or `from` is
+`default`, `generator`, `hash` and `from`. A `default` beside `generator` or `from` is
 `ERR_INVALID_VALUE` at `default`, and a `from` beside `generator` is
-`ERR_INVALID_VALUE` at `from`. These are structural rules.
+`ERR_INVALID_VALUE` at `from`. A hash is never offered in a form, so a
+`default`, `generator`, `from` or `ui` beside `hash` is `ERR_INVALID_VALUE` at
+that member. `hash` requires `parameter` and `algorithm`. These are structural
+rules.
 
 A parameter MAY also carry `ui` ([§5.4](#install-form)). Parameters declare no
 schema of their own; the inputs bound to them own the value contract
@@ -590,7 +688,10 @@ schema of their own; the inputs bound to them own the value contract
 ### <a id="recipients"></a><a id="coverage"></a><a id="derivation"></a><a id="merge"></a><a id="authored-parameters"></a>5.1 Recipients
 
 <a id="BP-PARAM-001"></a>**`BP-PARAM-001`**: Every parameter MUST be named by at
-least one `parameter` binding; otherwise `ERR_UNBOUND_PARAMETER`.
+least one `parameter` binding; otherwise `ERR_UNBOUND_PARAMETER`. The one
+exception is a generated parameter that carries `ui` and that a hash names: it
+reaches the installer through disclosure ([`BP-PARAM-012`](#BP-PARAM-012))
+without a binding of its own.
 
 <a id="BP-PARAM-002"></a>**`BP-PARAM-002`**: Shared parameters require equal
 logical schemas, ignoring mapping order. Otherwise `ERR_CONFLICTING_INPUT_SCHEMA`.
@@ -621,6 +722,35 @@ BASE64 uses the standard padded alphabet; BASE64URL uses the URL-safe alphabet
 without padding. Custom alphabets are unsupported. The generated string must
 satisfy every receiving schema; failing a constraint must not regenerate it.
 
+<a id="BP-PARAM-012"></a>**`BP-PARAM-012`**: A `hash` names, in `parameter`, a
+generated parameter of the same blueprint: an undeclared one is
+`ERR_UNKNOWN_PARAMETER`, and one supplied any other way is
+`ERR_INVALID_HASH_SOURCE`, both at `hash/parameter`. bcrypt reads at most 72
+bytes and ignores the rest, so a `BCRYPT` hash requires its source to encode to
+72 characters or fewer: a `byteLength` of at most 36 in `HEX`, and of at most 54
+in `BASE64` or `BASE64URL`; otherwise `ERR_INVALID_HASH_SOURCE` at
+`hash/algorithm`. Like a generated value, a hash is a string that must satisfy
+every receiving schema, so a receiver whose schema is not a string is
+`ERR_VALUE_CONSTRAINT` at `hash`. These are semantic rules. `algorithm` fixes
+the whole format:
+
+| Algorithm | Value |
+|---|---|
+| `BCRYPT` | `$2b$12$`, then 53 characters of the bcrypt alphabet: salt and hash |
+| `ARGON2ID` | The PHC string `$argon2id$v=19$m=19456,t=2,p=1$<salt>$<hash>`, with a 16-byte salt and a 32-byte hash in unpadded standard base64 |
+
+A hash is computed once, with a fresh random salt, when its source is
+generated, and again only when its source rotates, in the same atomic step. It
+is stored as a credential of its own, with its own identity and its source's
+rotation generation, and it is sensitive. It is never submitted. A stored hash
+that does not have its algorithm's format is `ERR_INVALID_RESOLUTION_CONTEXT`.
+
+A generated parameter that carries `ui` MAY be disclosed to the people who
+manage the installation, through a private channel, and never in a published
+artifact, a public response, a preview or a diagnostic. That is how an item that
+binds only a hash stays usable: whoever installed it can read the password the
+hash was made from.
+
 <a id="BP-PARAM-005"></a>**`BP-PARAM-005`**: Parameter defaults are logical
 literals, without interpolation. A submitted value replaces the default. Unknown
 submitted parameter keys fail with `ERR_UNKNOWN_PARAMETER` before defaults are
@@ -636,8 +766,9 @@ compatibility, not proof of schema containment.
 
 <a id="BP-REF-001"></a>**`BP-REF-001`**: `from` is exactly one whole reference
 under [core's grammar](../../core/v1/spec.md#reference-grammar), in the
-`variables` or the `connections` namespace. The namespace says what kind of entry
-the reference names: `variables` one value, `connections` one atomic connection.
+`variables`, `deployment` or `connections` namespace. The namespace says what
+kind of entry the reference names: `variables` one value, `deployment` one fact
+about the installation, `connections` one atomic connection.
 It cannot concatenate, interpolate other text, hold two references, select a
 component or fall back. A `from` that breaks this fails with:
 
@@ -647,8 +778,8 @@ component or fall back. A `from` that breaks this fails with:
   not exactly one whole reference;
 - `ERR_UNKNOWN_REFERENCE_NAMESPACE` when the namespace is one core does not
   reserve, such as `config`;
-- `ERR_REFERENCE_NOT_IN_SCOPE` when the namespace is reserved but is neither
-  `variables` nor `connections`
+- `ERR_REFERENCE_NOT_IN_SCOPE` when the namespace is reserved but is none of
+  `variables`, `deployment` and `connections`
   ([core v1 §5.2](../../core/v1/spec.md#reference-grammar)).
 
 All anchor at the parameter's `from` and are semantic rules. A blueprint never
@@ -668,8 +799,30 @@ many bindings name it, at `/spec/parameters/<name>/from` in the `parameters`
 stage of the `resolution` phase, and an unavailable variable is deferred there
 under this rule. No network lookup occurs during semantic validation.
 
-A parameter carrying `from`, like a generated one, is never submitted. A
-submitted value for either is `ERR_PARAMETER_NOT_SUBMITTABLE` at
+<a id="BP-PARAM-011"></a>**`BP-PARAM-011`**: A parameter whose `from` is in the
+`deployment` namespace takes one fact about the person who created the
+installation. The namespace defines exactly three paths, and any other is
+`ERR_UNKNOWN_DEPLOYMENT_FACT` at `from`, a semantic rule:
+
+| Path | Fact |
+|---|---|
+| `deployment.installer.identity` | Their stable, opaque identifier, the same one the installation's endpoints forward for them ([`BP-ACCESS-006`](#BP-ACCESS-006)) |
+| `deployment.installer.email` | Their verified email address |
+| `deployment.installer.name` | Their display name |
+
+A fact is captured once, when the installation is created, and kept in its
+private snapshot, so a redeploy, an update or an action by another person never
+changes it. It is sensitive: personal data, not a secret, kept out of public
+inspection, previews and diagnostics all the same. A fact acquisition has not
+supplied leaves resolution INCOMPLETE. A fact the platform knows it lacks, such
+as the email address of an installation a service principal created, is
+`ERR_DEPLOYMENT_FACT_UNAVAILABLE`, because waiting would never supply it. Both
+anchor at `/spec/parameters/<name>/from` in the `parameters` stage of the
+`resolution` phase, and a malformed fact is `ERR_INVALID_RESOLUTION_CONTEXT`
+there.
+
+A parameter carrying `from` or `hash`, like a generated one, is never
+submitted. A submitted value for any of them is `ERR_PARAMETER_NOT_SUBMITTABLE` at
 `/spec/parameters/<name>`, in the `resolution` phase. A connection is replaced
 whole through acquisition instead ([§5.3](#atomic-connections)).
 
@@ -708,7 +861,8 @@ its `source` tag where an authored document names a source by the key present.
 - compute identity (the profile slug) and version;
 - allocated volumes and exposure;
 - variable identity/version pairs, keyed by variable path in `variables`;
-- credential identity/rotation references.
+- credential identity/rotation references, for generated parameters and their
+  hashes.
 
 Each component records source IMAGE, GIT or EXTERNAL. External nodes forbid
 image, commit and compute fields and have empty volume and exposure maps. All
@@ -719,9 +873,11 @@ secret-content hashes are included.
 **The installation snapshot.** The required `installationSnapshot` pins the
 private state behind the record by an opaque identity and an immutable version.
 That private snapshot uses formatVersion 1. It persists submitted parameter
-values, selected variable values and their identity/version pairs, credential
-references and rotation generations for generated credentials, endpoint
-allocations, and any connection selections, including source-policy revisions.
+values, selected variable values and their identity/version pairs, captured
+deployment facts, credential references and rotation generations for generated
+credentials and their hashes, endpoint allocations with any OpenID Connect
+client registration, and any connection selections, including source-policy
+revisions.
 Its physical storage format is implementation-defined. Its sensitive values are
 private and never hashed into the public record, and no public secret-derived
 hash stands in for its identity. Reusing an identity/version for changed state is
@@ -736,7 +892,9 @@ sources and their kinds, compute identities, volumes, exposure and allocation
 choices, acquired dependencies and specification release graph. Pinned image
 digests and authored Git commits must agree. The `variables` map and the
 `credentials` map must match the variable and generated parameters the blueprint
-binds, and the private snapshot. Required endpoint allocation identities must be
+binds, the hash parameters it binds and the generated parameters they hash, and
+the private snapshot. A hash carries an identity of its own and its source's
+rotation. Required endpoint allocation identities must be
 present. Replaying the snapshot must successfully resolve the blueprint without
 unpersisted selections. Exact specification dependency manifests must name all
 declared dependencies and agree on shared editions; missing dependencies or
@@ -864,8 +1022,10 @@ representations of scalar enum members, or of string-array item enum members.
 Arrays and objects in a whole-value enum have no `enumLabels` keys.
 
 <a id="BP-UI-004"></a>**`BP-UI-004`**: A form offers each parameter that declares
-`ui`, except a generated parameter and a variable parameter: neither is ever an
-editable field. A connection parameter with `ui` is offered as one control
+`ui`, except a generated parameter, a variable parameter and a deployment fact:
+none is ever an editable field. A form MAY show a deployment fact, read-only, to
+the person it describes. A hash declares no `ui` and is never offered. A
+connection parameter with `ui` is offered as one control
 choosing a whole selection, never as its endpoint, credential or model. A
 connection parameter without `ui` is not offered: installation acquires its
 default selection without a form field.
@@ -904,23 +1064,27 @@ Core and component diagnostics apply, with these additions:
 | `ERR_NODE_REQUIRED` | `capability` | Publication requires a node this blueprint does not declare. |
 | `ERR_UNKNOWN_OUTPUT` | `semantic` | Binding names no producer output. |
 | `ERR_UNKNOWN_INPUT` | `semantic` | Binding names no receiver input. |
-| `ERR_UNKNOWN_PARAMETER` | `semantic`, `resolution` | Binding or submitted value names no parameter. |
+| `ERR_UNKNOWN_PARAMETER` | `semantic`, `resolution` | Binding, hash or submitted value names no parameter. |
 | `ERR_INCOMPATIBLE_TYPE` | `semantic` | Producer type cannot supply consumer. |
 | `ERR_UNREFERENCED_COMPONENT` | `semantic` | Item contains an unused component. |
 | `ERR_CONFLICTING_INPUT_SCHEMA` | `semantic` | Shared parameter receivers disagree. |
 | `ERR_UNBOUND_PARAMETER` | `semantic` | No binding names the parameter. |
 | `ERR_UNSATISFIED_REQUIRED_INPUT` | `semantic`, `resolution` | Required input has no binding or default. |
 | `ERR_ENDPOINT_NOT_PUBLIC` | `semantic` | Output requires exposure not selected by the blueprint. |
-| `ERR_VIEWER_IDENTITY_NOT_FORWARDED` | `semantic` | Output reads a viewer identity property of an endpoint whose exposure does not forward viewer identity. |
+| `ERR_VIEWER_IDENTITY_NOT_FORWARDED` | `semantic` | Output reads a viewer identity property of an endpoint whose exposure does not forward that property's mode or claim. |
+| `ERR_EXEMPTION_NOT_DECLARED` | `semantic` | An exposure lets through requests without a viewer that the component does not declare it takes. |
 | `ERR_UNKNOWN_ENUM_MEMBER` | `semantic` | UI label names no enum member. |
 | `ERR_INVALID_PARAMETER_SOURCE` | `semantic` | A parameter's `from` is not one whole reference. |
+| `ERR_UNKNOWN_DEPLOYMENT_FACT` | `semantic` | A parameter's `from` names a `deployment` path the namespace does not define. |
+| `ERR_INVALID_HASH_SOURCE` | `semantic` | A hash names a parameter that is not generated, or one too long for its algorithm. |
 | `ERR_INVALID_VOLUME_ALLOCATION` | `semantic` | Volume allocation is absent, unknown or below minimum. |
 | `ERR_READINESS_REQUIRED` | `semantic` | Public HTTP-family service has no readiness probe. |
 | `ERR_VALUE_CYCLE` | `semantic` | Value dependencies contain a cycle. |
 | `ERR_INVALID_CONNECTION_BINDING` | `semantic` | A connection input is bound by something other than a connection parameter, or a connection parameter binds a value input. |
-| `ERR_PARAMETER_NOT_SUBMITTABLE` | `resolution` | A submitted value names a generated, variable or connection parameter. |
+| `ERR_PARAMETER_NOT_SUBMITTABLE` | `resolution` | A submitted value names a generated, hash, variable, deployment fact or connection parameter. |
 | `ERR_MISSING_PARAMETER_VALUE` | `resolution` | Required submitted value is absent. |
 | `ERR_VARIABLE_NOT_AUTHORIZED` | `resolution` | Installation cannot read the organization variable. |
+| `ERR_DEPLOYMENT_FACT_UNAVAILABLE` | `resolution` | The platform knows it has no value for a deployment fact the installation reads. |
 | `ERR_INVALID_RESOLUTION_CONTEXT` | `resolution` | Resolution context lacks a required identity or version. |
 | `ERR_CONNECTION_NOT_FOUND` | `resolution` | Authorized acquisition confirms no selected default exists. |
 | `ERR_CONNECTION_DENIED` | `resolution` | Acquisition denies permission to use the connection. |
@@ -937,8 +1101,11 @@ credential lifecycle observations. A skipped case is never passed.
 Cross-installation component instances, conditional node sets, runtime job
 outputs, startup dependency graphs, recursive templates, arbitrary provider
 maps, a document naming the principals, roles or policy an `AUTHENTICATED`
-endpoint admits, and `AUTHENTICATED` access to a `GRPC`, `TCP` or `UDP`
-endpoint are unsupported. Their declarations are rejected.
+endpoint admits, `AUTHENTICATED` access to a `GRPC`, `TCP` or `UDP`
+endpoint, role or group claims, a viewer identity mode under `access: OPEN`,
+machine tokens the platform itself accepts, exemptions by request method,
+hashes of submitted values, other hash algorithms or parameters, and
+`deployment` facts beyond the installer's are unsupported. Their declarations are rejected.
 
 ## <a id="security"></a>10. Security considerations
 
@@ -955,3 +1122,21 @@ is why a component that reads the viewer identity properties cannot be deployed
 without `viewerIdentity: HEADER` ([`BP-NODE-007`](#BP-NODE-007)), and why the
 platform refuses, rather than forwards, a request it cannot authorize
 ([`BP-ACCESS-002`](#BP-ACCESS-002)).
+
+A released claim is personal data that the workload stores and may send on, and
+the platform cannot take it back. That is why a blueprint names each one in
+`viewerClaims`, why a deployment fact is bound through a parameter
+([`BP-PARAM-011`](#BP-PARAM-011)) that a reviewer reads, and why neither is
+ever released by default.
+
+An exemption opens part of an authenticated endpoint to anyone who can reach
+it. `PATHS` opens only the routes a component names, and the platform never
+exempts a path it could read two ways ([`BP-ACCESS-009`](#BP-ACCESS-009)).
+`BEARER` opens every route to any request that presents a bearer token, valid or
+not, so the endpoint is then exactly as strong as the workload's own token
+check. Prefer `PATHS`. A cross-origin preflight to a route that is not exempt
+carries no credentials, and is refused.
+
+A hash is not the secret, but it can be attacked offline, so it is sensitive
+and never published ([§5.2](#resolution-record)). The source of a hash is
+disclosed only to the people who manage the installation.

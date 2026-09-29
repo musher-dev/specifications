@@ -1,0 +1,63 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Dashboard that signs viewers in by verifying the signed assertion the platform forwards.
+spec:
+  type: SERVICE
+  workload:
+    source:
+      image: example/dashboard:12.1.0
+    endpoints:
+      web:
+        targetPort: 3000
+        protocol: HTTP
+    health:
+      readiness:
+        http:
+          endpoint: web
+          path: /api/health
+  contract:
+    inputs:
+      assertionHeader:
+        description: Request header carrying the signed viewer assertion.
+        schema:
+          type: string
+        target:
+          envVarKey: DASHBOARD_JWT_HEADER_NAME
+      keysURL:
+        description: Key set the dashboard verifies the assertion against.
+        schema:
+          type: string
+        target:
+          envVarKey: DASHBOARD_JWT_JWK_SET_URL
+      expectedClaims:
+        description: Issuer and audience the dashboard requires, as a JSON object.
+        schema:
+          type: string
+        target:
+          envVarKey: DASHBOARD_JWT_EXPECT_CLAIMS
+    # A verified assertion needs no peer check, so there are no trusted proxies
+    # to read: the signature, issuer and audience say the platform sent it.
+    outputs:
+      assertionHeader:
+        description: Header carrying the signed viewer assertion.
+        schema:
+          type: string
+        from:
+          endpoint: web
+          property: viewerAssertionHeader
+      keysURL:
+        description: URL of the key set that verifies the assertion.
+        schema:
+          type: string
+        from:
+          endpoint: web
+          property: viewerAssertionKeysURL
+      expectedClaims:
+        description: The assertion's issuer and audience, as a JSON object.
+        schema:
+          type: string
+        from:
+          template: >-
+            {"iss": "${{ self.endpoints.web.viewerAssertionIssuer }}", "aud": "${{ self.endpoints.web.viewerAssertionAudience }}"}

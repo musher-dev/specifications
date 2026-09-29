@@ -1,0 +1,10 @@
+{
+  "id": "structural-140-exempt-path-of-the-root",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#endpoints",
+  "requirements": [
+    "COMP-EP-016"
+  ],
+  "summary": "The root path would exempt every request, so it is not a path."
+}

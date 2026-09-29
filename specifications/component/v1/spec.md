@@ -383,6 +383,15 @@ workloads start; they do not assert readiness.
 | publicPort | integer | Allocated TCP/UDP edge port |
 | viewerIdentityHeader | string | Lowercase name of the request header carrying the authenticated viewer's identity |
 | trustedProxyCIDRs | array of string | CIDRs covering every address the workload observes as the immediate peer of forwarded traffic |
+| viewerEmailHeader | string | Lowercase name of the request header carrying the viewer's verified email address |
+| viewerNameHeader | string | Lowercase name of the request header carrying the viewer's display name |
+| viewerAssertionHeader | string | Lowercase name of the request header carrying the signed viewer assertion |
+| viewerAssertionIssuer | string | The assertion's `iss` |
+| viewerAssertionAudience | string | The assertion's `aud`, unique to this endpoint of this installation |
+| viewerAssertionKeysURL | string | HTTPS URL of the JSON Web Key Set that verifies the assertion |
+| oidcIssuerURL | string | Issuer URL of the OpenID Connect provider the endpoint is a client of |
+| oidcClientID | string | Client identifier the platform registered for the endpoint |
+| oidcClientSecret | string, sensitive | Client secret of that registration |
 
 <a id="COMP-EP-004"></a>**`COMP-EP-004`**: A public property is read only from an
 endpoint whose protocol has that address family. `publicURL` and
@@ -399,40 +408,119 @@ allocation context supplies the public URL scheme and routing address; a
 validator MUST NOT invent them.
 
 <a id="viewer-identity"></a>**Viewer identity.** A blueprint can expose an
-endpoint so that the platform signs its viewers in and forwards each viewer's
-identity to the workload in a request header
-([blueprint §4.3](../../blueprint/v1/spec.md#access)). A workload that trusts
-that header needs two facts only the platform has: the header's name,
-`viewerIdentityHeader`, and the addresses forwarded traffic arrives from,
-`trustedProxyCIDRs`. The addresses are the ones the workload itself observes as
-its TCP peer, which need not be any public or edge address. The identity is a
-stable, opaque identifier of the viewer, never an email address and never a
-credential.
+endpoint so that the platform signs its viewers in and tells the workload who
+each viewer is ([blueprint §4.5](../../blueprint/v1/spec.md#access)), in one of
+three ways, and each way needs facts only the platform has:
 
-<a id="COMP-EP-012"></a>**`COMP-EP-012`**: `viewerIdentityHeader` and
-`trustedProxyCIDRs` are read only from an `HTTP`, `HTTPS` or `WS` endpoint,
-and otherwise fail with `ERR_ENDPOINT_NOT_HTTP`. They exist only on an endpoint a
-blueprint exposes, so a `WORKER` reading either fails with
-`ERR_ENDPOINT_NOT_EXPOSABLE`, as [`COMP-TYPE-003`](#COMP-TYPE-003) says of a
-public property. `trustedProxyCIDRs` is an array: an output reading it declares
-an `array` schema whose `items` are `string`, otherwise `ERR_VALUE_CONSTRAINT`
-at the output's `schema`, and a `template` reading it fails with
-`ERR_VALUE_CONSTRAINT` at `from/template`, because a template produces a string.
-The other diagnostics anchor as [`COMP-EP-004`](#COMP-EP-004)'s do, and these
-are semantic rules.
+| Blueprint `viewerIdentity` | What the workload receives | Properties it reads |
+|---|---|---|
+| `HEADER` | The viewer's identity in a plain request header | `viewerIdentityHeader`, `trustedProxyCIDRs` |
+| `ASSERTION` | A signed JWT in a request header | `viewerAssertionHeader`, `viewerAssertionIssuer`, `viewerAssertionAudience`, `viewerAssertionKeysURL` |
+| `OIDC` | Nothing per request: the workload signs viewers in as an OpenID Connect client | `oidcIssuerURL`, `oidcClientID`, `oidcClientSecret` |
 
-Reading either property requires the blueprint to forward viewer identity on
-that endpoint, otherwise `ERR_VIEWER_IDENTITY_NOT_FORWARDED` in blueprint. A
-workload that trusts the identity header obtains both values through such
-outputs, never from a literal or an input's `default`, so that no node can deploy
-it where the header is not the platform's ([§11](#security)).
+The identity is a stable, opaque identifier of the viewer, never an email
+address and never a credential, and it is the same in every mode. A blueprint
+may also release the viewer's `EMAIL` and `NAME`. Under `HEADER` each released
+claim travels in a header of its own, named by `viewerEmailHeader` or
+`viewerNameHeader`; under the other two modes it travels inside the token. The
+addresses in `trustedProxyCIDRs` are the ones the workload itself observes as
+its TCP peer, which need not be any public or edge address.
+
+<a id="COMP-EP-012"></a>**`COMP-EP-012`**: The viewer identity properties, every
+property from `viewerIdentityHeader` to `oidcClientSecret` in the table above,
+are read only from an `HTTP`, `HTTPS` or `WS` endpoint, and otherwise fail with
+`ERR_ENDPOINT_NOT_HTTP`. They exist only on an endpoint a blueprint exposes, so
+a `WORKER` reading one fails with `ERR_ENDPOINT_NOT_EXPOSABLE`, as
+[`COMP-TYPE-003`](#COMP-TYPE-003) says of a public property. `trustedProxyCIDRs`
+is an array: an output reading it declares an `array` schema whose `items` are
+`string`, otherwise `ERR_VALUE_CONSTRAINT` at the output's `schema`, and a
+`template` reading it fails with `ERR_VALUE_CONSTRAINT` at `from/template`,
+because a template produces a string. The other diagnostics anchor as
+[`COMP-EP-004`](#COMP-EP-004)'s do, and these are semantic rules.
+
+Reading a property requires the blueprint to select, on that endpoint, the mode
+the table names, and the claim for `viewerEmailHeader` and `viewerNameHeader`,
+otherwise `ERR_VIEWER_IDENTITY_NOT_FORWARDED` in blueprint. A workload that
+trusts what the platform forwards obtains these values through such outputs,
+never from a literal or an input's `default`, so that no node can deploy it
+where the header or the token is not the platform's ([§11](#security)).
+
+`oidcClientSecret` is the one sensitive property. An output or a template that
+reads it is sensitive wherever its value travels, as an output forwarding a
+connection's `apiKey` is ([§6.2](#outputs)).
+
+<a id="oidc"></a>**OpenID Connect clients.** An OIDC client needs redirect URIs,
+and only the component knows its routes, so an endpoint that can be one
+declares them:
+
+```yaml
+endpoints:
+  web:
+    targetPort: 8080
+    protocol: HTTP
+    oidc:
+      redirectPaths: [/oauth/oidc/callback]
+```
+
+The platform registers exactly the endpoint's `publicURL` followed by each
+path. A workload that needs the whole redirect URI builds it with a template,
+`"${{ self.endpoints.web.publicURL }}/oauth/oidc/callback"`.
+
+<a id="COMP-EP-013"></a>**`COMP-EP-013`**: `oidc` belongs only to an `HTTP`,
+`HTTPS` or `WS` endpoint; on any other it is `ERR_INVALID_VALUE` at the
+endpoint's `oidc`. It is closed and requires `redirectPaths`, a unique list of 1
+to 8 [endpoint paths](#endpoint-paths). These are structural rules.
+
+<a id="COMP-EP-014"></a>**`COMP-EP-014`**: An output or a template reading
+`oidcIssuerURL`, `oidcClientID` or `oidcClientSecret` from an endpoint that
+declares no `oidc` fails with `ERR_ENDPOINT_NOT_OIDC_CLIENT`, anchored as
+[`COMP-EP-004`](#COMP-EP-004)'s diagnostics are. This is a semantic rule.
+
+<a id="access-exemptions"></a>**Requests without a viewer.** A blueprint can put
+an endpoint behind sign-in, and a machine client, such as a webhook sender or an
+API client, never has a viewer session. A component declares which requests to
+its endpoint it can safely take without one, and a blueprint node chooses
+whether to let them through
+([blueprint §4.5](../../blueprint/v1/spec.md#access-exemptions)):
+
+```yaml
+endpoints:
+  web:
+    targetPort: 5678
+    protocol: HTTP
+    accessExemptions:
+      paths: [/webhook, /webhook-test]
+      bearer: true
+```
+
+`paths` lists the routes that serve machines. `bearer: true` states that every
+route of the endpoint checks the bearer token a request carries, so that a
+request presenting one can be left for the workload to judge.
+
+<a id="COMP-EP-015"></a>**`COMP-EP-015`**: `accessExemptions` belongs only to an
+`HTTP`, `HTTPS` or `WS` endpoint; on any other it is `ERR_INVALID_VALUE` at the
+endpoint's `accessExemptions`. It is closed and names at least one of `paths`, a
+unique list of 1 to 32 [endpoint paths](#endpoint-paths), and `bearer`, a
+boolean; an empty one is `ERR_INVALID_VALUE` there. These are structural rules.
+
+<a id="endpoint-paths"></a><a id="COMP-EP-016"></a>**`COMP-EP-016`**: An
+endpoint path is literal, and matched against a request segment by segment. It
+begins with `/`, holds at most 256 characters, and is made of `/`-separated
+segments of RFC 3986 unreserved characters and the sub-delimiters other than
+`;`, plus `:` and `@`. It has no empty segment, so no `//` and no trailing `/`,
+no segment `.` or `..`, and no `%`, `;`, `?`, `#` or `\`. `/` alone is not a
+path, because a list that covers every request is not an exemption. The
+platform serves its own sign-in under `/.musher` on an endpoint that requires
+one, so `/.musher` and every path under it are excluded. A path breaking any of
+these is `ERR_INVALID_VALUE` at the path. These are structural rules.
 
 An authoritative endpoint allocation has opaque `identity` and `version`, an
 optional `privateHostname`, and optional public routing facts: `hostname`,
-`port`, `scheme` and `path`, and, on an endpoint that forwards viewer
-identity, `viewerIdentityHeader` and `trustedProxyCIDRs`
-([blueprint `BP-ACCESS-001`](../../blueprint/v1/spec.md#BP-ACCESS-001)). Public
-routing requires `PUBLIC` exposure. The
+`port`, `scheme` and `path`, and, on an endpoint that tells its workload who
+the viewer is, the facts of that mode
+([blueprint `BP-ACCESS-001`](../../blueprint/v1/spec.md#BP-ACCESS-001)). An
+endpoint whose mode is `OIDC` also has a private client registration beside its
+routing facts, never among them. Public routing requires `PUBLIC` exposure. The
 public scheme is http, https, ws or wss, and the port is 1–65535. Hostnames
 cannot carry credentials, a port, a path, query or fragment. Paths start with
 `/` and carry no query, fragment, whitespace or backslash. TCP and UDP require
@@ -1025,6 +1113,7 @@ Core diagnostics also apply.
 | `ERR_ENDPOINT_NOT_L4` | `semantic` | Endpoint cannot supply an edge address. |
 | `ERR_UNKNOWN_ADDRESS_PROPERTY` | `semantic` | Template reads a property §5.2 does not define. |
 | `ERR_ENDPOINT_NOT_EXPOSABLE` | `semantic` | A `WORKER` endpoint is exposed `PUBLIC`, or a `WORKER` output reads a public or viewer identity property. |
+| `ERR_ENDPOINT_NOT_OIDC_CLIENT` | `semantic` | An OpenID Connect client property is read from, or `OIDC` selected for, an endpoint that declares no `oidc`. |
 | `ERR_INVALID_SCHEDULE` | `semantic` | A cron field is outside §5.7's grammar or range. |
 | `ERR_UNKNOWN_INPUT_REFERENCE` | `semantic` | An output, trust bundle or probe credential names no own input, or an output reads a connection input without the member §6.2 requires. |
 | `ERR_OUTPUT_NOT_PRODUCIBLE` | `semantic` | Output forwards an optional input that has no default. |
@@ -1054,8 +1143,9 @@ outcomes as defined in [the conformance contract](../../../docs/conformance.md).
 Runtime-emitted outputs, arbitrary expressions, recursive substitution,
 provider-specific configuration maps, non-HTTP health mechanisms, TLS on the hop
 to a WebSocket or gRPC workload, probe request headers other than credentials,
-signed viewer identity assertions, forwarded viewer roles or scopes,
-schedule time zones and ordering a job against other nodes are unsupported. Reject
+forwarded viewer roles or scopes, viewer assertions signed with an algorithm
+other than RS256, OpenID Connect post-logout redirects, schedule time zones and
+ordering a job against other nodes are unsupported. Reject
 unsupported declarations. Adding them requires defined semantics and
 conformance evidence.
 
@@ -1080,10 +1170,31 @@ certificate is known in advance. Probe credentials are sent on probes only
 guards the traffic the platform forwards to it.
 
 A workload that reads a viewer's identity from `viewerIdentityHeader`
-([§5.2](#viewer-identity)) MUST accept that header only on a connection whose
+([§5.2](#viewer-identity)) MUST accept that header, and the headers
+`viewerEmailHeader` and `viewerNameHeader` name, only on a connection whose
 peer address is in `trustedProxyCIDRs`. Anything else that can reach the port can
-set the header. The component reads both values through its own outputs, and a
+set them. A released claim header's value is UTF-8 text in which every octet
+outside visible ASCII, and every `%`, is percent-encoded, so a workload
+percent-decodes it before use. The component reads both values through its own outputs, and a
 literal or a default in their place goes stale when the platform's proxies move,
 and deploys wherever a blueprint forgets to forward identity. Probes reach the
 workload directly and carry no viewer identity, so a health path must answer
 without one.
+
+A workload that reads the viewer from `viewerAssertionHeader` MUST verify the
+token's RS256 signature against a key from `viewerAssertionKeysURL`, and MUST
+check that its `iss` is `viewerAssertionIssuer`, that its `aud` is
+`viewerAssertionAudience`, and that it has not expired. The audience is unique
+to one endpoint of one installation, so a token another workload received is
+refused here. A verified assertion needs no peer check.
+
+A workload that signs viewers in through `oidcIssuerURL` keys its accounts on
+the ID token's `sub`, never on `email`: an email address can change owner, and
+the subject cannot. The client secret is sensitive, and the platform MAY rotate
+it, which is a new allocation and a restart with the new value.
+
+An endpoint path in `accessExemptions` or `oidc` is matched literally, so a
+workload whose router treats other spellings as the same route, such as a
+trailing `;` parameter, a percent-encoded slash or a differently cased path,
+exposes those spellings only through sign-in. Declare every route a machine
+calls, and nothing a viewer uses.
