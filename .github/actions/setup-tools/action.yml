@@ -1,0 +1,48 @@
+name: Setup Tools
+description: >-
+  Install the CLIs pinned in .config/mise/config.toml, then the tooling
+  dependencies tools/ declares, so a job runs the same versions as the dev
+  container and a local `task` run (docs/adr/0036 §3).
+
+inputs:
+  install-args:
+    description: >-
+      Space-separated subset of tools to install, each spelled exactly as its
+      key in .config/mise/config.toml (e.g. "aqua:go-task/task node"). A short
+      registry name such as "bun" resolves to a different, unpinned tool.
+      Empty installs every pinned tool.
+    required: false
+    default: ""
+  tooling:
+    description: >-
+      "true" to run `bun install --frozen-lockfile` in tools/ once the CLIs are
+      installed. Needs aqua:oven-sh/bun among install-args.
+    required: false
+    default: "true"
+
+runs:
+  using: composite
+  steps:
+    # mise discovers .config/mise/config.toml on its own, but a config in a
+    # checkout is untrusted until trusted. mise-action only exports this to its
+    # own step, and every later step resolves tools through mise shims, which
+    # need it too: an untrusted config installs nothing.
+    - name: Trust the repository's tool config
+      shell: bash
+      run: echo "MISE_TRUSTED_CONFIG_PATHS=${GITHUB_WORKSPACE}" >> "$GITHUB_ENV"
+
+    # With .config/mise/mise.lock present, mise-action installs with --locked:
+    # each tool comes from the URL and checksum the lockfile records.
+    - name: Install the pinned tools
+      uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c  # v4.3.0
+      with:
+        # Lockstep with min_version in .config/mise/config.toml (TOOL-04).
+        version: 2026.9.12
+        install: true
+        install_args: ${{ inputs.install-args }}
+
+    - name: Install the tooling dependencies
+      if: inputs.tooling == 'true'
+      shell: bash
+      working-directory: tools
+      run: bun install --frozen-lockfile
