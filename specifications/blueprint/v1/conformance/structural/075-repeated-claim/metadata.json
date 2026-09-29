@@ -1,0 +1,10 @@
+{
+  "id": "structural-075-repeated-claim",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#access",
+  "requirements": [
+    "BP-NODE-006"
+  ],
+  "summary": "Released claims do not repeat."
+}

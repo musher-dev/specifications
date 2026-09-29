@@ -7,8 +7,8 @@ contract; this checklist does not define another document dialect.
 
 ## Pin the released contract
 
-Pin exact releases, never a commit on `main`: `core/v1.0.0`,
-`component/v1.5.0` and `blueprint/v1.6.0`, plus `listing/v1.0.0` where the
+Pin exact releases, never a commit on `main`: `core/v1.1.0`,
+`component/v1.6.0` and `blueprint/v1.7.0`, plus `listing/v1.0.0` where the
 catalog reads listings. Earlier component and blueprint releases were withdrawn
 from the compatibility guarantee by
 [ADR 0033](adr/0033-inputs-are-the-only-way-into-a-component.md) §5; migrate
@@ -207,3 +207,84 @@ catalog item's decision.
 
 Validate blueprints with blueprint v1.6.0 or later, whose dependency closure
 carries component v1.5.0.
+
+## Identity modes, machine access, installer facts and hashes (core v1.1.0, component v1.6.0 and blueprint v1.7.0)
+
+[ADR 0035](adr/0035-how-identity-and-credentials-reach-a-workload.md) adds four
+things, all of them additive:
+
+- `viewerIdentity` gains `ASSERTION`, a signed JWT in a request header, and
+  `OIDC`, an OpenID Connect client the platform registers for the endpoint.
+  `viewerClaims: [EMAIL, NAME]` releases those facts beside the subject, in
+  headers of their own under `HEADER` and inside the token otherwise
+  ([blueprint §4.5](../specifications/blueprint/v1/spec.md#access),
+  [component §5.2](../specifications/component/v1/spec.md#viewer-identity)).
+- A component declares `accessExemptions` on an endpoint, `paths` and
+  `bearer: true`, and a node selects `accessExemptions: [PATHS, BEARER]` from
+  them, so webhooks and API clients reach an `AUTHENTICATED` endpoint
+  ([component §5.2](../specifications/component/v1/spec.md#access-exemptions)).
+- A parameter can read `${{ deployment.installer.identity }}`, `.email` or
+  `.name`, facts about the person who created the installation
+  ([`BP-PARAM-011`](../specifications/blueprint/v1/spec.md#BP-PARAM-011)).
+- A parameter can be `hash: { parameter, algorithm }`, a `BCRYPT` or
+  `ARGON2ID` hash of a generated parameter
+  ([`BP-PARAM-012`](../specifications/blueprint/v1/spec.md#BP-PARAM-012)).
+
+For the platform:
+
+- Parse the new exposure members, endpoint members and parameter supply
+  everywhere they are read, including the pinned resolution record.
+- **Subject.** Give one person one opaque subject per installation, the same in
+  the identity header, the assertion `sub`, the OIDC `sub` and
+  `deployment.installer.identity`
+  ([`BP-ACCESS-006`](../specifications/blueprint/v1/spec.md#BP-ACCESS-006)).
+  Release an email only when it is verified.
+- **Claim headers.** Allocate a distinct header name per released claim, strip
+  inbound copies, and percent-encode every octet outside visible ASCII and every
+  `%` in the value
+  ([`BP-ACCESS-003`](../specifications/blueprint/v1/spec.md#BP-ACCESS-003)).
+- **Assertions.** Sign an RS256 JWT per forwarded request with `kid`, `iss`,
+  an `aud` unique to the installation's endpoint, `sub`, `iat` and an `exp` at
+  most ten minutes later, plus released claims. Publish the key set at an HTTPS
+  URL, and keep a retired key there until its last token expires
+  ([`BP-ACCESS-007`](../specifications/blueprint/v1/spec.md#BP-ACCESS-007)).
+  Supply the header name, issuer, audience and key set URL as public routing
+  facts.
+- **OpenID Connect.** Run an issuer, register one confidential client per
+  installation endpoint with redirect URIs of exactly `publicURL` plus each
+  `redirectPaths` entry, support the authorization code flow with PKCE, admit
+  only viewers the installation's access policy authorizes, and revoke the client
+  with the installation. The client registration, `{identity, version, issuerURL,
+  clientID, secret}`, sits beside the endpoint's routing facts in the private
+  snapshot, never among them
+  ([`BP-ACCESS-008`](../specifications/blueprint/v1/spec.md#BP-ACCESS-008)).
+- **Exemptions.** Under `PATHS`, forward a request under a declared path as
+  `OPEN` does, matching segment by segment on the normalized path, ignoring the
+  query, and never exempting a path holding `;`, an encoded slash or backslash,
+  a backslash, NUL or an empty segment. Under `BEARER`, forward a request with
+  no session and a bearer token without identity, and identify one with a
+  session as usual. Keep `/.musher` out of every exemption
+  ([`BP-ACCESS-009`](../specifications/blueprint/v1/spec.md#BP-ACCESS-009),
+  [`BP-ACCESS-010`](../specifications/blueprint/v1/spec.md#BP-ACCESS-010),
+  [musher-dev/platform#3184](https://github.com/musher-dev/platform/issues/3184)).
+- **Installer facts.** Capture the creator's identity, verified email and
+  display name once, when the installation is created, and keep them in the
+  snapshot. Report a fact you know is missing, such as a service principal's
+  email, as `ERR_DEPLOYMENT_FACT_UNAVAILABLE`, not as incomplete. Treat the
+  values as sensitive.
+- **Hashes.** Compute a hash with a random salt when its source is generated,
+  store it as its own credential with the source's rotation, recompute it only
+  when the source rotates, and never publish it. bcrypt is `$2b$`, cost 12;
+  argon2id is `m=19456,t=2,p=1`. Disclose a generated value that carries `ui`
+  only to the installation's managers, privately.
+
+For catalog items: an app that speaks OpenID Connect, such as Open WebUI or
+Grafana, declares `oidc.redirectPaths` and reads the three `oidc*` properties.
+One that verifies a JWT, such as Langflow, reads the four `viewerAssertion*`
+properties and needs no trusted proxies. n8n declares its webhook paths and
+seeds its owner from `deployment.installer.email` and a `BCRYPT` hash of a
+generated password. Label Studio's admin email can come from the installer
+instead of the form.
+
+Validate blueprints with blueprint v1.7.0 or later, whose dependency closure
+carries component v1.6.0 and core v1.1.0.

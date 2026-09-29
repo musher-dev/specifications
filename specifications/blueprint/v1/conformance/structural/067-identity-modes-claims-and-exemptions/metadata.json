@@ -1,0 +1,10 @@
+{
+  "id": "structural-067-identity-modes-claims-and-exemptions",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/blueprint/v1/spec.md#access",
+  "requirements": [
+    "BP-NODE-006"
+  ],
+  "summary": "The object form takes each identity mode with released claims, and access exemptions."
+}

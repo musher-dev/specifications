@@ -1,0 +1,17 @@
+specVersion: v1
+kind: BLUEPRINT
+metadata:
+  slug: app
+  revision: 1
+  description: Synthetic conformance fixture blueprint.
+spec:
+  parameters:
+    password: { generator: { byteLength: 40 }, ui: { label: Password } }
+    passwordHash: { hash: { parameter: password, algorithm: BCRYPT } }
+  components:
+    web:
+      componentRef: ./web.yaml
+      compute:
+        profile: general.standard.small
+      bindings:
+        passwordHash: { parameter: passwordHash }

@@ -1,0 +1,10 @@
+{
+  "id": "semantic-069-oidc-issuer-in-a-template-without-a-declaration",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#endpoints",
+  "requirements": [
+    "COMP-EP-014"
+  ],
+  "summary": "A template cannot read an OpenID Connect client the endpoint does not declare."
+}

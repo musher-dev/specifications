@@ -1,0 +1,10 @@
+{
+  "id": "structural-070-claims-without-an-identity-mode",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#access",
+  "requirements": [
+    "BP-NODE-006"
+  ],
+  "summary": "A released claim needs an identity mode to travel in."
+}

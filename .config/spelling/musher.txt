@@ -30,6 +30,7 @@ vendoring
 deserialisation
 
 # --- Names and acronyms ------------------------------------------------------
+PKCE
 bluemonday
 CNAB
 Consolas
@@ -38,6 +39,19 @@ Pydantic
 Segoe
 SLSA
 SPDX
+
+# --- Applications the catalog deploys, and prior art ADRs compare --------------
+Authelia
+Cloudron
+flowise
+Gitea
+langflow
+mlflow
+Nextcloud
+openclaw
+Pomerium
+Umbrel
+webui
 
 # --- Hardware and format vocabulary the schemas name --------------------------
 buildpacks

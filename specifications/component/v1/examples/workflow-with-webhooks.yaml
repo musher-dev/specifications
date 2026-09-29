@@ -1,0 +1,43 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Workflow editor whose webhooks and API serve machines on the same port as its UI.
+spec:
+  type: SERVICE
+  workload:
+    source:
+      image: example/workflows:2.40.7
+    endpoints:
+      web:
+        targetPort: 5678
+        protocol: HTTP
+        # Routes third-party services call. A blueprint may let them through
+        # sign-in; every other route keeps it.
+        accessExemptions:
+          paths: [/webhook, /webhook-test]
+    health:
+      readiness:
+        http:
+          endpoint: web
+          path: /healthz
+  contract:
+    inputs:
+      ownerEmail:
+        description: Email address of the owner account created on first start.
+        schema:
+          type: string
+        presentationHint: EMAIL
+        target:
+          envVarKey: WORKFLOWS_OWNER_EMAIL
+      ownerPasswordHash:
+        description: bcrypt hash of the owner account's password.
+        schema:
+          type: string
+          pattern: "^\\$2[aby]\\$"
+          minLength: 60
+          maxLength: 60
+        sensitive: true
+        target:
+          envVarKey: WORKFLOWS_OWNER_PASSWORD_HASH
+    outputs: {}

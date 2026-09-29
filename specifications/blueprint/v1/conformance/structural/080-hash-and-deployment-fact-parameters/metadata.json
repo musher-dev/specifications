@@ -1,0 +1,10 @@
+{
+  "id": "structural-080-hash-and-deployment-fact-parameters",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/blueprint/v1/spec.md#parameters",
+  "requirements": [
+    "BP-PARAM-010"
+  ],
+  "summary": "A parameter may be a hash of a generated parameter, by either algorithm, or a deployment fact."
+}

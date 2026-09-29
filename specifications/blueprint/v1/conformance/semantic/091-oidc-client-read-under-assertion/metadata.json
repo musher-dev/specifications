@@ -1,0 +1,11 @@
+{
+  "id": "semantic-091-oidc-client-read-under-assertion",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#access",
+  "requirements": [
+    "BP-NODE-007"
+  ],
+  "summary": "An OpenID Connect client exists only under viewerIdentity OIDC.",
+  "document": "app/blueprint.yaml"
+}

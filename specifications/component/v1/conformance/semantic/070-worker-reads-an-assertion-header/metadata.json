@@ -1,0 +1,10 @@
+{
+  "id": "semantic-070-worker-reads-an-assertion-header",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#endpoints",
+  "requirements": [
+    "COMP-EP-012"
+  ],
+  "summary": "A WORKER endpoint is never exposed, so it has no viewer assertion."
+}

@@ -1,0 +1,11 @@
+{
+  "id": "semantic-089-assertion-read-under-header",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#access",
+  "requirements": [
+    "BP-NODE-007"
+  ],
+  "summary": "An assertion property exists only under viewerIdentity ASSERTION.",
+  "document": "app/blueprint.yaml"
+}

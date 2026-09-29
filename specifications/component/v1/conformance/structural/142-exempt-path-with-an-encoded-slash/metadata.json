@@ -1,0 +1,10 @@
+{
+  "id": "structural-142-exempt-path-with-an-encoded-slash",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#endpoints",
+  "requirements": [
+    "COMP-EP-016"
+  ],
+  "summary": "An endpoint path is literal and holds no percent-encoding."
+}

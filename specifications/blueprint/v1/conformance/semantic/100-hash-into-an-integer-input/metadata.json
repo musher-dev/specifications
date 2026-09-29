@@ -1,0 +1,11 @@
+{
+  "id": "semantic-100-hash-into-an-integer-input",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#value-sources",
+  "requirements": [
+    "BP-PARAM-012"
+  ],
+  "summary": "A hash is a string, and so is every input it supplies.",
+  "document": "app/blueprint.yaml"
+}

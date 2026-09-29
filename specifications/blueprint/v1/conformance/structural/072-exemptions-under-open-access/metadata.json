@@ -1,0 +1,10 @@
+{
+  "id": "structural-072-exemptions-under-open-access",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#access",
+  "requirements": [
+    "BP-NODE-006"
+  ],
+  "summary": "An exemption from sign-in requires sign-in."
+}

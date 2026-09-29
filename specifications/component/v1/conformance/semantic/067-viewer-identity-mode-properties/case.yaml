@@ -1,0 +1,65 @@
+specVersion: v1
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: SERVICE
+  workload:
+    source:
+      image: example/web:1
+    endpoints:
+      web:
+        targetPort: 8080
+        protocol: HTTP
+        oidc:
+          redirectPaths: [/oauth/oidc/callback]
+    health:
+      readiness:
+        http:
+          endpoint: web
+          path: /healthz
+  contract:
+    inputs: {}
+    outputs:
+      emailHeader:
+        description: Synthetic output.
+        schema: { type: string }
+        from: { endpoint: web, property: viewerEmailHeader }
+      nameHeader:
+        description: Synthetic output.
+        schema: { type: string }
+        from: { endpoint: web, property: viewerNameHeader }
+      assertionHeader:
+        description: Synthetic output.
+        schema: { type: string }
+        from: { endpoint: web, property: viewerAssertionHeader }
+      assertionIssuer:
+        description: Synthetic output.
+        schema: { type: string }
+        from: { endpoint: web, property: viewerAssertionIssuer }
+      assertionAudience:
+        description: Synthetic output.
+        schema: { type: string }
+        from: { endpoint: web, property: viewerAssertionAudience }
+      assertionKeys:
+        description: Synthetic output.
+        schema: { type: string }
+        from: { endpoint: web, property: viewerAssertionKeysURL }
+      issuer:
+        description: Synthetic output.
+        schema: { type: string }
+        from: { endpoint: web, property: oidcIssuerURL }
+      clientID:
+        description: Synthetic output.
+        schema: { type: string }
+        from: { endpoint: web, property: oidcClientID }
+      clientSecret:
+        description: Synthetic output.
+        schema: { type: string }
+        sensitive: true
+        from: { endpoint: web, property: oidcClientSecret }
+      redirectURI:
+        description: Synthetic output.
+        schema: { type: string }
+        from: { template: '${{ self.endpoints.web.publicURL }}/oauth/oidc/callback' }

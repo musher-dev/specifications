@@ -136,6 +136,8 @@
           "then": {
             "properties": {
               "access": false,
+              "accessExemptions": false,
+              "viewerClaims": false,
               "viewerIdentity": false
             }
           }
@@ -153,14 +155,39 @@
           },
           "else": {
             "properties": {
+              "accessExemptions": false,
               "viewerIdentity": {
                 "const": "NONE"
               }
             }
           }
+        },
+        {
+          "$comment": "spec.md §4.5 BP-NODE-006. A released claim travels in an identity mode, so viewerClaims requires a viewerIdentity other than NONE.",
+          "if": {
+            "not": {
+              "properties": {
+                "viewerIdentity": {
+                  "enum": [
+                    "HEADER",
+                    "ASSERTION",
+                    "OIDC"
+                  ]
+                }
+              },
+              "required": [
+                "viewerIdentity"
+              ]
+            }
+          },
+          "then": {
+            "properties": {
+              "viewerClaims": false
+            }
+          }
         }
       ],
-      "description": "Exposure of one endpoint in the object form: its visibility, and whether the platform authenticates viewers and forwards their identity. Bare PUBLIC or PRIVATE is the object form with only visibility.",
+      "description": "Exposure of one endpoint in the object form: its visibility, whether the platform authenticates viewers, how the workload learns who they are, which of their claims it receives, and which requests pass without a viewer. Bare PUBLIC or PRIVATE is the object form with only visibility.",
       "properties": {
         "access": {
           "default": "OPEN",
@@ -171,12 +198,40 @@
           ],
           "type": "string"
         },
+        "accessExemptions": {
+          "description": "Requests an AUTHENTICATED endpoint forwards without a viewer, each one the component declares: PATHS, a request under one of its accessExemptions paths, and BEARER, a request with no viewer session that carries a bearer token.",
+          "items": {
+            "enum": [
+              "PATHS",
+              "BEARER"
+            ],
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "viewerClaims": {
+          "description": "Facts about the viewer released to the workload beside the subject: EMAIL, the viewer's verified email address, and NAME, their display name. Requires a viewerIdentity other than NONE.",
+          "items": {
+            "enum": [
+              "EMAIL",
+              "NAME"
+            ],
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
         "viewerIdentity": {
           "default": "NONE",
-          "description": "Whether the workload receives the authenticated viewer's identity: NONE, or HEADER, in the request header the endpoint's viewerIdentityHeader names. HEADER requires access AUTHENTICATED.",
+          "description": "How the workload learns who the viewer is: NONE; HEADER, a plain request header; ASSERTION, a signed JWT in a request header; or OIDC, the workload signs viewers in as an OpenID Connect client of the platform. Every value but NONE requires access AUTHENTICATED.",
           "enum": [
             "NONE",
-            "HEADER"
+            "HEADER",
+            "ASSERTION",
+            "OIDC"
           ],
           "type": "string"
         },
@@ -193,7 +248,7 @@
         "visibility"
       ],
       "type": "object",
-      "$comment": "spec.md §4.3 / ADR 0034 §1-§2. A bare PUBLIC or PRIVATE, or the object form. Bare PUBLIC is { visibility: PUBLIC } with every default: access OPEN, viewerIdentity NONE. access and viewerIdentity apply only to PUBLIC, and HEADER requires AUTHENTICATED (BP-NODE-006)."
+      "$comment": "spec.md §4.5 / ADR 0034 §1-§2 / ADR 0035 §2, §4. A bare PUBLIC or PRIVATE, or the object form. Bare PUBLIC is { visibility: PUBLIC } with every default: access OPEN, viewerIdentity NONE. Every member but visibility applies only to PUBLIC; an identity mode and accessExemptions require AUTHENTICATED; viewerClaims requires an identity mode (BP-NODE-006)."
     },
     "BlueprintMetadata": {
       "additionalProperties": false,
@@ -325,7 +380,7 @@
       "x-additionalPropertiesName": "nodeName"
     },
     "BlueprintParameter": {
-      "$comment": "spec.md §5 / ADR 0031 §4. A parameter is supplied in one way: submitted (with an optional default), generated, or read from outside the documents through `from`. At most one of default, generator and from.",
+      "$comment": "spec.md §5 / ADR 0031 §4 / ADR 0035 §5, §6. A parameter is supplied in one way: submitted (with an optional default), generated, hashed from a generated parameter, or read from outside the documents through `from`. At most one of default, generator, from and hash, and a hash is never offered in a form.",
       "additionalProperties": false,
       "allOf": [
         {
@@ -362,6 +417,26 @@
               "default": false
             }
           }
+        },
+        {
+          "if": {
+            "properties": {
+              "hash": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "hash"
+            ]
+          },
+          "then": {
+            "properties": {
+              "default": false,
+              "from": false,
+              "generator": false,
+              "ui": false
+            }
+          }
         }
       ],
       "description": "Named installation value, bound explicitly by the nodes that consume it.",
@@ -370,7 +445,7 @@
           "description": "Logical default, replaced by a submitted value. No interpolation."
         },
         "from": {
-          "description": "One whole reference to a value outside the documents: ${{ variables.<path> }} for an organization variable, or ${{ connections.<path> }} for an atomic connection. Never submitted; a connection is replaced whole through acquisition instead.",
+          "description": "One whole reference to a value outside the documents: ${{ variables.<path> }} for an organization variable, ${{ connections.<path> }} for an atomic connection, or ${{ deployment.installer.<fact> }} for a fact about the person who created the installation. Never submitted; a connection is replaced whole through acquisition instead.",
           "maxLength": 512,
           "minLength": 1,
           "type": "string"
@@ -378,6 +453,10 @@
         "generator": {
           "$ref": "#/$defs/BlueprintParameterGenerator",
           "description": "Persisted credential generation; a submitted value is rejected."
+        },
+        "hash": {
+          "$ref": "#/$defs/BlueprintParameterHash",
+          "description": "A hash of a generated parameter, computed once and kept beside it; a submitted value is rejected."
         },
         "ui": {
           "$ref": "#/$defs/BlueprintParameterUi",
@@ -408,6 +487,32 @@
           "type": "string"
         }
       },
+      "type": "object"
+    },
+    "BlueprintParameterHash": {
+      "$comment": "spec.md §5.2 BP-PARAM-012 / ADR 0035 §6. The algorithms and their parameters are fixed: BCRYPT is $2b$ with cost 12, and ARGON2ID is m=19456, t=2, p=1 with a 16-byte salt and a 32-byte hash.",
+      "additionalProperties": false,
+      "description": "Password hash of a generated parameter.",
+      "properties": {
+        "algorithm": {
+          "description": "BCRYPT ($2b$, cost 12) or ARGON2ID (PHC string, m=19456, t=2, p=1).",
+          "enum": [
+            "BCRYPT",
+            "ARGON2ID"
+          ],
+          "type": "string"
+        },
+        "parameter": {
+          "description": "The generated parameter hashed.",
+          "maxLength": 64,
+          "pattern": "^[a-z][a-zA-Z0-9]{0,63}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "parameter",
+        "algorithm"
+      ],
       "type": "object"
     },
     "BlueprintParameterUi": {

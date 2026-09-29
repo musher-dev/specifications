@@ -1,0 +1,11 @@
+{
+  "id": "semantic-097-hash-of-an-undeclared-parameter",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#value-sources",
+  "requirements": [
+    "BP-PARAM-012"
+  ],
+  "summary": "A hash names a declared parameter.",
+  "document": "app/blueprint.yaml"
+}

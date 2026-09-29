@@ -347,7 +347,7 @@ a family admits names from it rather than adding to it.
 | `parameters` | A value supplied when a composition is installed. | Reserved. |
 | `variables` | An organization variable, as visible to the environment an installation deploys into. | Defined by blueprint parameters' `from`. |
 | `connections` | An atomic connection: endpoint, credential and model selected together. | Defined by blueprint parameters' `from`. |
-| `deployment` | Facts about a deployment. | Reserved. |
+| `deployment` | Facts about a deployment. | Defined by blueprint parameters' `from`. |
 | `environment` | Facts about a target environment. | Reserved. |
 | `organization` | Facts about an owning organization. | Reserved. |
 | `output` | A value another node publishes. | Reserved. |
@@ -690,8 +690,9 @@ bundles are self-contained. Source copies do not independently author the patter
 `self.endpoints.<name>.<property>`. Blueprint consumes that definition. Core
 defines syntax only.
 
-**Reserved namespaces.** `parameters`, `deployment`, `environment`, `organization`
-and `output` are reserved and unsupported in v1 reference strings.
+**Reserved namespaces.** `parameters`, `environment`, `organization` and
+`output` are reserved and unsupported in v1 reference strings. `deployment` is
+defined only where blueprint parameters' `from` admits it.
 
 ## <a id="security"></a>11. Security considerations
 

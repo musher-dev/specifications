@@ -1,0 +1,10 @@
+{
+  "id": "structural-069-oidc-on-an-open-endpoint",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#access",
+  "requirements": [
+    "BP-NODE-006"
+  ],
+  "summary": "Every identity mode requires access AUTHENTICATED, OIDC included."
+}

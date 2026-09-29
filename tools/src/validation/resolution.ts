@@ -18,14 +18,17 @@ import { strictAjv } from '../schema/lint.ts'
 import {
   type ConnectionsContext,
   connectionMemberContract,
+  DEPLOYMENT_FACT_PATHS,
   isConnectionInput,
   parameterSource,
   resolveConnections,
 } from './connections.ts'
 import { type Diagnostic, type Phase, parseDocumentBytes } from './document.ts'
 import {
+  addressProperty,
   at,
   effectiveExposure,
+  forwards,
   record,
   type SemanticContext,
   semanticReport,
@@ -122,27 +125,75 @@ export function canonicalCIDR(cidr: unknown): boolean {
   if (value & ((1n << BigInt(bits - prefix)) - 1n)) return false
   return !v6 || ipv6Text(value) === address
 }
+/** An absolute HTTPS URL without credentials, query or fragment. */
+function httpsURL(value: unknown): boolean {
+  if (typeof value !== 'string') return false
+  try {
+    const url = new URL(value)
+    return url.protocol === 'https:' && !url.username && !url.password && !url.search && !url.hash
+  } catch {
+    return false
+  }
+}
+/** The public routing facts that are not viewer identity facts. */
+const ROUTING_FACTS = ['hostname', 'port', 'scheme', 'path']
 /**
- * BP-ACCESS-001: the viewer identity facts exist only on an endpoint whose
- * exposure forwards identity, and each one supplied is well formed. One that is
- * absent is not an error here: a read of it is deferred, so resolution stays
- * incomplete rather than inventing a value.
+ * BP-ACCESS-001: a viewer identity fact exists only on an endpoint whose
+ * exposure selects its mode and claim, and each one supplied is well formed.
+ * One that is absent is not an error here: a read of it is deferred, so
+ * resolution stays incomplete rather than inventing a value.
  */
 function viewerFacts(
   pub: NonNullable<EndpointAllocation['public']>,
-  viewerIdentity: 'NONE' | 'HEADER',
+  exposure: ReturnType<typeof effectiveExposure>,
 ): boolean {
-  const header = pub.viewerIdentityHeader,
-    cidrs = pub.trustedProxyCIDRs as unknown
-  if (header === undefined && cidrs === undefined) return true
-  if (viewerIdentity !== 'HEADER') return false
-  if (header !== undefined && !validIdentityHeader(header)) return false
+  const facts = Object.entries(pub).filter(([key]) => !ROUTING_FACTS.includes(key))
+  const headers: string[] = []
+  for (const [key, value] of facts) {
+    const property = addressProperty(key)
+    // An OpenID Connect client is never a routing fact: it holds a secret.
+    if (
+      property?.requires !== 'VIEWER_IDENTITY' ||
+      property.mode === 'OIDC' ||
+      !forwards(exposure, property)
+    )
+      return false
+    if (key === 'trustedProxyCIDRs') {
+      const cidrs = value as unknown
+      if (
+        !Array.isArray(cidrs) ||
+        !cidrs.length ||
+        !cidrs.every(canonicalCIDR) ||
+        new Set(cidrs).size !== cidrs.length
+      )
+        return false
+    } else if (key.endsWith('Header')) {
+      if (!validIdentityHeader(value)) return false
+      headers.push(value as string)
+    } else if (key.endsWith('URL')) {
+      if (!httpsURL(value)) return false
+    } else if (typeof value !== 'string' || !value || value.length > 512) return false
+  }
+  // Each forwarded fact travels in a header of its own.
+  return new Set(headers).size === headers.length
+}
+/**
+ * BP-ACCESS-001: the client registration of an endpoint whose mode is OIDC.
+ * It sits beside the routing facts, never among them, because it holds a secret.
+ */
+function oidcClientFact(value: unknown): value is OidcClient {
+  const c = record(value as Json)
+  const text = (v: unknown) => typeof v === 'string' && v.length > 0 && v.length <= 512
   return (
-    cidrs === undefined ||
-    (Array.isArray(cidrs) &&
-      cidrs.length > 0 &&
-      cidrs.every(canonicalCIDR) &&
-      new Set(cidrs).size === cidrs.length)
+    isObject(value as Json) &&
+    Object.keys(c).every((key) =>
+      ['identity', 'version', 'issuerURL', 'clientID', 'secret'].includes(key),
+    ) &&
+    text(c.identity) &&
+    text(c.version) &&
+    httpsURL(c.issuerURL) &&
+    text(c.clientID) &&
+    text(c.secret)
   )
 }
 export interface ResolvedValue {
@@ -150,6 +201,13 @@ export interface ResolvedValue {
   readonly sensitive: boolean
   readonly identity?: string
   readonly version?: string
+}
+export interface OidcClient {
+  readonly identity: string
+  readonly version: string
+  readonly issuerURL: string
+  readonly clientID: string
+  readonly secret: string
 }
 export interface EndpointAllocation {
   readonly identity: string
@@ -162,7 +220,21 @@ export interface EndpointAllocation {
     readonly path?: string
     readonly viewerIdentityHeader?: string
     readonly trustedProxyCIDRs?: readonly string[]
+    readonly viewerEmailHeader?: string
+    readonly viewerNameHeader?: string
+    readonly viewerAssertionHeader?: string
+    readonly viewerAssertionIssuer?: string
+    readonly viewerAssertionAudience?: string
+    readonly viewerAssertionKeysURL?: string
   }
+  readonly oidcClient?: OidcClient
+}
+/**
+ * Blueprint BP-PARAM-011: facts about the person who created the installation.
+ * An absent fact is not yet acquired; `null` is one the platform knows it lacks.
+ */
+export interface DeploymentContext {
+  readonly installer?: Readonly<Record<string, string | null>>
 }
 export interface InstallationContext extends SemanticContext {
   readonly connections?: ConnectionsContext['connections']
@@ -176,6 +248,7 @@ export interface InstallationContext extends SemanticContext {
   >
   readonly allocations?: Readonly<Record<string, Readonly<Record<string, EndpointAllocation>>>>
   readonly credentials?: Readonly<Record<string, ResolvedValue>>
+  readonly deployment?: DeploymentContext
 }
 export interface InstallationResult {
   /** Describes pre-start value resolution, never current deployment admission. */
@@ -260,10 +333,12 @@ export function resolveInstallation(
       fail('ERR_UNKNOWN_PARAMETER', '/spec/parameters', 'parameters')
     else if (
       at(parameters[name], 'generator') !== undefined ||
-      at(parameters[name], 'from') !== undefined
+      at(parameters[name], 'from') !== undefined ||
+      at(parameters[name], 'hash') !== undefined
     )
-      // BP-PARAM-004 and BP-PARAM-009: generated values, variables and connections are
-      // never submitted. A connection is replaced whole through acquisition instead.
+      // BP-PARAM-004, BP-PARAM-009, BP-PARAM-011 and BP-PARAM-012: generated values,
+      // hashes, variables, deployment facts and connections are never submitted. A
+      // connection is replaced whole through acquisition instead.
       fail('ERR_PARAMETER_NOT_SUBMITTABLE', '/spec/parameters/' + token(name), 'parameters')
   if (context.allocations !== undefined && !isObject(context.allocations as unknown as Json)) {
     fail('ERR_INVALID_RESOLUTION_CONTEXT', '/spec/components', 'allocation')
@@ -296,21 +371,19 @@ export function resolveInstallation(
         typeof allocation.version !== 'string' ||
         !allocation.version ||
         Object.keys(allocation).some(
-          (key) => !['identity', 'version', 'privateHostname', 'public'].includes(key),
+          (key) =>
+            !['identity', 'version', 'privateHostname', 'public', 'oidcClient'].includes(key),
         ) ||
+        (allocation.oidcClient !== undefined &&
+          (effectiveExposure(at(nodes[node], 'exposure'), name).viewerIdentity !== 'OIDC' ||
+            !oidcClientFact(allocation.oidcClient))) ||
         (allocation.privateHostname !== undefined && !validHostname(allocation.privateHostname)) ||
         (pub &&
           (!validHostname(pub.hostname) ||
             Object.keys(pub).some(
               (key) =>
-                ![
-                  'hostname',
-                  'port',
-                  'scheme',
-                  'path',
-                  'viewerIdentityHeader',
-                  'trustedProxyCIDRs',
-                ].includes(key),
+                !ROUTING_FACTS.includes(key) &&
+                addressProperty(key)?.requires !== 'VIEWER_IDENTITY',
             ) ||
             (pub.port !== undefined &&
               (!Number.isInteger(pub.port) || pub.port < 1 || pub.port > 65535)) ||
@@ -319,10 +392,7 @@ export function resolveInstallation(
               (typeof pub.path !== 'string' ||
                 !pub.path.startsWith('/') ||
                 /[?#\\\s]/.test(pub.path))) ||
-            !viewerFacts(
-              pub,
-              effectiveExposure(at(nodes[node], 'exposure'), name).viewerIdentity,
-            ) ||
+            !viewerFacts(pub, effectiveExposure(at(nodes[node], 'exposure'), name)) ||
             effectiveExposure(at(nodes[node], 'exposure'), name).visibility !== 'PUBLIC'))
       )
         fail(
@@ -359,6 +429,34 @@ export function resolveInstallation(
         version: variable.version,
       })
   }
+  // BP-PARAM-011: a deployment fact is acquired once per parameter, and its
+  // failures anchor at that parameter's `from`.
+  const facts = new Map<string, ResolvedValue>()
+  const installer = record(at(context.deployment as Json | undefined, 'installer'))
+  if (
+    (context.deployment !== undefined &&
+      (!isObject(context.deployment as unknown as Json) ||
+        Object.keys(context.deployment).some((key) => key !== 'installer'))) ||
+    Object.keys(installer).some((key) => !DEPLOYMENT_FACT_PATHS.includes('installer.' + key))
+  ) {
+    fail('ERR_INVALID_RESOLUTION_CONTEXT', '/spec/parameters', 'parameters')
+    return result()
+  }
+  for (const [name, p] of Object.entries(parameters)) {
+    const source = parameterSource(p)
+    if (source?.namespace !== 'deployment' || Object.hasOwn(context.parameters ?? {}, name))
+      continue
+    const path = '/spec/parameters/' + token(name) + '/from',
+      field = source.key.slice('installer.'.length),
+      fact = Object.hasOwn(installer, field) ? installer[field] : undefined
+    if (fact === undefined)
+      deferred.push({ rule: 'BP-PARAM-011', path, missing: `deployment:${source.key}` })
+    else if (fact === null) fail('ERR_DEPLOYMENT_FACT_UNAVAILABLE', path, 'parameters')
+    else if (typeof fact !== 'string' || !fact)
+      fail('ERR_INVALID_RESOLUTION_CONTEXT', path, 'parameters')
+    // Personal data, not a secret, and concealed as one.
+    else facts.set(name, { value: fact, sensitive: true })
+  }
   function endpoint(
     node: string,
     name: string,
@@ -383,9 +481,11 @@ export function resolveInstallation(
     else if (property === 'publicPort') value = allocation?.public?.port
     else if (property === 'publicAddress' && allocation?.public?.port)
       value = `${addressHost(allocation.public.hostname)}:${allocation.public.port}`
-    else if (property === 'viewerIdentityHeader') value = allocation?.public?.viewerIdentityHeader
-    else if (property === 'trustedProxyCIDRs')
-      value = allocation?.public?.trustedProxyCIDRs as Json | undefined
+    else if (property === 'oidcIssuerURL') value = allocation?.oidcClient?.issuerURL
+    else if (property === 'oidcClientID') value = allocation?.oidcClient?.clientID
+    else if (property === 'oidcClientSecret') value = allocation?.oidcClient?.secret
+    else if (addressProperty(property)?.requires === 'VIEWER_IDENTITY')
+      value = record(allocation?.public as Json | undefined)[property]
     else if (property === 'publicURL' && allocation?.public?.scheme) {
       const p = allocation.public
       value = `${p.scheme}://${addressHost(p.hostname)}${p.port === undefined ? '' : ':' + p.port}${(p.path ?? '').replace(/\/+$/, '')}`
@@ -394,7 +494,7 @@ export function resolveInstallation(
       missing(path, `allocation:${node}:${name}:${property}`)
       return
     }
-    return { value, sensitive: false }
+    return { value, sensitive: addressProperty(property)?.sensitive === true }
   }
   function output(node: string, name: string): ResolvedValue | undefined {
     const id = `${node}:out:${name}`,
@@ -428,7 +528,8 @@ export function resolveInstallation(
         scan = scanReferences(text, ['self'])
       let atIndex = 0,
         rendered = '',
-        complete = true
+        complete = true,
+        sensitive = false
       for (const ref of scan.references) {
         rendered += text.slice(atIndex, ref.offset).replaceAll('$${{', '${{')
         // Component §6.2: a self path is `endpoints.<endpoint>.<property>`.
@@ -438,12 +539,14 @@ export function resolveInstallation(
           break
         }
         rendered += encodeEnvironment(part.value)
+        sensitive ||= part.sensitive
         atIndex = ref.offset + ref.raw.length
       }
+      // Component §11: sensitivity follows a value through formatting.
       if (complete)
         value = {
           value: rendered + text.slice(atIndex).replaceAll('$${{', '${{'),
-          sensitive: false,
+          sensitive,
         }
     }
     if (value && (typeof value.sensitive !== 'boolean' || !boundedValue(value.value))) {
@@ -502,7 +605,7 @@ export function resolveInstallation(
           context.parameters && Object.hasOwn(context.parameters, key)
             ? context.parameters[key]
             : undefined
-      if (p.generator) {
+      if (p.generator || p.hash) {
         // A submitted value was already rejected with ERR_PARAMETER_NOT_SUBMITTABLE.
         value =
           context.credentials && Object.hasOwn(context.credentials, key)
@@ -510,9 +613,20 @@ export function resolveInstallation(
             : undefined
         if (value) value = { ...value, sensitive: true }
         else if (submitted === undefined) missing(path, `credential:${key}`)
+        // BP-PARAM-012: a stored hash has its algorithm's one format.
+        if (
+          value &&
+          p.hash &&
+          !hashFormat(String(at(p.hash, 'algorithm'))).test(String(value.value))
+        ) {
+          fail('ERR_INVALID_RESOLUTION_CONTEXT', path)
+          value = undefined
+        }
       } else if (source?.namespace === 'variables') {
         // Reported once for the parameter above; a binding only takes the value.
         value = variables.get(key)
+      } else if (source?.namespace === 'deployment') {
+        value = facts.get(key)
       } else {
         value = submitted
         if (!value && Object.hasOwn(p, 'default')) value = { value: p.default!, sensitive: false }
@@ -583,6 +697,12 @@ export function resolveInstallation(
   return result()
 }
 
+/** BP-PARAM-012: the one format each hash algorithm produces. */
+export function hashFormat(algorithm: string): RegExp {
+  return algorithm === 'ARGON2ID'
+    ? /^\$argon2id\$v=19\$m=19456,t=2,p=1\$[A-Za-z0-9+/]{22}\$[A-Za-z0-9+/]{43}$/
+    : /^\$2b\$12\$[./A-Za-z0-9]{53}$/
+}
 /** Safe public view: no plaintext or content hash of a sensitive value. */
 export function inspectValue(value: ResolvedValue): Json {
   return value.sensitive
@@ -642,6 +762,8 @@ export interface InstallationSnapshot {
   >
   readonly allocations: NonNullable<InstallationContext['allocations']>
   readonly connections?: ConnectionsContext['connections']
+  /** Deployment facts captured when the installation was created (BP-PARAM-011). */
+  readonly deployment?: DeploymentContext
 }
 export interface RecordContext extends SemanticContext {
   readonly snapshot: InstallationSnapshot
@@ -727,6 +849,11 @@ export function resolutionRecord(
         source = parameterSource(parameter)
       if (source?.namespace === 'variables') expectedVariables.add(source.key)
       if (at(parameter, 'generator') !== undefined) expectedCredentials.add(name)
+      // BP-PARAM-012: a hash is a credential, and so is the generated value it hashes.
+      if (at(parameter, 'hash') !== undefined) {
+        expectedCredentials.add(name)
+        expectedCredentials.add(String(at(parameter, 'hash', 'parameter')))
+      }
     }
   }
   if (
@@ -748,6 +875,16 @@ export function resolutionRecord(
       selected.rotation !== snapshot.credentials[key]?.rotation
     )
       throw new Error('credential snapshot mismatch')
+  // BP-PARAM-012: a hash has an identity of its own and its source's rotation.
+  for (const [key, selected] of Object.entries(credentials)) {
+    const source = at(parsed.value, 'spec', 'parameters', key, 'hash', 'parameter')
+    if (
+      typeof source === 'string' &&
+      (selected.rotation !== credentials[source]?.rotation ||
+        selected.identity === credentials[source]?.identity)
+    )
+      throw new Error('hash credential disagrees with its source')
+  }
   if (
     !context.specificationDependencies ||
     !sameKeys(specifications, context.specificationDependencies)

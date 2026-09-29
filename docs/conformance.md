@@ -371,8 +371,14 @@ URLs. Fixtures use synthetic values, including when testing sensitivity.
 The resolution context's `contracts` map uses `identity@revision` keys and
 `{source, digest}` values. Variables use exact dotted paths and entries
 `{value, sensitive, identity, version, authorized}`. Parameters and stored
-credentials use `{value, sensitive}`. `allocations` maps node and endpoint to
-`{identity, version, privateHostname?, public?}`. `connections` holds the
+credentials use `{value, sensitive}`; a hash parameter's stored credential is
+keyed by its own name. `allocations` maps node and endpoint to
+`{identity, version, privateHostname?, public?, oidcClient?}`. `public` holds
+the routing facts and the viewer identity facts of the endpoint's mode;
+`oidcClient` is `{identity, version, issuerURL, clientID, secret}`, beside
+`public` and never inside it. `deployment` is `{installer: {identity?, email?,
+name?}}`: an absent fact is not yet acquired, and `null` is one the platform
+knows it lacks. `connections` holds the
 `installation` and, per connection parameter, an acquisition `status` and, when
 `SELECTED`, the persisted `selection` of blueprint §5.3. An unavailable entry is absent, never a fabricated empty
 value. The complete meaning of each source belongs to blueprint and component.

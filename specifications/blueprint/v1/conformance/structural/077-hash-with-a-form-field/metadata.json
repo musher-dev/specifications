@@ -1,0 +1,10 @@
+{
+  "id": "structural-077-hash-with-a-form-field",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#parameters",
+  "requirements": [
+    "BP-PARAM-010"
+  ],
+  "summary": "A hash is never offered in a form."
+}

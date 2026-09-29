@@ -1,0 +1,17 @@
+specVersion: v1
+kind: BLUEPRINT
+metadata:
+  slug: app
+  revision: 1
+  description: Synthetic conformance fixture blueprint.
+spec:
+  parameters:
+    ownerPassword: { generator: { byteLength: 24, encoding: BASE64URL }, ui: { label: Owner password } }
+    ownerPasswordHash: { hash: { parameter: ownerPassword, algorithm: BCRYPT } }
+    codeHash: { hash: { parameter: ownerPassword, algorithm: ARGON2ID } }
+    ownerEmail: { from: "${{ deployment.installer.email }}" }
+  components:
+    web:
+      componentRef: ./components/web.yaml
+      compute:
+        profile: general.standard.small

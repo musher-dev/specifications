@@ -1,0 +1,10 @@
+{
+  "id": "structural-138-oidc-without-redirect-paths",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#endpoints",
+  "requirements": [
+    "COMP-EP-013"
+  ],
+  "summary": "An OpenID Connect client names its redirect paths."
+}

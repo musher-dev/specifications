@@ -1,0 +1,11 @@
+{
+  "id": "semantic-092-oidc-for-an-endpoint-that-is-no-client",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#access",
+  "requirements": [
+    "BP-NODE-008"
+  ],
+  "summary": "A node selects OIDC only for an endpoint the component declares a client.",
+  "document": "app/blueprint.yaml"
+}

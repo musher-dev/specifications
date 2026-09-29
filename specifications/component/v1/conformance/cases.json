@@ -851,6 +851,101 @@
       "id": "semantic-066-trusted-proxies-in-a-template",
       "phase": "semantic",
       "path": "semantic/066-trusted-proxies-in-a-template"
+    },
+    {
+      "id": "structural-135-oidc-client-and-access-exemptions",
+      "phase": "structural",
+      "path": "structural/135-oidc-client-and-access-exemptions"
+    },
+    {
+      "id": "structural-136-oidc-on-a-tcp-endpoint",
+      "phase": "structural",
+      "path": "structural/136-oidc-on-a-tcp-endpoint"
+    },
+    {
+      "id": "structural-137-access-exemptions-on-a-grpc-endpoint",
+      "phase": "structural",
+      "path": "structural/137-access-exemptions-on-a-grpc-endpoint"
+    },
+    {
+      "id": "structural-138-oidc-without-redirect-paths",
+      "phase": "structural",
+      "path": "structural/138-oidc-without-redirect-paths"
+    },
+    {
+      "id": "structural-139-empty-access-exemptions",
+      "phase": "structural",
+      "path": "structural/139-empty-access-exemptions"
+    },
+    {
+      "id": "structural-140-exempt-path-of-the-root",
+      "phase": "structural",
+      "path": "structural/140-exempt-path-of-the-root"
+    },
+    {
+      "id": "structural-141-exempt-path-with-a-trailing-slash",
+      "phase": "structural",
+      "path": "structural/141-exempt-path-with-a-trailing-slash"
+    },
+    {
+      "id": "structural-142-exempt-path-with-an-encoded-slash",
+      "phase": "structural",
+      "path": "structural/142-exempt-path-with-an-encoded-slash"
+    },
+    {
+      "id": "structural-143-exempt-path-with-a-parameter",
+      "phase": "structural",
+      "path": "structural/143-exempt-path-with-a-parameter"
+    },
+    {
+      "id": "structural-144-redirect-path-with-a-dot-segment",
+      "phase": "structural",
+      "path": "structural/144-redirect-path-with-a-dot-segment"
+    },
+    {
+      "id": "structural-145-redirect-path-with-a-query",
+      "phase": "structural",
+      "path": "structural/145-redirect-path-with-a-query"
+    },
+    {
+      "id": "structural-146-exempt-path-under-the-platform-prefix",
+      "phase": "structural",
+      "path": "structural/146-exempt-path-under-the-platform-prefix"
+    },
+    {
+      "id": "structural-147-repeated-exempt-path",
+      "phase": "structural",
+      "path": "structural/147-repeated-exempt-path"
+    },
+    {
+      "id": "semantic-067-viewer-identity-mode-properties",
+      "phase": "semantic",
+      "path": "semantic/067-viewer-identity-mode-properties"
+    },
+    {
+      "id": "semantic-068-oidc-client-read-without-a-declaration",
+      "phase": "semantic",
+      "path": "semantic/068-oidc-client-read-without-a-declaration"
+    },
+    {
+      "id": "semantic-069-oidc-issuer-in-a-template-without-a-declaration",
+      "phase": "semantic",
+      "path": "semantic/069-oidc-issuer-in-a-template-without-a-declaration"
+    },
+    {
+      "id": "semantic-070-worker-reads-an-assertion-header",
+      "phase": "semantic",
+      "path": "semantic/070-worker-reads-an-assertion-header"
+    },
+    {
+      "id": "semantic-071-assertion-keys-of-a-grpc-endpoint",
+      "phase": "semantic",
+      "path": "semantic/071-assertion-keys-of-a-grpc-endpoint"
+    },
+    {
+      "id": "semantic-072-deployment-fact-in-a-template",
+      "phase": "semantic",
+      "path": "semantic/072-deployment-fact-in-a-template"
     }
   ]
 }

@@ -1,0 +1,17 @@
+specVersion: v1
+kind: BLUEPRINT
+metadata:
+  slug: app
+  revision: 1
+  description: Synthetic conformance fixture blueprint.
+spec:
+  parameters: {}
+  components:
+    web:
+      componentRef: ./web.yaml
+      compute:
+        profile: general.standard.small
+      exposure:
+        web: { visibility: PUBLIC, access: AUTHENTICATED, viewerIdentity: HEADER }
+      bindings:
+        header: { node: web, output: assertionHeader }

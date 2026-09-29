@@ -1,0 +1,11 @@
+{
+  "id": "semantic-090-claim-header-read-without-the-claim",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v1/spec.md#access",
+  "requirements": [
+    "BP-NODE-007"
+  ],
+  "summary": "A claim header exists only when the exposure releases the claim.",
+  "document": "app/blueprint.yaml"
+}

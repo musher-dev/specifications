@@ -1,0 +1,37 @@
+specVersion: v1
+kind: BLUEPRINT
+metadata:
+  slug: workflow-with-webhooks
+  revision: 1
+  description: A workflow editor behind the platform's sign-in, whose webhooks stay reachable and whose owner is the installer.
+spec:
+  parameters:
+    # Disclosed to the installer, and never bound: the workload receives only
+    # its hash.
+    ownerPassword:
+      generator:
+        byteLength: 24
+        encoding: BASE64URL
+      ui:
+        label: Owner password
+    ownerPasswordHash:
+      hash:
+        parameter: ownerPassword
+        algorithm: BCRYPT
+    ownerEmail:
+      from: "${{ deployment.installer.email }}"
+  components:
+    workflows:
+      componentRef: ./components/workflow-with-webhooks.yaml
+      compute:
+        profile: general.standard.small
+      exposure:
+        web:
+          visibility: PUBLIC
+          access: AUTHENTICATED
+          accessExemptions: [PATHS]
+      bindings:
+        ownerEmail:
+          parameter: ownerEmail
+        ownerPasswordHash:
+          parameter: ownerPasswordHash

@@ -3406,5 +3406,990 @@
         "stage": "allocation"
       }
     ]
+  },
+  {
+    "id": "resolution-claim-header-facts",
+    "profile": "resolution",
+    "operation": "resolve",
+    "document": "app/blueprint.yaml",
+    "requirements": [
+      "BP-ACCESS-001",
+      "BP-NODE-007"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"exposure\":{\"web\":{\"visibility\":\"PUBLIC\",\"access\":\"AUTHENTICATED\",\"viewerIdentity\":\"HEADER\",\"viewerClaims\":[\"EMAIL\",\"NAME\"]}},\"bindings\":{\"identityHeader\":{\"node\":\"web\",\"output\":\"identityHeader\"},\"emailHeader\":{\"node\":\"web\",\"output\":\"emailHeader\"},\"nameHeader\":{\"node\":\"web\",\"output\":\"nameHeader\"}}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/service:1\"},\"endpoints\":{\"web\":{\"targetPort\":8080,\"protocol\":\"HTTP\"}},\"health\":{\"readiness\":{\"http\":{\"endpoint\":\"web\",\"path\":\"/healthz\"}}}},\"contract\":{\"inputs\":{\"identityHeader\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"IDENTITY_HEADER\"}},\"emailHeader\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"EMAIL_HEADER\"}},\"nameHeader\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"NAME_HEADER\"}}},\"outputs\":{\"identityHeader\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"endpoint\":\"web\",\"property\":\"viewerIdentityHeader\"}},\"emailHeader\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"endpoint\":\"web\",\"property\":\"viewerEmailHeader\"}},\"nameHeader\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"endpoint\":\"web\",\"property\":\"viewerNameHeader\"}}}}}}"
+    },
+    "context": {
+      "allocations": {
+        "web": {
+          "web": {
+            "identity": "allocation-1",
+            "version": "1",
+            "public": {
+              "hostname": "app.example.invalid",
+              "scheme": "https",
+              "viewerIdentityHeader": "x-platform-user",
+              "trustedProxyCIDRs": [
+                "10.88.0.0/16"
+              ],
+              "viewerEmailHeader": "x-platform-email",
+              "viewerNameHeader": "x-platform-name"
+            }
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "VALID",
+      "/environment/web/EMAIL_HEADER/value": "x-platform-email",
+      "/environment/web/NAME_HEADER/value": "x-platform-name"
+    }
+  },
+  {
+    "id": "resolution-rejects-claim-header-not-released",
+    "profile": "resolution",
+    "operation": "resolve",
+    "document": "app/blueprint.yaml",
+    "requirements": [
+      "BP-ACCESS-001"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"exposure\":{\"web\":{\"visibility\":\"PUBLIC\",\"access\":\"AUTHENTICATED\",\"viewerIdentity\":\"HEADER\",\"viewerClaims\":[\"NAME\"]}},\"bindings\":{\"identityHeader\":{\"node\":\"web\",\"output\":\"identityHeader\"},\"nameHeader\":{\"node\":\"web\",\"output\":\"nameHeader\"}}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/service:1\"},\"endpoints\":{\"web\":{\"targetPort\":8080,\"protocol\":\"HTTP\"}},\"health\":{\"readiness\":{\"http\":{\"endpoint\":\"web\",\"path\":\"/healthz\"}}}},\"contract\":{\"inputs\":{\"identityHeader\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"IDENTITY_HEADER\"}},\"nameHeader\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"NAME_HEADER\"}}},\"outputs\":{\"identityHeader\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"endpoint\":\"web\",\"property\":\"viewerIdentityHeader\"}},\"nameHeader\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"endpoint\":\"web\",\"property\":\"viewerNameHeader\"}}}}}}"
+    },
+    "context": {
+      "allocations": {
+        "web": {
+          "web": {
+            "identity": "allocation-1",
+            "version": "1",
+            "public": {
+              "hostname": "app.example.invalid",
+              "scheme": "https",
+              "viewerIdentityHeader": "x-platform-user",
+              "trustedProxyCIDRs": [
+                "10.88.0.0/16"
+              ],
+              "viewerEmailHeader": "x-platform-email",
+              "viewerNameHeader": "x-platform-name"
+            }
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_INVALID_RESOLUTION_CONTEXT",
+        "phase": "resolution",
+        "stage": "allocation"
+      }
+    ]
+  },
+  {
+    "id": "resolution-rejects-shared-claim-header",
+    "profile": "resolution",
+    "operation": "resolve",
+    "document": "app/blueprint.yaml",
+    "requirements": [
+      "BP-ACCESS-001"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"exposure\":{\"web\":{\"visibility\":\"PUBLIC\",\"access\":\"AUTHENTICATED\",\"viewerIdentity\":\"HEADER\",\"viewerClaims\":[\"EMAIL\",\"NAME\"]}},\"bindings\":{\"identityHeader\":{\"node\":\"web\",\"output\":\"identityHeader\"},\"emailHeader\":{\"node\":\"web\",\"output\":\"emailHeader\"},\"nameHeader\":{\"node\":\"web\",\"output\":\"nameHeader\"}}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/service:1\"},\"endpoints\":{\"web\":{\"targetPort\":8080,\"protocol\":\"HTTP\"}},\"health\":{\"readiness\":{\"http\":{\"endpoint\":\"web\",\"path\":\"/healthz\"}}}},\"contract\":{\"inputs\":{\"identityHeader\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"IDENTITY_HEADER\"}},\"emailHeader\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"EMAIL_HEADER\"}},\"nameHeader\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"NAME_HEADER\"}}},\"outputs\":{\"identityHeader\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"endpoint\":\"web\",\"property\":\"viewerIdentityHeader\"}},\"emailHeader\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"endpoint\":\"web\",\"property\":\"viewerEmailHeader\"}},\"nameHeader\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"endpoint\":\"web\",\"property\":\"viewerNameHeader\"}}}}}}"
+    },
+    "context": {
+      "allocations": {
+        "web": {
+          "web": {
+            "identity": "allocation-1",
+            "version": "1",
+            "public": {
+              "hostname": "app.example.invalid",
+              "scheme": "https",
+              "viewerIdentityHeader": "x-platform-user",
+              "trustedProxyCIDRs": [
+                "10.88.0.0/16"
+              ],
+              "viewerEmailHeader": "x-platform-email",
+              "viewerNameHeader": "x-platform-user"
+            }
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_INVALID_RESOLUTION_CONTEXT",
+        "phase": "resolution",
+        "stage": "allocation"
+      }
+    ]
+  },
+  {
+    "id": "resolution-assertion-facts",
+    "profile": "resolution",
+    "operation": "resolve",
+    "document": "app/blueprint.yaml",
+    "requirements": [
+      "BP-ACCESS-001",
+      "BP-NODE-007"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"exposure\":{\"web\":{\"visibility\":\"PUBLIC\",\"access\":\"AUTHENTICATED\",\"viewerIdentity\":\"ASSERTION\",\"viewerClaims\":[\"EMAIL\"]}},\"bindings\":{\"header\":{\"node\":\"web\",\"output\":\"header\"},\"issuer\":{\"node\":\"web\",\"output\":\"issuer\"},\"audience\":{\"node\":\"web\",\"output\":\"audience\"},\"keys\":{\"node\":\"web\",\"output\":\"keys\"}}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/service:1\"},\"endpoints\":{\"web\":{\"targetPort\":8080,\"protocol\":\"HTTP\"}},\"health\":{\"readiness\":{\"http\":{\"endpoint\":\"web\",\"path\":\"/healthz\"}}}},\"contract\":{\"inputs\":{\"header\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"ASSERTION_HEADER\"}},\"issuer\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"ASSERTION_ISSUER\"}},\"audience\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"ASSERTION_AUDIENCE\"}},\"keys\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"ASSERTION_KEYS\"}}},\"outputs\":{\"header\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"endpoint\":\"web\",\"property\":\"viewerAssertionHeader\"}},\"issuer\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"endpoint\":\"web\",\"property\":\"viewerAssertionIssuer\"}},\"audience\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"endpoint\":\"web\",\"property\":\"viewerAssertionAudience\"}},\"keys\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"endpoint\":\"web\",\"property\":\"viewerAssertionKeysURL\"}}}}}}"
+    },
+    "context": {
+      "allocations": {
+        "web": {
+          "web": {
+            "identity": "allocation-1",
+            "version": "1",
+            "public": {
+              "hostname": "app.example.invalid",
+              "scheme": "https",
+              "viewerAssertionHeader": "x-platform-assertion",
+              "viewerAssertionIssuer": "https://id.example.invalid",
+              "viewerAssertionAudience": "installation-1/web",
+              "viewerAssertionKeysURL": "https://id.example.invalid/.well-known/jwks.json"
+            }
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "VALID",
+      "/environment/web/ASSERTION_HEADER/value": "x-platform-assertion",
+      "/environment/web/ASSERTION_AUDIENCE/value": "installation-1/web",
+      "/environment/web/ASSERTION_KEYS/value": "https://id.example.invalid/.well-known/jwks.json",
+      "/inputs/web:in:keys/sensitive": false
+    }
+  },
+  {
+    "id": "resolution-rejects-assertion-keys-over-http",
+    "profile": "resolution",
+    "operation": "resolve",
+    "document": "app/blueprint.yaml",
+    "requirements": [
+      "BP-ACCESS-001"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"exposure\":{\"web\":{\"visibility\":\"PUBLIC\",\"access\":\"AUTHENTICATED\",\"viewerIdentity\":\"ASSERTION\",\"viewerClaims\":[\"EMAIL\"]}},\"bindings\":{\"header\":{\"node\":\"web\",\"output\":\"header\"},\"issuer\":{\"node\":\"web\",\"output\":\"issuer\"},\"audience\":{\"node\":\"web\",\"output\":\"audience\"},\"keys\":{\"node\":\"web\",\"output\":\"keys\"}}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/service:1\"},\"endpoints\":{\"web\":{\"targetPort\":8080,\"protocol\":\"HTTP\"}},\"health\":{\"readiness\":{\"http\":{\"endpoint\":\"web\",\"path\":\"/healthz\"}}}},\"contract\":{\"inputs\":{\"header\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"ASSERTION_HEADER\"}},\"issuer\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"ASSERTION_ISSUER\"}},\"audience\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"ASSERTION_AUDIENCE\"}},\"keys\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"ASSERTION_KEYS\"}}},\"outputs\":{\"header\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"endpoint\":\"web\",\"property\":\"viewerAssertionHeader\"}},\"issuer\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"endpoint\":\"web\",\"property\":\"viewerAssertionIssuer\"}},\"audience\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"endpoint\":\"web\",\"property\":\"viewerAssertionAudience\"}},\"keys\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"endpoint\":\"web\",\"property\":\"viewerAssertionKeysURL\"}}}}}}"
+    },
+    "context": {
+      "allocations": {
+        "web": {
+          "web": {
+            "identity": "allocation-1",
+            "version": "1",
+            "public": {
+              "hostname": "app.example.invalid",
+              "scheme": "https",
+              "viewerAssertionHeader": "x-platform-assertion",
+              "viewerAssertionIssuer": "https://id.example.invalid",
+              "viewerAssertionAudience": "installation-1/web",
+              "viewerAssertionKeysURL": "http://id.example.invalid/jwks.json"
+            }
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_INVALID_RESOLUTION_CONTEXT",
+        "phase": "resolution",
+        "stage": "allocation"
+      }
+    ]
+  },
+  {
+    "id": "resolution-rejects-assertion-facts-under-header",
+    "profile": "resolution",
+    "operation": "resolve",
+    "document": "app/blueprint.yaml",
+    "requirements": [
+      "BP-ACCESS-001"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"exposure\":{\"web\":{\"visibility\":\"PUBLIC\",\"access\":\"AUTHENTICATED\",\"viewerIdentity\":\"HEADER\"}},\"bindings\":{}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/service:1\"},\"endpoints\":{\"web\":{\"targetPort\":8080,\"protocol\":\"HTTP\"}},\"health\":{\"readiness\":{\"http\":{\"endpoint\":\"web\",\"path\":\"/healthz\"}}}},\"contract\":{\"inputs\":{},\"outputs\":{}}}}"
+    },
+    "context": {
+      "allocations": {
+        "web": {
+          "web": {
+            "identity": "allocation-1",
+            "version": "1",
+            "public": {
+              "hostname": "app.example.invalid",
+              "scheme": "https",
+              "viewerAssertionHeader": "x-platform-assertion",
+              "viewerAssertionIssuer": "https://id.example.invalid",
+              "viewerAssertionAudience": "installation-1/web",
+              "viewerAssertionKeysURL": "https://id.example.invalid/.well-known/jwks.json"
+            }
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_INVALID_RESOLUTION_CONTEXT",
+        "phase": "resolution",
+        "stage": "allocation"
+      }
+    ]
+  },
+  {
+    "id": "resolution-oidc-client",
+    "profile": "resolution",
+    "operation": "resolve",
+    "document": "app/blueprint.yaml",
+    "requirements": [
+      "BP-ACCESS-001",
+      "BP-NODE-007",
+      "COMP-EP-012"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"exposure\":{\"web\":{\"visibility\":\"PUBLIC\",\"access\":\"AUTHENTICATED\",\"viewerIdentity\":\"OIDC\",\"viewerClaims\":[\"EMAIL\",\"NAME\"]}},\"bindings\":{\"issuer\":{\"node\":\"web\",\"output\":\"issuer\"},\"clientID\":{\"node\":\"web\",\"output\":\"clientID\"},\"clientSecret\":{\"node\":\"web\",\"output\":\"clientSecret\"},\"redirectURI\":{\"node\":\"web\",\"output\":\"redirectURI\"}}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/service:1\"},\"endpoints\":{\"web\":{\"targetPort\":8080,\"protocol\":\"HTTP\",\"oidc\":{\"redirectPaths\":[\"/oauth/oidc/callback\"]}}},\"health\":{\"readiness\":{\"http\":{\"endpoint\":\"web\",\"path\":\"/healthz\"}}}},\"contract\":{\"inputs\":{\"issuer\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"OIDC_ISSUER\"}},\"clientID\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"OIDC_CLIENT_ID\"}},\"clientSecret\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"OIDC_CLIENT_SECRET\"}},\"redirectURI\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"OIDC_REDIRECT_URI\"}}},\"outputs\":{\"issuer\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"endpoint\":\"web\",\"property\":\"oidcIssuerURL\"}},\"clientID\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"endpoint\":\"web\",\"property\":\"oidcClientID\"}},\"clientSecret\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"endpoint\":\"web\",\"property\":\"oidcClientSecret\"}},\"redirectURI\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"template\":\"${{ self.endpoints.web.publicURL }}/oauth/oidc/callback\"}}}}}}"
+    },
+    "context": {
+      "allocations": {
+        "web": {
+          "web": {
+            "identity": "allocation-1",
+            "version": "1",
+            "public": {
+              "hostname": "app.example.invalid",
+              "scheme": "https"
+            },
+            "oidcClient": {
+              "identity": "client-1",
+              "version": "1",
+              "issuerURL": "https://id.example.invalid",
+              "clientID": "installation-1-web",
+              "secret": "synthetic-client-secret"
+            }
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "VALID",
+      "/environment/web/OIDC_ISSUER/value": "https://id.example.invalid",
+      "/environment/web/OIDC_CLIENT_ID/value": "installation-1-web",
+      "/environment/web/OIDC_REDIRECT_URI/value": "https://app.example.invalid/oauth/oidc/callback",
+      "/outputs/web:out:clientSecret/sensitive": true,
+      "/inspection/web:in:clientSecret": {
+        "sensitive": true,
+        "redacted": true
+      },
+      "/inspection/web:in:clientID": {
+        "sensitive": false,
+        "value": "installation-1-web"
+      }
+    }
+  },
+  {
+    "id": "resolution-oidc-client-absent",
+    "profile": "resolution",
+    "operation": "resolve",
+    "document": "app/blueprint.yaml",
+    "requirements": [
+      "BP-ACCESS-001"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"exposure\":{\"web\":{\"visibility\":\"PUBLIC\",\"access\":\"AUTHENTICATED\",\"viewerIdentity\":\"OIDC\",\"viewerClaims\":[\"EMAIL\",\"NAME\"]}},\"bindings\":{\"issuer\":{\"node\":\"web\",\"output\":\"issuer\"},\"clientID\":{\"node\":\"web\",\"output\":\"clientID\"},\"clientSecret\":{\"node\":\"web\",\"output\":\"clientSecret\"},\"redirectURI\":{\"node\":\"web\",\"output\":\"redirectURI\"}}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/service:1\"},\"endpoints\":{\"web\":{\"targetPort\":8080,\"protocol\":\"HTTP\",\"oidc\":{\"redirectPaths\":[\"/oauth/oidc/callback\"]}}},\"health\":{\"readiness\":{\"http\":{\"endpoint\":\"web\",\"path\":\"/healthz\"}}}},\"contract\":{\"inputs\":{\"issuer\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"OIDC_ISSUER\"}},\"clientID\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"OIDC_CLIENT_ID\"}},\"clientSecret\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"OIDC_CLIENT_SECRET\"}},\"redirectURI\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"OIDC_REDIRECT_URI\"}}},\"outputs\":{\"issuer\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"endpoint\":\"web\",\"property\":\"oidcIssuerURL\"}},\"clientID\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"endpoint\":\"web\",\"property\":\"oidcClientID\"}},\"clientSecret\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"endpoint\":\"web\",\"property\":\"oidcClientSecret\"}},\"redirectURI\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"template\":\"${{ self.endpoints.web.publicURL }}/oauth/oidc/callback\"}}}}}}"
+    },
+    "context": {
+      "allocations": {
+        "web": {
+          "web": {
+            "identity": "allocation-1",
+            "version": "1",
+            "public": {
+              "hostname": "app.example.invalid",
+              "scheme": "https"
+            }
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "INCOMPLETE"
+    }
+  },
+  {
+    "id": "resolution-rejects-oidc-client-among-routing-facts",
+    "profile": "resolution",
+    "operation": "resolve",
+    "document": "app/blueprint.yaml",
+    "requirements": [
+      "BP-ACCESS-001"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"exposure\":{\"web\":{\"visibility\":\"PUBLIC\",\"access\":\"AUTHENTICATED\",\"viewerIdentity\":\"OIDC\",\"viewerClaims\":[\"EMAIL\",\"NAME\"]}},\"bindings\":{\"issuer\":{\"node\":\"web\",\"output\":\"issuer\"},\"clientID\":{\"node\":\"web\",\"output\":\"clientID\"},\"clientSecret\":{\"node\":\"web\",\"output\":\"clientSecret\"},\"redirectURI\":{\"node\":\"web\",\"output\":\"redirectURI\"}}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/service:1\"},\"endpoints\":{\"web\":{\"targetPort\":8080,\"protocol\":\"HTTP\",\"oidc\":{\"redirectPaths\":[\"/oauth/oidc/callback\"]}}},\"health\":{\"readiness\":{\"http\":{\"endpoint\":\"web\",\"path\":\"/healthz\"}}}},\"contract\":{\"inputs\":{\"issuer\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"OIDC_ISSUER\"}},\"clientID\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"OIDC_CLIENT_ID\"}},\"clientSecret\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"OIDC_CLIENT_SECRET\"}},\"redirectURI\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"OIDC_REDIRECT_URI\"}}},\"outputs\":{\"issuer\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"endpoint\":\"web\",\"property\":\"oidcIssuerURL\"}},\"clientID\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"endpoint\":\"web\",\"property\":\"oidcClientID\"}},\"clientSecret\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"endpoint\":\"web\",\"property\":\"oidcClientSecret\"}},\"redirectURI\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"template\":\"${{ self.endpoints.web.publicURL }}/oauth/oidc/callback\"}}}}}}"
+    },
+    "context": {
+      "allocations": {
+        "web": {
+          "web": {
+            "identity": "allocation-1",
+            "version": "1",
+            "public": {
+              "hostname": "app.example.invalid",
+              "scheme": "https",
+              "oidcClientSecret": "synthetic-client-secret"
+            },
+            "oidcClient": {
+              "identity": "client-1",
+              "version": "1",
+              "issuerURL": "https://id.example.invalid",
+              "clientID": "installation-1-web",
+              "secret": "synthetic-client-secret"
+            }
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_INVALID_RESOLUTION_CONTEXT",
+        "phase": "resolution",
+        "stage": "allocation"
+      }
+    ]
+  },
+  {
+    "id": "resolution-rejects-oidc-client-under-assertion",
+    "profile": "resolution",
+    "operation": "resolve",
+    "document": "app/blueprint.yaml",
+    "requirements": [
+      "BP-ACCESS-001"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"exposure\":{\"web\":{\"visibility\":\"PUBLIC\",\"access\":\"AUTHENTICATED\",\"viewerIdentity\":\"ASSERTION\",\"viewerClaims\":[\"EMAIL\"]}},\"bindings\":{\"header\":{\"node\":\"web\",\"output\":\"header\"},\"issuer\":{\"node\":\"web\",\"output\":\"issuer\"},\"audience\":{\"node\":\"web\",\"output\":\"audience\"},\"keys\":{\"node\":\"web\",\"output\":\"keys\"}}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/service:1\"},\"endpoints\":{\"web\":{\"targetPort\":8080,\"protocol\":\"HTTP\"}},\"health\":{\"readiness\":{\"http\":{\"endpoint\":\"web\",\"path\":\"/healthz\"}}}},\"contract\":{\"inputs\":{\"header\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"ASSERTION_HEADER\"}},\"issuer\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"ASSERTION_ISSUER\"}},\"audience\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"ASSERTION_AUDIENCE\"}},\"keys\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"ASSERTION_KEYS\"}}},\"outputs\":{\"header\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"endpoint\":\"web\",\"property\":\"viewerAssertionHeader\"}},\"issuer\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"endpoint\":\"web\",\"property\":\"viewerAssertionIssuer\"}},\"audience\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"endpoint\":\"web\",\"property\":\"viewerAssertionAudience\"}},\"keys\":{\"description\":\"Synthetic output\",\"schema\":{\"type\":\"string\"},\"from\":{\"endpoint\":\"web\",\"property\":\"viewerAssertionKeysURL\"}}}}}}"
+    },
+    "context": {
+      "allocations": {
+        "web": {
+          "web": {
+            "identity": "allocation-1",
+            "version": "1",
+            "public": {
+              "hostname": "app.example.invalid",
+              "scheme": "https",
+              "viewerAssertionHeader": "x-platform-assertion",
+              "viewerAssertionIssuer": "https://id.example.invalid",
+              "viewerAssertionAudience": "installation-1/web",
+              "viewerAssertionKeysURL": "https://id.example.invalid/.well-known/jwks.json"
+            },
+            "oidcClient": {
+              "identity": "client-1",
+              "version": "1",
+              "issuerURL": "https://id.example.invalid",
+              "clientID": "installation-1-web",
+              "secret": "synthetic-client-secret"
+            }
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_INVALID_RESOLUTION_CONTEXT",
+        "phase": "resolution",
+        "stage": "allocation"
+      }
+    ]
+  },
+  {
+    "id": "resolution-installer-facts",
+    "profile": "resolution",
+    "operation": "resolve",
+    "document": "app/blueprint.yaml",
+    "requirements": [
+      "BP-PARAM-011",
+      "BP-REF-001"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"ownerEmail\":{\"from\":\"${{ deployment.installer.email }}\"},\"ownerName\":{\"from\":\"${{ deployment.installer.name }}\"},\"ownerIdentity\":{\"from\":\"${{ deployment.installer.identity }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"email\":{\"parameter\":\"ownerEmail\"},\"name\":{\"parameter\":\"ownerName\"},\"identity\":{\"parameter\":\"ownerIdentity\"}}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/service:1\"},\"endpoints\":{\"web\":{\"targetPort\":8080,\"protocol\":\"HTTP\"}},\"health\":{\"readiness\":{\"http\":{\"endpoint\":\"web\",\"path\":\"/healthz\"}}}},\"contract\":{\"inputs\":{\"email\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"OWNER_EMAIL\"}},\"name\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"OWNER_NAME\"}},\"identity\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"OWNER_ID\"}}},\"outputs\":{}}}}"
+    },
+    "context": {
+      "deployment": {
+        "installer": {
+          "identity": "viewer-7f3a",
+          "email": "ada@example.invalid",
+          "name": "Ada Lovelace"
+        }
+      }
+    },
+    "expect": {
+      "/status": "VALID",
+      "/environment/web/OWNER_EMAIL/value": "ada@example.invalid",
+      "/environment/web/OWNER_ID/value": "viewer-7f3a",
+      "/inputs/web:in:email/sensitive": true,
+      "/inspection/web:in:name": {
+        "sensitive": true,
+        "redacted": true
+      }
+    }
+  },
+  {
+    "id": "resolution-installer-fact-absent",
+    "profile": "resolution",
+    "operation": "resolve",
+    "document": "app/blueprint.yaml",
+    "requirements": [
+      "BP-PARAM-011"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"ownerEmail\":{\"from\":\"${{ deployment.installer.email }}\"},\"ownerName\":{\"from\":\"${{ deployment.installer.name }}\"},\"ownerIdentity\":{\"from\":\"${{ deployment.installer.identity }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"email\":{\"parameter\":\"ownerEmail\"},\"name\":{\"parameter\":\"ownerName\"},\"identity\":{\"parameter\":\"ownerIdentity\"}}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/service:1\"},\"endpoints\":{\"web\":{\"targetPort\":8080,\"protocol\":\"HTTP\"}},\"health\":{\"readiness\":{\"http\":{\"endpoint\":\"web\",\"path\":\"/healthz\"}}}},\"contract\":{\"inputs\":{\"email\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"OWNER_EMAIL\"}},\"name\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"OWNER_NAME\"}},\"identity\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"OWNER_ID\"}}},\"outputs\":{}}}}"
+    },
+    "context": {
+      "deployment": {
+        "installer": {
+          "identity": "viewer-7f3a",
+          "name": "Ada Lovelace"
+        }
+      }
+    },
+    "expect": {
+      "/status": "INCOMPLETE"
+    }
+  },
+  {
+    "id": "resolution-installer-fact-unavailable",
+    "profile": "resolution",
+    "operation": "resolve",
+    "document": "app/blueprint.yaml",
+    "requirements": [
+      "BP-PARAM-011"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"ownerEmail\":{\"from\":\"${{ deployment.installer.email }}\"},\"ownerName\":{\"from\":\"${{ deployment.installer.name }}\"},\"ownerIdentity\":{\"from\":\"${{ deployment.installer.identity }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"email\":{\"parameter\":\"ownerEmail\"},\"name\":{\"parameter\":\"ownerName\"},\"identity\":{\"parameter\":\"ownerIdentity\"}}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/service:1\"},\"endpoints\":{\"web\":{\"targetPort\":8080,\"protocol\":\"HTTP\"}},\"health\":{\"readiness\":{\"http\":{\"endpoint\":\"web\",\"path\":\"/healthz\"}}}},\"contract\":{\"inputs\":{\"email\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"OWNER_EMAIL\"}},\"name\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"OWNER_NAME\"}},\"identity\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"OWNER_ID\"}}},\"outputs\":{}}}}"
+    },
+    "context": {
+      "deployment": {
+        "installer": {
+          "identity": "service-principal-2",
+          "email": null,
+          "name": "Nightly pipeline"
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_DEPLOYMENT_FACT_UNAVAILABLE",
+        "path": "/spec/parameters/ownerEmail/from",
+        "phase": "resolution",
+        "stage": "parameters"
+      }
+    ]
+  },
+  {
+    "id": "resolution-installer-fact-not-submittable",
+    "profile": "resolution",
+    "operation": "resolve",
+    "document": "app/blueprint.yaml",
+    "requirements": [
+      "BP-PARAM-011"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"ownerEmail\":{\"from\":\"${{ deployment.installer.email }}\"},\"ownerName\":{\"from\":\"${{ deployment.installer.name }}\"},\"ownerIdentity\":{\"from\":\"${{ deployment.installer.identity }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"email\":{\"parameter\":\"ownerEmail\"},\"name\":{\"parameter\":\"ownerName\"},\"identity\":{\"parameter\":\"ownerIdentity\"}}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/service:1\"},\"endpoints\":{\"web\":{\"targetPort\":8080,\"protocol\":\"HTTP\"}},\"health\":{\"readiness\":{\"http\":{\"endpoint\":\"web\",\"path\":\"/healthz\"}}}},\"contract\":{\"inputs\":{\"email\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"OWNER_EMAIL\"}},\"name\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"OWNER_NAME\"}},\"identity\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"OWNER_ID\"}}},\"outputs\":{}}}}"
+    },
+    "context": {
+      "deployment": {
+        "installer": {
+          "identity": "viewer-7f3a",
+          "email": "ada@example.invalid",
+          "name": "Ada Lovelace"
+        }
+      },
+      "parameters": {
+        "ownerEmail": {
+          "value": "someone@example.invalid",
+          "sensitive": false
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_PARAMETER_NOT_SUBMITTABLE",
+        "path": "/spec/parameters/ownerEmail",
+        "phase": "resolution",
+        "stage": "parameters"
+      }
+    ]
+  },
+  {
+    "id": "resolution-rejects-unknown-installer-fact",
+    "profile": "resolution",
+    "operation": "resolve",
+    "document": "app/blueprint.yaml",
+    "requirements": [
+      "BP-PARAM-011"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"ownerEmail\":{\"from\":\"${{ deployment.installer.email }}\"},\"ownerName\":{\"from\":\"${{ deployment.installer.name }}\"},\"ownerIdentity\":{\"from\":\"${{ deployment.installer.identity }}\"}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"email\":{\"parameter\":\"ownerEmail\"},\"name\":{\"parameter\":\"ownerName\"},\"identity\":{\"parameter\":\"ownerIdentity\"}}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/service:1\"},\"endpoints\":{\"web\":{\"targetPort\":8080,\"protocol\":\"HTTP\"}},\"health\":{\"readiness\":{\"http\":{\"endpoint\":\"web\",\"path\":\"/healthz\"}}}},\"contract\":{\"inputs\":{\"email\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"OWNER_EMAIL\"}},\"name\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"OWNER_NAME\"}},\"identity\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"OWNER_ID\"}}},\"outputs\":{}}}}"
+    },
+    "context": {
+      "deployment": {
+        "installer": {
+          "identity": "viewer-7f3a",
+          "email": "ada@example.invalid",
+          "name": "Ada Lovelace",
+          "phone": "+1 555 0100"
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_INVALID_RESOLUTION_CONTEXT",
+        "phase": "resolution",
+        "stage": "parameters"
+      }
+    ]
+  },
+  {
+    "id": "resolution-hash-credentials",
+    "profile": "resolution",
+    "operation": "resolve",
+    "document": "app/blueprint.yaml",
+    "requirements": [
+      "BP-PARAM-012",
+      "BP-PARAM-001"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"ownerPassword\":{\"generator\":{\"byteLength\":24,\"encoding\":\"BASE64URL\"},\"ui\":{\"label\":\"Owner password\"}},\"ownerPasswordHash\":{\"hash\":{\"parameter\":\"ownerPassword\",\"algorithm\":\"BCRYPT\"}},\"codeHash\":{\"hash\":{\"parameter\":\"ownerPassword\",\"algorithm\":\"ARGON2ID\"}}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"passwordHash\":{\"parameter\":\"ownerPasswordHash\"},\"codeHash\":{\"parameter\":\"codeHash\"}}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/service:1\"},\"endpoints\":{\"web\":{\"targetPort\":8080,\"protocol\":\"HTTP\"}},\"health\":{\"readiness\":{\"http\":{\"endpoint\":\"web\",\"path\":\"/healthz\"}}}},\"contract\":{\"inputs\":{\"passwordHash\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"OWNER_PASSWORD_HASH\"}},\"codeHash\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"CODE_PASSWORD_HASH\"}}},\"outputs\":{}}}}"
+    },
+    "context": {
+      "credentials": {
+        "ownerPassword": {
+          "value": "c3ludGhldGljLXBhc3N3b3JkLTI0Yg",
+          "sensitive": true
+        },
+        "ownerPasswordHash": {
+          "value": "$2b$12$R9h/cIPz0gi.URNNX3kh2OPST9/PgBkqquzi.Ss7KIUgO2t0jWMUW",
+          "sensitive": true
+        },
+        "codeHash": {
+          "value": "$argon2id$v=19$m=19456,t=2,p=1$c29tZXNhbHRzb21lc2FsdA$AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8",
+          "sensitive": true
+        }
+      }
+    },
+    "expect": {
+      "/status": "VALID",
+      "/environment/web/OWNER_PASSWORD_HASH/value": "$2b$12$R9h/cIPz0gi.URNNX3kh2OPST9/PgBkqquzi.Ss7KIUgO2t0jWMUW",
+      "/environment/web/CODE_PASSWORD_HASH/value": "$argon2id$v=19$m=19456,t=2,p=1$c29tZXNhbHRzb21lc2FsdA$AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8",
+      "/inspection/web:in:passwordHash": {
+        "sensitive": true,
+        "redacted": true
+      }
+    }
+  },
+  {
+    "id": "resolution-hash-credential-absent",
+    "profile": "resolution",
+    "operation": "resolve",
+    "document": "app/blueprint.yaml",
+    "requirements": [
+      "BP-PARAM-012"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"ownerPassword\":{\"generator\":{\"byteLength\":24,\"encoding\":\"BASE64URL\"},\"ui\":{\"label\":\"Owner password\"}},\"ownerPasswordHash\":{\"hash\":{\"parameter\":\"ownerPassword\",\"algorithm\":\"BCRYPT\"}},\"codeHash\":{\"hash\":{\"parameter\":\"ownerPassword\",\"algorithm\":\"ARGON2ID\"}}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"passwordHash\":{\"parameter\":\"ownerPasswordHash\"},\"codeHash\":{\"parameter\":\"codeHash\"}}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/service:1\"},\"endpoints\":{\"web\":{\"targetPort\":8080,\"protocol\":\"HTTP\"}},\"health\":{\"readiness\":{\"http\":{\"endpoint\":\"web\",\"path\":\"/healthz\"}}}},\"contract\":{\"inputs\":{\"passwordHash\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"OWNER_PASSWORD_HASH\"}},\"codeHash\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"CODE_PASSWORD_HASH\"}}},\"outputs\":{}}}}"
+    },
+    "context": {
+      "credentials": {
+        "ownerPassword": {
+          "value": "c3ludGhldGljLXBhc3N3b3JkLTI0Yg",
+          "sensitive": true
+        },
+        "codeHash": {
+          "value": "$argon2id$v=19$m=19456,t=2,p=1$c29tZXNhbHRzb21lc2FsdA$AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8",
+          "sensitive": true
+        }
+      }
+    },
+    "expect": {
+      "/status": "INCOMPLETE"
+    }
+  },
+  {
+    "id": "resolution-rejects-hash-of-another-format",
+    "profile": "resolution",
+    "operation": "resolve",
+    "document": "app/blueprint.yaml",
+    "requirements": [
+      "BP-PARAM-012"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"ownerPassword\":{\"generator\":{\"byteLength\":24,\"encoding\":\"BASE64URL\"},\"ui\":{\"label\":\"Owner password\"}},\"ownerPasswordHash\":{\"hash\":{\"parameter\":\"ownerPassword\",\"algorithm\":\"BCRYPT\"}},\"codeHash\":{\"hash\":{\"parameter\":\"ownerPassword\",\"algorithm\":\"ARGON2ID\"}}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"passwordHash\":{\"parameter\":\"ownerPasswordHash\"},\"codeHash\":{\"parameter\":\"codeHash\"}}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/service:1\"},\"endpoints\":{\"web\":{\"targetPort\":8080,\"protocol\":\"HTTP\"}},\"health\":{\"readiness\":{\"http\":{\"endpoint\":\"web\",\"path\":\"/healthz\"}}}},\"contract\":{\"inputs\":{\"passwordHash\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"OWNER_PASSWORD_HASH\"}},\"codeHash\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"CODE_PASSWORD_HASH\"}}},\"outputs\":{}}}}"
+    },
+    "context": {
+      "credentials": {
+        "ownerPassword": {
+          "value": "c3ludGhldGljLXBhc3N3b3JkLTI0Yg",
+          "sensitive": true
+        },
+        "ownerPasswordHash": {
+          "value": "$argon2id$v=19$m=19456,t=2,p=1$c29tZXNhbHRzb21lc2FsdA$AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8",
+          "sensitive": true
+        },
+        "codeHash": {
+          "value": "$argon2id$v=19$m=19456,t=2,p=1$c29tZXNhbHRzb21lc2FsdA$AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8",
+          "sensitive": true
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_INVALID_RESOLUTION_CONTEXT",
+        "path": "/spec/components/web/bindings/passwordHash",
+        "phase": "resolution",
+        "stage": "values"
+      }
+    ]
+  },
+  {
+    "id": "resolution-hash-not-submittable",
+    "profile": "resolution",
+    "operation": "resolve",
+    "document": "app/blueprint.yaml",
+    "requirements": [
+      "BP-PARAM-012"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"ownerPassword\":{\"generator\":{\"byteLength\":24,\"encoding\":\"BASE64URL\"},\"ui\":{\"label\":\"Owner password\"}},\"ownerPasswordHash\":{\"hash\":{\"parameter\":\"ownerPassword\",\"algorithm\":\"BCRYPT\"}},\"codeHash\":{\"hash\":{\"parameter\":\"ownerPassword\",\"algorithm\":\"ARGON2ID\"}}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"passwordHash\":{\"parameter\":\"ownerPasswordHash\"},\"codeHash\":{\"parameter\":\"codeHash\"}}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/service:1\"},\"endpoints\":{\"web\":{\"targetPort\":8080,\"protocol\":\"HTTP\"}},\"health\":{\"readiness\":{\"http\":{\"endpoint\":\"web\",\"path\":\"/healthz\"}}}},\"contract\":{\"inputs\":{\"passwordHash\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"OWNER_PASSWORD_HASH\"}},\"codeHash\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"CODE_PASSWORD_HASH\"}}},\"outputs\":{}}}}"
+    },
+    "context": {
+      "credentials": {
+        "ownerPassword": {
+          "value": "c3ludGhldGljLXBhc3N3b3JkLTI0Yg",
+          "sensitive": true
+        },
+        "ownerPasswordHash": {
+          "value": "$2b$12$R9h/cIPz0gi.URNNX3kh2OPST9/PgBkqquzi.Ss7KIUgO2t0jWMUW",
+          "sensitive": true
+        },
+        "codeHash": {
+          "value": "$argon2id$v=19$m=19456,t=2,p=1$c29tZXNhbHRzb21lc2FsdA$AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8",
+          "sensitive": true
+        }
+      },
+      "parameters": {
+        "codeHash": {
+          "value": "$argon2id$v=19$m=19456,t=2,p=1$c29tZXNhbHRzb21lc2FsdA$AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8",
+          "sensitive": true
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_PARAMETER_NOT_SUBMITTABLE",
+        "path": "/spec/parameters/codeHash",
+        "phase": "resolution",
+        "stage": "parameters"
+      }
+    ]
+  },
+  {
+    "id": "rendering-omits-deployment-facts-and-hashes",
+    "profile": "rendering",
+    "operation": "form",
+    "document": "app/blueprint.yaml",
+    "requirements": [
+      "BP-UI-004"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"siteTitle\":{\"ui\":{\"label\":\"Site title\"}},\"ownerEmail\":{\"from\":\"${{ deployment.installer.email }}\",\"ui\":{\"label\":\"Owner email\"}},\"ownerPassword\":{\"generator\":{},\"ui\":{\"label\":\"Owner password\"}},\"ownerPasswordHash\":{\"hash\":{\"parameter\":\"ownerPassword\",\"algorithm\":\"BCRYPT\"}}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"title\":{\"parameter\":\"siteTitle\"},\"email\":{\"parameter\":\"ownerEmail\"},\"passwordHash\":{\"parameter\":\"ownerPasswordHash\"}}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/service:1\"},\"endpoints\":{\"web\":{\"targetPort\":8080,\"protocol\":\"HTTP\"}},\"health\":{\"readiness\":{\"http\":{\"endpoint\":\"web\",\"path\":\"/healthz\"}}}},\"contract\":{\"inputs\":{\"title\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"SITE_TITLE\"}},\"email\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVarKey\":\"OWNER_EMAIL\"}},\"passwordHash\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"OWNER_PASSWORD_HASH\"}}},\"outputs\":{}}}}"
+    },
+    "context": {},
+    "expect": {
+      "": [
+        {
+          "name": "siteTitle",
+          "label": "Site title",
+          "control": "text",
+          "order": null,
+          "prominence": "PRIMARY"
+        }
+      ]
+    }
+  },
+  {
+    "id": "resolution-record-hash-credentials",
+    "profile": "resolution",
+    "operation": "record",
+    "requirements": [
+      "BP-PARAM-012",
+      "BP-RESOLVE-001"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"ownerPassword\":{\"generator\":{\"byteLength\":24,\"encoding\":\"BASE64URL\"},\"ui\":{\"label\":\"Owner password\"}},\"ownerPasswordHash\":{\"hash\":{\"parameter\":\"ownerPassword\",\"algorithm\":\"BCRYPT\"}},\"codeHash\":{\"hash\":{\"parameter\":\"ownerPassword\",\"algorithm\":\"ARGON2ID\"}}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"passwordHash\":{\"parameter\":\"ownerPasswordHash\"},\"codeHash\":{\"parameter\":\"codeHash\"}}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/service:1\"},\"endpoints\":{\"web\":{\"targetPort\":8080,\"protocol\":\"HTTP\"}},\"health\":{\"readiness\":{\"http\":{\"endpoint\":\"web\",\"path\":\"/healthz\"}}}},\"contract\":{\"inputs\":{\"passwordHash\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"OWNER_PASSWORD_HASH\"}},\"codeHash\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"CODE_PASSWORD_HASH\"}}},\"outputs\":{}}}}"
+    },
+    "document": "app/blueprint.yaml",
+    "input": {
+      "blueprint": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"ownerPassword\":{\"generator\":{\"byteLength\":24,\"encoding\":\"BASE64URL\"},\"ui\":{\"label\":\"Owner password\"}},\"ownerPasswordHash\":{\"hash\":{\"parameter\":\"ownerPassword\",\"algorithm\":\"BCRYPT\"}},\"codeHash\":{\"hash\":{\"parameter\":\"ownerPassword\",\"algorithm\":\"ARGON2ID\"}}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"passwordHash\":{\"parameter\":\"ownerPasswordHash\"},\"codeHash\":{\"parameter\":\"codeHash\"}}}}}}",
+      "specifications": {
+        "core": "1.1.0",
+        "component": "1.6.0",
+        "blueprint": "1.7.0"
+      },
+      "components": {
+        "web": {
+          "source": "IMAGE",
+          "identity": "./web.yaml",
+          "revision": 1,
+          "digest": "504b7eebd7946974481f3b392353834e973a8ee6674fd1aeb3a9680e44d253e1",
+          "imageDigest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "compute": {
+            "identity": "general.standard.small",
+            "version": "7"
+          },
+          "volumes": {},
+          "exposure": {}
+        }
+      },
+      "variables": {},
+      "credentials": {
+        "ownerPassword": {
+          "identity": "credential-1",
+          "rotation": 2
+        },
+        "ownerPasswordHash": {
+          "identity": "credential-2",
+          "rotation": 2
+        },
+        "codeHash": {
+          "identity": "credential-3",
+          "rotation": 2
+        }
+      },
+      "recordContext": {
+        "snapshot": {
+          "formatVersion": 1,
+          "identity": "snapshot-1",
+          "version": "1",
+          "parameters": {},
+          "variables": {},
+          "credentials": {
+            "ownerPassword": {
+              "identity": "credential-1",
+              "rotation": 2,
+              "value": "c3ludGhldGljLXBhc3N3b3JkLTI0Yg",
+              "sensitive": true
+            },
+            "ownerPasswordHash": {
+              "identity": "credential-2",
+              "rotation": 2,
+              "value": "$2b$12$R9h/cIPz0gi.URNNX3kh2OPST9/PgBkqquzi.Ss7KIUgO2t0jWMUW",
+              "sensitive": true
+            },
+            "codeHash": {
+              "identity": "credential-3",
+              "rotation": 2,
+              "value": "$argon2id$v=19$m=19456,t=2,p=1$c29tZXNhbHRzb21lc2FsdA$AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8",
+              "sensitive": true
+            }
+          },
+          "allocations": {
+            "web": {
+              "web": {
+                "identity": "allocation-1",
+                "version": "1"
+              }
+            }
+          }
+        },
+        "specificationDependencies": {
+          "core": {},
+          "component": {
+            "core": "1.1.0"
+          },
+          "blueprint": {
+            "core": "1.1.0",
+            "component": "1.6.0"
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "VALID",
+      "/record/credentials": {
+        "ownerPassword": {
+          "identity": "credential-1",
+          "rotation": 2
+        },
+        "ownerPasswordHash": {
+          "identity": "credential-2",
+          "rotation": 2
+        },
+        "codeHash": {
+          "identity": "credential-3",
+          "rotation": 2
+        }
+      }
+    }
+  },
+  {
+    "id": "resolution-record-rejects-hash-behind-its-source",
+    "profile": "resolution",
+    "operation": "record",
+    "requirements": [
+      "BP-PARAM-012",
+      "BP-RESOLVE-001"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"ownerPassword\":{\"generator\":{\"byteLength\":24,\"encoding\":\"BASE64URL\"},\"ui\":{\"label\":\"Owner password\"}},\"ownerPasswordHash\":{\"hash\":{\"parameter\":\"ownerPassword\",\"algorithm\":\"BCRYPT\"}},\"codeHash\":{\"hash\":{\"parameter\":\"ownerPassword\",\"algorithm\":\"ARGON2ID\"}}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"passwordHash\":{\"parameter\":\"ownerPasswordHash\"},\"codeHash\":{\"parameter\":\"codeHash\"}}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v1\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/service:1\"},\"endpoints\":{\"web\":{\"targetPort\":8080,\"protocol\":\"HTTP\"}},\"health\":{\"readiness\":{\"http\":{\"endpoint\":\"web\",\"path\":\"/healthz\"}}}},\"contract\":{\"inputs\":{\"passwordHash\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"OWNER_PASSWORD_HASH\"}},\"codeHash\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVarKey\":\"CODE_PASSWORD_HASH\"}}},\"outputs\":{}}}}"
+    },
+    "document": "app/blueprint.yaml",
+    "input": {
+      "blueprint": "{\"specVersion\":\"v1\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"ownerPassword\":{\"generator\":{\"byteLength\":24,\"encoding\":\"BASE64URL\"},\"ui\":{\"label\":\"Owner password\"}},\"ownerPasswordHash\":{\"hash\":{\"parameter\":\"ownerPassword\",\"algorithm\":\"BCRYPT\"}},\"codeHash\":{\"hash\":{\"parameter\":\"ownerPassword\",\"algorithm\":\"ARGON2ID\"}}},\"components\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"passwordHash\":{\"parameter\":\"ownerPasswordHash\"},\"codeHash\":{\"parameter\":\"codeHash\"}}}}}}",
+      "specifications": {
+        "core": "1.1.0",
+        "component": "1.6.0",
+        "blueprint": "1.7.0"
+      },
+      "components": {
+        "web": {
+          "source": "IMAGE",
+          "identity": "./web.yaml",
+          "revision": 1,
+          "digest": "504b7eebd7946974481f3b392353834e973a8ee6674fd1aeb3a9680e44d253e1",
+          "imageDigest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "compute": {
+            "identity": "general.standard.small",
+            "version": "7"
+          },
+          "volumes": {},
+          "exposure": {}
+        }
+      },
+      "variables": {},
+      "credentials": {
+        "ownerPassword": {
+          "identity": "credential-1",
+          "rotation": 2
+        },
+        "ownerPasswordHash": {
+          "identity": "credential-2",
+          "rotation": 1
+        },
+        "codeHash": {
+          "identity": "credential-3",
+          "rotation": 2
+        }
+      },
+      "recordContext": {
+        "snapshot": {
+          "formatVersion": 1,
+          "identity": "snapshot-1",
+          "version": "1",
+          "parameters": {},
+          "variables": {},
+          "credentials": {
+            "ownerPassword": {
+              "identity": "credential-1",
+              "rotation": 2,
+              "value": "c3ludGhldGljLXBhc3N3b3JkLTI0Yg",
+              "sensitive": true
+            },
+            "ownerPasswordHash": {
+              "identity": "credential-2",
+              "rotation": 1,
+              "value": "$2b$12$R9h/cIPz0gi.URNNX3kh2OPST9/PgBkqquzi.Ss7KIUgO2t0jWMUW",
+              "sensitive": true
+            },
+            "codeHash": {
+              "identity": "credential-3",
+              "rotation": 2,
+              "value": "$argon2id$v=19$m=19456,t=2,p=1$c29tZXNhbHRzb21lc2FsdA$AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8",
+              "sensitive": true
+            }
+          },
+          "allocations": {
+            "web": {
+              "web": {
+                "identity": "allocation-1",
+                "version": "1"
+              }
+            }
+          }
+        },
+        "specificationDependencies": {
+          "core": {},
+          "component": {
+            "core": "1.1.0"
+          },
+          "blueprint": {
+            "core": "1.1.0",
+            "component": "1.6.0"
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_INVALID_RESOLUTION_CONTEXT",
+        "phase": "resolution",
+        "stage": "record"
+      }
+    ]
   }
 ]

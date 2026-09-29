@@ -1,0 +1,6 @@
+[
+  {
+    "code": "ERR_ENDPOINT_NOT_OIDC_CLIENT",
+    "path": "/spec/components/web/exposure/web/viewerIdentity"
+  }
+]

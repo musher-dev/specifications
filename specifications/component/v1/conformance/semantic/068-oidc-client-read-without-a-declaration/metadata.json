@@ -1,0 +1,10 @@
+{
+  "id": "semantic-068-oidc-client-read-without-a-declaration",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v1/spec.md#endpoints",
+  "requirements": [
+    "COMP-EP-014"
+  ],
+  "summary": "An endpoint that declares no oidc has no OpenID Connect client to read."
+}

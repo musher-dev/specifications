@@ -1,0 +1,6 @@
+[
+  {
+    "code": "ERR_UNKNOWN_PARAMETER",
+    "path": "/spec/parameters/passwordHash/hash/parameter"
+  }
+]

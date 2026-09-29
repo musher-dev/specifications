@@ -206,9 +206,42 @@
               "tls": false
             }
           }
+        },
+        {
+          "$comment": "spec.md §5.2 COMP-EP-013 / COMP-EP-015. An OpenID Connect client and requests taken without a viewer exist only where the platform can sign a viewer in: HTTP, HTTPS and WS.",
+          "if": {
+            "not": {
+              "properties": {
+                "protocol": {
+                  "enum": [
+                    "HTTP",
+                    "HTTPS",
+                    "WS"
+                  ]
+                }
+              },
+              "required": [
+                "protocol"
+              ]
+            }
+          },
+          "then": {
+            "properties": {
+              "accessExemptions": false,
+              "oidc": false
+            }
+          }
         }
       ],
       "properties": {
+        "accessExemptions": {
+          "$ref": "#/$defs/ComponentEndpointAccessExemptions",
+          "description": "Requests to this endpoint the workload can safely take without a signed-in viewer, which a blueprint node may let through an AUTHENTICATED exposure. HTTP, HTTPS or WS only."
+        },
+        "oidc": {
+          "$ref": "#/$defs/ComponentEndpointOidc",
+          "description": "Declares the endpoint an OpenID Connect client, which a blueprint node selects with viewerIdentity OIDC. HTTP, HTTPS or WS only."
+        },
         "protocol": {
           "description": "Protocol the platform speaks to the workload on the port: HTTP, HTTPS, WS, GRPC, TCP, or UDP.",
           "enum": [
@@ -238,6 +271,60 @@
       ],
       "type": "object",
       "x-additionalPropertiesName": "endpointName"
+    },
+    "ComponentEndpointAccessExemptions": {
+      "$comment": "spec.md §5.2 COMP-EP-015. At least one of paths and bearer. bearer true states that every route of the endpoint checks the bearer token a request carries.",
+      "additionalProperties": false,
+      "description": "Requests the workload can take without a signed-in viewer.",
+      "minProperties": 1,
+      "properties": {
+        "bearer": {
+          "description": "True when every route of the endpoint checks the bearer token a request carries, so that a request presenting one may be forwarded without a viewer for the workload to judge.",
+          "type": "boolean"
+        },
+        "paths": {
+          "description": "Routes that serve machines, matched segment by segment: /webhook covers /webhook and /webhook/abc, never /webhooks.",
+          "items": {
+            "$ref": "#/$defs/ComponentEndpointPath"
+          },
+          "maxItems": 32,
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        }
+      },
+      "type": "object"
+    },
+    "ComponentEndpointOidc": {
+      "$comment": "spec.md §5.2 COMP-EP-013. The platform registers the endpoint publicURL followed by each path, compared exactly.",
+      "additionalProperties": false,
+      "description": "The endpoint as an OpenID Connect client of the platform.",
+      "properties": {
+        "redirectPaths": {
+          "description": "Paths the workload receives the authorization response on. The platform registers publicURL followed by each one as a redirect URI.",
+          "items": {
+            "$ref": "#/$defs/ComponentEndpointPath"
+          },
+          "maxItems": 8,
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "redirectPaths"
+      ],
+      "type": "object"
+    },
+    "ComponentEndpointPath": {
+      "$comment": "spec.md §5.2 COMP-EP-016. Lookahead-free, so it compiles under RE2 as well as ECMA-262. Segments of RFC 3986 unreserved characters, sub-delimiters other than ;, colon and at; each segment holds a character other than a dot, so none is . or ..; no empty segment, no trailing slash, and never / alone. The not excludes the platform sign-in prefix.",
+      "description": "A literal path on the endpoint, matched segment by segment. Never /.musher or a path under it, which the platform serves its sign-in on.",
+      "maxLength": 256,
+      "not": {
+        "pattern": "^/\\.musher(?:/|$)"
+      },
+      "pattern": "^(?:/[A-Za-z0-9._~!$&'()*+,=:@-]*[A-Za-z0-9_~!$&'()*+,=:@-][A-Za-z0-9._~!$&'()*+,=:@-]*)+$",
+      "type": "string"
     },
     "ComponentEndpointTls": {
       "$comment": "spec.md §5.2 COMP-EP-005 / COMP-EP-007. One policy for every connection the platform makes to the endpoint, routing and probes alike. BUNDLE names its roots and the name to verify; the other modes carry no bundle. serverName is a DNS name, never an IP literal: its last label starts with a letter.",
@@ -663,7 +750,7 @@
           "description": "Own input forwarded as this output, keeping its sensitivity."
         },
         "property": {
-          "description": "Property of the named endpoint: an allocated address, or the viewer identity header and trusted proxy CIDRs of an endpoint whose blueprint exposure forwards viewer identity.",
+          "description": "Property of the named endpoint: an allocated address, or a viewer identity property of an endpoint whose blueprint exposure selects the mode and claim that property belongs to. oidcClientSecret is sensitive.",
           "enum": [
             "publicURL",
             "publicHostname",
@@ -673,7 +760,16 @@
             "privatePort",
             "privateAddress",
             "viewerIdentityHeader",
-            "trustedProxyCIDRs"
+            "trustedProxyCIDRs",
+            "viewerEmailHeader",
+            "viewerNameHeader",
+            "viewerAssertionHeader",
+            "viewerAssertionIssuer",
+            "viewerAssertionAudience",
+            "viewerAssertionKeysURL",
+            "oidcIssuerURL",
+            "oidcClientID",
+            "oidcClientSecret"
           ],
           "type": "string"
         },
