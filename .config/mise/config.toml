@@ -1,6 +1,6 @@
 # Every CLI this repository runs, pinned once. The dev container
-# (.devcontainer/scripts/lib/base-setup.sh), `task setup` and CI
-# (jdx/mise-action in .github/workflows/validate.yml) all install from this file.
+# (.devcontainer/scripts/lib/base-setup.sh) and CI (jdx/mise-action, through
+# .github/actions/setup-tools) both install from this file.
 # mise discovers it natively at .config/mise/config.toml, the one config besides
 # lefthook's that no caller passes by path (docs/adr/0036 §3).
 #
@@ -14,11 +14,14 @@
 #
 # Versions stated a second time elsewhere, held equal by
 # `conventions check` (TOOL-04, TOOL-08, TOOL-11):
-#   - min_version, and MISE_VERSION in .devcontainer/scripts/lib/base-setup.sh
-#     and the `version` of jdx/mise-action in the workflows
+#   - min_version, and _MISE_VERSION in .devcontainer/scripts/lib/base-setup.sh
+#     and the `version` of jdx/mise-action in .github/actions/setup-tools
 #   - bun, and tools/.bun-version
 #   - node, and the node Feature in .devcontainer/devcontainer.json
 #   - lefthook, and min_version in .config/lefthook.yml
+# and one held equal by hand:
+#   - task, and go-task/setup-task in .github/workflows/release.yml, which
+#     builds a tag's own tree and so cannot count on this file being there
 min_version = "2026.9.12"
 
 [tools]

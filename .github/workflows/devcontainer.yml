@@ -51,10 +51,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
+      - uses: ./.github/actions/setup-tools
         with:
-          version: 3.52.0
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          install-args: aqua:go-task/task
+          tooling: 'false'
       - name: Verify .env and .env.example stay in sync
         run: |
           cp .devcontainer/.env.example .devcontainer/.env
