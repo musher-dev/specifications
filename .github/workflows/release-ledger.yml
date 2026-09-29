@@ -29,7 +29,7 @@ jobs:
     # can name a branch `release-please--anything`, and nothing from a fork may
     # reach the step that holds the App token.
     if: startsWith(github.head_ref, 'release-please--') && github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     # The push authenticates as the release App, not with this token.
     permissions:

@@ -42,7 +42,7 @@ jobs:
     # Drafts are skipped; `ready_for_review` re-fires this when the pull request
     # leaves draft.
     if: github.event.pull_request.draft == false && !endsWith(github.event.pull_request.user.login, '[bot]')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 3
     steps:
       # CODEOWNERS is read from the base branch -- the same file GitHub itself

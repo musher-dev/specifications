@@ -8,6 +8,10 @@
 # No self-hosted runners. GitHub-hosted labels are known to actionlint and need
 # no declaration, so an empty list here is a statement rather than a stub: a
 # workflow naming any other label is a typo, and actionlint will say so.
+#
+# Jobs name an exact image, ubuntu-24.04, never ubuntu-latest: the alias moves
+# to a new release on GitHub's schedule (to 26.04 on 2026-10-19), which would
+# change every job's toolchain in a commit nobody reviewed.
 self-hosted-runner:
   labels: []
 

@@ -23,7 +23,7 @@ jobs:
   # ---------------------------------------------------------------------------
   lint:
     name: Lint
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       # Full history: check:adr compares every accepted ADR against the base
@@ -93,7 +93,7 @@ jobs:
   # ---------------------------------------------------------------------------
   schema:
     name: Schema
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       # Full history and tags: check:compat replays each released version's
@@ -160,7 +160,7 @@ jobs:
   # ---------------------------------------------------------------------------
   site:
     name: Site Build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       # Full history and every tag: check:published proves each tagged ledger

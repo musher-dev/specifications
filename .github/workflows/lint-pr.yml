@@ -19,7 +19,7 @@ permissions:
 jobs:
   title:
     name: Conventional PR title
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       # Dependabot capitalises the subject it writes -- `build(deps): Bump ...`
