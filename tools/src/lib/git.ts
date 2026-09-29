@@ -160,16 +160,37 @@ export function listTreeChildren(repoRoot: string, ref: string, dir: string): st
   return names
 }
 
+/** How many times a short blob read is retried before it is reported. */
+const BLOB_READ_ATTEMPTS = 3
+
 /**
  * A file's bytes as of a ref, or null when the ref does not carry that path.
  *
  * Returned as a Buffer and never decoded here. The published checksum has to be
  * of the bytes git stored, so anything that re-encodes on the way through would
  * make the hash describe a different artifact than the one it names.
+ *
+ * The length is checked against the size git records for the blob. A pipe read
+ * that ends early (seen once in CI: ADR-04 reported an accepted ADR as edited at
+ * the line spanning byte 16,384, and a re-read found it intact) must never pass
+ * as the blob's content, so a short read is retried and then fails loudly.
  */
 export function readBlobAtRef(repoRoot: string, ref: string, path: string): Buffer | null {
-  const { status, stdout } = run(repoRoot, ['cat-file', 'blob', `${ref}:${path}`])
-  return status === 0 ? stdout : null
+  const object = `${ref}:${path}`
+  const size = run(repoRoot, ['cat-file', '-s', object])
+  if (size.status !== 0) return null
+  const expected = Number(size.stdout.toString('utf8').trim())
+  let got = 0
+  for (let attempt = 0; attempt < BLOB_READ_ATTEMPTS; attempt++) {
+    const { status, stdout } = run(repoRoot, ['cat-file', 'blob', object])
+    if (status !== 0) return null
+    if (stdout.length === expected) return stdout
+    got = stdout.length
+  }
+  throw new Error(
+    `git cat-file blob ${object} returned ${got} of ${expected} bytes in each of ` +
+      `${BLOB_READ_ATTEMPTS} attempts`,
+  )
 }
 
 /** True when `ref` names a tag in this repository. */
