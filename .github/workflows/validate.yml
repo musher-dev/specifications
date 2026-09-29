@@ -1,0 +1,222 @@
+name: Validate
+
+# Owns the judgement of every change: the tooling's hygiene, the normative gates
+# over the specifications, the publication tree, and this repository against the
+# engineering conventions it pins (docs/adr/0036). The pull request author reads
+# a red job here. The one context the ruleset requires is `Validate / Required`,
+# which fails unless every other job succeeded.
+#
+# It replaces ci.yml job for job (docs/adr/0036 §5). The two run side by side
+# until the ruleset requires this workflow's context instead of ci.yml's job
+# names; ci.yml is then deleted.
+#
+# Every job installs its tools from .config/mise/config.toml, through
+# .github/actions/setup-tools, and runs `task` targets rather than tool
+# commands, so a failure reproduces locally with the command the job ran.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  merge_group:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # The non-normative surface: formatting, lint and types of tools/, the
+  # repository layout, the docs and the workflows
+  # ---------------------------------------------------------------------------
+  tools:
+    name: Tools / Lint
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      # Full history: check:adr compares every accepted ADR against the base
+      # commit, and a depth-1 clone does not carry it.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup-tools
+        with:
+          install-args: aqua:oven-sh/bun node aqua:go-task/task aqua:rhysd/actionlint
+
+      # BASE_REF is empty on a push, where check:adr falls back to origin/main.
+      # The suite includes check:docs, which fails when docs/traceability.md or
+      # the ADR index is stale.
+      - name: Run the lint suite
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.sha }}
+        run: task ci:lint
+
+      - name: Typecheck the tooling
+        run: task check:types
+
+  # ---------------------------------------------------------------------------
+  # The normative gates
+  # ---------------------------------------------------------------------------
+  specifications:
+    name: Specifications / Schema
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      # Full history and tags: check:compat replays each released version's
+      # accepted documents out of that version's own tag.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup-tools
+        with:
+          install-args: aqua:oven-sh/bun node aqua:go-task/task
+
+      # Every check here builds the bundles in memory from schemas/src; none is
+      # committed (docs/adr/0023). The suite includes check:editions: every kind
+      # family names the core edition it implements (docs/adr/0023 §5).
+      - name: Check the schemas, examples and conformance corpora
+        run: task ci:test
+
+      # Build output for reviewers: dist/ holds every bundle and the catalog,
+      # uploaded below, so the bytes a pull request would publish can be read
+      # without a checkout.
+      - name: Build the bundles
+        run: task bundle
+
+      # Reporting only; check:compat above is the gate. It says what the pull
+      # request does to the contract in a specification reviewer's terms, and
+      # `--diff` appends each built bundle's unified diff, base against head.
+      # base_ref reaches the shell through the environment, never through
+      # ${{ }} interpolation: a branch name is attacker-chosen on a fork.
+      - name: Report the contract changes
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: task changes BASE="origin/$BASE_REF" -- --diff >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload the built bundles
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+
+  # ---------------------------------------------------------------------------
+  # The publication tree assembles before a release depends on it
+  # ---------------------------------------------------------------------------
+  site:
+    name: Site / Build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      # Full history and every tag: check:published proves each tagged ledger
+      # entry against `<tag>:<path>`, and the ledger's append-only check
+      # compares against the base commit.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup-tools
+        with:
+          install-args: aqua:oven-sh/bun node aqua:go-task/task
+
+      # Offline: every tagged entry still names its tag's tree, and every pending
+      # entry matches a fresh build of this head.
+      - name: Verify the published versions
+        run: task check:published
+
+      - name: Check the ledger is append-only
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.sha }}
+        run: task check:ledger
+
+      # Keyed on the ledger: the verified assets of every recorded release change
+      # only when an entry is added. A cache hit is still checked against the
+      # ledger by site:fetch, so a restored entry is never trusted unread.
+      - name: Cache the verified release assets
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+        with:
+          path: .cache/releases
+          key: releases-${{ hashFiles('published.json') }}
+
+      # Online, with a read-only token: the same verification the deploy runs.
+      # ALLOW_PENDING_RELEASES covers the draft window: the push that tags a
+      # release runs this before release.yml has published it, so a tagged
+      # entry whose release is not yet published warns and is left out.
+      - name: Fetch and verify the release assets
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          ALLOW_PENDING_RELEASES: '1'
+        run: task site:fetch
+
+      # No `task bundle` first: pinned paths come from the verified cache and
+      # every untagged alias is built in memory, which proves a clean checkout
+      # needs nothing more. site:build fetches again when the ledger has a
+      # tagged entry, so it gets the same token and flag.
+      - name: Assemble the publication tree
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          ALLOW_PENDING_RELEASES: '1'
+        run: |
+          task site:build
+          find site -type f | sort
+
+  # ---------------------------------------------------------------------------
+  # This repository against the engineering conventions it pins
+  # ---------------------------------------------------------------------------
+  conventions:
+    name: Conventions / Check
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup-tools
+        with:
+          install-args: aqua:go-task/task github:musher-dev/engineering-conventions
+          tooling: 'false'
+
+      # Report-only until .repo/conventions.toml lists the families this
+      # repository enforces (docs/adr/0036 §1): every requirement is a warning,
+      # and the task's default --fail-on error fails on none of them.
+      - name: Check the repository against the conventions
+        run: task check:conventions
+
+  required:
+    name: Validate / Required
+    if: always()
+    needs:
+      - tools
+      - specifications
+      - site
+      - conventions
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      # Every job above is unconditional, so anything other than success is a
+      # failure: a skipped or cancelled job has proved nothing.
+      - name: Classify every job result
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          set -euo pipefail
+          failed=0
+          while read -r job result; do
+            printf '%-16s %s\n' "$job" "$result"
+            if [ "$result" != "success" ]; then
+              echo "::error title=Validate / Required::job '$job' reported '$result'; only success passes"
+              failed=1
+            fi
+          done < <(jq -r 'to_entries[] | "\(.key) \(.value.result)"' <<<"$RESULTS")
+          exit "$failed"

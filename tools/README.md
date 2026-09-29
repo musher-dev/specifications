@@ -46,7 +46,10 @@ reported. CI runs the same steps across its jobs, in parallel within each:
 **Lint** runs `task ci:lint` and `check:types`, **Schema** runs
 `task ci:test`, and **Site Build** runs `check:published`, then the CI-only
 steps listed [below](#ci-only). Every step must pass before a pull request
-merges.
+merges. The Validate workflow runs the same jobs as **Tools / Lint**,
+**Specifications / Schema** and **Site / Build**, plus **Conventions / Check**,
+and replaces them once the ruleset requires it
+([ADR 0036](../docs/adr/0036-the-repository-adopts-the-engineering-conventions.md) §5).
 
 Two steps also spread their own work across cores. `check:parity` runs its
 Blaze batches concurrently, and `check:compat` replays each release in a
@@ -57,6 +60,7 @@ process of its own; both report in the order they would sequentially.
 | `check:format` | Biome formatting and lint of `tools/` | `biome ci .` | — |
 | `check:config` | The `.config/` layout: every file indexed, reachable, and passed by path; and the repository root holds only `ROOT_ENTRIES` | `src/policy/config.ts` | CFG-01..CFG-09 |
 | `check:rulesets` | The two halves of the review gate agree, and no required status check can hang a pull request | `src/policy/rulesets.ts` | RUL-01..RUL-09 |
+| `check:conventions` | The repository against the pinned engineering-conventions release. Report-only for now: it prints findings and fails on none ([ADR 0036](../docs/adr/0036-the-repository-adopts-the-engineering-conventions.md) §1) | `conventions check` | The release's own |
 | `check:types` | TypeScript typecheck of `tools/` | `tsc --noEmit` | — |
 | `check:schema` | Every source module is valid JSON Schema 2020-12, `$id`s are unique and canonical, no `$ref` is remote, and repository naming holds | `src/schema/lint.ts` | — |
 | `check:generated` | No build output is tracked: nothing under `dist/`, no `schemas/dist/`, no root `catalog.json` | `src/policy/generated.ts` | — |

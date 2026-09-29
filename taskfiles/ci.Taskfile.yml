@@ -1,4 +1,5 @@
-# The two entry points .github/workflows/ci.yml calls, under the `ci` namespace.
+# The two entry points the CI workflows call, under the `ci` namespace:
+# validate.yml, and ci.yml until validate.yml replaces it (docs/adr/0036 §5).
 #
 # They exist so the workflow names one task per job rather than a list of
 # checks: a check added to a job is added here, where a developer can run the

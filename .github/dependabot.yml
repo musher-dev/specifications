@@ -3,7 +3,8 @@
 #
 # - devcontainers  : bumps Features in devcontainer.json AND refreshes
 #                    .devcontainer/devcontainer-lock.json (digest pins).
-# - github-actions : bumps the actions pinned in .github/workflows/.
+# - github-actions : bumps the actions pinned in .github/workflows/ and in the
+#                    composite actions under .github/actions/.
 # - bun            : bumps tools/ dependencies.
 #
 # Every `prefix` below is a Conventional Commits TYPE, optionally with a scope
@@ -27,7 +28,11 @@ updates:
       include: 'scope' # -> build(deps): bump ...
 
   - package-ecosystem: 'github-actions'
-    directory: '/'
+    # '/' covers .github/workflows/ only; a composite action is found only in
+    # the directory named for it.
+    directories:
+      - '/'
+      - '/.github/actions/*'
     schedule:
       interval: 'weekly'
     commit-message:
