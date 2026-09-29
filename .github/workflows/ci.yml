@@ -51,8 +51,9 @@ jobs:
       # in CI where an upstream compromise would run arbitrary code with the
       # workflow's token.
       #
-      # Keep ACTIONLINT_VERSION in step with .devcontainer/mise.toml. CI is not
-      # a mise host and does not read that file.
+      # Keep ACTIONLINT_VERSION in step with .config/mise/config.toml until
+      # validate.yml, which installs from that file, replaces this workflow
+      # (docs/adr/0036 §5).
       - name: Install actionlint
         env:
           ACTIONLINT_VERSION: 1.7.11
