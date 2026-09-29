@@ -85,9 +85,10 @@ export const GENERATED_PATH_PATTERNS: readonly string[] = [
 
 /**
  * Every entry the repository root may hold, which `task check:config` enforces
- * as CFG-09 (docs/adr/0024 §1). Visible entries are content a contributor edits
- * or a file a tool or GitHub reads only from the root; dotted entries are the
- * machinery that operates on them. Build output never appears here, because it
+ * as CFG-09 (docs/adr/0024 §1, and docs/adr/0036 §2 and §4 for `.repo` and
+ * `AGENTS.md`). Visible entries are content a contributor edits or a file a
+ * tool or GitHub reads only from the root; dotted entries are the machinery
+ * that operates on them. Build output never appears here, because it
  * is gitignored rather than allowed.
  */
 export const ROOT_ENTRIES: readonly string[] = [
@@ -97,6 +98,8 @@ export const ROOT_ENTRIES: readonly string[] = [
   '.gitattributes',
   '.github',
   '.gitignore',
+  '.repo',
+  'AGENTS.md',
   'README.md',
   'Taskfile.yml',
   LEDGER_FILE,

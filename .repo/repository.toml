@@ -1,0 +1,18 @@
+# What this repository is (EC-0009 in musher-dev/engineering-conventions).
+# `conventions check` reads it at this fixed path, which is why .repo/ is a
+# root entry (docs/adr/0036 §2). The kind selects the conventions profile.
+schema_version = 1
+name = "specifications"
+system = "platform"
+component = "specifications"
+kind = "specification"
+owner = "@musher-dev/platform"
+lifecycle = "production"
+audience = "public"
+tier = 2
+
+# No product directory: what this repository publishes is data under
+# specifications/, which holds no build manifest, and its release packages and
+# ledger paths already name that directory (docs/adr/0036 §2).
+[layout]
+product = ""

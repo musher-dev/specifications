@@ -71,6 +71,7 @@ tasks:
       - task: check:format
       - task: check:config
       - task: check:rulesets
+      - task: check:conventions
       - task: check:types
       - task: check:schema
       - task: check:generated
@@ -90,6 +91,11 @@ tasks:
       - task: check:spelling
       - task: check:shell
       - task: check:workflow
+
+  lint:
+    desc: Run the lint suite CI runs
+    cmds:
+      - task: ci:lint
 
   # ===========================================================================
   # Formatting
