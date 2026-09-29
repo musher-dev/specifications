@@ -68,9 +68,15 @@ base_fix_nvm_permissions() {
   fix_nvm_permissions
 }
 
-# --- mise (pins the CLIs that have no devcontainer Feature) ---
+# --- mise (pins every CLI: .config/mise/config.toml) ---
 
 readonly _MISE_BIN="${_HOME}/.local/bin/mise"
+# The mise release the installer fetches. Keep in step with min_version in
+# .config/mise/config.toml and the `version` of jdx/mise-action in the
+# workflows (TOOL-04): an older mise may resolve the same config differently.
+readonly _MISE_VERSION="v2026.9.12"
+# The repository's tool config, found by mise itself (docs/adr/0036 §3).
+readonly _MISE_CONFIG="${_LIB_DIR}/../../../.config/mise/config.toml"
 readonly _MISE_SHIMS="${_HOME}/.local/share/mise/shims"
 
 # Puts the mise shims and ~/.local/bin on PATH for the rest of this script, so
@@ -83,7 +89,8 @@ base_setup_path() {
   export PATH="${_MISE_SHIMS}:${_HOME}/.local/bin:${PATH}"
 }
 
-# Installs mise via the official installer if not already present.
+# Installs the pinned mise release via the official installer if mise is not
+# already present.
 #
 # Outputs:
 #   Writes progress to stderr via log()
@@ -94,17 +101,17 @@ base_install_mise() {
     log "mise already installed, skipping"
     return 0
   fi
-  log "Installing mise (https://mise.run)..."
-  retry 3 5 bounded 300 bash -c \
+  log "Installing mise ${_MISE_VERSION} (https://mise.run)..."
+  # MISE_VERSION is the installer's own input: it fetches that release rather
+  # than the newest one.
+  retry 3 5 bounded 300 env MISE_VERSION="${_MISE_VERSION}" bash -c \
     'curl -fsSL --connect-timeout 10 --max-time 120 https://mise.run | sh'
 }
 
-# Installs the CLIs pinned in .devcontainer/mise.toml (tools with no Feature),
-# then regenerates shims. MISE_GLOBAL_CONFIG_FILE (devcontainer.json →
-# containerEnv) points mise at that manifest.
+# Installs the CLIs pinned in .config/mise/config.toml, as mise.lock beside it
+# records them, then regenerates shims. mise finds the config itself when run
+# from the repository, so it runs from there.
 #
-# Globals:
-#   MISE_GLOBAL_CONFIG_FILE — read, path to the tool manifest
 # Outputs:
 #   Writes progress to stderr via log()
 # Returns:
@@ -112,7 +119,7 @@ base_install_mise() {
 base_install_tools() {
   local mise
   mise="$(command -v mise || echo "${_MISE_BIN}")"
-  local config="${MISE_GLOBAL_CONFIG_FILE:-${_LIB_DIR}/../../mise.toml}"
+  local config="${_MISE_CONFIG}"
 
   # Claude Code is this repository's default harness; Codex is opt-IN. Codex is
   # an npm package carrying a platform binary and it dominates the cold-
@@ -128,7 +135,7 @@ base_install_tools() {
   log "Installing pinned CLIs from ${config}..."
   debug "MISE_DISABLE_TOOLS=${MISE_DISABLE_TOOLS:-<unset>}"
   "${mise}" trust "${config}" >/dev/null 2>&1 || true
-  retry 3 5 bounded 900 "${mise}" install
+  retry 3 5 bounded 900 "${mise}" --cd "${_LIB_DIR}/../../.." install --locked
   "${mise}" reshim >/dev/null 2>&1 || true
 }
 
@@ -172,7 +179,7 @@ base_install_claude() {
 base_verify_tools() {
   # Verify what this container was actually asked to install. Checking a CLI the
   # developer deliberately switched off would report a self-inflicted failure.
-  local -a tools=(gh task lefthook actionlint shellcheck)
+  local -a tools=(gh bun node task lefthook actionlint shellcheck)
   if install_wanted "${MUSHER_INSTALL_CODEX:-0}"; then tools+=(codex); fi
   if install_wanted "${MUSHER_INSTALL_CLAUDE:-1}"; then tools+=(claude); fi
   debug "verifying: ${tools[*]}"

@@ -4,7 +4,8 @@
 # and why a stray lefthook.yml at the repo root would silently shadow it.
 # `task check:config` (CFG-06) fails the build if one appears.
 #
-# Keep min_version in step with .devcontainer/mise.toml.
+# Keep min_version equal to the lefthook version .config/mise/config.toml pins
+# (HOOKS-02).
 min_version: 2.1.10
 
 # Standard `**` semantics. Under the default gobwas matcher `**/*.md` needs at

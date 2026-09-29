@@ -34,11 +34,23 @@ const CONFIG_DIR = '.config'
 
 /**
  * Configs the tool finds on its own, and so cannot be required to have a
- * caller. Keep this short — every entry is a dependency on discovery
- * behaviour that a tool upgrade could change underneath us.
+ * caller, keyed by their path under `.config/`. Keep this short — every entry
+ * is a dependency on discovery behaviour that a tool upgrade could change
+ * underneath us.
  */
 const AUTO_DISCOVERED: { readonly [file: string]: string } = {
   'lefthook.yml': 'lefthook searches .config/ natively',
+  'mise/config.toml': 'mise searches .config/mise/ natively (docs/adr/0036 §3)',
+}
+
+/**
+ * Directories whose every file the tool that owns the directory writes and
+ * reads itself: `mise lock` writes `mise.lock` and the per-tool lock files
+ * under `locks/` beside the config it discovers, and `mise install --locked`
+ * reads them from there. No caller names them, and none could.
+ */
+const TOOL_OWNED_DIRS: { readonly [dir: string]: string } = {
+  'mise/': 'written by `mise lock`, read by `mise install --locked`',
 }
 
 /** Gitignored personal overrides. Present or absent, never indexed. */
@@ -49,7 +61,11 @@ const LOCAL_OVERRIDES = ['lefthook-local.yml', 'lefthook-local.yaml']
  * concern bucket. Lefthook qualifies solely because its config search does not
  * descend past `.config/lefthook.*` — bucketing it would stop every hook.
  */
-const TOP_LEVEL_ALLOWED = ['README.md', ...Object.keys(AUTO_DISCOVERED), ...LOCAL_OVERRIDES]
+const TOP_LEVEL_ALLOWED = [
+  'README.md',
+  ...Object.keys(AUTO_DISCOVERED).filter((rel) => !rel.includes('/')),
+  ...LOCAL_OVERRIDES,
+]
 
 /**
  * Suffixes that make a file a program rather than a declaration. A denylist
@@ -176,6 +192,26 @@ function indexedNames(index: string): Set<string> {
 }
 
 /**
+ * Whether the index names `rel`: by its path, by its file name, or by a
+ * directory holding it, written with a trailing slash. A directory row covers
+ * files a tool writes there itself, such as mise's per-tool lock files, which
+ * the index could only list by repeating the tool's own naming scheme.
+ */
+function isIndexed(indexed: Set<string>, rel: string, name: string): boolean {
+  if (indexed.has(rel) || indexed.has(name)) return true
+  const parts = rel.split('/')
+  for (let depth = 1; depth < parts.length; depth++) {
+    if (indexed.has(`${parts.slice(0, depth).join('/')}/`)) return true
+  }
+  return false
+}
+
+/** Whether `rel` sits in a directory its tool writes and reads itself. */
+function isToolOwned(rel: string): boolean {
+  return Object.keys(TOOL_OWNED_DIRS).some((dir) => rel.startsWith(dir))
+}
+
+/**
  * Every violation of the layout, as `CFG-NN: <what> — <fix>` messages.
  *
  * Exported and taking `repoRoot` so the test suite can exercise each rule
@@ -230,7 +266,7 @@ export function configViolations(repoRoot: string = REPO_ROOT): string[] {
       )
     }
 
-    if (hasIndex && !indexed.has(rel) && !indexed.has(name)) {
+    if (hasIndex && !isIndexed(indexed, rel, name)) {
       problems.push(
         `CFG-03: ${CONFIG_DIR}/${rel} has no row in ${CONFIG_DIR}/README.md. A config ` +
           'the index does not name is invisible to the next reader.',
@@ -238,7 +274,8 @@ export function configViolations(repoRoot: string = REPO_ROOT): string[] {
     }
 
     const called =
-      AUTO_DISCOVERED[name] !== undefined ||
+      AUTO_DISCOVERED[rel] !== undefined ||
+      isToolOwned(rel) ||
       callers.includes(`${CONFIG_DIR}/${rel}`) ||
       bucketSiblings(configDir, rel).includes(name)
     if (!called) {
