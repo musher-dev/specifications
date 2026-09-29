@@ -48,7 +48,7 @@ jobs:
   release-please:
     name: Release Please
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       contents: read
@@ -130,7 +130,7 @@ jobs:
     name: Plan
     needs: release-please
     if: ${{ !cancelled() && (github.event_name == 'workflow_dispatch' || needs.release-please.result == 'success') }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
       # Listing draft releases, and creating one, both need write access.
@@ -201,7 +201,7 @@ jobs:
     name: Release artifacts
     needs: plan
     if: ${{ !cancelled() && github.ref == 'refs/heads/main' && needs.plan.result == 'success' && needs.plan.outputs.matrix != '[]' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
       contents: write
