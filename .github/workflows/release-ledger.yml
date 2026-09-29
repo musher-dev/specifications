@@ -19,8 +19,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: release-ledger-${{ github.head_ref }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   record:
@@ -43,18 +43,11 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      # The branch's own .config/mise/config.toml: release-please builds the
+      # branch on top of main, so it always carries the action and the pins.
+      - uses: ./.github/actions/setup-tools
         with:
-          bun-version-file: tools/.bun-version
-
-      - uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
-        with:
-          version: 3.52.0
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Install tooling dependencies
-        working-directory: tools
-        run: bun install --frozen-lockfile
+          install-args: aqua:oven-sh/bun node aqua:go-task/task
 
       # Inserts or updates the entry for every untagged manifest version, so a
       # branch brought up to date with main gets fresh `tree` and `bundleSha256`

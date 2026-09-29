@@ -47,8 +47,10 @@ docs/             guides, governance, the fixture format, traceability, and deci
 tools/            non-normative build and check scripts (Bun and TypeScript)
 taskfiles/        the tasks behind `task check`
 .claude/          the agent brief, CLAUDE.md, for Claude Code
-.config/          every linter, formatter, and hook configuration
+.config/          every linter, formatter, and hook configuration, and the tool pins
 .github/          contributing, security, rulesets, and workflows
+.repo/            what the repository is and publishes, for the engineering conventions
+AGENTS.md         points coding agents other than Claude Code at .claude/CLAUDE.md
 published.json    append-only ledger of every release (docs/publication.md#the-ledger)
 ```
 

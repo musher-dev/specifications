@@ -1,0 +1,47 @@
+# Every CLI this repository runs, pinned once. The dev container
+# (.devcontainer/scripts/lib/base-setup.sh) and CI (jdx/mise-action, through
+# .github/actions/setup-tools) both install from this file.
+# mise discovers it natively at .config/mise/config.toml, the one config besides
+# lefthook's that no caller passes by path (docs/adr/0036 §3).
+#
+# mise.lock beside this file records each tool's download URL and checksum per
+# platform, and installs run with --locked. Edit a version here, then run
+# `mise lock` and commit both files.
+#
+# Backends are fully qualified, so what installs does not depend on mise's
+# registry. Pins are exact: a range resolves the newest match through the
+# GitHub API on every install, so a degraded API takes every job down.
+#
+# Versions stated a second time elsewhere, held equal by
+# `conventions check` (TOOL-04, TOOL-08, TOOL-11):
+#   - min_version, and _MISE_VERSION in .devcontainer/scripts/lib/base-setup.sh
+#     and the `version` of jdx/mise-action in .github/actions/setup-tools
+#   - bun, and tools/.bun-version
+#   - node, and the node Feature in .devcontainer/devcontainer.json
+#   - lefthook, and min_version in .config/lefthook.yml
+# and one held equal by hand:
+#   - task, and go-task/setup-task in .github/workflows/release.yml, which
+#     builds a tag's own tree and so cannot count on this file being there
+min_version = "2026.9.12"
+
+[tools]
+# --- Runtimes --------------------------------------------------------------
+# Bun runs tools/. Node runs the npm CLIs Bun installs under tools/node_modules
+# (cspell, markdownlint-cli2, jsonschema), whose shebangs name node.
+"aqua:oven-sh/bun" = "1.3.14"
+node = "24.18.0"
+
+# --- Task runner, hooks, linters --------------------------------------------
+"aqua:go-task/task" = "3.52.0"
+"aqua:evilmartians/lefthook" = "2.1.10"
+"aqua:rhysd/actionlint" = "1.7.11"
+
+# --- The conventions release this repository is checked against (ADR 0036) --
+"github:musher-dev/engineering-conventions" = "0.6.1"
+
+# --- Opt-in -----------------------------------------------------------------
+# @openai/codex is pinned here but NOT installed by default: it is opt-in via
+# MUSHER_INSTALL_CODEX=1 in .devcontainer/.env, which the setup scripts turn
+# into MISE_DISABLE_TOOLS. The pin stays recorded so enabling it is a one-line
+# change that still resolves to a known version.
+"npm:@openai/codex" = "0.143.0"

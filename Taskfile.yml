@@ -20,7 +20,9 @@ output:
 
 vars:
   TOOLS_DIR: tools
-  SITE_DIR: site
+  # Build output: `task site:build` creates it, so it is not named `_DIR`, which
+  # promises a directory the repository holds (TASK-08).
+  SITE: site
 
 env:
   # Keep bun's cache inside the workspace-visible cache dir the dev container
@@ -71,6 +73,7 @@ tasks:
       - task: check:format
       - task: check:config
       - task: check:rulesets
+      - task: check:conventions
       - task: check:types
       - task: check:schema
       - task: check:generated
@@ -90,6 +93,11 @@ tasks:
       - task: check:spelling
       - task: check:shell
       - task: check:workflow
+
+  lint:
+    desc: Run the lint suite CI runs
+    cmds:
+      - task: ci:lint
 
   # ===========================================================================
   # Formatting
@@ -148,6 +156,6 @@ tasks:
   clean:
     desc: Remove generated output
     cmds:
-      - rm -rf {{.SITE_DIR}}
+      - rm -rf {{.SITE}}
       - rm -rf dist .cache
       - rm -rf {{.TOOLS_DIR}}/node_modules

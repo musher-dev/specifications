@@ -22,6 +22,9 @@ missing from this table fails CFG-03; a file no caller names fails CFG-04.
 | --- | --- | --- |
 | `lefthook.yml` | lefthook | **Auto-discovered.** Lefthook searches `.config/lefthook.*` natively |
 | `lefthook-local.yml` | lefthook | Auto-discovered and merged. Gitignored; personal overrides only |
+| `mise/config.toml` | mise | **Auto-discovered.** mise searches `.config/mise/config.toml` natively (docs/adr/0036 §3) |
+| `mise/mise.lock` | mise | Written by `mise lock` beside the config; read by `mise install --locked` |
+| `mise/locks/` | mise | Per-tool lock files `mise lock` writes for npm tools; read by `mise install --locked` |
 | `actions/actionlint.yaml` | actionlint | `-config-file .config/actions/actionlint.yaml` |
 | `markdown/markdownlint.jsonc` | markdownlint-cli2 | `--config .config/markdown/markdownlint.jsonc` |
 | `spelling/cspell.json` | cspell | `--config .config/spelling/cspell.json` |
@@ -31,11 +34,10 @@ Call sites are [`Taskfile.yml`](../Taskfile.yml), [`taskfiles/`](../taskfiles/),
 `.config/lefthook.yml`, and [`.github/workflows/`](../.github/workflows/).
 Tool versions are pinned in
 [`tools/package.json`](../tools/package.json) for anything installed by Bun,
-and in [`.devcontainer/mise.toml`](../.devcontainer/mise.toml) for the rest.
-CI is not a mise host and does not read that file. The CI workflows pin the
-tools they install themselves, Task and actionlint, to the same versions.
-ShellCheck is the exception: CI uses the copy preinstalled on the runner image,
-which is not pinned and can differ from the container's.
+and in [`mise/config.toml`](mise/config.toml) for every CLI. The dev container
+and CI both install from that file (docs/adr/0036 §3). ShellCheck is the
+exception: CI uses the copy preinstalled on the runner image, which is not
+pinned and can differ from the container's.
 
 ## Rules
 
@@ -46,9 +48,9 @@ which is not pinned and can differ from the container's.
    stop every hook.
 2. **No leading dot on filenames.** The directory is already dotted; a second
    dot advertises a discovery mechanism that is deliberately not in use.
-3. **Pass the path explicitly.** Except for lefthook, which finds this
-   directory on its own, every caller names its config with the tool's own
-   config flag. Never rely on default discovery — that is what put these files
+3. **Pass the path explicitly.** Except for lefthook and mise, which find
+   their configs here on their own, every caller names its config with the
+   tool's own config flag. Never rely on default discovery — that is what put these files
    at the repo root in the first place.
 4. **Every file must have a caller.** A config nothing reads is dead weight
    that still reads as authoritative.
@@ -72,7 +74,7 @@ whole directory exists to prevent, and it is one command to rule out.
 | `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md` | `.github/` | Community health files, which GitHub resolves from there |
 | `biome.json`, `tsconfig.json` | `tools/` | They belong to the `tools/` package and are resolved by it — a package's own config, not a repo-level one |
 | `published.json` | Repo root | A published data artifact, not tool configuration. The catalog is build output under `dist/`, never tracked |
-| `mise.toml`, `devcontainer.json` | `.devcontainer/` | They provision the environment rather than checking the code |
+| `devcontainer.json` | `.devcontainer/` | It provisions the environment rather than checking the code |
 | `dependabot.yml`, `release-please/`, `rulesets/`, `workflows/` | `.github/` | GitHub reads these from fixed locations |
 
 ## Deliberately config-less

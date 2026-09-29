@@ -1,5 +1,7 @@
 # Musher Document Specifications
 
+@../README.md
+
 This repository is the normative source of truth for the documents Musher users
 author: the prose, schemas, examples and conformance corpora that define them.
 The CLI, the platform API and every SDK implement what is defined here.

@@ -30,15 +30,17 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write
 
 concurrency:
-  group: codeowners-notice-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  self-owned-notice:
+  self_owned_notice:
     name: Self-owned paths notice
+    permissions:
+      contents: read
+      pull-requests: write  # the sticky comment
     # Drafts are skipped; `ready_for_review` re-fires this when the pull request
     # leaves draft.
     if: github.event.pull_request.draft == false && !endsWith(github.event.pull_request.user.login, '[bot]')

@@ -38,8 +38,10 @@ The supported environment is the dev container:
 
 **Command Palette → Dev Containers: Reopen in Container**
 
-Outside the container you need [Bun](https://bun.sh) ≥ 1.3 and
-[Task](https://taskfile.dev) ≥ 3.52.
+Outside the container, install [mise](https://mise.jdx.dev) and run
+`mise install --locked` at the repository root. It installs every CLI that
+[`.config/mise/config.toml`](../.config/mise/config.toml) pins, at the pinned
+version. ShellCheck is the one tool `task check` runs that you install yourself.
 
 ```sh
 task setup     # install tool dependencies and git hooks

@@ -1,0 +1,75 @@
+# What this repository publishes (EC-0007 in musher-dev/engineering-conventions):
+# each kind family's schema, as a contract, and each family's release archive,
+# as a bundle. release.yml attaches both to the family's immutable GitHub
+# Release (docs/adr/0023 §2), and the site then serves the schemas at their
+# `$id` URLs. `conventions check` reads this file at this fixed path.
+schema_version = 1
+
+[[outputs]]
+id = "component-schema"
+kind = "contract"
+description = "The component document's JSON Schema, served at its $id URL."
+format = "json-schema"
+definition = "specifications/component/v1/schemas/src/component.schema.json"
+source = "specifications/component/v1/"
+publish_workflow = "release.yml"
+location = "https://specifications.musher.dev/component/v1/component.schema.json"
+docs = "docs/using-schemas.md#which-url"
+
+[[outputs]]
+id = "blueprint-schema"
+kind = "contract"
+description = "The blueprint document's JSON Schema, served at its $id URL."
+format = "json-schema"
+definition = "specifications/blueprint/v1/schemas/src/blueprint.schema.json"
+source = "specifications/blueprint/v1/"
+publish_workflow = "release.yml"
+location = "https://specifications.musher.dev/blueprint/v1/blueprint.schema.json"
+docs = "docs/using-schemas.md#which-url"
+
+[[outputs]]
+id = "listing-schema"
+kind = "contract"
+description = "The listing document's JSON Schema, served at its $id URL."
+format = "json-schema"
+definition = "specifications/listing/v1/schemas/src/listing.schema.json"
+source = "specifications/listing/v1/"
+publish_workflow = "release.yml"
+location = "https://specifications.musher.dev/listing/v1/listing.schema.json"
+docs = "docs/using-schemas.md#which-url"
+
+[[outputs]]
+id = "core-release"
+kind = "bundle"
+description = "The core specification's release archive: prose and parser-phase corpus."
+source = "specifications/core/v1/"
+publish_workflow = "release.yml"
+location = "https://github.com/musher-dev/specifications/releases"
+docs = "docs/publication.md#release-assets"
+
+[[outputs]]
+id = "component-release"
+kind = "bundle"
+description = "The component family's release archive: prose, schema, examples and corpus."
+source = "specifications/component/v1/"
+publish_workflow = "release.yml"
+location = "https://github.com/musher-dev/specifications/releases"
+docs = "docs/publication.md#release-assets"
+
+[[outputs]]
+id = "blueprint-release"
+kind = "bundle"
+description = "The blueprint family's release archive: prose, schema, examples and corpus."
+source = "specifications/blueprint/v1/"
+publish_workflow = "release.yml"
+location = "https://github.com/musher-dev/specifications/releases"
+docs = "docs/publication.md#release-assets"
+
+[[outputs]]
+id = "listing-release"
+kind = "bundle"
+description = "The listing family's release archive: prose, schema, examples and corpus."
+source = "specifications/listing/v1/"
+publish_workflow = "release.yml"
+location = "https://github.com/musher-dev/specifications/releases"
+docs = "docs/publication.md#release-assets"

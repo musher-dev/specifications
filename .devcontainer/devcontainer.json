@@ -6,8 +6,9 @@
 // Docker, Python, Go, Java, Deno, uv, the postgres client, and the whole
 // compose stack set) is deliberately absent.
 //
-// Kept: Bun and Node for tools/, Task as the runner, shellcheck for the
-// devcontainer scripts, gh for release work.
+// Kept: Node for the npm CLIs tools/ installs, shellcheck for the devcontainer
+// scripts, gh for release work. Bun, Task and the other CLIs come from mise
+// (.config/mise/config.toml), which CI installs from too.
 {
   "name": "Musher Specifications",
 
@@ -19,8 +20,10 @@
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
 
   // Every Feature is version-pinned and captured in devcontainer-lock.json.
-  // CI fails on lockfile drift. Tools with no Feature (codex, lefthook) live in
-  // .devcontainer/mise.toml; Claude Code self-updates via its own installer.
+  // CI fails on lockfile drift. Every other CLI is pinned in
+  // .config/mise/config.toml, which CI installs from too (docs/adr/0036 §3);
+  // node is pinned there as well, and must stay equal to the Feature's version
+  // (TOOL-08). Claude Code self-updates via its own installer.
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {
       "installZsh": true,
@@ -32,8 +35,6 @@
     "ghcr.io/devcontainers/features/git:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": { "version": "2.96.0" },
     "ghcr.io/devcontainers/features/node:2": { "version": "24.18.0" },
-    "ghcr.io/devcontainers-extra/features/bun:1": { "version": "1.3.14" },
-    "ghcr.io/devcontainers-extra/features/go-task:1": { "version": "3.52.0" },
     "ghcr.io/lukewiwa/features/shellcheck:0": { "version": "v0.11.0" }
   },
 
@@ -53,8 +54,8 @@
   ],
 
   "containerEnv": {
-    // mise's manifest lives under .devcontainer/, not the repo root.
-    "MISE_GLOBAL_CONFIG_FILE": "${containerWorkspaceFolder}/.devcontainer/mise.toml",
+    // mise discovers .config/mise/config.toml itself; a config in a checkout
+    // installs nothing until it is trusted.
     "MISE_TRUSTED_CONFIG_PATHS": "${containerWorkspaceFolder}",
 
     "XDG_CACHE_HOME": "/home/vscode/.cache",

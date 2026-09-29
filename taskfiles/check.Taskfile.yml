@@ -39,6 +39,16 @@ tasks:
     cmds:
       - bun run src/policy/rulesets.ts
 
+  conventions:
+    desc: Check the repository against the pinned engineering-conventions release
+    dir: '{{.ROOT_DIR}}'
+    cmds:
+      # The release is pinned in .config/mise/config.toml (docs/adr/0036 §1).
+      # Report-only for now: every requirement is a warning, and the default
+      # --fail-on error fails on none of them. CI adds --fail-on warning once
+      # .repo/conventions.toml lists the families this repository enforces.
+      - conventions check
+
   # --- The normative gates ---------------------------------------------------
 
   schema:
