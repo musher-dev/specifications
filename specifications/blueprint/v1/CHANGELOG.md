@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/musher-dev/specifications/compare/blueprint/v1.6.0...blueprint/v1.7.0) (2026-09-29)
+
+
+### Additions
+
+* **core:** identity modes, machine access, installer facts and hashes ([#145](https://github.com/musher-dev/specifications/issues/145)) ([b2cf17f](https://github.com/musher-dev/specifications/commit/b2cf17f3801c162d9f1e9b513adbda3a479de253))
+
 ## [1.6.0](https://github.com/musher-dev/specifications/compare/blueprint/v1.5.0...blueprint/v1.6.0) (2026-09-28)
 
 
