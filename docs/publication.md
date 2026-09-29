@@ -380,6 +380,16 @@ from the merged `CHANGELOG.md` under a `## X.Y.Z` heading. Then re-run that
 push's release workflow with `gh run rerun <run-id>`, and close the pull request
 it opened by mistake.
 
+If a release pull request merges and no workflow runs at all for its merge
+commit, GitHub dropped the push event, and there is no run to re-run. A
+dispatch cannot help either, because it only finishes a tag that exists. The
+merged pull request still carries the `autorelease: pending` label, and
+release-please tags every such pull request at its own merge commit on the next
+push to `main`. Merge any ready pull request, and that push's run tags and
+publishes the missed release. Merge no later release pull request of a family
+that depends on it first: its ledger entry cannot be recorded until the missed
+tag exists.
+
 ## Prerequisites before the first tag
 
 These live outside the repository. Each was in place for the first releases on
