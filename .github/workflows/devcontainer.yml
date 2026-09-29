@@ -3,13 +3,17 @@ name: Dev Container
 on:
   push:
     branches: [main]
-    paths: ['.devcontainer/**', '.github/workflows/devcontainer.yml']
+    paths: ['.devcontainer/**', '.config/mise/**', '.github/workflows/devcontainer.yml']
   pull_request:
     branches: [main]
-    paths: ['.devcontainer/**', '.github/workflows/devcontainer.yml']
+    paths: ['.devcontainer/**', '.config/mise/**', '.github/workflows/devcontainer.yml']
 
 permissions:
   contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   shellcheck:
@@ -18,6 +22,8 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: ludeeus/action-shellcheck@00cae500b08a931fb5698e11e79bfbd38e612a38 # 2.0.0
         env:
           SHELLCHECK_OPTS: -x --source-path=SCRIPTDIR
@@ -30,17 +36,21 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       # --frozen-lockfile fails if devcontainer-lock.json is missing or if its
       # resolved Feature digests drift from devcontainer.json.
       - name: Enforce devcontainer-lock.json is current
         run: npx -y @devcontainers/cli build --workspace-folder . --frozen-lockfile
 
-  env-check:
+  env_check:
     name: Env Template Sync
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
         with:
           version: 3.52.0

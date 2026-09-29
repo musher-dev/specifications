@@ -84,7 +84,7 @@ tasks:
           .github/workflows/deploy.yml.
     cmds:
       - >-
-        {{.TOOLS_DIR}}/node_modules/.bin/wrangler pages deploy {{.SITE_DIR}}
+        {{.TOOLS_DIR}}/node_modules/.bin/wrangler pages deploy {{.SITE}}
         --project-name={{.PAGES_PROJECT}} --branch=main
 
   site:verify-live:

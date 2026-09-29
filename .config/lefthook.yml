@@ -8,6 +8,9 @@
 # (HOOKS-02).
 min_version: 2.1.10
 
+# Where lefthook itself is missing, fail rather than skip every hook in silence.
+assert_lefthook_installed: true
+
 # Standard `**` semantics. Under the default gobwas matcher `**/*.md` needs at
 # least one directory, so a root README.md or tools/biome.json never matched
 # the globs below. With doublestar, `*` stops at `/`: a glob meant for any
@@ -20,20 +23,24 @@ pre-commit:
     - name: format
       glob: 'tools/**/*.{ts,json}'
       run: task check:format
+      fail_text: "Formatting or lint of tools/ failed. Run 'task fmt', then 'task check:format' for what is left."
 
     - name: schema
       glob: 'specifications/**/*.schema.json'
       run: task check:schema
+      fail_text: "A schema module failed meta-validation. Run 'task check:schema' for the report."
 
     - name: config
       glob: '.config/**'
       run: task check:config
+      fail_text: "The .config/ layout or the root allowlist broke. Run 'task check:config'; .config/README.md has the rules."
 
     # Both halves of the review gate, plus the workflows whose job names its
     # required checks name -- renaming a job is the quiet way to break it.
     - name: rulesets
       glob: '.github/{rulesets/**,CODEOWNERS,workflows/*.yml}'
       run: task check:rulesets
+      fail_text: "The ruleset, CODEOWNERS and required checks disagree. Run 'task check:rulesets' (docs/adr/0015)."
 
     # Every copy of the Conventional Commits vocabulary, this file included --
     # the commit-msg hook below inlines the types a fifth time. CI checks them
@@ -44,18 +51,22 @@ pre-commit:
         - '.github/{conventional-commits.yaml,dependabot.yml,CONTRIBUTING.md,workflows/lint-pr.yml}'
         - '.config/lefthook.yml'
       run: task check:commits
+      fail_text: "A copy of the commit vocabulary drifted. Run 'task check:commits'; .github/conventional-commits.yaml is the source."
 
     - name: markdown
       glob: '**/*.md'
       run: task check:md
+      fail_text: "Markdown lint failed. Run 'task fmt:md' for what it can fix, then 'task check:md'."
 
     - name: shell
       glob: '**/*.sh'
       run: task check:shell:files -- {staged_files}
+      fail_text: "ShellCheck failed on a staged script. Run 'task check:shell' for the report."
 
     - name: workflow
       glob: '.github/workflows/*.{yml,yaml}'
       run: task check:workflow:files -- {staged_files}
+      fail_text: "actionlint failed on a staged workflow. Run 'task check:workflow' for the report."
 
 commit-msg:
   jobs:
@@ -82,8 +93,10 @@ commit-msg:
           exit 1
         fi
         ' -- {1}
+      fail_text: "The subject must be a Conventional Commit; .github/CONTRIBUTING.md lists the types and scopes."
 
 pre-push:
   jobs:
     - name: verify
       run: task hooks:pre-push
+      fail_text: "'task check' failed. Run it to see which check, and fix that before pushing."

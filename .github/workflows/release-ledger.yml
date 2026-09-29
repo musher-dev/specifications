@@ -19,8 +19,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: release-ledger-${{ github.head_ref }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   record:
