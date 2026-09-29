@@ -8,9 +8,7 @@ name: Validate Pull Request
 #
 # It is a workflow of its own because it must re-run when a title is `edited`:
 # in validate.yml that event would re-run, or through the concurrency group
-# cancel, every other job. It replaces the title step of ci.yml's Lint job and
-# dco.yml (docs/adr/0036 §5); they run side by side until the ruleset requires
-# this workflow's context instead.
+# cancel, every other job (docs/adr/0036 §5).
 #
 # `merge_group` is declared so a merge queue sees the context. A merge group has
 # no pull request, so both checks skip there and the aggregate passes on skips.

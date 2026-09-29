@@ -1,8 +1,8 @@
 /**
  * Hold every copy of the Conventional Commits vocabulary in step.
  *
- * `.github/conventional-commits.yaml` calls itself the single source of truth
- * and says it is "consumed by .github/workflows/lint-pr.yml". It is not
+ * `.github/conventional-commits.yaml` called itself the single source of truth
+ * and said it was "consumed by" the pull request title workflow. It was not
  * consumed by anything: the workflow inlines the same lists in its `with:`
  * block, and the .config/lefthook.yml commit-msg hook inlines the types again
  * inside a POSIX regex. Copies, and a comment asking people to keep them in
@@ -34,7 +34,8 @@ import { join } from 'node:path'
 import { Failures, REPO_ROOT } from '../lib/layout.ts'
 
 const SOURCE = join(REPO_ROOT, '.github', 'conventional-commits.yaml')
-const WORKFLOW = join(REPO_ROOT, '.github', 'workflows', 'lint-pr.yml')
+const WORKFLOW_FILE = 'repository-pull-request-title.yml'
+const WORKFLOW = join(REPO_ROOT, '.github', 'workflows', WORKFLOW_FILE)
 const HOOKS = join(REPO_ROOT, '.config', 'lefthook.yml')
 const DEPENDABOT = join(REPO_ROOT, '.github', 'dependabot.yml')
 const CONTRIBUTING = join(REPO_ROOT, '.github', 'CONTRIBUTING.md')
@@ -144,8 +145,8 @@ function main(): void {
   }
 
   const workflow = readFileSync(WORKFLOW, 'utf8')
-  compare('lint-pr.yml types', types, blockScalar(workflow, 'types'), failures)
-  compare('lint-pr.yml scopes', scopes, blockScalar(workflow, 'scopes'), failures)
+  compare(`${WORKFLOW_FILE} types`, types, blockScalar(workflow, 'types'), failures)
+  compare(`${WORKFLOW_FILE} scopes`, scopes, blockScalar(workflow, 'scopes'), failures)
 
   // The hook checks types only — a scope is optional, and the hook's own error
   // text lists the scopes for a human rather than enforcing them.

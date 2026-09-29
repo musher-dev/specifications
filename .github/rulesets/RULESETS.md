@@ -38,15 +38,20 @@ Protects the default branch:
   file.
 - **Linear history**, squash-merge only. The specification's history should read
   as a sequence of deliberate changes.
-- **Required status checks**: `Lint`, `Schema`, `Site Build`, `Signed off`,
-  each pinned to `integration_id: 15368` so only the GitHub Actions app can
-  satisfy them. This is the one list of the required checks; other pages link
-  here. `Lint` carries the repository policy checks, and on a pull request it
-  also enforces the Conventional Commits title (`task check:title`). `Schema` is
-  the one that matters most — it carries the conformance, compatibility and
-  build-output gates. `Site Build` carries the publication-ledger gates and
-  verifies every published release asset. `Signed off` is the DCO check
-  CONTRIBUTING.md requires.
+- **Required status checks**: `Validate / Required` and
+  `Validate Pull Request / Required`, each pinned to `integration_id: 15368` so
+  only the GitHub Actions app can satisfy them. This is the one list of the
+  required checks; other pages link here. Each is the aggregate job of its
+  workflow, and fails unless every other job in that workflow succeeded
+  ([ADR 0036](../../docs/adr/0036-the-repository-adopts-the-engineering-conventions.md)
+  §5). `validate.yml` judges the tree: `Tools / Lint` carries the repository
+  policy checks, `Specifications / Schema` the conformance, compatibility and
+  build-output gates, `Site / Build` the publication-ledger gates and every
+  published release asset, and `Conventions / Check` the engineering
+  conventions. `validate-pull-request.yml` judges the pull request itself:
+  `Title / Conventional Commit` (`task check:title`) and `Commits / Sign-off`,
+  the DCO check CONTRIBUTING.md requires. A job added to either workflow is
+  required through its aggregate, with no ruleset change.
 - **Deletion and force-push blocked.**
 
 ### The selective code-owner review gate
@@ -77,9 +82,9 @@ array. RUL-07 checks the gate's two values above.
    it produces a self-contradictory, unmergeable state. RUL-08.
 3. **Every required context must name a job some workflow publishes**, and that
    workflow must not filter on `paths:`. Either mistake yields a context that
-   never reports and a pull request that hangs forever. RUL-09. This is why the
-   validator, and the title check, run inside the existing `Lint` job rather
-   than as workflows of their own.
+   never reports and a pull request that hangs forever. RUL-09. This is why
+   the validator, and the title check, run inside the two Validate workflows,
+   neither of which filters on `paths:`, rather than as workflows of their own.
 4. **Every root-anchored CODEOWNERS pattern must resolve to a real path.**
    CODEOWNERS fails open: a stale entry reads as ownership and grants none. So
    does an owner without explicit write access, or an invisible team. RUL-06
@@ -108,8 +113,8 @@ array. RUL-07 checks the gate's two values above.
 **An owner's own pull requests are exempt.** GitHub cannot request a review from
 the author, so authorship waives the requirement for the patterns that author
 owns. The gate protects owned paths from *other* contributors, not from their
-owner. `.github/workflows/codeowners-notice.yml` posts a sticky comment on
-self-owned edits so the waiver is at least visible.
+owner. `.github/workflows/repository-codeowners-notice.yml` posts a sticky
+comment on self-owned edits so the waiver is at least visible.
 
 ### Changing the review gate
 

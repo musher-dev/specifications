@@ -164,7 +164,7 @@ the ledger's `path`.
 
 **The draft window.** release-please tags a merge commit before the release job
 publishes its release, so for a few minutes a tagged entry has no published
-release. CI's `Site Build` sets `ALLOW_PENDING_RELEASES=1`: there, such an entry
+release. CI's `Site / Build` sets `ALLOW_PENDING_RELEASES=1`: there, such an entry
 is a warning, and its release is left out of the site CI builds. The deploy sets
 no such variable, and fails on it.
 
@@ -257,7 +257,7 @@ The checks that read the ledger:
   - A shallow clone holding entries but no tags fails, rather than reporting
     nothing to check.
 - **`task check:ledger`** is the append-only check above. It runs in CI's
-  `Site Build`, on pull requests only.
+  `Site / Build`, on pull requests only.
 - **`task check:published:online`** runs the online half of `task site:fetch`
   without writing the cache. For each tagged entry, the GitHub Release must be
   published and immutable, carry its conventional assets, and have a bundle
@@ -415,7 +415,7 @@ family, starting with core, is tagged:
      invariant 7).
    - `squash_merge_commit_message` must be `COMMIT_MESSAGES`. The squash body
      is then the branch's own commit messages, the text the `commit-msg` hook
-     and `Signed off` read, and its trailer block is the end of the branch's last
+     and `Commits / Sign-off` read, and its trailer block is the end of the branch's last
      commit. That is where a `BREAKING CHANGE:` or `Release-As:` footer has to
      sit to count. `PR_BODY` would land the pull request description, which no
      check reads, and `BLANK` would drop every footer.
@@ -440,7 +440,7 @@ family, starting with core, is tagged:
    `gh api 'users/musher-release[bot]' --jq .id` prints. Before release-please runs, the
    release job compares the value on the default branch with the App's commit
    author, and it refuses to continue until they match, because every release
-   pull request would otherwise fail `Signed off`.
+   pull request would otherwise fail `Commits / Sign-off`.
 6. **Serve `specifications.musher.dev` from Cloudflare Pages.** Attach the
    custom domain to the Pages project `task site:deploy` names. Store a token
    scoped to that one project as `CLOUDFLARE_API_TOKEN`, and the account as

@@ -1,14 +1,15 @@
 /**
  * Hold a pull request title to the Conventional Commits vocabulary —
- * `task check:title`, run by CI's `Lint` job on pull requests only.
+ * `task check:title`, run by the `Title / Conventional Commit` job of
+ * validate-pull-request.yml, on pull requests only.
  *
  * The squash merge lands the title as the commit subject, and release-please
  * reads that subject. So the title is checked against the same
  * `.github/conventional-commits.yaml` `check:commits` holds every other copy
  * to, read with the same parser: `<type>(<scope>)!: <subject>`, a listed type,
  * a listed scope when one is given (or always, under `requireScope: true`), and
- * a subject that starts lowercase and does not end with a period, as lint-pr.yml
- * words it.
+ * a subject that starts lowercase and does not end with a period, as
+ * repository-pull-request-title.yml words it.
  *
  * release-please titles its own pull requests from
  * `.github/release-please/config.json`'s `chore(repo): release${component}

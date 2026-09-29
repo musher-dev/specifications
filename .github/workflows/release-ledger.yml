@@ -80,7 +80,8 @@ jobs:
 
       # Authored and signed off as the App's bot user — the identity
       # release-please's own commits carry and .github/release-please/config.json
-      # names in `signoff` — so dco.yml finds a trailer equal to the author.
+      # names in `signoff` — so `Commits / Sign-off` finds a trailer equal to
+      # the author.
       - name: Commit the ledger entry
         if: steps.ledger.outputs.changed == 'true'
         env:

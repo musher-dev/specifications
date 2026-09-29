@@ -42,14 +42,13 @@ Every task in [`taskfiles/`](../taskfiles/) runs from this directory as
 the tree and writes only to a scratch directory of its own, so none depends on
 another's result. Each step's output is printed in one block when it finishes,
 a failing step does not stop the others, and the run fails once all have
-reported. CI runs the same steps across its jobs, in parallel within each:
-**Lint** runs `task ci:lint` and `check:types`, **Schema** runs
-`task ci:test`, and **Site Build** runs `check:published`, then the CI-only
-steps listed [below](#ci-only). Every step must pass before a pull request
-merges. The Validate workflow runs the same jobs as **Tools / Lint**,
-**Specifications / Schema** and **Site / Build**, plus **Conventions / Check**,
-and replaces them once the ruleset requires it
-([ADR 0036](../docs/adr/0036-the-repository-adopts-the-engineering-conventions.md) §5).
+reported. CI runs the same steps across the jobs of the Validate workflow, in
+parallel within each: **Tools / Lint** runs `task ci:lint` and `check:types`,
+**Specifications / Schema** runs `task ci:test`, **Site / Build** runs
+`check:published`, then the CI-only steps listed [below](#ci-only), and
+**Conventions / Check** runs `check:conventions`. Every step must pass before
+a pull request merges, except `check:conventions`, which only reports for now
+([ADR 0036](../docs/adr/0036-the-repository-adopts-the-engineering-conventions.md) §1).
 
 Two steps also spread their own work across cores. `check:parity` runs its
 Blaze batches concurrently, and `check:compat` replays each release in a
@@ -91,13 +90,13 @@ not run them. Everything else CI runs, `task check` runs locally.
 
 | Step | Job | When | Script |
 |---|---|---|---|
-| DCO sign-off on every commit | `Signed off` | Pull requests | `.github/workflows/dco.yml` |
-| `check:title`: the pull request title is a Conventional Commit, with a type and scope from `.github/conventional-commits.yaml` | `Lint` | Pull requests | `src/policy/title.ts` |
-| `check:ledger`: `published.json` edits no entry the base branch holds | `Site Build` | Pull requests | `src/publication/ledger.ts check` |
-| `site:fetch`, then `site:build` | `Site Build` | Every run | `src/publication/fetch.ts`, `src/publication/site.ts` |
+| DCO sign-off on every commit | `Commits / Sign-off` | Pull requests | `.github/workflows/validate-pull-request.yml` |
+| `check:title`: the pull request title is a Conventional Commit, with a type and scope from `.github/conventional-commits.yaml` | `Title / Conventional Commit` | Pull requests | `src/policy/title.ts` |
+| `check:ledger`: `published.json` edits no entry the base branch holds | `Site / Build` | Pull requests | `src/publication/ledger.ts check` |
+| `site:fetch`, then `site:build` | `Site / Build` | Every run | `src/publication/fetch.ts`, `src/publication/site.ts` |
 
-`lint-pr.yml` still runs on pull requests, to lowercase a Dependabot title, but
-the title is enforced by `check:title`.
+`repository-pull-request-title.yml` still runs on pull requests, to lowercase a
+Dependabot title, but the title is enforced by `check:title`.
 
 ## Build, release and site tasks
 

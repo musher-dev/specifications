@@ -1,12 +1,12 @@
-name: Dev Container
+name: Validate Dev Container
 
 on:
   push:
     branches: [main]
-    paths: ['.devcontainer/**', '.config/mise/**', '.github/workflows/devcontainer.yml']
+    paths: ['.devcontainer/**', '.config/mise/**', '.github/workflows/validate-devcontainer.yml']
   pull_request:
     branches: [main]
-    paths: ['.devcontainer/**', '.config/mise/**', '.github/workflows/devcontainer.yml']
+    paths: ['.devcontainer/**', '.config/mise/**', '.github/workflows/validate-devcontainer.yml']
 
 permissions:
   contents: read

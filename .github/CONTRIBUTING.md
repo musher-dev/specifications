@@ -131,8 +131,9 @@ script behind it, are listed in [tools/README.md → Checks](../tools/README.md#
 
 [Conventional Commits](https://www.conventionalcommits.org/), enforced by a
 `commit-msg` git hook locally, and on the pull request title by
-`task check:title` inside the required `Lint` job. `main` squash-merges under
-the title, so the title is the subject that lands, and editing it re-runs CI.
+`task check:title` in the Validate Pull Request workflow, which the ruleset
+requires. `main` squash-merges under the title, so the title is the subject
+that lands, and editing it re-runs the check.
 
 ```
 <type>(<scope>): <description>
@@ -153,7 +154,8 @@ Use the family's own scope, such as `component`, for a change under
 [ADR 0016](../docs/adr/0016-dependency-update-policy.md).
 
 `task check:commits` holds these two lists in step with their other copies:
-`.github/conventional-commits.yaml`, `.github/workflows/lint-pr.yml`,
+`.github/conventional-commits.yaml`,
+`.github/workflows/repository-pull-request-title.yml`,
 `.config/lefthook.yml` and `.github/dependabot.yml`.
 
 ### How a commit reaches a release

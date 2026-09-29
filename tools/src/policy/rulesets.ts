@@ -16,9 +16,10 @@
  * report. RUL-03 and RUL-09 are those two failure modes.
  *
  * RUL-09 has no counterpart in `musher-dev/platform`, which documents the rule
- * in prose and enforces nothing. It is the reason this runs inside the existing
- * `Lint` job rather than as its own workflow: a required check that lives in a
- * `paths:`-filtered workflow is the very hang it exists to prevent.
+ * in prose and enforces nothing. It is the reason this runs inside the
+ * `Tools / Lint` job of validate.yml rather than as its own workflow: a required
+ * check that lives in a `paths:`-filtered workflow is the very hang it exists to
+ * prevent.
  *
  * See docs/adr/0015-selective-code-owner-review.md and
  * .github/rulesets/RULESETS.md.

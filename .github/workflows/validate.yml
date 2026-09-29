@@ -6,9 +6,9 @@ name: Validate
 # a red job here. The one context the ruleset requires is `Validate / Required`,
 # which fails unless every other job succeeded.
 #
-# It replaces ci.yml job for job (docs/adr/0036 §5). The two run side by side
-# until the ruleset requires this workflow's context instead of ci.yml's job
-# names; ci.yml is then deleted.
+# A job added here is required through that aggregate, with no ruleset change
+# (docs/adr/0036 §5). It must not filter on `paths:`: a required context that
+# never reports hangs every pull request (RUL-09).
 #
 # Every job installs its tools from .config/mise/config.toml, through
 # .github/actions/setup-tools, and runs `task` targets rather than tool

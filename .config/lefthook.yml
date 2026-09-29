@@ -48,7 +48,7 @@ pre-commit:
     # dependabot.yml are only ever exercised by a bot nobody watches.
     - name: commits
       glob:
-        - '.github/{conventional-commits.yaml,dependabot.yml,CONTRIBUTING.md,workflows/lint-pr.yml}'
+        - '.github/{conventional-commits.yaml,dependabot.yml,CONTRIBUTING.md,workflows/repository-pull-request-title.yml}'
         - '.config/lefthook.yml'
       run: task check:commits
       fail_text: "A copy of the commit vocabulary drifted. Run 'task check:commits'; .github/conventional-commits.yaml is the source."

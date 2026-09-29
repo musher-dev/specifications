@@ -1,4 +1,4 @@
-name: CODEOWNERS Notice
+name: Repository CODEOWNERS Notice
 
 # The compensating control for the one hole in the selective review gate.
 #
@@ -84,7 +84,9 @@ jobs:
           while IFS= read -r raw; do
             lineno=$((lineno + 1))
             line="${raw%%#*}"
-            line="$(echo "$line" | xargs || true)"
+            # Trim surrounding whitespace.
+            line="${line#"${line%%[![:space:]]*}"}"
+            line="${line%"${line##*[![:space:]]}"}"
             if [[ -z "$line" ]]; then
               echo "" >> "$workdir/patterns"
               continue
@@ -94,8 +96,10 @@ jobs:
             owners_by_line[$lineno]="$owners"
           done < "$codeowners"
 
+          # A failed call fails the notifier: an empty list would read as a
+          # pull request with nothing owned, and the notice would go missing.
           gh api --paginate "/repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files" \
-            --jq '.[].filename' > "$workdir/changed" || true
+            --jq '.[].filename' > "$workdir/changed"
           if [[ ! -s "$workdir/changed" ]]; then
             echo "self_owned=" >> "$GITHUB_OUTPUT"
             exit 0
@@ -104,10 +108,17 @@ jobs:
           # An empty scratch repository isolates matching from this repository's
           # own .gitignore. `check-ignore -v` reports the LAST matching pattern
           # per path, which is exactly CODEOWNERS precedence.
+          # Exit 1 means no path matched a pattern, which is an answer; anything
+          # higher is a failure.
           git init -q "$workdir/scratch"
+          status=0
           git -C "$workdir/scratch" -c "core.excludesFile=$workdir/patterns" \
             check-ignore -v --no-index --stdin \
-            < "$workdir/changed" > "$workdir/matches" || true
+            < "$workdir/changed" > "$workdir/matches" || status=$?
+          if [[ "$status" -gt 1 ]]; then
+            echo "::error::git check-ignore failed with exit ${status}" >&2
+            exit "$status"
+          fi
 
           author_lc="${PR_AUTHOR,,}"
           : > "$workdir/self_owned"
@@ -172,7 +183,7 @@ jobs:
             '' \
             "$SELF_OWNED" \
             '' \
-            'Double-check they are intentional. If you want a second pair of eyes, request a review manually. (Automated notice from the codeowners-notice workflow — ADR 0015.)')"
+            'Double-check they are intentional. If you want a second pair of eyes, request a review manually. (Automated notice from the repository-codeowners-notice workflow — ADR 0015.)')"
 
           if [[ -n "$existing_id" ]]; then
             gh api --method PATCH \
