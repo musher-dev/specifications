@@ -41,6 +41,7 @@ includes:
   check: taskfiles/check.Taskfile.yml
   ci: taskfiles/ci.Taskfile.yml
   release: taskfiles/release.Taskfile.yml
+  contracts: taskfiles/contracts.Taskfile.yml
 
 tasks:
   default:

@@ -82,7 +82,9 @@ array. RUL-07 checks the gate's two values above.
    it produces a self-contradictory, unmergeable state. RUL-08.
 3. **Every required context must name a job some workflow publishes**, and that
    workflow must not filter on `paths:`. Either mistake yields a context that
-   never reports and a pull request that hangs forever. RUL-09. This is why
+   never reports and a pull request that hangs forever. The engineering
+   conventions check it (GHA-15, and their path-filter rule), which retired
+   the local RUL-09 ([ADR 0037](../../docs/adr/0037-the-repository-adopts-engineering-conventions-0-7-0.md)). This is why
    the validator, and the title check, run inside the two Validate workflows,
    neither of which filters on `paths:`, rather than as workflows of their own.
 4. **Every root-anchored CODEOWNERS pattern must resolve to a real path.**
@@ -168,18 +170,17 @@ Makes releases immutable:
 
 - Applies to `refs/tags/core/**`, `refs/tags/component/**`,
   `refs/tags/blueprint/**`, and `refs/tags/listing/**`.
-- **Blocks tag deletion, tag update, and any non-fast-forward move.** A
-  published schema version can never be silently altered — a flaw is corrected
-  by superseding it with a new patch, never by moving a tag.
+- **Blocks tag creation, deletion, update, and any non-fast-forward move**
+  (REL-13 in the engineering conventions). A published schema version can never
+  be silently altered: a flaw is corrected by superseding it with a new patch,
+  never by moving a tag. A release tag cannot be pushed by hand either; only
+  release-please, acting as the release App, cuts one.
 
-Tag **creation** is deliberately unrestricted. An earlier version of this file
-claimed it was limited to administrators and the release-please workflow; no
-such rule existed, and the claim was worse than the gap because it described a
-control a reader would then not think to add. Creation is left open because
-`published.json` is the control that matters: a tag with no ledger entry fails
-`task check:published` and stops the deploy, so an unauthorised tag cannot
-become a published version. See
-[ADR 0006](../../docs/adr/0006-publication-from-tags.md).
+Tag creation was left open until
+[ADR 0037](../../docs/adr/0037-the-repository-adopts-engineering-conventions-0-7-0.md),
+on the grounds that `published.json` is the control that matters: a tag with no
+ledger entry fails `task check:published` and stops the deploy. That backstop
+still holds. Blocking creation adds that nobody can open that window by hand.
 
 ## Bypass
 
@@ -195,12 +196,19 @@ again.
 reconciled in the file's favour on 2026-08-25, which is what the paragraph below
 has always claimed.
 
-**`release-tags` allows no bypass at all.** Using a bypass there means mutating
-a published artifact, which is the one thing this repository promises never
-happens — and an escape hatch nobody may legitimately use is an escape hatch an
-attacker inherits. An administrator who genuinely must intervene can disable
-the ruleset, which is a logged, deliberate, visible act rather than a silent
-one.
+**`release-tags` allows one bypass actor: the `musher-release` GitHub App**
+(`actor_id` 4991671, `actor_type: Integration`). Blocking creation needs it:
+release-please creates each release tag through the API as that App, and
+nothing else may. It is an App rather than a person or a role because an App's
+key lives only in the release workflow's secrets and every use of it is a
+workflow run on `main`. The bypass also lets the App delete or move a tag, and
+the release workflow never does either. An administrator who genuinely must
+intervene can still disable the ruleset, which is a logged, deliberate, visible
+act rather than a silent one.
+
+Apply `release-tags.json` with the `PUT` recipe before the first release after
+a change to it. Without the bypass, the creation rule stops release-please
+cutting the tag, and the release pull request merges with no release.
 
 `published.json` remains the backstop either way: it makes a rewritten tag a
 red build and a reviewable diff, which is a control that survives someone

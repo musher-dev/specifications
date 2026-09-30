@@ -38,7 +38,9 @@ Every release is a published **immutable** GitHub Release. Once published, its
 tag and assets cannot change, and GitHub records a digest for each asset. Which
 assets each release carries is listed in
 [Publication → Release assets](../docs/publication.md#release-assets). Every
-asset has a SLSA provenance attestation.
+asset has a SLSA provenance attestation, and every release since
+[ADR 0037](../docs/adr/0037-the-repository-adopts-engineering-conventions-0-7-0.md)
+also carries `SHA256SUMS` over its other assets.
 
 ```sh
 # The release is published and immutable
@@ -49,6 +51,9 @@ gh release verify-asset component/v1.0.0 component-v1.0.0.tar.gz --repo musher-d
 
 # Provenance
 gh attestation verify component-v1.0.0.tar.gz --repo musher-dev/specifications
+
+# Every download against the release's SHA256SUMS
+sha256sum --check --ignore-missing SHA256SUMS
 ```
 
 A schema served from `specifications.musher.dev` can be verified without the

@@ -12,7 +12,7 @@
  * repository-pull-request-title.yml words it.
  *
  * release-please titles its own pull requests from
- * `.github/release-please/config.json`'s `chore(repo): release${component}
+ * `.github/release-please/config.json`'s `chore(release): release${component}
  * ${version}`. That title is accepted explicitly, prerelease versions included,
  * so the release pull request cannot fail on a rule tightened for people.
  *
@@ -34,9 +34,9 @@ export interface Vocabulary {
 
 const HEADER = /^(?<type>[a-z]+)(?:\((?<scope>[^()]*)\))?(?<bang>!)?: (?<subject>.+)$/
 const SUBJECT = /^(?![A-Z])(?!.*\.$).+$/
-/** `chore(repo): release${component} ${version}`, as release-please renders it. */
+/** `chore(release): release${component} ${version}`, as release-please renders it (REL-06). */
 const RELEASE_TITLE =
-  /^chore\(repo\): release(?: [a-z][a-z0-9-]*)? (?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?$/
+  /^chore\(release\): release(?: [a-z][a-z0-9-]*)? (?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?$/
 
 export function readVocabulary(repoRoot: string = REPO_ROOT): Vocabulary {
   const source = readFileSync(join(repoRoot, '.github', 'conventional-commits.yaml'), 'utf8')

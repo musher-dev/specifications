@@ -49,15 +49,16 @@ The CLI, the platform API and every SDK implement what is defined here.
    when a path the layout names is absent. See docs/adr/0021 §3.
 9. **Tool configuration lives in `.config/<concern>/`, passed by path.** Never
    add a config to the repo root when the tool accepts a config flag, and never
-   rely on default discovery. `task check:config` enforces this (CFG-01..CFG-08),
-   and CFG-09 holds the repository root to `ROOT_ENTRIES` in
-   `tools/src/lib/layout.ts`. See docs/adr/0011 and docs/adr/0024.
+   rely on default discovery. `task check:conventions` enforces this
+   (CONF-01..CONF-09), and `task check:config` (CFG-09) holds the repository
+   root to `ROOT_ENTRIES` in `tools/src/lib/layout.ts`. See docs/adr/0011,
+   docs/adr/0024 and docs/adr/0037.
 10. **Review is a code-owner gate, not a blanket approval.** A pull request
     touching no path in `.github/CODEOWNERS` merges on green CI. The two halves
     are `required_approving_review_count: 0` plus
     `require_code_owner_review: true`, and a CODEOWNERS with no `*` catch-all.
     Each is useless without the other and both break silently, so never change
-    one without the other. `task check:rulesets` enforces this (RUL-01..RUL-09).
+    one without the other. `task check:rulesets` enforces this (RUL-01..RUL-08).
     See docs/adr/0015.
 11. **Structural changes need an accepted ADR first.** An accepted ADR changes
     only by link-target maintenance: a relative link whose target moved may be

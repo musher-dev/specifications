@@ -1,6 +1,9 @@
 # How this repository adopts musher-dev/engineering-conventions (EC-0001). The
 # release it is checked against is pinned in .config/mise/config.toml, and
-# `task check:conventions` runs the check (docs/adr/0036 §1).
+# `task check:conventions` runs the check with --fail-on warning, so every
+# family is enforced (docs/adr/0037). There is no [adoption] table: without one,
+# a family a later release adds is enforced too, and the upgrade that brings it
+# fixes or waives what it reports.
 #
 # Every waiver says why, links a public issue that tracks its removal, and
 # expires within 180 days; an expired waiver's findings come back.
@@ -11,13 +14,3 @@ requirement = "REPO-08"
 reason = "The repository name predates the organization's <system>-<component> naming grammar; the rename is tracked with the organization's other renames."
 tracking = "https://github.com/musher-dev/specifications/issues/149"
 expires = "2027-03-27"
-
-# REPO-04 compares the name with system and component joined, which a name that
-# predates the grammar can never match; REPO-08 above already reports it. The
-# engineering-conventions release after 0.6.1 leaves a malformed name to
-# REPO-08 alone, and this waiver goes with the upgrade to it.
-[[waivers]]
-requirement = "REPO-04"
-reason = "Reported alongside REPO-08 for a name that predates the grammar; engineering-conventions stops reporting it once REPO-08 applies."
-tracking = "https://github.com/musher-dev/engineering-conventions/pull/46"
-expires = "2026-12-31"

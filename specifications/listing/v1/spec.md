@@ -475,7 +475,8 @@ skipped case is never a passed one.
 
 Each entry below is a gap this version leaves open, with the section that
 records it. Unless an entry says otherwise, closing one rejects a document v1
-accepts, which makes it a new major once this family is released.
+accepts, which makes it a new major: v1 is released, and a released major never
+becomes stricter.
 
 **Media is unbounded in dimensions and file size** ([§5](#media)). A storefront
 cannot reserve space for an image whose aspect ratio it does not know, and

@@ -889,7 +889,7 @@ describe('assembleSite', () => {
         },
       }),
     )
-    fx.commit('chore(repo): release component 1.0.0')
+    fx.commit('chore(release): release component 1.0.0')
     fx.tag('component/v1.0.0')
     // This tooling would not stage a release at a path it does not build from,
     // so seed the cache with the verified bytes the release would have carried.

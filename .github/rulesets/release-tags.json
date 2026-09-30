@@ -13,8 +13,11 @@
       "exclude": []
     }
   },
-  "bypass_actors": [],
+  "bypass_actors": [
+    { "actor_id": 4991671, "actor_type": "Integration", "bypass_mode": "always" }
+  ],
   "rules": [
+    { "type": "creation" },
     { "type": "deletion" },
     { "type": "non_fast_forward" },
     { "type": "update" }

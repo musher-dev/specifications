@@ -98,7 +98,7 @@ describe('record', () => {
   test('updates a pending entry after the branch changes', () => {
     const { fx } = ready()
     record(fx.root)
-    fx.commit('chore(repo): release component 1.0.0')
+    fx.commit('chore(release): release component 1.0.0')
     const stale = readLedger(fx.root).releases['component/v1.0.0']
 
     // "Update branch" brings a change from main into the release branch.
@@ -116,7 +116,7 @@ describe('record', () => {
     const { fx } = ready()
     record(fx.root)
     fx.setManifestVersion(COMPONENT.manifestKey, '1.1.0')
-    fx.commit('chore(repo): release component 1.1.0')
+    fx.commit('chore(release): release component 1.1.0')
     const result = record(fx.root)
     expect(result.dropped).toEqual(['component/v1.0.0'])
     expect(Object.keys(readLedger(fx.root).releases).sort()).toEqual([

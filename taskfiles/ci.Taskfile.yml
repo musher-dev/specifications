@@ -7,7 +7,9 @@
 #
 # `task check` runs everything; these two are its split into the Tools / Lint
 # and Specifications / Schema jobs. Every check in either must also be in `check`. Like `check`,
-# each runs its checks as parallel deps.
+# each runs its checks as parallel deps. The one exception to one task per job:
+# Specifications / Schema also names `contracts:check contracts:breaking` on its
+# command line, which is where the conventions look for them (IFACE-12).
 #
 # The leading colon on each reference is load-bearing: inside an included
 # taskfile a bare `task: check:format` resolves within this file's own
@@ -30,15 +32,14 @@ tasks:
       - task: :check:shell
       - task: :check:workflow
 
+  # The interface checks, check:schema, check:generated, check:examples and
+  # check:compat, run in the same job as `task contracts:check
+  # contracts:breaking`, the names the conventions look for (IFACE-12).
   test:
-    desc: Schema and conformance suite as run in CI
+    desc: Schema and conformance suite as run in CI, beside contracts:check and contracts:breaking
     deps:
-      - task: :check:schema
-      - task: :check:generated
-      - task: :check:examples
       - task: :check:conformance
       - task: :check:standards
       - task: :check:parity
       - task: :check:editions
-      - task: :check:compat
       - task: :check:test

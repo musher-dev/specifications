@@ -61,6 +61,25 @@ export const CLAUDE_WORKTREES_DIR = '.claude/worktrees'
 export const RELEASE_CACHE_DIR = `${CACHE_DIR}/releases`
 /** Where `task release:stage` writes the files a release attaches (docs/adr/0023). */
 export const RELEASE_STAGE_DIR = `${DIST_DIR}/release`
+/**
+ * What this repository is, what it publishes, and the interfaces its outputs
+ * deliver, as musher-dev/engineering-conventions reads them (EC-0009, EC-0007,
+ * EC-0030; docs/adr/0036 §2). `release:stage` reads both at the tag.
+ */
+export const REPOSITORY_DECLARATION_FILE = '.repo/repository.toml'
+export const OUTPUTS_DECLARATION_FILE = '.repo/outputs.toml'
+/**
+ * Where a kind family's archive carries the conventions' release record, which
+ * lists each interface file with its SHA-256 (EC-0031; docs/adr/0037). The name
+ * is the conventions', so a consumer's vendoring check finds it.
+ */
+export const RELEASE_RECORD_ARCHIVE_PATH = 'release.json'
+/**
+ * Where every archive carries this repository's own record: the tag, commit and
+ * dependency closure it was built from (docs/adr/0023 §6, as docs/adr/0037
+ * renames it).
+ */
+export const SPECIFICATION_RECORD_ARCHIVE_PATH = 'specification.json'
 /** Carried in every release archive beside the family's own files. */
 export const LICENSE_FILE = 'LICENSE'
 export const NOTICE_FILE = 'NOTICE'

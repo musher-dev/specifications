@@ -76,7 +76,7 @@ function forge(fx: FixtureRepo, version: string, requiresCore = '1.0.0'): void {
       },
     }),
   )
-  fx.commit(`chore(repo): release component ${version}`)
+  fx.commit(`chore(release): release component ${version}`)
   fx.tag(`component/v${version}`)
 }
 
@@ -143,7 +143,7 @@ describe('verifyPublications', () => {
     p.releaseCore('1.0.0')
     prepare(fx, '1.0.0')
     record(fx.root)
-    fx.commit('chore(repo): release component 1.0.0')
+    fx.commit('chore(release): release component 1.0.0')
     expect(verify(fx.root)).toEqual({ failures: [], warnings: [] })
 
     fx.writeSources('component', 'v1', fx.bundleDoc('component', 'v1', { description: 'moved' }))
@@ -173,7 +173,7 @@ describe('verifyPublications', () => {
     p.releaseCore('1.0.0')
     prepare(fx, '1.0.0')
     record(fx.root)
-    fx.commit('chore(repo): release component 1.0.0')
+    fx.commit('chore(release): release component 1.0.0')
     fx.writeFile(`${COMPONENT.examples}/draft.yaml`, 'kind: COMPONENT\n')
     expect(verify(fx.root)).toEqual({
       failures: [],
@@ -186,7 +186,7 @@ describe('verifyPublications', () => {
     p.releaseCore('1.0.0')
     prepare(fx, '1.0.0')
     record(fx.root)
-    fx.commit('chore(repo): release component 1.0.0')
+    fx.commit('chore(release): release component 1.0.0')
     fx.writeFile(CORE.spec, '## <a id="scope"></a>1. Core scope, amended\n')
     fx.commit('fix(core): amend a rule')
     expect(verify(fx.root).failures).toEqual([
