@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/musher-dev/specifications/compare/listing/v1.0.0...listing/v1.0.1) (2026-09-30)
+
+
+### Specification prose
+
+* **listing:** state that closing a known debt needs a new major now that v1 is released ([8ed1814](https://github.com/musher-dev/specifications/commit/8ed1814c583dd39eb7c3598a3c1f4affdece1fc6))
+
 ## 1.0.0 (2026-09-18)
 
 
