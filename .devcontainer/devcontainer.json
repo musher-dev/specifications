@@ -48,9 +48,9 @@
   "runArgs": ["--env-file", "${localWorkspaceFolder}/.devcontainer/.env"],
 
   "mounts": [
-    "source=musher-spec-${devcontainerId}-gh-config,target=/home/vscode/.config/gh,type=volume",
-    "source=musher-spec-${devcontainerId}-claude-config,target=/home/vscode/.claude,type=volume",
-    "source=musher-spec-${devcontainerId}-codex-config,target=/home/vscode/.codex,type=volume"
+    "source=musher-${devcontainerId}-gh-config,target=/home/vscode/.config/gh,type=volume",
+    "source=musher-${devcontainerId}-claude-config,target=/home/vscode/.claude,type=volume",
+    "source=musher-${devcontainerId}-codex-config,target=/home/vscode/.codex,type=volume"
   ],
 
   "containerEnv": {
@@ -123,7 +123,6 @@
         "timonwong.shellcheck",
         "eamodio.gitlens",
         "bierner.markdown-mermaid",
-        "github.copilot",
         "github.copilot-chat"
       ],
       "settings": {

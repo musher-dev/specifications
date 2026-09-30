@@ -90,17 +90,27 @@ base_setup_path() {
   export PATH="${_MISE_SHIMS}:${_HOME}/.local/bin:${PATH}"
 }
 
-# Installs the pinned mise release via the official installer if mise is not
-# already present.
+# Installs the pinned mise release via the official installer unless that
+# exact release is already present.
+#
+# A mise of any other version is replaced, not kept: the volumes and home
+# directory outlive a pin bump, and a container created before one kept its
+# older mise, which then refused the config's min_version and left every
+# mise-managed CLI uninstalled.
 #
 # Outputs:
 #   Writes progress to stderr via log()
 # Returns:
 #   0 on success, non-zero on failure
 base_install_mise() {
+  local installed=""
   if has_cmd mise; then
-    log "mise already installed, skipping"
-    return 0
+    installed="$(mise --version 2>/dev/null | awk 'NR == 1 { print $1 }')"
+    if [[ "${installed}" == "${_MISE_VERSION#v}" ]]; then
+      log "mise ${installed} already installed, skipping"
+      return 0
+    fi
+    log "mise ${installed:-of unknown version} is not the pinned ${_MISE_VERSION}; replacing it"
   fi
   log "Installing mise ${_MISE_VERSION} (https://mise.run)..."
   # MISE_VERSION is the installer's own input: it fetches that release rather
