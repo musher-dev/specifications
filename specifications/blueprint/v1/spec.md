@@ -577,6 +577,12 @@ and application cookies, and MUST NOT forward its own session credential to the
 workload. Under `viewerIdentity: NONE` and `OIDC` it forwards no identity
 header.
 
+This paragraph is informative. The header names are the platform's choice,
+and no document depends on them. A platform does best to name them without the
+`X-` prefix (RFC 6648), and under one prefix it owns, such as
+`<platform>-viewer-id`, so that it removes inbound copies by that prefix rather
+than by a list of names that can miss one.
+
 <a id="BP-ACCESS-004"></a>**`BP-ACCESS-004`**: `trustedProxyCIDRs` MUST cover
 every address the workload observes as the peer of traffic the platform
 forwards to it, and no address from which another workload, another tenant or

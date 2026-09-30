@@ -3026,7 +3026,7 @@
             "public": {
               "hostname": "example.invalid",
               "scheme": "https",
-              "viewerIdentityHeader": "x-platform-user",
+              "viewerIdentityHeader": "platform-viewer-id",
               "trustedProxyCIDRs": [
                 "10.88.0.0/16",
                 "fd00:88::/64"
@@ -3038,12 +3038,12 @@
     },
     "expect": {
       "/status": "VALID",
-      "/outputs/web:out:identityHeader/value": "x-platform-user",
+      "/outputs/web:out:identityHeader/value": "platform-viewer-id",
       "/outputs/web:out:trustedProxies/value": [
         "10.88.0.0/16",
         "fd00:88::/64"
       ],
-      "/environment/web/GATEWAY_IDENTITY_HEADER/value": "x-platform-user",
+      "/environment/web/GATEWAY_IDENTITY_HEADER/value": "platform-viewer-id",
       "/environment/web/GATEWAY_TRUSTED_PROXIES/value": "[\"10.88.0.0/16\",\"fd00:88::/64\"]"
     }
   },
@@ -3098,7 +3098,7 @@
             "public": {
               "hostname": "example.invalid",
               "scheme": "https",
-              "viewerIdentityHeader": "x-platform-user",
+              "viewerIdentityHeader": "platform-viewer-id",
               "trustedProxyCIDRs": [
                 "10.88.0.0/16",
                 "fd00:88::/64"
@@ -3140,7 +3140,7 @@
             "public": {
               "hostname": "example.invalid",
               "scheme": "https",
-              "viewerIdentityHeader": "x-platform-user",
+              "viewerIdentityHeader": "platform-viewer-id",
               "trustedProxyCIDRs": []
             }
           }
@@ -3179,7 +3179,7 @@
             "public": {
               "hostname": "example.invalid",
               "scheme": "https",
-              "viewerIdentityHeader": "x-platform-user",
+              "viewerIdentityHeader": "platform-viewer-id",
               "trustedProxyCIDRs": [
                 "10.88.0.1/16"
               ]
@@ -3220,7 +3220,7 @@
             "public": {
               "hostname": "example.invalid",
               "scheme": "https",
-              "viewerIdentityHeader": "x-platform-user",
+              "viewerIdentityHeader": "platform-viewer-id",
               "trustedProxyCIDRs": [
                 "0.0.0.0/0"
               ]
@@ -3261,7 +3261,7 @@
             "public": {
               "hostname": "example.invalid",
               "scheme": "https",
-              "viewerIdentityHeader": "x-platform-user",
+              "viewerIdentityHeader": "platform-viewer-id",
               "trustedProxyCIDRs": [
                 "10.88.0.0/16",
                 "10.88.0.0/16"
@@ -3303,7 +3303,7 @@
             "public": {
               "hostname": "example.invalid",
               "scheme": "https",
-              "viewerIdentityHeader": "x-platform-user",
+              "viewerIdentityHeader": "platform-viewer-id",
               "trustedProxyCIDRs": [
                 "fd00:88:0:0::/64"
               ]
@@ -3386,7 +3386,7 @@
             "public": {
               "hostname": "example.invalid",
               "scheme": "https",
-              "viewerIdentityHeader": "X-Platform-User",
+              "viewerIdentityHeader": "Platform-Viewer-Id",
               "trustedProxyCIDRs": [
                 "10.88.0.0/16",
                 "fd00:88::/64"
@@ -3429,12 +3429,12 @@
             "public": {
               "hostname": "app.example.invalid",
               "scheme": "https",
-              "viewerIdentityHeader": "x-platform-user",
+              "viewerIdentityHeader": "platform-viewer-id",
               "trustedProxyCIDRs": [
                 "10.88.0.0/16"
               ],
-              "viewerEmailHeader": "x-platform-email",
-              "viewerNameHeader": "x-platform-name"
+              "viewerEmailHeader": "platform-viewer-email",
+              "viewerNameHeader": "platform-viewer-name"
             }
           }
         }
@@ -3442,8 +3442,8 @@
     },
     "expect": {
       "/status": "VALID",
-      "/environment/web/EMAIL_HEADER/value": "x-platform-email",
-      "/environment/web/NAME_HEADER/value": "x-platform-name"
+      "/environment/web/EMAIL_HEADER/value": "platform-viewer-email",
+      "/environment/web/NAME_HEADER/value": "platform-viewer-name"
     }
   },
   {
@@ -3467,12 +3467,12 @@
             "public": {
               "hostname": "app.example.invalid",
               "scheme": "https",
-              "viewerIdentityHeader": "x-platform-user",
+              "viewerIdentityHeader": "platform-viewer-id",
               "trustedProxyCIDRs": [
                 "10.88.0.0/16"
               ],
-              "viewerEmailHeader": "x-platform-email",
-              "viewerNameHeader": "x-platform-name"
+              "viewerEmailHeader": "platform-viewer-email",
+              "viewerNameHeader": "platform-viewer-name"
             }
           }
         }
@@ -3510,12 +3510,12 @@
             "public": {
               "hostname": "app.example.invalid",
               "scheme": "https",
-              "viewerIdentityHeader": "x-platform-user",
+              "viewerIdentityHeader": "platform-viewer-id",
               "trustedProxyCIDRs": [
                 "10.88.0.0/16"
               ],
-              "viewerEmailHeader": "x-platform-email",
-              "viewerNameHeader": "x-platform-user"
+              "viewerEmailHeader": "platform-viewer-email",
+              "viewerNameHeader": "platform-viewer-id"
             }
           }
         }
@@ -3554,7 +3554,7 @@
             "public": {
               "hostname": "app.example.invalid",
               "scheme": "https",
-              "viewerAssertionHeader": "x-platform-assertion",
+              "viewerAssertionHeader": "platform-viewer-assertion",
               "viewerAssertionIssuer": "https://id.example.invalid",
               "viewerAssertionAudience": "installation-1/web",
               "viewerAssertionKeysURL": "https://id.example.invalid/.well-known/jwks.json"
@@ -3565,7 +3565,7 @@
     },
     "expect": {
       "/status": "VALID",
-      "/environment/web/ASSERTION_HEADER/value": "x-platform-assertion",
+      "/environment/web/ASSERTION_HEADER/value": "platform-viewer-assertion",
       "/environment/web/ASSERTION_AUDIENCE/value": "installation-1/web",
       "/environment/web/ASSERTION_KEYS/value": "https://id.example.invalid/.well-known/jwks.json",
       "/inputs/web:in:keys/sensitive": false
@@ -3592,7 +3592,7 @@
             "public": {
               "hostname": "app.example.invalid",
               "scheme": "https",
-              "viewerAssertionHeader": "x-platform-assertion",
+              "viewerAssertionHeader": "platform-viewer-assertion",
               "viewerAssertionIssuer": "https://id.example.invalid",
               "viewerAssertionAudience": "installation-1/web",
               "viewerAssertionKeysURL": "http://id.example.invalid/jwks.json"
@@ -3633,7 +3633,7 @@
             "public": {
               "hostname": "app.example.invalid",
               "scheme": "https",
-              "viewerAssertionHeader": "x-platform-assertion",
+              "viewerAssertionHeader": "platform-viewer-assertion",
               "viewerAssertionIssuer": "https://id.example.invalid",
               "viewerAssertionAudience": "installation-1/web",
               "viewerAssertionKeysURL": "https://id.example.invalid/.well-known/jwks.json"
@@ -3800,7 +3800,7 @@
             "public": {
               "hostname": "app.example.invalid",
               "scheme": "https",
-              "viewerAssertionHeader": "x-platform-assertion",
+              "viewerAssertionHeader": "platform-viewer-assertion",
               "viewerAssertionIssuer": "https://id.example.invalid",
               "viewerAssertionAudience": "installation-1/web",
               "viewerAssertionKeysURL": "https://id.example.invalid/.well-known/jwks.json"
