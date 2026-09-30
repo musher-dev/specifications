@@ -84,7 +84,7 @@ function forge(fx: FixtureRepo, options: { coreLine?: string; examples?: boolean
       },
     }),
   )
-  fx.commit('chore(repo): release component 1.0.0')
+  fx.commit('chore(release): release component 1.0.0')
   fx.tag('component/v1.0.0')
 }
 
@@ -114,7 +114,7 @@ describe('stageRelease', () => {
     for (const file of staged) expect(sha256(readFileSync(file.path))).toBe(file.sha256)
   })
 
-  test('the archive carries the family, the core it was built against, and release.json', () => {
+  test('the archive carries the family, the core it was built against, and both records', () => {
     const { fx, p } = fixture()
     p.releaseKind('component', 'v1', '1.0.0', fx.bundleDoc('component', 'v1'), { publish: false })
     const out = outDir()
@@ -138,8 +138,9 @@ describe('stageRelease', () => {
       'component-v1/examples/minimal.yaml',
       'component-v1/release.json',
       'component-v1/spec.md',
+      'component-v1/specification.json',
     ])
-    const manifest = JSON.parse(member(archive, 'component-v1/release.json'))
+    const manifest = JSON.parse(member(archive, 'component-v1/specification.json'))
     expect(manifest).toEqual({
       bundleSha256: readLedger(fx.root).releases['component/v1.0.0']?.bundleSha256,
       commit: tagCommit(fx.root, 'component/v1.0.0'),
@@ -157,6 +158,47 @@ describe('stageRelease', () => {
       requires: { core: '1.0.0' },
       tag: 'component/v1.0.0',
     })
+  })
+
+  test('release.json is the conventions release record of the schema interface', () => {
+    const { fx, p } = fixture()
+    p.releaseKind('component', 'v1', '1.0.0', fx.bundleDoc('component', 'v1'), { publish: false })
+    const out = outDir()
+    stage(fx, 'component/v1.0.0', out)
+    const archive = join(out, 'component-v1.0.0.tar.gz')
+
+    const record = JSON.parse(member(archive, 'component-v1/release.json'))
+    expect(record).toEqual({
+      schema_version: 1,
+      repository: 'specifications',
+      output: 'component-release',
+      version: '1.0.0',
+      tag: 'component/v1.0.0',
+      commit: tagCommit(fx.root, 'component/v1.0.0'),
+      interfaces: [
+        {
+          id: 'component-schema',
+          format: 'json-schema',
+          compatibility: 'gated',
+          files: [
+            {
+              path: 'component.schema.json',
+              sha256: sha256(member(archive, 'component-v1/component.schema.json')),
+            },
+          ],
+        },
+      ],
+    })
+    expect(record.commit).toMatch(/^[0-9a-f]{40}$/)
+  })
+
+  test('refuses a kind family whose bundle output delivers no declared interface', () => {
+    const { fx, p } = fixture()
+    fx.writeDeclarations(['blueprint'])
+    p.releaseKind('component', 'v1', '1.0.0', fx.bundleDoc('component', 'v1'), { publish: false })
+    expect(refusal(() => stage(fx, 'component/v1.0.0', outDir()))).toContain(
+      'declares no interface delivered by "component-release"',
+    )
   })
 
   test('the archive is byte-identical across runs', () => {
@@ -200,10 +242,10 @@ describe('stageRelease', () => {
       'core-v1/conformance/',
       'core-v1/conformance/README.md',
       'core-v1/conformance/cases.json',
-      'core-v1/release.json',
       'core-v1/spec.md',
+      'core-v1/specification.json',
     ])
-    expect(JSON.parse(member(archive, 'core-v1/release.json'))).toEqual({
+    expect(JSON.parse(member(archive, 'core-v1/specification.json'))).toEqual({
       commit: tagCommit(fx.root, 'core/v1.0.0'),
       tag: 'core/v1.0.0',
     })
@@ -232,7 +274,7 @@ describe('stageRelease', () => {
         },
       }),
     )
-    fx.commit('chore(repo): release component 1.0.0 with a wrong hash')
+    fx.commit('chore(release): release component 1.0.0 with a wrong hash')
     fx.tag('component/v1.0.0')
     const out = outDir()
     expect(refusal(() => stage(fx, 'component/v1.0.0', out))).toContain(
@@ -352,7 +394,7 @@ describe('stageRelease', () => {
         'core/v1.0.0': { path: CORE.dir, tree: fx.treeId('HEAD', CORE.dir), bundleSha256: null },
       },
     })
-    fx.commit('chore(repo): release core 1.0.0')
+    fx.commit('chore(release): release core 1.0.0')
     fx.tag('core/v1.0.0')
     expect(refusal(() => stage(fx, 'core/v1.0.0', outDir()))).toContain('core publishes no schema')
   })

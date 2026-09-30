@@ -116,7 +116,8 @@ test('archives verified dependency bytes and stays pinned after a newer dependen
   ).toBe(true)
   expect(member(archive, 'blueprint-v1/component/conformance/cases.json').length).toBeGreaterThan(0)
   expect(
-    JSON.parse(member(archive, 'blueprint-v1/release.json').toString()).dependencies.component.tag,
+    JSON.parse(member(archive, 'blueprint-v1/specification.json').toString()).dependencies.component
+      .tag,
   ).toBe('component/v1.0.0')
   p.releaseKind(
     'component',

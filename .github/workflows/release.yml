@@ -7,8 +7,9 @@ name: Release
 #   release_please  opens release pull requests; on a merged one, forces the tag
 #                   at the merge commit and creates a DRAFT release.
 #   plan            one matrix entry {tag, release_id} per release to finish.
-#   artifacts       stages, attests and uploads the assets to the draft, then
-#                   publishes it and proves GitHub made it immutable.
+#   artifacts       stages the assets and their SHA256SUMS, attests them and
+#                   uploads them to the draft, then publishes it as the release
+#                   App and proves GitHub made it immutable.
 #   deploy          deploy.yml, last, unless a release in this run failed.
 #
 # A run that fails between the tag and the publication leaves a tag with no
@@ -206,8 +207,9 @@ jobs:
     timeout-minutes: 20
     permissions:
       contents: write
-      id-token: write
-      attestations: write
+      id-token: write  # sign the provenance attestation
+      attestations: write  # store the provenance attestation
+      artifact-metadata: write  # record the attested artifacts
     strategy:
       fail-fast: false
       matrix:
@@ -297,11 +299,12 @@ jobs:
         working-directory: tools
         run: bun install --frozen-lockfile
 
-      # release:stage refuses unless the tag's ledger entry equals main's, its
-      # tree equals `<tag>:<path>`, the core gate holds at the tag, and a fresh
-      # pinned build hashes to the recorded bundleSha256. Asset names are the
-      # convention, not configuration: a kind family ships its bundle and its
-      # archive, core ships the archive alone.
+      # contracts:bundle (release:stage) refuses unless the tag's ledger entry
+      # equals main's, its tree equals `<tag>:<path>`, the core gate holds at the
+      # tag, and a fresh pinned build hashes to the recorded bundleSha256. Asset
+      # names are the convention, not configuration: a kind family ships its
+      # bundle and its archive, core ships the archive alone, and every release
+      # ships SHA256SUMS over them (REL-18, docs/adr/0037).
       # The current release is still a draft; its already-published dependencies
       # are fetched and hash-verified before they are included in its archive.
       - name: Fetch dependency artifacts
@@ -316,7 +319,14 @@ jobs:
           TAG: ${{ matrix.tag }}
         run: |
           set -euo pipefail
-          task release:stage TAG="$TAG"
+          # contracts:bundle is the conventions' name for staging (IFACE-13).
+          # A tag cut before docs/adr/0037 has only release:stage, which is what
+          # contracts:bundle runs, so a recovery of such a tag still builds.
+          if task --list-all --json | jq -e '.tasks[] | select(.name == "contracts:bundle")' >/dev/null; then
+            task contracts:bundle TAG="$TAG"
+          else
+            task release:stage TAG="$TAG"
+          fi
 
           family="${TAG%%/*}"
           version="${TAG#*/v}"
@@ -330,7 +340,7 @@ jobs:
               exit 1
             fi
           done
-          (cd dist/release && sha256sum "${assets[@]}")
+          (cd dist/release && sha256sum -- "${assets[@]}" > SHA256SUMS && cat SHA256SUMS)
 
           {
             echo "family=${family}"
@@ -339,25 +349,31 @@ jobs:
             echo 'subjects<<SUBJECTS'
             printf 'dist/release/%s\n' "${assets[@]}"
             echo 'SUBJECTS'
+            echo 'sums=dist/release/SHA256SUMS'
           } >> "$GITHUB_OUTPUT"
 
+      # One attestation over every file SHA256SUMS lists, so a consumer verifies
+      # any asset with `gh attestation verify` or mise (REL-18).
       - name: Attest build provenance
-        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
-          subject-path: ${{ steps.stage.outputs.subjects }}
+          subject-checksums: dist/release/SHA256SUMS
 
       # By release id, because the tags endpoint cannot see a draft. While the
       # release is a draft its assets are still ours to correct: an asset whose
       # digest already matches is left alone, one that differs is replaced, and
       # one this run did not stage is removed. Once published nothing may change,
       # so a published release is only compared — a mismatch there means the
-      # build stopped being deterministic, and deserves a red X.
+      # build stopped being deterministic, and deserves a red X. The one
+      # exception is SHA256SUMS on a release published before docs/adr/0037,
+      # which never carried it: that release is verified on its other assets.
       - name: Upload assets to the draft
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ matrix.tag }}
           RELEASE_ID: ${{ matrix.release_id }}
           SUBJECTS: ${{ steps.stage.outputs.subjects }}
+          SUMS: ${{ steps.stage.outputs.sums }}
         run: |
           set -euo pipefail
           api="repos/${GITHUB_REPOSITORY}/releases/${RELEASE_ID}"
@@ -369,6 +385,7 @@ jobs:
           draft="$(jq -r .draft <<<"$release")"
           upload="$(jq -r '.upload_url | sub("\\{.*\\}$"; "")' <<<"$release")"
           mapfile -t subjects <<<"$SUBJECTS"
+          subjects+=("$SUMS")
 
           names=()
           for path in "${subjects[@]}"; do
@@ -378,7 +395,9 @@ jobs:
             asset="$(jq -c --arg n "$name" '.assets[] | select(.name == $n)' <<<"$release")"
             have="$(jq -r '.digest // ""' <<<"${asset:-null}")"
 
-            if [ "$have" = "$want" ]; then
+            if [ "$path" = "$SUMS" ] && [ "$draft" != 'true' ] && [ -z "$asset" ]; then
+              echo "::notice::${TAG} was published before docs/adr/0037 and carries no ${name}"
+            elif [ "$have" = "$want" ]; then
               echo "${name} already attached with ${want}"
             elif [ "$draft" != 'true' ]; then
               echo "::error::${TAG} is published, and ${name} is '${have:-missing}' rather than ${want}" >&2
@@ -403,7 +422,8 @@ jobs:
           fi
 
       # A kind family names every exact dependency it was built against, read from the
-      # release.json inside the archive just staged. The body is edited only
+      # specification.json inside the archive just staged (release.json in an
+      # archive cut before docs/adr/0037). The body is edited only
       # while the release is a draft, and only once.
       - name: Note the specification dependencies
         if: steps.stage.outputs.family != 'core'
@@ -416,10 +436,15 @@ jobs:
           ARCHIVE: ${{ steps.stage.outputs.archive }}
         run: |
           set -euo pipefail
-          meta="$(tar -xzOf "$ARCHIVE" "${FAMILY}-${MAJOR}/release.json")"
+          root="${FAMILY}-${MAJOR}"
+          if tar -tzf "$ARCHIVE" "${root}/specification.json" >/dev/null 2>&1; then
+            meta="$(tar -xzOf "$ARCHIVE" "${root}/specification.json")"
+          else
+            meta="$(tar -xzOf "$ARCHIVE" "${root}/release.json")"
+          fi
           edition="$(jq -r '.requires.core // ""' <<<"$meta")"
           if [[ ! "$edition" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "::error::${ARCHIVE} release.json names no core edition: ${meta}" >&2
+            echo "::error::${ARCHIVE}'s specification record names no core edition: ${meta}" >&2
             exit 1
           fi
           note="Specification dependencies: $(jq -r '.requires | to_entries | sort_by(.key) | map(.key + "/v" + .value) | join(", ")' <<<"$meta")"
@@ -438,19 +463,39 @@ jobs:
             echo "Noted: ${note}"
           fi
 
+      # Published as the release App, not with GITHUB_TOKEN: a release published
+      # with GITHUB_TOKEN starts no workflow on its `published` event (REL-19).
+      # A token minted for this step alone, with contents: write and nothing
+      # else.
+      - name: Mint the release App token
+        id: publisher
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          permission-contents: write
+
       # Not marked latest: four trains share one repository, and whichever
       # released last is not the one a reader wants. Then read the release back:
       # publication is only done when GitHub reports it immutable and holds
-      # exactly the staged assets under the staged digests.
+      # exactly the staged assets and SHA256SUMS under the staged digests.
       - name: Publish and verify immutability
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.publisher.outputs.token }}
           TAG: ${{ matrix.tag }}
           RELEASE_ID: ${{ matrix.release_id }}
           SUBJECTS: ${{ steps.stage.outputs.subjects }}
+          SUMS: ${{ steps.stage.outputs.sums }}
         run: |
           set -euo pipefail
           api="repos/${GITHUB_REPOSITORY}/releases/${RELEASE_ID}"
+          mapfile -t subjects <<<"$SUBJECTS"
+          # SHA256SUMS is expected unless the release was published before
+          # docs/adr/0037 without it (see the upload step).
+          if [ "$(gh api "$api" --jq .draft)" = 'true' ] ||
+             gh api "$api" --jq '.assets[].name' | grep -qxF "$(basename "$SUMS")"; then
+            subjects+=("$SUMS")
+          fi
           if [ "$(gh api "$api" --jq .draft)" = 'true' ]; then
             gh api -X PATCH "$api" -f tag_name="$TAG" -F draft=false -f make_latest=false >/dev/null
             echo "Published ${TAG}"
@@ -468,7 +513,6 @@ jobs:
             echo "::error::${TAG} was published but GitHub does not report it immutable" >&2; failed=1
           fi
 
-          mapfile -t subjects <<<"$SUBJECTS"
           expected="$(for path in "${subjects[@]}"; do
             printf '%s\tsha256:%s\n' "$(basename "$path")" "$(sha256sum "$path" | cut -d' ' -f1)"
           done | sort)"

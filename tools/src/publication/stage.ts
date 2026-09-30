@@ -19,7 +19,11 @@
  * `examples/`, `conformance/` with the fixture format as `conformance/README.md`,
  * dependency specifications and corpora read from their exact tags, plus
  * dependency schemas read from verified published assets — never rebuilt —
- * `LICENSE`, `NOTICE`, and `release.json`. Core stages only its archive.
+ * `LICENSE`, `NOTICE`, `specification.json` (this repository's record: tag,
+ * commit and dependency closure) and `release.json` (the conventions' release
+ * record of the interfaces the archive delivers, docs/adr/0037). Core stages
+ * only its archive, and carries `specification.json` alone: it delivers no
+ * interface.
  *
  * Every file is read out of git at a tag, never from the working tree. The
  * archive is deterministic: sorted names, owner and group 0, a fixed mtime, and
@@ -58,9 +62,11 @@ import {
   LICENSE_FILE,
   NOTICE_FILE,
   RELEASE_CACHE_DIR,
+  RELEASE_RECORD_ARCHIVE_PATH,
   RELEASE_STAGE_DIR,
   REPO_ROOT,
   releaseDirPaths,
+  SPECIFICATION_RECORD_ARCHIVE_PATH,
 } from '../lib/layout.ts'
 import { pinnedBundle } from '../schema/bundle.ts'
 import { gitReader } from '../schema/sources.ts'
@@ -68,6 +74,7 @@ import { assertCoreGateTaggedContent } from './core-gate.ts'
 import { assertDependencyContent, dependencyClosure } from './dependency-gate.ts'
 import { readCachedBundle, readPendingReleases } from './fetch.ts'
 import { type AnyLedger, ledgerAtRef, sameEntry } from './ledger.ts'
+import { readDeclarations, releaseRecord } from './release-record.ts'
 import { assetNames, isCore, parseReleaseTag, releaseTag, sha256 } from './releases.ts'
 
 export interface StagedFile {
@@ -102,8 +109,6 @@ export function archiveEnv(env: NodeJS.ProcessEnv = process.env): NodeJS.Process
   const { TAR_OPTIONS: _tar, GZIP: _gzip, ...rest } = env
   return { ...rest, LC_ALL: 'C' }
 }
-
-const RELEASE_MANIFEST = 'release.json'
 
 /** Copy every file under `from` at `ref` to `to`, keeping relative paths. Returns the count. */
 function extractTree(repoRoot: string, ref: string, from: string, to: string): number {
@@ -238,7 +243,7 @@ export function stageRelease(
       if (listTreeFiles(repoRoot, tag, dir.src).length > 0) {
         throw new StageError(`${tag}: core publishes no schema, but ${dir.src} exists at the tag`)
       }
-      writeMember(join(root, RELEASE_MANIFEST), canonicalJson({ tag, commit }))
+      writeMember(join(root, SPECIFICATION_RECORD_ARCHIVE_PATH), canonicalJson({ tag, commit }))
     } else {
       const requires = entry.requires
       if (requires === undefined || entry.bundleSha256 === null) {
@@ -325,7 +330,21 @@ export function stageRelease(
         coreTag,
         coreCommit: tagCommit(repoRoot, coreTag),
       }
-      writeMember(join(root, RELEASE_MANIFEST), canonicalJson(manifest))
+      writeMember(join(root, SPECIFICATION_RECORD_ARCHIVE_PATH), canonicalJson(manifest))
+      let record: Json
+      try {
+        record = releaseRecord({
+          declarations: readDeclarations(repoRoot, tag),
+          family: release.family,
+          version: release.version,
+          tag,
+          commit,
+          file: { path: names.bundle, sha256: entry.bundleSha256 },
+        })
+      } catch (error) {
+        throw new StageError((error as Error).message)
+      }
+      writeMember(join(root, RELEASE_RECORD_ARCHIVE_PATH), canonicalJson(record))
     }
 
     requireFile(repoRoot, tag, dir.spec, join(root, 'spec.md'))

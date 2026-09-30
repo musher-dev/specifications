@@ -28,13 +28,13 @@ tasks:
       - bun run tsc --noEmit
 
   config:
-    desc: Verify the .config/ layout (CFG-01..CFG-08)
+    desc: Verify the repository root holds only ROOT_ENTRIES (CFG-09)
     dir: '{{.ROOT_DIR}}/{{.TOOLS_DIR}}'
     cmds:
       - bun run src/policy/config.ts
 
   rulesets:
-    desc: Verify the review gate holds together (RUL-01..RUL-09)
+    desc: Verify the review gate holds together (RUL-01..RUL-08)
     dir: '{{.ROOT_DIR}}/{{.TOOLS_DIR}}'
     cmds:
       - bun run src/policy/rulesets.ts
@@ -44,10 +44,11 @@ tasks:
     dir: '{{.ROOT_DIR}}'
     cmds:
       # The release is pinned in .config/mise/config.toml (docs/adr/0036 §1).
-      # Report-only for now: every requirement is a warning, and the default
-      # --fail-on error fails on none of them. CI adds --fail-on warning once
-      # .repo/conventions.toml lists the families this repository enforces.
-      - conventions check
+      # Every family is enforced (docs/adr/0037): every requirement is a
+      # warning, so --fail-on warning is what makes a finding fail. A finding
+      # is fixed, or waived in .repo/conventions.toml with a reason, a tracking
+      # issue and an expiry.
+      - conventions check --fail-on warning
 
   # --- The normative gates ---------------------------------------------------
 

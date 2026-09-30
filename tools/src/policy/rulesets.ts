@@ -13,13 +13,12 @@
  * the rare config where a shape error is discovered in production: a leaked
  * server-side field makes the apply fail, and a mistyped required-check context
  * makes every pull request hang forever waiting for a check that will never
- * report. RUL-03 and RUL-09 are those two failure modes.
+ * report. RUL-03 guards the first.
  *
- * RUL-09 has no counterpart in `musher-dev/platform`, which documents the rule
- * in prose and enforces nothing. It is the reason this runs inside the
- * `Tools / Lint` job of validate.yml rather than as its own workflow: a required
- * check that lives in a `paths:`-filtered workflow is the very hang it exists to
- * prevent.
+ * The second was RUL-09, which checked that every required context is a job
+ * some workflow publishes, in a workflow with no `paths:` filter. It retired
+ * when the engineering conventions' GHA family, whose GHA-15 and path-filter
+ * requirements check the same, became enforced (docs/adr/0037).
  *
  * See docs/adr/0015-selective-code-owner-review.md and
  * .github/rulesets/RULESETS.md.
@@ -28,12 +27,10 @@
  */
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { parse } from 'yaml'
 import { Failures, REPO_ROOT } from '../lib/layout.ts'
 
 const RULESETS_DIR = join('.github', 'rulesets')
 const CODEOWNERS = join('.github', 'CODEOWNERS')
-const WORKFLOWS_DIR = join('.github', 'workflows')
 
 /** The ruleset carrying the review gate. Named because RUL-07/08 only apply to it. */
 const MAIN_RULESET = 'main-branch.json'
@@ -79,64 +76,6 @@ function parseCodeowners(text: string): CodeownersEntry[] {
   return entries
 }
 
-/**
- * Every job name a workflow publishes as a check context, and whether that
- * workflow filters by path.
- *
- * A job with no `name:` reports under its key, which is what GitHub does. Only
- * `paths`/`paths-ignore` matter: a `branches:` filter still reports on every
- * pull request targeting that branch.
- */
-interface WorkflowContexts {
-  readonly contexts: Map<string, string>
-  readonly pathFiltered: Set<string>
-}
-
-function workflowContexts(repoRoot: string): WorkflowContexts {
-  const contexts = new Map<string, string>()
-  const pathFiltered = new Set<string>()
-  const dir = join(repoRoot, WORKFLOWS_DIR)
-  if (!existsSync(dir)) return { contexts, pathFiltered }
-
-  for (const file of readdirSync(dir).sort()) {
-    if (!file.endsWith('.yml') && !file.endsWith('.yaml')) continue
-    let doc: unknown
-    try {
-      doc = parse(readFileSync(join(dir, file), 'utf8'))
-    } catch {
-      continue // check:workflow owns YAML validity; do not double-report.
-    }
-    if (typeof doc !== 'object' || doc === null) continue
-    const workflow = doc as Record<string, unknown>
-
-    // YAML 1.2 keeps `on` a string, but a 1.1-minded editor may yield `true`.
-    const triggers = (workflow.on ?? workflow.true) as Record<string, unknown> | undefined
-    const filtered =
-      typeof triggers === 'object' &&
-      triggers !== null &&
-      Object.values(triggers).some(
-        (event) =>
-          typeof event === 'object' &&
-          event !== null &&
-          ('paths' in event || 'paths-ignore' in event),
-      )
-
-    const jobs = workflow.jobs as Record<string, unknown> | undefined
-    if (typeof jobs !== 'object' || jobs === null) continue
-    for (const [id, job] of Object.entries(jobs)) {
-      const name =
-        typeof job === 'object' &&
-        job !== null &&
-        typeof (job as { name?: unknown }).name === 'string'
-          ? (job as { name: string }).name
-          : id
-      contexts.set(name, file)
-      if (filtered) pathFiltered.add(name)
-    }
-  }
-  return { contexts, pathFiltered }
-}
-
 export function rulesetViolations(repoRoot: string = REPO_ROOT): string[] {
   const problems: string[] = []
   const dir = join(repoRoot, RULESETS_DIR)
@@ -153,8 +92,6 @@ export function rulesetViolations(repoRoot: string = REPO_ROOT): string[] {
         'would then live only in the GitHub UI, where it cannot be reviewed or restored.',
     )
   }
-
-  const { contexts, pathFiltered } = workflowContexts(repoRoot)
 
   for (const file of files) {
     const rel = `${RULESETS_DIR}/${file}`
@@ -229,31 +166,6 @@ export function rulesetViolations(repoRoot: string = REPO_ROOT): string[] {
         }
       }
     }
-
-    for (const rule of typed) {
-      if (rule.type !== 'required_status_checks') continue
-      const parameters = (rule.parameters ?? {}) as Record<string, unknown>
-      const checks = parameters.required_status_checks
-      if (!Array.isArray(checks)) continue
-      for (const check of checks) {
-        const context = (check as { context?: unknown }).context
-        if (typeof context !== 'string') continue
-        const source = contexts.get(context)
-        if (source === undefined) {
-          problems.push(
-            `RUL-09: ${rel} requires the check \`${context}\`, which no job in ` +
-              `${WORKFLOWS_DIR}/ publishes. A required context that never reports leaves every ` +
-              'pull request permanently unmergeable.',
-          )
-        } else if (pathFiltered.has(context)) {
-          problems.push(
-            `RUL-09: ${rel} requires \`${context}\`, published by ${WORKFLOWS_DIR}/${source}, ` +
-              'which filters on `paths:`. It will not report on a pull request the filter ' +
-              'misses, and that pull request hangs forever.',
-          )
-        }
-      }
-    }
   }
 
   problems.push(...codeownersViolations(repoRoot))
@@ -308,7 +220,7 @@ function codeownersViolations(repoRoot: string): string[] {
 function main(): void {
   const failures = new Failures()
   for (const problem of rulesetViolations()) failures.add(problem)
-  failures.report('Ruleset and CODEOWNERS halves of the review gate agree (RUL-01..RUL-09).')
+  failures.report('Ruleset and CODEOWNERS halves of the review gate agree (RUL-01..RUL-08).')
 }
 
 if (import.meta.main) main()

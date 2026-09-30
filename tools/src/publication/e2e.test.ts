@@ -82,13 +82,13 @@ describe('the publication pipeline, end to end', () => {
   })
 
   test('3. the release branch moves; record updates the pending entry, and it verifies', () => {
-    fx.commit('chore(repo): release component 1.0.0')
+    fx.commit('chore(release): release component 1.0.0')
     fx.writeSources('component', 'v1', fx.bundleDoc('component', 'v1', { minProperties: 1 }))
     fx.commit('feat(component): brought in by Update branch')
     expect(verified()).not.toEqual([])
 
     expect(record(fx.root).updated).toEqual([TAG])
-    fx.commit('chore(repo): release component 1.0.0')
+    fx.commit('chore(release): release component 1.0.0')
     expect(verified()).toEqual([])
   })
 

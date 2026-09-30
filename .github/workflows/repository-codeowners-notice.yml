@@ -13,7 +13,7 @@ name: Repository CODEOWNERS Notice
 #
 # It is a NOTIFIER, not a gate: it validates nothing, blocks nothing, and must
 # never be added to the required checks in .github/rulesets/main-branch.json
-# (`task check:rulesets` RUL-09 would accept it; the ruleset should not). A
+# (the conventions' GHA-15 would accept it; the ruleset should not). A
 # failure of the notifier itself still fails the workflow so it cannot rot
 # unnoticed.
 #

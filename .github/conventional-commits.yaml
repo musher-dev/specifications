@@ -36,6 +36,7 @@ scopes:
   - devcontainer
   - docs
   - repo
+  - release
   - deps
   - deps-dev
 

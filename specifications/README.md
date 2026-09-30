@@ -109,7 +109,9 @@ What within a single conformance case is normative is set out in
    edition the family release records
    ([core v1 §9](core/v1/spec.md#editions)). That edition is `requires.core` in
    the release's [ledger](../docs/publication.md#the-ledger) entry in
-   `published.json`, repeated in `release.json` inside its release archive.
+   `published.json`, repeated in `specification.json` inside its release archive
+   (`release.json` in an archive cut before
+   [ADR 0037](../docs/adr/0037-the-repository-adopts-engineering-conventions-0-7-0.md)).
    Before a family's first release there is no recorded edition: use core as it
    stands on `main`. Core cases run through the parser
    alone. Declare the profile you claim, as

@@ -25,8 +25,10 @@ import {
   LEDGER_FILE,
   LICENSE_FILE,
   NOTICE_FILE,
+  OUTPUTS_DECLARATION_FILE,
   RELEASE_PLEASE_CONFIG_FILE,
   RELEASE_PLEASE_MANIFEST_FILE,
+  REPOSITORY_DECLARATION_FILE,
   readJson,
 } from '../lib/layout.ts'
 
@@ -160,6 +162,32 @@ export class FixtureRepo {
     this.writeFile(NOTICE_FILE, 'Fixture notice\n')
     this.writeFile(CONFORMANCE_FORMAT_FILE, '# Conformance (fixture)\n')
     this.writeReleaseConfig()
+    this.writeDeclarations()
+  }
+
+  /**
+   * The `.repo/` declarations `release:stage` reads the release record from:
+   * the repository's name, and one schema interface per kind family, delivered
+   * by that family's bundle.
+   */
+  writeDeclarations(families: readonly string[] = ['component', 'blueprint', 'listing']): void {
+    this.writeFile(REPOSITORY_DECLARATION_FILE, 'schema_version = 1\nname = "specifications"\n')
+    this.writeFile(
+      OUTPUTS_DECLARATION_FILE,
+      [
+        'schema_version = 2',
+        ...families.flatMap((family) => [
+          '',
+          '[[interfaces]]',
+          `id = "${family}-schema"`,
+          'format = "json-schema"',
+          `definitions = ["${familyPaths(family, 'v1').dir}/schemas/src/"]`,
+          `delivered_by = "${family}-release"`,
+          'compatibility = "gated"',
+        ]),
+        '',
+      ].join('\n'),
+    )
   }
 
   /**

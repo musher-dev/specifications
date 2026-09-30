@@ -21,7 +21,7 @@ release line, tagged `<family>/v<MAJOR>.<MINOR>.<PATCH>`.
    release-please authenticates as the release GitHub App and opens or updates
    one pull request per package that has releasable commits
    ([CONTRIBUTING → Commit messages](../.github/CONTRIBUTING.md#commit-messages)).
-   It titles each `chore(repo): release <family> <version>` and signs it off as
+   It titles each `chore(release): release <family> <version>` and signs it off as
    the App. The App token matters here, because a push made with `GITHUB_TOKEN`
    triggers no workflow, and a release pull request would then never report its
    required checks.
@@ -78,11 +78,15 @@ release line, tagged `<family>/v<MAJOR>.<MINOR>.<PATCH>`.
 
 | Release | Assets |
 |---|---|
-| Kind family (`component`, `blueprint`, `listing`) | `<family>.schema.json`, `<family>-v<X.Y.Z>.tar.gz` |
-| Core | `core-v<X.Y.Z>.tar.gz` |
+| Kind family (`component`, `blueprint`, `listing`) | `<family>.schema.json`, `<family>-v<X.Y.Z>.tar.gz`, `SHA256SUMS` |
+| Core | `core-v<X.Y.Z>.tar.gz`, `SHA256SUMS` |
 
 `<family>.schema.json` is the pinned bundle, carrying the exact-version `$id`.
-It holds the same bytes the site serves at the pinned URL.
+It holds the same bytes the site serves at the pinned URL. `SHA256SUMS` lists
+the other assets in `sha256sum` format, and one provenance attestation covers
+every file it lists. Releases published before
+[ADR 0037](adr/0037-the-repository-adopts-engineering-conventions-0-7-0.md)
+carry no `SHA256SUMS`, and each of their assets has its own attestation.
 
 Every archive unpacks into one top-level directory, `<family>-v<MAJOR>/`, such
 as `component-v1/`. A kind family archive's directory holds:
@@ -93,12 +97,25 @@ as `component-v1/`. A kind family archive's directory holds:
   present, all read from that dependency's exact tag;
 - each schema dependency's bundle, taken from its verified published asset,
   never rebuilt with the consuming release's tooling;
-- `LICENSE`, `NOTICE` and `release.json`, which names the tag, the commit and
-  exact direct dependencies and the complete dependency closure, including
-  tags, commits, tree identities and bundle digests.
+- `LICENSE` and `NOTICE`;
+- `specification.json`, which names the tag, the commit and exact direct
+  dependencies and the complete dependency closure, including tags, commits,
+  tree identities and bundle digests;
+- `release.json`, the
+  [engineering conventions' release record](https://github.com/musher-dev/engineering-conventions/blob/v0.7.0/engineering-conventions/definitions/conventions/interfaces/publishing-interfaces.md#the-release-record):
+  the repository, the bundle output (`<family>-release`), the version, tag and
+  commit, and the family's schema interface (`<family>-schema`) with the
+  bundle's SHA-256. A repository that vendors the archive keeps it unchanged,
+  and checks its copy against it offline.
+
+An archive cut before
+[ADR 0037](adr/0037-the-repository-adopts-engineering-conventions-0-7-0.md)
+has no conventions record, and carries `specification.json`'s content as
+`release.json`.
 
 A core archive's directory holds `spec.md`, `conformance/`, `LICENSE`, `NOTICE`
-and `release.json`. In both archives, `conformance/` carries the fixture format,
+and `specification.json`, naming the tag and commit. Core delivers no
+interface, so it carries no conventions record. In both archives, `conformance/` carries the fixture format,
 [docs/conformance.md](conformance.md), as `conformance/README.md` beside the corpus.
 Before staging, `task site:fetch` verifies dependency bundles into the cache.
 The release workflow permits the current tagged draft during that fetch; staging
@@ -224,7 +241,7 @@ The reasoning is in [ADR 0012 §2](adr/0012-cloudflare-pages-publication.md) and
 | `path` | The family version directory at that release. A release is read through this field, which is how it survives a later layout change. |
 | `tree` | Git's tree id for `path` at the tagged commit. It covers prose, sources, examples and corpus in one value. |
 | `bundleSha256` | SHA-256 of the pinned bundle, which is also the release asset. `null` exactly when the family publishes no schema, which today means core. |
-| `requires` | Exact versions of the families this release was built against. Required on a kind family entry, and forbidden on core's. Each key comes from the family's normative dependencies table, and each value is the exact manifest version selected when recording. Blueprint records both core and component. The archive's `release.json` repeats these direct pins and describes the transitive closure. |
+| `requires` | Exact versions of the families this release was built against. Required on a kind family entry, and forbidden on core's. Each key comes from the family's normative dependencies table, and each value is the exact manifest version selected when recording. Blueprint records both core and component. The archive's `specification.json` repeats these direct pins and describes the transitive closure. |
 
 **The ledger is append-only.** An entry is *pending* until its tag exists, and
 *tagged* after that. `task release:record` inserts or updates pending entries

@@ -143,11 +143,14 @@ Types: `feat`, `fix`, `perf`, `docs`, `chore`, `refactor`, `test`, `ci`,
 `build`, `style`, `revert`.
 
 Scopes: `core`, `component`, `blueprint`, `listing`, `conformance`, `tools`,
-`ci`, `devcontainer`, `docs`, `repo`, `deps`, `deps-dev`.
+`ci`, `devcontainer`, `docs`, `repo`, `release`, `deps`, `deps-dev`.
 
 Use the family's own scope, such as `component`, for a change under
 `specifications/<family>/`, conformance cases included. `conformance` is for
 `docs/conformance.md`, the fixture format, alone.
+
+`release` is release-please's: it titles each release pull request
+`chore(release): release <family> <version>`.
 
 `deps` and `deps-dev` are Dependabot's: a dependency update arrives as
 `build(deps):`, `build(deps-dev):`, or `ci(deps):`. See

@@ -8,7 +8,7 @@ name: Validate
 #
 # A job added here is required through that aggregate, with no ruleset change
 # (docs/adr/0036 §5). It must not filter on `paths:`: a required context that
-# never reports hangs every pull request (RUL-09).
+# never reports hangs every pull request (GHA-15, docs/adr/0037).
 #
 # Every job installs its tools from .config/mise/config.toml, through
 # .github/actions/setup-tools, and runs `task` targets rather than tool
@@ -81,8 +81,11 @@ jobs:
       # Every check here builds the bundles in memory from schemas/src; none is
       # committed (docs/adr/0023). The suite includes check:editions: every kind
       # family names the core edition it implements (docs/adr/0023 §5).
+      # contracts:check and contracts:breaking are the interface gates the
+      # conventions name (IFACE-12): check:schema, check:generated,
+      # check:examples and check:compat, under the names every producer uses.
       - name: Check the schemas, examples and conformance corpora
-        run: task ci:test
+        run: task contracts:check contracts:breaking ci:test
 
       # Build output for reviewers: dist/ holds every bundle and the catalog,
       # uploaded below, so the bytes a pull request would publish can be read
@@ -187,9 +190,8 @@ jobs:
           install-args: aqua:go-task/task github:musher-dev/engineering-conventions
           tooling: 'false'
 
-      # Report-only until .repo/conventions.toml lists the families this
-      # repository enforces (docs/adr/0036 §1): every requirement is a warning,
-      # and the task's default --fail-on error fails on none of them.
+      # Every family is enforced: the task runs --fail-on warning, so any
+      # finding the declarations do not waive fails the job (docs/adr/0037).
       - name: Check the repository against the conventions
         run: task check:conventions
 

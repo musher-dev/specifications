@@ -20,10 +20,10 @@ describe('titleProblems', () => {
     'feat(component): add restartPolicy',
     'fix: an unscoped fix',
     'feat(core)!: a breaking change',
-    'chore(repo): release component 1.0.0',
-    'chore(repo): release core 2.10.3',
-    'chore(repo): release 1.0.0',
-    'chore(repo): release listing 1.1.0-rc.1',
+    'chore(release): release component 1.0.0',
+    'chore(release): release core 2.10.3',
+    'chore(release): release 1.0.0',
+    'chore(release): release listing 1.1.0-rc.1',
   ]
   for (const title of passes) {
     test(`accepts ${JSON.stringify(title)}`, () => {

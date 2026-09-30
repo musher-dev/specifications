@@ -1,42 +1,13 @@
-# What this repository publishes (EC-0007 in musher-dev/engineering-conventions):
-# each kind family's schema, as a contract, and each family's release archive,
-# as a bundle. release.yml attaches both to the family's immutable GitHub
-# Release (docs/adr/0023 §2), and the site then serves the schemas at their
-# `$id` URLs. `conventions check` reads this file at this fixed path.
-schema_version = 1
-
-[[outputs]]
-id = "component-schema"
-kind = "contract"
-description = "The component document's JSON Schema, served at its $id URL."
-format = "json-schema"
-definition = "specifications/component/v1/schemas/src/component.schema.json"
-source = "specifications/component/v1/"
-publish_workflow = "release.yml"
-location = "https://specifications.musher.dev/component/v1/component.schema.json"
-docs = "docs/using-schemas.md#which-url"
-
-[[outputs]]
-id = "blueprint-schema"
-kind = "contract"
-description = "The blueprint document's JSON Schema, served at its $id URL."
-format = "json-schema"
-definition = "specifications/blueprint/v1/schemas/src/blueprint.schema.json"
-source = "specifications/blueprint/v1/"
-publish_workflow = "release.yml"
-location = "https://specifications.musher.dev/blueprint/v1/blueprint.schema.json"
-docs = "docs/using-schemas.md#which-url"
-
-[[outputs]]
-id = "listing-schema"
-kind = "contract"
-description = "The listing document's JSON Schema, served at its $id URL."
-format = "json-schema"
-definition = "specifications/listing/v1/schemas/src/listing.schema.json"
-source = "specifications/listing/v1/"
-publish_workflow = "release.yml"
-location = "https://specifications.musher.dev/listing/v1/listing.schema.json"
-docs = "docs/using-schemas.md#which-url"
+# What this repository publishes (EC-0007 in musher-dev/engineering-conventions)
+# and the interfaces those outputs deliver (EC-0030). `conventions check` reads
+# this file at this fixed path.
+#
+# Each family's release archive is a bundle that release.yml attaches to the
+# family's immutable GitHub Release (docs/adr/0023 §2). The site serves every
+# released schema at its `$id` URL, and deploy.yml is what publishes it. Each
+# kind family's schema is an interface, delivered by its family's bundle, which
+# carries the release record listing it (docs/adr/0037).
+schema_version = 2
 
 [[outputs]]
 id = "core-release"
@@ -73,3 +44,45 @@ source = "specifications/listing/v1/"
 publish_workflow = "release.yml"
 location = "https://github.com/musher-dev/specifications/releases"
 docs = "docs/publication.md#release-assets"
+
+[[outputs]]
+id = "site"
+kind = "site"
+description = "specifications.musher.dev: every released schema at its $id URL, with the prose and the catalog."
+source = "specifications/"
+publish_workflow = "deploy.yml"
+location = "https://specifications.musher.dev"
+docs = "docs/using-schemas.md#which-url"
+
+# gated, not versioned: a break needs a new specifications/<family>/v<N>/
+# directory, which is a new major release, and check:compat fails one inside a
+# major (docs/adr/0005). The major is in the directory, not the file name.
+[[interfaces]]
+id = "component-schema"
+format = "json-schema"
+description = "The component document's JSON Schema, for validators and editors."
+definitions = ["specifications/component/v1/schemas/src/"]
+delivered_by = "component-release"
+compatibility = "gated"
+audience = "public"
+docs = "docs/using-schemas.md#which-url"
+
+[[interfaces]]
+id = "blueprint-schema"
+format = "json-schema"
+description = "The blueprint document's JSON Schema, for validators and editors."
+definitions = ["specifications/blueprint/v1/schemas/src/"]
+delivered_by = "blueprint-release"
+compatibility = "gated"
+audience = "public"
+docs = "docs/using-schemas.md#which-url"
+
+[[interfaces]]
+id = "listing-schema"
+format = "json-schema"
+description = "The listing document's JSON Schema, for validators and editors."
+definitions = ["specifications/listing/v1/schemas/src/"]
+delivered_by = "listing-release"
+compatibility = "gated"
+audience = "public"
+docs = "docs/using-schemas.md#which-url"

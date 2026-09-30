@@ -7,7 +7,7 @@
   "tag-separator": "/",
   "draft": true,
   "force-tag-creation": true,
-  "pull-request-title-pattern": "chore(repo): release${component} ${version}",
+  "pull-request-title-pattern": "chore(release): release${component} ${version}",
   "signoff": "musher-release[bot] <330958847+musher-release[bot]@users.noreply.github.com>",
   "packages": {
     "specifications/core/v1": {
