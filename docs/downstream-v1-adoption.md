@@ -182,9 +182,10 @@ from as two endpoint properties, `viewerIdentityHeader` and `trustedProxyCIDRs`
   the request's `Authorization` header and application cookies, and never
   forward the platform's session cookie
   ([`BP-ACCESS-003`](../specifications/blueprint/v1/spec.md#BP-ACCESS-003)).
-  The specification leaves the header name to the platform. A name under the
-  edge's existing `x-platform-*` strip, such as `x-platform-user`, is covered by
-  it at the edge, but every later hop that can add headers must strip it too.
+  The specification leaves the header names to the platform. Put every header
+  forwarded to a workload under one prefix the platform owns, without `X-`
+  (RFC 6648), such as `<platform>-viewer-id`, and strip inbound copies by that
+  prefix, not by an enumerated list, at every hop that can add headers.
 - Supply `viewerIdentityHeader` and `trustedProxyCIDRs` as public routing facts
   of the endpoint allocation, before the workload starts. The CIDRs are the
   addresses the container itself observes as its TCP peer, which on the current
