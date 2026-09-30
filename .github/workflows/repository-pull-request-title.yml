@@ -1,4 +1,4 @@
-name: Lint PR
+name: Repository Pull Request Title
 
 # `pull-requests: write` is here for the normalisation step below, which fixes
 # one thing it is not worth exempting a bot from. This workflow runs on

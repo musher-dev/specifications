@@ -1,12 +1,12 @@
-# The two entry points the CI workflows call, under the `ci` namespace:
-# validate.yml, and ci.yml until validate.yml replaces it (docs/adr/0036 §5).
+# The two entry points .github/workflows/validate.yml calls, under the `ci`
+# namespace.
 #
 # They exist so the workflow names one task per job rather than a list of
 # checks: a check added to a job is added here, where a developer can run the
 # same job locally, instead of only in YAML nobody executes before pushing.
 #
-# `task check` runs everything; these two are its split into the Lint and
-# Schema jobs. Every check in either must also be in `check`. Like `check`,
+# `task check` runs everything; these two are its split into the Tools / Lint
+# and Specifications / Schema jobs. Every check in either must also be in `check`. Like `check`,
 # each runs its checks as parallel deps.
 #
 # The leading colon on each reference is load-bearing: inside an included

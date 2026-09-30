@@ -32,8 +32,8 @@
 #     owner is the supported way to carve out an explicitly unowned exception.
 #   - An owner's own pull requests are exempt: GitHub cannot request a review
 #     from the author, so authorship waives the requirement for the patterns
-#     that author owns. The `codeowners-notice` workflow posts a comment on
-#     those pull requests so a self-owned edit is at least visible.
+#     that author owns. The `repository-codeowners-notice` workflow posts a
+#     comment on those pull requests so a self-owned edit is at least visible.
 #
 # NOTE: musher-dev/platform's CODEOWNERS names `@merrelljustin`, which is not a
 # real GitHub account (the API returns 404). Do not copy that handle here — a

@@ -1,9 +1,10 @@
 # Single source of truth for the Conventional Commits vocabulary.
 #
 # `task check:title` reads this file to validate a pull request title. The other
-# copies cannot read it: the lint-pr.yml action takes static YAML inputs, the
-# lefthook commit-msg hook is a POSIX regex, dependabot.yml writes fixed commit
-# prefixes, and CONTRIBUTING.md prints the lists for a reader. They inline these
+# copies cannot read it: the action in repository-pull-request-title.yml takes
+# static YAML inputs, the lefthook commit-msg hook is a POSIX regex,
+# dependabot.yml writes fixed commit prefixes, and CONTRIBUTING.md prints the
+# lists for a reader. They inline these
 # lists instead. What makes this file the source of truth rather than one more
 # copy is `task check:commits`, which fails when any of the five disagree — the
 # enforced form of the "keep them in step" this comment used to ask for

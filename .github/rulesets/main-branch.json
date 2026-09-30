@@ -38,10 +38,8 @@
         "strict_required_status_checks_policy": true,
         "do_not_enforce_on_create": false,
         "required_status_checks": [
-          { "context": "Lint", "integration_id": 15368 },
-          { "context": "Schema", "integration_id": 15368 },
-          { "context": "Site Build", "integration_id": 15368 },
-          { "context": "Signed off", "integration_id": 15368 }
+          { "context": "Validate / Required", "integration_id": 15368 },
+          { "context": "Validate Pull Request / Required", "integration_id": 15368 }
         ]
       }
     }

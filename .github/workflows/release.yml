@@ -4,7 +4,7 @@ name: Release
 # and every run ends by deploying the site exactly once. See
 # docs/adr/0023-published-bytes-are-immutable-release-assets.md.
 #
-#   release-please  opens release pull requests; on a merged one, forces the tag
+#   release_please  opens release pull requests; on a merged one, forces the tag
 #                   at the merge commit and creates a DRAFT release.
 #   plan            one matrix entry {tag, release_id} per release to finish.
 #   artifacts       stages, attests and uploads the assets to the draft, then
@@ -42,10 +42,10 @@ jobs:
   #
   # It authenticates as the release GitHub App, not with GITHUB_TOKEN. A push
   # made with GITHUB_TOKEN triggers no workflow, so a release pull request
-  # opened with it never reports Lint, Schema, Site Build or Signed off and can
-  # merge only through the admin bypass ADR 0015 took out of daily use.
+  # opened with it never reports the Validate checks and can merge only through
+  # the admin bypass ADR 0015 took out of daily use.
   # ---------------------------------------------------------------------------
-  release-please:
+  release_please:
     name: Release Please
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
@@ -69,12 +69,12 @@ jobs:
           permission-pull-requests: write
 
       # release-please writes `signoff` verbatim as the Signed-off-by trailer of
-      # its release commit, whose author is this App. dco.yml fails the release
-      # pull request unless the trailer names that author, and release-please
-      # reads the value from the default branch through the API, so it cannot be
-      # injected here. Compare instead, before any commit is made with it: a
+      # its release commit, whose author is this App. The sign-off check fails
+      # the release pull request unless the trailer names that author, and
+      # release-please reads the value from the default branch through the API,
+      # so it cannot be injected here. Compare instead, before any commit is made with it: a
       # placeholder or a renamed App stops the run here rather than opening a
-      # pull request that can never pass `Signed off`.
+      # pull request that can never pass `Commits / Sign-off`.
       - name: The configured sign-off names this App
         env:
           GH_TOKEN: ${{ github.token }}
@@ -128,8 +128,8 @@ jobs:
   # ---------------------------------------------------------------------------
   plan:
     name: Plan
-    needs: release-please
-    if: ${{ !cancelled() && (github.event_name == 'workflow_dispatch' || needs.release-please.result == 'success') }}
+    needs: release_please
+    if: ${{ !cancelled() && (github.event_name == 'workflow_dispatch' || needs.release_please.result == 'success') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
@@ -155,7 +155,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           EVENT: ${{ github.event_name }}
-          RELEASES: ${{ needs.release-please.outputs.releases }}
+          RELEASES: ${{ needs.release_please.outputs.releases }}
           TAG: ${{ inputs.tag }}
         run: |
           set -euo pipefail
@@ -171,14 +171,15 @@ jobs:
               exit 1
             fi
 
+            # --paginate prints one array per page; -s gathers them into one.
             ids="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/releases?per_page=100" \
-              | jq -r --arg tag "$TAG" '.[] | select(.tag_name == $tag) | .id')"
-            count="$(printf '%s' "$ids" | grep -c . || true)"
+              | jq -sc --arg tag "$TAG" '[.[][] | select(.tag_name == $tag) | .id]')"
+            count="$(jq length <<<"$ids")"
             if [ "$count" -gt 1 ]; then
               echo "::error::${TAG} has ${count} releases; resolve by hand before recovering" >&2
               exit 1
             elif [ "$count" -eq 1 ]; then
-              id="$ids"
+              id="$(jq '.[0]' <<<"$ids")"
             else
               id="$(gh api -X POST "repos/${GITHUB_REPOSITORY}/releases" \
                 -f tag_name="$TAG" -f name="$TAG" -F draft=true \
@@ -472,9 +473,8 @@ jobs:
             printf '%s\tsha256:%s\n' "$(basename "$path")" "$(sha256sum "$path" | cut -d' ' -f1)"
           done | sort)"
           actual="$(jq -r '.assets[] | "\(.name)\t\(.digest)"' <<<"$release" | sort)"
-          if [ "$expected" != "$actual" ]; then
+          if ! diff <(printf '%s\n' "$expected") <(printf '%s\n' "$actual"); then
             echo "::error::${TAG} assets do not match what was staged" >&2
-            diff <(printf '%s\n' "$expected") <(printf '%s\n' "$actual") || true
             failed=1
           fi
 
@@ -487,7 +487,7 @@ jobs:
   # every release that push published. It runs only when plan and artifacts
   # each succeeded or were skipped: a release that failed stops the deploy, as
   # site:fetch would refuse its unpublished tag anyway, and the red X belongs on
-  # the job that can be recovered. A failed release-please job does not block
+  # the job that can be recovered. A failed release_please job does not block
   # it — plan is then skipped and nothing partial exists — and is reported red
   # on its own. Skipped artifacts, a push that released nothing, deploy as
   # normal.
