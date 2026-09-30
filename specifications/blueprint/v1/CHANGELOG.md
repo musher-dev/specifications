@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.7.1](https://github.com/musher-dev/specifications/compare/blueprint/v1.7.0...blueprint/v1.7.1) (2026-09-30)
+
+
+### Specification prose
+
+* **blueprint:** note owned, unprefixed viewer header names ([b285eb8](https://github.com/musher-dev/specifications/commit/b285eb8973caf0c7b4bfbcae54f2a0ff4b34e727))
+* recommend one owned header prefix in the adoption guide ([b285eb8](https://github.com/musher-dev/specifications/commit/b285eb8973caf0c7b4bfbcae54f2a0ff4b34e727))
+
 ## [1.7.0](https://github.com/musher-dev/specifications/compare/blueprint/v1.6.0...blueprint/v1.7.0) (2026-09-29)
 
 
