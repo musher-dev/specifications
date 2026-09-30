@@ -43,10 +43,10 @@ test('canonical CIDRs: dotted IPv4 and RFC 5952 IPv6, no host bits, never /0', (
 })
 
 test('identity header names are lowercase tokens the platform does not reserve', () => {
-  for (const name of ['x-platform-user', 'x-musher-user', 'remote-user'])
+  for (const name of ['platform-viewer-id', 'x-platform-user', 'remote-user'])
     expect(validIdentityHeader(name)).toBe(true)
   for (const name of [
-    'X-Platform-User',
+    'Platform-Viewer-Id',
     'x-forwarded-user',
     'forwarded',
     'authorization',
@@ -190,7 +190,7 @@ test('a resolution record carries the object form of an exposure', () => {
             public: {
               hostname: 'example.invalid',
               scheme: 'https',
-              viewerIdentityHeader: 'x-platform-user',
+              viewerIdentityHeader: 'platform-viewer-id',
               trustedProxyCIDRs: ['10.88.0.0/16'],
             },
           },
