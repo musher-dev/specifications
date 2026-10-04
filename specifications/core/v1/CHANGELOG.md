@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/musher-dev/specifications/compare/core/v1.1.0...core/v1.1.1) (2026-10-04)
+
+
+### Specification prose
+
+* **core:** name ERR_INVALID_NUMBER and fix two stale citations ([#170](https://github.com/musher-dev/specifications/issues/170)) ([fab704c](https://github.com/musher-dev/specifications/commit/fab704c963ef7cc7ad09377f276bcfc0c8de05dc)), closes [#166](https://github.com/musher-dev/specifications/issues/166)
+
 ## [1.1.0](https://github.com/musher-dev/specifications/compare/core/v1.0.0...core/v1.1.0) (2026-09-29)
 
 
