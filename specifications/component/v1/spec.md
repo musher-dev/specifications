@@ -1109,13 +1109,13 @@ Core diagnostics also apply.
 |---|---|---|
 | `ERR_CONFLICTING_ENV_KEY` | `semantic` | Environment destination claimed twice. |
 | `ERR_UNKNOWN_ENDPOINT` | `semantic` | Endpoint absent or not explicitly named. |
-| `ERR_ENDPOINT_NOT_HTTP` | `semantic` | Endpoint cannot supply this HTTP operation or viewer identity property. |
+| `ERR_ENDPOINT_NOT_HTTP` | `semantic` | Endpoint cannot supply this HTTP probe, public URL or hostname, or viewer identity property. |
 | `ERR_ENDPOINT_NOT_L4` | `semantic` | Endpoint cannot supply an edge address. |
 | `ERR_UNKNOWN_ADDRESS_PROPERTY` | `semantic` | Template reads a property §5.2 does not define. |
 | `ERR_ENDPOINT_NOT_EXPOSABLE` | `semantic` | A `WORKER` endpoint is exposed `PUBLIC`, or a `WORKER` output reads a public or viewer identity property. |
 | `ERR_ENDPOINT_NOT_OIDC_CLIENT` | `semantic` | An OpenID Connect client property is read from, or `OIDC` selected for, an endpoint that declares no `oidc`. |
 | `ERR_INVALID_SCHEDULE` | `semantic` | A cron field is outside §5.7's grammar or range. |
-| `ERR_UNKNOWN_INPUT_REFERENCE` | `semantic` | An output, trust bundle or probe credential names no own input, or an output reads a connection input without the member §6.2 requires. |
+| `ERR_UNKNOWN_INPUT_REFERENCE` | `semantic` | An output, trust bundle or probe credential names no own input, or an output names a connection input without a `member` or a value input with one (§6.2). |
 | `ERR_OUTPUT_NOT_PRODUCIBLE` | `semantic` | Output forwards an optional input that has no default. |
 | `ERR_INPUT_NOT_GUARANTEED` | `semantic` | A trust bundle or probe credential reads an optional input that has no default. |
 | `ERR_INVALID_MOUNT` | `semantic` | Mount is not canonical or overlaps another. |
@@ -1175,8 +1175,9 @@ A workload that reads a viewer's identity from `viewerIdentityHeader`
 peer address is in `trustedProxyCIDRs`. Anything else that can reach the port can
 set them. A released claim header's value is UTF-8 text in which every octet
 outside visible ASCII, and every `%`, is percent-encoded, so a workload
-percent-decodes it before use. The component reads both values through its own outputs, and a
-literal or a default in their place goes stale when the platform's proxies move,
+percent-decodes it before use. The component reads the header names and
+`trustedProxyCIDRs` through its own outputs, and a literal or a default in their
+place goes stale when the platform's proxies move,
 and deploys wherever a blueprint forgets to forward identity. Probes reach the
 workload directly and carry no viewer identity, so a health path must answer
 without one.
