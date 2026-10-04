@@ -518,7 +518,8 @@ Musher document and is read identically.
 The byte boundary MUST use fatal UTF-8 decoding. Parser/profile errors and
 representation depth are checked before conversion to JSON; aliases are never
 expanded. Implementations return diagnostics rather than conversion exceptions.
-Non-finite numbers and integers outside ±9007199254740991 are rejected.
+Non-finite numbers and integers outside ±9007199254740991 are rejected with
+`ERR_INVALID_NUMBER`.
 Other numbers use finite binary64 representation. Logical values may contain
 null when explicitly admitted by their value schema; this is separate from
 optional document-field omission.
@@ -658,7 +659,9 @@ edition ([§8](#conformance)), so the two corpora the claim names both exist and
 were tested together. How the edition is recorded, the checks that hold a
 family release while this document has unreleased releasable changes, and why
 its other unreleased changes only warn, are set out in
-[ADR 0023](../../../docs/adr/0023-published-bytes-are-immutable-release-assets.md).
+[ADR 0023](../../../docs/adr/0023-published-bytes-are-immutable-release-assets.md),
+as [ADR 0037](../../../docs/adr/0037-the-repository-adopts-engineering-conventions-0-7-0.md)
+§3 refines it.
 
 **What a release of this document may change.** This paragraph is informative:
 it records this repository's release policy. Within v1, a minor release of this
@@ -749,8 +752,9 @@ reviewed brings in something the review did not cover.
 
 **Schema retrieval.** Every published bundle is self-contained: all `$ref`s
 resolve inside `$defs`, and no validator needs a network request to evaluate a
-document ([README](../../../README.md)). An implementation SHOULD vendor the
-schema at an exact version rather than fetching it, and MUST verify what it
+document ([Using the schemas](../../../docs/using-schemas.md#offline)). An
+implementation SHOULD vendor the schema at an exact version rather than fetching
+it, and MUST verify what it
 fetches if it does — the `.sha256` beside each pinned URL and `published.json`
 are there for that. A validator that resolves schemas over the network at
 validation time is an SSRF primitive and a runtime dependency on an origin it
