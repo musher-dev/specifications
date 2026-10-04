@@ -805,6 +805,11 @@ many bindings name it, at `/spec/parameters/<name>/from` in the `parameters`
 stage of the `resolution` phase, and an unavailable variable is deferred there
 under this rule. No network lookup occurs during semantic validation.
 
+A parameter carrying `from` or `hash`, like a generated one, is never
+submitted. A submitted value for any of them is `ERR_PARAMETER_NOT_SUBMITTABLE` at
+`/spec/parameters/<name>`, in the `resolution` phase. A connection is replaced
+whole through acquisition instead ([§5.3](#atomic-connections)).
+
 <a id="BP-PARAM-011"></a>**`BP-PARAM-011`**: A parameter whose `from` is in the
 `deployment` namespace takes one fact about the person who created the
 installation. The namespace defines exactly three paths, and any other is
@@ -826,11 +831,6 @@ as the email address of an installation a service principal created, is
 anchor at `/spec/parameters/<name>/from` in the `parameters` stage of the
 `resolution` phase, and a malformed fact is `ERR_INVALID_RESOLUTION_CONTEXT`
 there.
-
-A parameter carrying `from` or `hash`, like a generated one, is never
-submitted. A submitted value for any of them is `ERR_PARAMETER_NOT_SUBMITTABLE` at
-`/spec/parameters/<name>`, in the `resolution` phase. A connection is replaced
-whole through acquisition instead ([§5.3](#atomic-connections)).
 
 <a id="BP-RESOLVE-001"></a>**`BP-RESOLVE-001`**: Resolution completes these steps
 before any workload starts: validate pinned contracts; select compute, storage
@@ -975,8 +975,8 @@ are released on incomplete or invalid resolution, including when only one of
 several connection parameters fails.
 
 Acquisition distinguishes NOT_ACQUIRED (INCOMPLETE), authoritative NOT_FOUND
-(ERR_CONNECTION_NOT_FOUND), DENIED (ERR_CONNECTION_DENIED), INCOMPATIBLE
-(ERR_CONNECTION_INCOMPATIBLE), and SELECTED. The synthetic context represents a
+(`ERR_CONNECTION_NOT_FOUND`), DENIED (`ERR_CONNECTION_DENIED`), INCOMPATIBLE
+(`ERR_CONNECTION_INCOMPATIBLE`), and SELECTED. The synthetic context represents a
 SELECTED result with persisted: true and a selection containing identity,
 version, installation, parameter, source reference/identity/version, kind
 MANAGED or USER, costOwner, credential identity/rotation/value/permittedBaseURLs,
@@ -988,7 +988,7 @@ model and capabilities. Endpoints are absolute HTTPS URLs without user
 information, query or fragment. Every view URL must belong to the credential's
 permittedBaseURLs. Context is trusted acquisition evidence, not an authored
 mechanism for granting permission. Offline evaluation performs no network or
-credential issuance. Malformed evidence is ERR_INVALID_RESOLUTION_CONTEXT.
+credential issuance. Malformed evidence is `ERR_INVALID_RESOLUTION_CONTEXT`.
 
 <a id="BP-CONNECTION-003"></a>**`BP-CONNECTION-003`**: Persist the complete selection
 and scoped credential before materialization. Retry and redeploy reuse the selected
@@ -1091,7 +1091,7 @@ Core and component diagnostics apply, with these additions:
 | `ERR_MISSING_PARAMETER_VALUE` | `resolution` | Required submitted value is absent. |
 | `ERR_VARIABLE_NOT_AUTHORIZED` | `resolution` | Installation cannot read the organization variable. |
 | `ERR_DEPLOYMENT_FACT_UNAVAILABLE` | `resolution` | The platform knows it has no value for a deployment fact the installation reads. |
-| `ERR_INVALID_RESOLUTION_CONTEXT` | `resolution` | Resolution context lacks a required identity or version. |
+| `ERR_INVALID_RESOLUTION_CONTEXT` | `resolution` | Resolution context is malformed, or lacks a required identity or version. |
 | `ERR_CONNECTION_NOT_FOUND` | `resolution` | Authorized acquisition confirms no selected default exists. |
 | `ERR_CONNECTION_DENIED` | `resolution` | Acquisition denies permission to use the connection. |
 | `ERR_CONNECTION_INCOMPATIBLE` | `resolution` | Selection cannot satisfy required protocol or capabilities. |
@@ -1125,7 +1125,8 @@ and cannot appear in diagnostics or exported resolution records.
 A `PUBLIC` endpoint whose access is `OPEN` is reachable by anyone with its
 address, and an identity header on one would be whatever the caller wrote. That
 is why a component that reads the viewer identity properties cannot be deployed
-without `viewerIdentity: HEADER` ([`BP-NODE-007`](#BP-NODE-007)), and why the
+without the `viewerIdentity` mode those properties belong to
+([`BP-NODE-007`](#BP-NODE-007)), and why the
 platform refuses, rather than forwards, a request it cannot authorize
 ([`BP-ACCESS-002`](#BP-ACCESS-002)).
 
