@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.2](https://github.com/musher-dev/specifications/compare/blueprint/v1.7.1...blueprint/v1.7.2) (2026-10-04)
+
+
+### Specification prose
+
+* **blueprint:** correct four statements made stale by later rules ([#172](https://github.com/musher-dev/specifications/issues/172)) ([b074bb8](https://github.com/musher-dev/specifications/commit/b074bb83a35a51d77f8e45872de2e7673761f5bf)), closes [#166](https://github.com/musher-dev/specifications/issues/166)
+
 ## [1.7.1](https://github.com/musher-dev/specifications/compare/blueprint/v1.7.0...blueprint/v1.7.1) (2026-09-30)
 
 
