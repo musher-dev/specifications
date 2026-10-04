@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.1](https://github.com/musher-dev/specifications/compare/component/v1.6.0...component/v1.6.1) (2026-10-04)
+
+
+### Specification prose
+
+* **component:** correct three statements made stale by later rules ([#171](https://github.com/musher-dev/specifications/issues/171)) ([f264440](https://github.com/musher-dev/specifications/commit/f2644401602a6c2397957c67fd0ce85c8b8429fe)), closes [#166](https://github.com/musher-dev/specifications/issues/166)
+
 ## [1.6.0](https://github.com/musher-dev/specifications/compare/component/v1.5.0...component/v1.6.0) (2026-09-29)
 
 
