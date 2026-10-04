@@ -147,6 +147,11 @@
       "path": "specifications/core/v1",
       "tree": "963f5da7e89072d8312937ca1fa4cc130e5f5897"
     },
+    "core/v1.1.1": {
+      "bundleSha256": null,
+      "path": "specifications/core/v1",
+      "tree": "151d95e68d6707bf142acec70583f8215bc69bca"
+    },
     "listing/v1.0.0": {
       "bundleSha256": "8a0ac418d4dacfc998310d11bf8003a1841e10b0869ca6b2b294caafb845305d",
       "path": "specifications/listing/v1",
