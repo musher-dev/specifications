@@ -47,16 +47,35 @@
   // Loaded at `docker run` time so shells and `task` runs see the same values.
   "runArgs": ["--env-file", "${localWorkspaceFolder}/.devcontainer/.env"],
 
+  // One volume per purpose per container (DEVC-08): logins, agent sessions,
+  // shell history and download caches survive a rebuild. Each target's parent
+  // already exists in the image, so Docker creates no root-owned directory on
+  // the way; post-create takes ownership of the volumes themselves.
   "mounts": [
     "source=musher-${devcontainerId}-gh-config,target=/home/vscode/.config/gh,type=volume",
     "source=musher-${devcontainerId}-claude-config,target=/home/vscode/.claude,type=volume",
-    "source=musher-${devcontainerId}-codex-config,target=/home/vscode/.codex,type=volume"
+    "source=musher-${devcontainerId}-codex-config,target=/home/vscode/.codex,type=volume",
+    "source=musher-${devcontainerId}-shell-history,target=/home/vscode/.shell-history,type=volume",
+    "source=musher-${devcontainerId}-cache,target=/home/vscode/.cache,type=volume"
   ],
 
   "containerEnv": {
     // mise discovers .config/mise/config.toml itself; a config in a checkout
     // installs nothing until it is trusted.
     "MISE_TRUSTED_CONFIG_PATHS": "${containerWorkspaceFolder}",
+
+    // Without this, Claude Code keeps .claude.json (account, onboarding and
+    // trust state) in ~/, outside the claude volume, so every rebuild loses it.
+    "CLAUDE_CONFIG_DIR": "/home/vscode/.claude",
+
+    // Every Claude Code session starts at max effort. An env var because the
+    // settings file's effortLevel has no "max"; it also outranks /effort, so
+    // start a lighter session as `CLAUDE_CODE_EFFORT_LEVEL=auto claude`.
+    "CLAUDE_CODE_EFFORT_LEVEL": "max",
+
+    // Node's REPL history joins the shell's on its volume; post-create points
+    // zsh and bash there.
+    "NODE_REPL_HISTORY": "/home/vscode/.shell-history/node_repl_history",
 
     "XDG_CACHE_HOME": "/home/vscode/.cache",
     "NPM_CONFIG_CACHE": "/home/vscode/.cache/npm",
@@ -71,7 +90,12 @@
   },
 
   "remoteEnv": {
-    "PATH": "/home/vscode/.local/share/mise/shims:/home/vscode/.local/bin:${containerEnv:PATH}"
+    "PATH": "/home/vscode/.local/share/mise/shims:/home/vscode/.local/bin:${containerEnv:PATH}",
+
+    // The host's GH_TOKEN, when it exports one: the first credential
+    // lib/github-auth.sh offers gh. Not GH_TOKEN itself, which would override
+    // gh's stored login on every call.
+    "MUSHER_HOST_GH_TOKEN": "${localEnv:GH_TOKEN}"
   },
 
   // Host-side: creates .devcontainer/.env from the template and strips CRLF so
@@ -114,6 +138,9 @@
   // output line by line while it runs.
   "postCreateCommand": "find .devcontainer/scripts -type f -name '*.sh' -exec sed -i 's/\\r$//' {} + && bash .devcontainer/scripts/post-create.sh",
   "postStartCommand": ["bash", ".devcontainer/scripts/startup.sh"],
+  // Finishes the GitHub credential on every attach. VS Code copies the host's
+  // ~/.gitconfig and forwards its credential helper only when it attaches.
+  "postAttachCommand": ["bash", ".devcontainer/scripts/post-attach.sh"],
 
   "customizations": {
     "vscode": {
@@ -123,7 +150,8 @@
         "timonwong.shellcheck",
         "eamodio.gitlens",
         "bierner.markdown-mermaid",
-        "github.copilot-chat"
+        "github.copilot-chat",
+        "anthropic.claude-code"
       ],
       "settings": {
         "editor.formatOnSave": true,
