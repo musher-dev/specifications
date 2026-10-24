@@ -34,7 +34,7 @@ runs:
     # With .config/mise/mise.lock present, mise-action installs with --locked:
     # each tool comes from the URL and checksum the lockfile records.
     - name: Install the pinned tools
-      uses: jdx/mise-action@08ae2a091c038e1e05ec6f5115dc5c69d5a2a6b8  # v5.1.2
+      uses: jdx/mise-action@8418fedb1110381a0d3ba51a7a415d7c1b884550  # v5.2.2
       with:
         # Lockstep with min_version in .config/mise/config.toml (TOOL-04).
         version: 2026.9.12
