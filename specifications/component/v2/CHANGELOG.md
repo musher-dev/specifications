@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.0.0 (2026-10-24)
+
+
+### ⚠ BREAKING CHANGES
+
+* **core:** every family moves to v2; documents declare specVersion: v2, and each spec's Migration from v1 section maps every renamed field, value, code and requirement ID.
+
+### Additions
+
+* **core:** release v2 of every family with one vocabulary, and retire v1 ([#197](https://github.com/musher-dev/specifications/issues/197)) ([ff06c3d](https://github.com/musher-dev/specifications/commit/ff06c3da85c4f92994cb1716a634c3db1f27668e))
+
 ## [1.6.1](https://github.com/musher-dev/specifications/compare/component/v1.6.0...component/v1.6.1) (2026-10-04)
 
 
