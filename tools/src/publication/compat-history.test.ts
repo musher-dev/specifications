@@ -29,7 +29,7 @@ function replay(s: ReturnType<typeof setup>) {
     (r) => r.release.family === s.family,
   )!
   const failures = new Failures()
-  const count = replayRelease(s.fx.root, family, recorded, failures)
+  const { count } = replayRelease(s.fx.root, family, recorded, failures)
   return { failures, count }
 }
 function flat(s: ReturnType<typeof setup>, source: string, metadata: object) {

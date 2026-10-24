@@ -123,7 +123,11 @@ const REGISTRY_PHASES: readonly Phase[] = [...CASE_PHASES, 'resolution']
  * are executed here. See ADR 0002 §5 for why running them is not this
  * repository publishing a reference validator.
  */
-const IMPLEMENTED_PHASES = new Set<Phase>(['parser', 'structural', 'semantic'])
+export const IMPLEMENTED_PHASES: ReadonlySet<Phase> = new Set<Phase>([
+  'parser',
+  'structural',
+  'semantic',
+])
 
 /**
  * The validation scopes docs/conformance.md defines for a conformance claim,

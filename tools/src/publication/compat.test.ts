@@ -10,7 +10,13 @@ import { afterEach, describe, expect, test } from 'bun:test'
 import { discoverKinds, Failures, familyPaths, LayoutError, REPO_ROOT } from '../lib/layout.ts'
 import { FixtureRepo } from '../testing/fixture.ts'
 import { Pipeline } from '../testing/pipeline.ts'
-import { replayAll, replayConcurrently, replayRelease, WITHDRAWN } from './compat.ts'
+import {
+  type ReplayCount,
+  replayAll,
+  replayConcurrently,
+  replayRelease,
+  WITHDRAWN,
+} from './compat.ts'
 import { readLedger, taggedEntries } from './ledger.ts'
 
 const COMPONENT = familyPaths('component', 'v1')
@@ -38,6 +44,10 @@ function cut(without?: 'examples' | 'conformance'): FixtureRepo {
 }
 
 function replay(fx: FixtureRepo, failures: Failures): number {
+  return replayCount(fx, failures).count
+}
+
+function replayCount(fx: FixtureRepo, failures: Failures): ReplayCount {
   const family = discoverKinds(fx.root).find((f) => f.name === 'component')
   const recorded = taggedEntries(fx.root, readLedger(fx.root)).find(
     (r) => r.release.family === 'component',
@@ -61,6 +71,35 @@ describe('replayRelease', () => {
     const failures = new Failures()
     expect(replay(fx, failures)).toBe(1)
     expect(failures.count).toBe(0)
+  })
+
+  test('counts a case in a phase this repository cannot run, without failing it', () => {
+    const fx = new FixtureRepo()
+    repo = fx
+    const p = new Pipeline(fx)
+    p.releaseCore('1.0.0')
+    fx.writeFamilySkeleton('component', 'v1')
+    const id = 'admission-001-needs-a-server'
+    fx.writeFile(`${COMPONENT.conformance}/admission/001-needs-a-server/case.yaml`, 'kind: X\n')
+    fx.writeFile(
+      `${COMPONENT.conformance}/admission/001-needs-a-server/metadata.json`,
+      JSON.stringify({ id, phase: 'admission', expected: 'pass' }, null, 2),
+    )
+    fx.writeFile(
+      `${COMPONENT.conformance}/cases.json`,
+      JSON.stringify(
+        { cases: [{ id, phase: 'admission', path: 'admission/001-needs-a-server' }] },
+        null,
+        2,
+      ),
+    )
+    p.releaseKind('component', 'v1', '1.0.0', fx.bundleDoc('component', 'v1'), {
+      skeleton: false,
+      publish: false,
+    })
+    const failures = new Failures()
+    expect(replayCount(fx, failures)).toEqual({ count: 1, unrunnable: 1 })
+    expect(failures.messages).toEqual([])
   })
 
   for (const part of ['examples', 'conformance'] as const) {
