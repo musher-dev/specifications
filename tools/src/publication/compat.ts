@@ -8,6 +8,7 @@ import { runBehaviorCases } from '../conformance/behavior.ts'
 import {
   type CaseIndexEntry,
   type CaseMetadata,
+  IMPLEMENTED_PHASES,
   loadContext,
   runCase,
 } from '../conformance/conformance.ts'
@@ -186,6 +187,18 @@ function requiredBlob(repoRoot: string, tag: string, path: string): Buffer {
   return bytes
 }
 
+/** What replaying one release checked, and what it could not run here. */
+export interface ReplayCount {
+  /** Documents and cases replayed against the candidate. */
+  readonly count: number
+  /**
+   * Cases in a phase this repository cannot run (admission needs a server).
+   * The release's own conformance run never executed them either, so they are
+   * counted and reported, never silently dropped and never a failure.
+   */
+  readonly unrunnable: number
+}
+
 /**
  * Reconstruct the release's own corpus, including item trees and binary parser
  * subjects. Evaluate it with candidate semantics and schemas. Never execute
@@ -196,10 +209,11 @@ export function replayRelease(
   family: Family,
   recorded: RecordedRelease,
   failures: Failures,
-): number {
+): ReplayCount {
   const { release, entry } = recorded
   const scratch = mkdtempSync(join(tmpdir(), 'musher-compat-'))
   let count = 0
+  let unrunnable = 0
   try {
     const corpusPath = releaseDirPaths(entry.path).conformance
     for (const path of partFiles(repoRoot, recorded, 'conformance')) {
@@ -241,9 +255,10 @@ export function replayRelease(
         new Set(),
         () => {},
       )
-      if (outcome === 'skipped')
+      if (outcome !== 'skipped') count++
+      else if (IMPLEMENTED_PHASES.has(metadata.phase))
         failures.add(release.tag + ' historical obligation cannot be checked: ' + metadata.id)
-      else count++
+      else unrunnable++
     }
     const behavior = runBehaviorCases(candidate, () => {})
     count += behavior.ran
@@ -261,7 +276,7 @@ export function replayRelease(
           failures.add(release.tag + ' accepted ' + path + ', but the candidate schema rejects it')
       }
     }
-    return count
+    return { count, unrunnable }
   } finally {
     rmSync(scratch, { recursive: true, force: true })
   }
@@ -320,17 +335,24 @@ export function replayAll(
       else console.log(`  · ${planned.note}`)
       continue
     }
-    const count = replayRelease(repoRoot, planned.family, planned.recorded, failures)
-    console.log(`  ✓ ${planned.recorded.release.tag}: ${count} document(s) replayed`)
-    replayed += count
+    const result = replayRelease(repoRoot, planned.family, planned.recorded, failures)
+    console.log(`  ✓ ${replayedLine(planned.recorded.release.tag, result)}`)
+    replayed += result.count
     checked += 1
   }
   return { replayed, checked }
 }
 
+/** The line `check:compat` prints for one replayed release. */
+function replayedLine(tag: string, result: ReplayCount): string {
+  const line = `${tag}: ${result.count} document(s) replayed`
+  return result.unrunnable === 0
+    ? line
+    : `${line}; ${result.unrunnable} admission case(s) need a server and are not replayed`
+}
+
 /** What one release's replay reports back to the process that asked for it. */
-interface Replayed {
-  readonly count: number
+interface Replayed extends ReplayCount {
   readonly failures: readonly string[]
   readonly layoutError?: string
 }
@@ -345,11 +367,11 @@ function replayOne(repoRoot: string, tag: string): void {
   const failures = new Failures()
   let result: Replayed
   try {
-    const count = replayRelease(repoRoot, planned.family, planned.recorded, failures)
-    result = { count, failures: failures.messages }
+    const replayed = replayRelease(repoRoot, planned.family, planned.recorded, failures)
+    result = { ...replayed, failures: failures.messages }
   } catch (error) {
     if (!(error instanceof LayoutError)) throw error
-    result = { count: 0, failures: [], layoutError: error.message }
+    result = { count: 0, unrunnable: 0, failures: [], layoutError: error.message }
   }
   console.log(JSON.stringify(result))
 }
@@ -416,7 +438,7 @@ export async function replayConcurrently(
     const result = results.get(tag) as Replayed
     if (result.layoutError !== undefined) throw new LayoutError(result.layoutError)
     for (const message of result.failures) failures.add(message)
-    console.log(`  ✓ ${tag}: ${result.count} document(s) replayed`)
+    console.log(`  ✓ ${replayedLine(tag, result)}`)
     replayed += result.count
     checked += 1
   }
