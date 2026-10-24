@@ -1,0 +1,14 @@
+# An image in `gettingStarted` is an overview image, so it is a media path or
+# nothing: a remote one would disclose every reader to a host the author chose.
+specVersion: v2
+kind: LISTING
+metadata:
+  slug: pgvector
+spec:
+  itemType: COMPONENT
+  displayName: pgvector
+  summary: Vector similarity search for PostgreSQL
+  category: DATABASES
+  lifecycleStage: STABLE
+  gettingStarted: |
+    ![First query](https://images.example/first-query.png)

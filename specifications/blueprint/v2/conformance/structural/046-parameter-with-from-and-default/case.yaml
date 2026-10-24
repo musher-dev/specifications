@@ -1,0 +1,19 @@
+specVersion: v2
+kind: BLUEPRINT
+metadata:
+  slug: app
+  revision: 1
+  description: Synthetic conformance fixture blueprint.
+spec:
+  parameters:
+    region:
+      from: "${{ variables.cloud.region }}"
+      default: eu-west
+  nodes:
+    web:
+      componentRef: ./components/web.yaml
+      compute:
+        profile: general.standard.small
+      bindings:
+        region:
+          parameter: region

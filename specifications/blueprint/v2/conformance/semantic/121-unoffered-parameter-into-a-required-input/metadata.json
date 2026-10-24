@@ -1,0 +1,11 @@
+{
+  "id": "semantic-121-unoffered-parameter-into-a-required-input",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#deploy-form",
+  "requirements": [
+    "BP-UI-005"
+  ],
+  "summary": "A submitted parameter with neither ui nor default cannot supply a required input, because no form ever offers it.",
+  "document": "app/blueprint.yaml"
+}

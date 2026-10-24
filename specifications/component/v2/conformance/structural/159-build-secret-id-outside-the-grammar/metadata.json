@@ -1,0 +1,10 @@
+{
+  "id": "structural-159-build-secret-id-outside-the-grammar",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#source",
+  "requirements": [
+    "COMP-BUILD-003"
+  ],
+  "summary": "A build secret ID outside the environment-variable grammar is rejected."
+}

@@ -156,7 +156,7 @@ export function checkCoreHasNoSchema(family: Family, failures: Failures): void {
 const ENVELOPE_PROPERTIES = ['specVersion', 'kind', 'metadata', 'spec'] as const
 
 /**
- * A kind family's root schema is the envelope core v1 §2 defines, and nothing
+ * A kind family's root schema is the envelope core v2 §2 defines, and nothing
  * more: exactly `specVersion`, `kind`, `metadata` and `spec`, all required, the
  * object closed, `specVersion` admitting the family's own major and no other,
  * and `kind` a constant.

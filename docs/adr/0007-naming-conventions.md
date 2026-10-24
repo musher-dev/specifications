@@ -7,7 +7,7 @@
 
 ## Context
 
-[CLAUDE.md](../../.claude/CLAUDE.md) carries a naming table, and `tools/src/lint.ts`
+[CLAUDE.md](../../AGENTS.md) carries a naming table, and `tools/src/lint.ts`
 enforces the half of it that is mechanical — directory case, module filenames,
 bundle filenames, `$defs` keys, `title` placement. What neither says is how to
 name a **field**, how to spell a **value**, or what a **key** in a user-authored
@@ -147,7 +147,7 @@ space, or a volume named `../../etc`, and has nothing to say about either.
 | Endpoint name | `^[a-z][a-z0-9]{0,19}$` | Unchanged. Composed into a DNS label *beside* other slugs, so a hyphen would make the composition ambiguous |
 | Volume name | `^[a-z][a-z0-9-]{0,61}[a-z0-9]$` | A DNS label; materialised as a named volume |
 | Input, output, and parameter name | `^[a-z][a-zA-Z0-9]{0,63}$` | `lowerCamelCase`. These are read by people in an install form and bound by key across documents |
-| Connection key | The input grammar | It *is* an input name — [blueprint §4.2](../../specifications/blueprint/v1/spec.md#connections) makes the map key the input being filled |
+| Connection key | The input grammar | It *is* an input name — [blueprint §4.2](../../specifications/blueprint/v2/spec.md#connections) makes the map key the input being filled |
 | Environment-variable key | `^[A-Z_][A-Z0-9_]*$` | Unchanged. The POSIX shape; a name outside it is not portably settable |
 | Build-argument name | The environment-variable grammar | It becomes an environment variable in the build context |
 | Tag | `^[a-z0-9][a-z0-9-]{0,38}[a-z0-9]$` | Lowercase kebab; compared after normalisation |
@@ -206,7 +206,7 @@ agreeing on anything.
 
 **Raising `cpuDedication`'s `shared`/`dedicated` to UPPER_SNAKE**, to remove what
 looks like the one casing inconsistency in the contract. Rejected: it is not an
-enum. [Blueprint §4.4](../../specifications/blueprint/v1/spec.md#advanced-constraints)'s
+enum. [Blueprint §4.4](../../specifications/blueprint/v2/spec.md#advanced-constraints)'s
 pins are lowercase **grammar tokens** whose vocabularies this contract does not
 fix, expressed as a `pattern` rather than an `enum` for exactly that reason, and
 `cpuDedication` is spelled as its neighbours are because it is one of them. The

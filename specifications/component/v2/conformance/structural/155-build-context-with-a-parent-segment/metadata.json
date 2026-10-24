@@ -1,0 +1,10 @@
+{
+  "id": "structural-155-build-context-with-a-parent-segment",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#source",
+  "requirements": [
+    "COMP-BUILD-002"
+  ],
+  "summary": "A build context that climbs out of the source root with .. is rejected."
+}

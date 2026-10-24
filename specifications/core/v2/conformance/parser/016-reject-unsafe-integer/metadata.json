@@ -1,0 +1,10 @@
+{
+  "id": "parser-016-reject-unsafe-integer",
+  "phase": "parser",
+  "expected": "fail",
+  "clause": "specifications/core/v2/spec.md#yaml-profile",
+  "requirements": [
+    "CORE-YAML-013"
+  ],
+  "summary": "An integer outside the safe range is rejected rather than read differently by different languages."
+}

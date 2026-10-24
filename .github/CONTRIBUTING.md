@@ -28,7 +28,7 @@ below.
    the one pre-publication exception, are in
    [Governance → Compatibility review](../docs/governance.md#compatibility-review).
 5. **Shared rules live in core.** A family cites the
-   [core specification](../specifications/core/v1/spec.md). It does not restate
+   [core specification](../specifications/core/v2/spec.md). It does not restate
    core's rules. What core is, and why it has no schema, is in
    [How the families relate](../specifications/README.md#how-the-families-relate).
 
@@ -60,21 +60,21 @@ tool's own flag. Adding one has a fixed shape, which that page describes.
 
 ```sh
 # 1. State the rule in the prose first. spec.md is where the rule is defined.
-$EDITOR specifications/component/v1/spec.md
+$EDITOR specifications/component/v2/spec.md
 
 # 2. Express it in the authored modules
-$EDITOR specifications/component/v1/schemas/src/component.schema.json
+$EDITOR specifications/component/v2/schemas/src/component.schema.json
 
 # 3. Optional: build the bundle into dist/ to read it. Every check builds it in memory.
 task bundle
 
 # 4. Add cases proving the new behaviour, in that family version's corpus.
 #    <NNN> is the next free number in the phase: list the directory to find it.
-ls specifications/component/v1/conformance/structural/
-mkdir -p specifications/component/v1/conformance/structural/<NNN>-my-new-rule
+ls specifications/component/v2/conformance/structural/
+mkdir -p specifications/component/v2/conformance/structural/<NNN>-my-new-rule
 
 # 5. Index every new case in the corpus's cases.json. An unindexed case runs nowhere.
-$EDITOR specifications/component/v1/conformance/cases.json
+$EDITOR specifications/component/v2/conformance/cases.json
 
 # 6. Verify
 task check
@@ -129,11 +129,13 @@ script behind it, are listed in [tools/README.md → Checks](../tools/README.md#
 
 ## Commit messages
 
-[Conventional Commits](https://www.conventionalcommits.org/), enforced by a
-`commit-msg` git hook locally, and on the pull request title by
-`task check:title` in the Validate Pull Request workflow, which the ruleset
-requires. `main` squash-merges under the title, so the title is the subject
-that lands, and editing it re-runs the check.
+[Conventional Commits](https://www.conventionalcommits.org/), checked by
+[committed](https://github.com/crate-ci/committed) against
+`.config/commits/committed.toml`: in a `commit-msg` git hook locally, and on
+the pull request title in the Validate Pull Request workflow, which the ruleset
+requires. There `task check:title` also requires a scope and a lowercase
+subject, which committed cannot. `main` squash-merges under the title, so the
+title is the subject that lands, and editing it re-runs the check.
 
 ```
 <type>(<scope>): <description>
@@ -156,18 +158,20 @@ Use the family's own scope, such as `component`, for a change under
 `build(deps):`, `build(deps-dev):`, or `ci(deps):`. See
 [ADR 0016](../docs/adr/0016-dependency-update-policy.md).
 
-`task check:commits` holds these two lists in step with their other copies:
-`.github/conventional-commits.yaml`,
-`.github/workflows/repository-pull-request-title.yml`,
-`.config/lefthook.yml` and `.github/dependabot.yml`.
+`.config/commits/committed.toml` is the one source of these two lists.
+`task check:commits` holds the copies that cannot read it in step with it:
+this page, `.github/workflows/repository-pull-request-title.yml` and the
+prefixes in `.github/dependabot.yml`.
 
 ### How a commit reaches a release
 
 [release-please](https://github.com/googleapis/release-please) keeps four
-packages, one per family version: `specifications/core/v1`,
-`specifications/component/v1`, `specifications/blueprint/v1` and
-`specifications/listing/v1`. It assigns a commit to a package by the **paths the
-commit changes**, not by its scope. The scope only labels the area for a reader.
+packages, one per family version: `specifications/core/v2`,
+`specifications/component/v2`, `specifications/blueprint/v2` and
+`specifications/listing/v2`. v1 is a retired major and has no package
+([Publication → Retired majors](../docs/publication.md#retired-majors)). It
+assigns a commit to a package by the **paths the commit changes**, not by its
+scope. The scope only labels the area for a reader.
 A family version's conformance corpus sits inside its package, so a case change
 releases the family just as a prose or schema change does.
 

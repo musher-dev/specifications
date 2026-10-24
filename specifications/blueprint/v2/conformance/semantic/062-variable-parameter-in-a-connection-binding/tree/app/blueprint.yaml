@@ -1,0 +1,30 @@
+specVersion: v2
+kind: BLUEPRINT
+metadata:
+  slug: app
+  revision: 1
+  description: Synthetic conformance fixture blueprint.
+spec:
+  parameters:
+    baseURL:
+      from: ${{ variables.errors.reportingURL }}
+  nodes:
+    app:
+      componentRef: ./app.yaml
+      compute:
+        profile: general.standard.small
+      bindings:
+        url:
+          node: app-llm
+          output: baseURL
+        key:
+          node: app-llm
+          output: apiKey
+        model:
+          node: app-llm
+          output: model
+    app-llm:
+      componentRef: ./app-llm.yaml
+      bindings:
+        llm:
+          parameter: baseURL

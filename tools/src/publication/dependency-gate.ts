@@ -2,10 +2,16 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { parseBindings } from '../lib/bindings.ts'
 import { isAncestor, logRange, readBlobAtRef, tagExists, treeId } from '../lib/git.ts'
-import { type Failures, familyPaths, inRepo, releaseDirPaths } from '../lib/layout.ts'
+import {
+  type Failures,
+  familyPaths,
+  inRepo,
+  RELEASE_PLEASE_MANIFEST_FILE,
+  releaseDirPaths,
+} from '../lib/layout.ts'
 import { classifyCommit, releasableTypes } from './core-gate.ts'
 import { type Ledger, type LedgerEntry, ledgerAtRef, readLedger, sameEntry } from './ledger.ts'
-import { readManifest, releaseTag, UNRELEASED_VERSION } from './releases.ts'
+import { readManifest, releasedManifestVersion, releaseTag } from './releases.ts'
 
 export type Dependencies = NonNullable<LedgerEntry['requires']>
 export interface PinnedDependency {
@@ -47,9 +53,14 @@ export function selectDependencies(
   const manifest = readManifest(repoRoot)
   const selected: Record<string, string> = {}
   for (const dependency of declarations(repoRoot, path, failures)) {
-    const version = manifest[familyPaths(dependency.family, dependency.line).manifestKey]
-    if (version === undefined || version === UNRELEASED_VERSION) {
-      failures.add(`${path}: ${dependency.family} ${dependency.line} has never been released`)
+    const key = familyPaths(dependency.family, dependency.line).manifestKey
+    const version = releasedManifestVersion(manifest, key, dependency.line)
+    if (version === null) {
+      failures.add(
+        `${path}: ${dependency.family} ${dependency.line} has never been released ` +
+          `(${RELEASE_PLEASE_MANIFEST_FILE} reads ${manifest[key] ?? '<absent>'} for ${key}). ` +
+          `${dependency.family} ${dependency.line} releases first.`,
+      )
       continue
     }
     selected[dependency.family] = version
@@ -77,7 +88,7 @@ export function dependencyClosure(
     }
     const previous = found.get(family)
     if (previous !== undefined && previous.tag !== dependencyTag) {
-      failures.add(`${tag}: conflicting ${family} editions ${previous.tag} and ${dependencyTag}`)
+      failures.add(`${tag}: conflicting ${family} releases ${previous.tag} and ${dependencyTag}`)
       return
     }
     if (!tagExists(repoRoot, dependencyTag)) {

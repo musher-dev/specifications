@@ -1,0 +1,6 @@
+[
+  {
+    "code": "ERR_CONFLICTING_ENV_VAR",
+    "path": "/spec/workload/build/secrets/NPM_TOKEN"
+  }
+]

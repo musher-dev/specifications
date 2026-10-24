@@ -1,0 +1,10 @@
+{
+  "id": "structural-025-license-parenthesised-group",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/listing/v2/spec.md#presentation",
+  "requirements": [
+    "LIST-LICENSE-001"
+  ],
+  "summary": "A licence expression holding one parenthesised group is accepted."
+}

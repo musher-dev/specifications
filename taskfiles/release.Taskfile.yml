@@ -1,4 +1,4 @@
-# Release tasks, under the `release` namespace (docs/adr/0023).
+# Release tasks, each named `release:<task>` (docs/adr/0023).
 #
 # `release:record` runs on a release-please pull request branch and writes the
 # pending entries into published.json; `release:stage` runs in the release job,
@@ -11,13 +11,13 @@
 version: '3'
 
 tasks:
-  record:
+  release:record:
     desc: Record every pending release in published.json, enforcing the core gate
     dir: '{{.ROOT_DIR}}/{{.TOOLS_DIR}}'
     cmds:
       - bun run src/publication/record.ts
 
-  stage:
+  release:stage:
     desc: Verify a tagged release and stage its assets into dist/release (TAG=<family>/vX.Y.Z)
     dir: '{{.ROOT_DIR}}/{{.TOOLS_DIR}}'
     requires:

@@ -1,0 +1,14 @@
+# `media/icon.png` is a GIF. Its extension names PNG, and its header states no
+# dimensions in PNG's form, so LIST-MEDIA-005 cannot find any: a header that does
+# not state dimensions in the format the extension names fails the rule.
+specVersion: v2
+kind: LISTING
+metadata:
+  slug: pgvector
+spec:
+  itemType: COMPONENT
+  displayName: pgvector
+  summary: Vector similarity search for PostgreSQL
+  category: DATABASES
+  lifecycleStage: STABLE
+  icon: media/icon.png

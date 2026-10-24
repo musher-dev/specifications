@@ -1,0 +1,10 @@
+{
+  "id": "semantic-009-overview-javascript-url",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/listing/v2/spec.md#overview-markdown",
+  "requirements": [
+    "LIST-MD-002"
+  ],
+  "summary": "An overview link using a scheme outside the permitted set is rejected."
+}

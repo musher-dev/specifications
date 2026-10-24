@@ -1,0 +1,12 @@
+specVersion: v2
+kind: BLUEPRINT
+metadata:
+  slug: acme-wiki
+  revision: 1
+  description: Synthetic conformance fixture blueprint.
+spec:
+  parameters: {}
+  nodes:
+    web:
+      componentRef: ./components/web.yaml
+      bindings: {}

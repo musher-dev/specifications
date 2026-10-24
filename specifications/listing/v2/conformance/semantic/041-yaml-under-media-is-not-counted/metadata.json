@@ -1,0 +1,12 @@
+{
+  "id": "semantic-041-yaml-under-media-is-not-counted",
+  "phase": "semantic",
+  "expected": "pass",
+  "clause": "specifications/listing/v2/spec.md#identity",
+  "requirements": [
+    "CORE-ITEM-002",
+    "LIST-ITEM-002"
+  ],
+  "summary": "A YAML file under media/ is no component document: it is neither counted nor read.",
+  "document": "pgvector/listing.yaml"
+}

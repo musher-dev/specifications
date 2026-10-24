@@ -1,29 +1,51 @@
-/** Language-neutral observable behavior fixtures; no live account or network. */
+/**
+ * Language-neutral behavioural fixtures (docs/conformance.md, Behavioural
+ * cases): each entry names a behaviour suite and an operation, and pins
+ * observations over a synthetic context. No live account and no network.
+ */
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path'
 import { canonicalJson, discoverKinds, type Family, isObject, type Json } from '../lib/layout.ts'
 import { familyBundle } from '../schema/bundle.ts'
-import { parseDocumentBytes } from '../validation/document.ts'
+import { type Phase, parseDocumentBytes, RESOLUTION_STAGES } from '../validation/document.ts'
 import { normalizeDocument } from '../validation/normalization.ts'
 import { formControls, renderListing } from '../validation/presentation.ts'
 import {
   credential,
-  type InstallationContext,
   inspectValue,
   type RecordContext,
+  type ResolutionContext,
   type ResolutionRecord,
   type ResolvedValue,
   resolutionRecord,
-  resolveInstallation,
+  resolveDeployment,
 } from '../validation/resolution.ts'
 import { at, record, semanticReport } from '../validation/semantic.ts'
 import { validateDocument } from '../validation/validator.ts'
 import { observeConnectionLifecycle } from './connection-lifecycle.ts'
 
+/** The behaviour suites, and the operations each one runs. */
+export const SUITES = {
+  normalization: ['normalize'],
+  resolution: ['resolve', 'validate', 'record'],
+  rendering: ['render', 'form'],
+  lifecycle: ['credential', 'revision', 'connection'],
+} as const
+export type Suite = keyof typeof SUITES
+
+/** Phases a behavioural diagnostic may declare: every document phase, and `resolution`. */
+const BEHAVIOUR_PHASES: readonly Phase[] = [
+  'parser',
+  'structural',
+  'semantic',
+  'admission',
+  'resolution',
+]
+
 export interface BehaviorCase {
   id: string
-  profile: 'normalization' | 'resolution' | 'rendering' | 'lifecycle'
+  suite: Suite
   operation:
     | 'normalize'
     | 'resolve'
@@ -60,12 +82,12 @@ export function observe(family: Family, c: BehaviorCase): Json {
     const parsed = parseDocumentBytes(source)
     const document = 'value' in parsed ? parsed.value : null
     const component = discoverKinds(family.repoRoot).find((f) => f.name === 'component')
-    const context: InstallationContext = {
+    const context: ResolutionContext = {
       ...record(c.context),
       ...(path ? { itemRoot: dirname(path), documentPath: path } : {}),
       checkComponent: (bytes) =>
         component !== undefined && validateDocument(component, bytes).status === 'VALID',
-    } as InstallationContext
+    } as ResolutionContext
     if ('errors' in parsed && c.operation !== 'validate')
       throw new Error('behavior input does not parse')
     if (c.operation === 'connection') return observeConnectionLifecycle(c.input ?? null)
@@ -83,7 +105,7 @@ export function observe(family: Family, c: BehaviorCase): Json {
         ? { status: 'VALID', diagnostics: [] }
         : {
             status: 'INVALID',
-            diagnostics: [{ code: 'ERR_VERSION_NOT_MONOTONIC', path: '/metadata/revision' }],
+            diagnostics: [{ code: 'ERR_REVISION_NOT_INCREASING', path: '/metadata/revision' }],
           }
     }
     if (c.operation === 'record') {
@@ -94,7 +116,7 @@ export function observe(family: Family, c: BehaviorCase): Json {
           record: resolutionRecord(
             Buffer.from(String(v.blueprint)),
             record(v.specifications) as Record<string, string>,
-            v.components as unknown as ResolutionRecord['components'],
+            v.nodes as unknown as ResolutionRecord['nodes'],
             v.variables as unknown as ResolutionRecord['variables'],
             v.credentials as unknown as ResolutionRecord['credentials'],
             { ...context, ...record(v.recordContext) } as unknown as RecordContext,
@@ -125,7 +147,7 @@ export function observe(family: Family, c: BehaviorCase): Json {
       }
     }
     if (c.operation === 'resolve') {
-      const result = resolveInstallation(document, context, discoverKinds(family.repoRoot))
+      const result = resolveDeployment(document, context, discoverKinds(family.repoRoot))
       return {
         ...result,
         inspection: Object.fromEntries(
@@ -162,7 +184,7 @@ export function observe(family: Family, c: BehaviorCase): Json {
       values.push(
         credential(
           store,
-          String(at(step, 'installation')),
+          String(at(step, 'deployment')),
           String(at(step, 'parameter')),
           Number(at(step, 'rotation')),
           () => ({ value: 'synthetic-' + ++generated, sensitive: true }),
@@ -195,6 +217,8 @@ export function runBehaviorCases(family: Family, log: (line: string) => void) {
     ran: 0,
     requirements: new Set<string>(),
     codes: new Set<string>(),
+    /** Each declared diagnostic's code and phase, for the registry check. */
+    phases: [] as { code: string; phase: Phase }[],
     failures: [] as string[],
   }
   if (!existsSync(path)) return result
@@ -205,20 +229,35 @@ export function runBehaviorCases(family: Family, log: (line: string) => void) {
       if (
         !c.id ||
         seen.has(c.id) ||
-        !['normalization', 'resolution', 'rendering', 'lifecycle'].includes(c.profile) ||
+        !Object.hasOwn(SUITES, c.suite) ||
         !Array.isArray(c.requirements) ||
         !isObject(c.expect)
       )
         throw new Error('invalid behavior fixture')
       seen.add(c.id)
-      const operations = {
-        normalization: ['normalize'],
-        resolution: ['resolve', 'validate', 'record'],
-        rendering: ['render', 'form'],
-        lifecycle: ['credential', 'revision', 'connection'],
+      if (!(SUITES[c.suite] as readonly string[]).includes(c.operation))
+        throw new Error(`operation ${c.operation} does not belong to suite ${c.suite}`)
+      for (const expected of c.diagnostics ?? []) {
+        // A resolution diagnostic names its stage, and only a resolution
+        // diagnostic has one (core v2 §6.4).
+        if (expected.phase !== undefined && !BEHAVIOUR_PHASES.includes(expected.phase as Phase))
+          throw new Error(`diagnostic phase "${expected.phase}" is not a validation phase`)
+        if (expected.phase === 'resolution' && expected.stage === undefined)
+          throw new Error(`resolution diagnostic ${expected.code} declares no stage`)
+        if (
+          expected.stage !== undefined &&
+          expected.phase !== undefined &&
+          expected.phase !== 'resolution'
+        )
+          throw new Error(
+            `diagnostic ${expected.code} declares a stage outside the resolution phase`,
+          )
+        if (
+          expected.stage !== undefined &&
+          !(RESOLUTION_STAGES as readonly string[]).includes(expected.stage)
+        )
+          throw new Error(`diagnostic stage "${expected.stage}" is not a resolution stage`)
       }
-      if (!operations[c.profile].includes(c.operation))
-        throw new Error('operation does not belong to profile')
       const observed = observe(family, c)
       for (const expected of c.diagnostics ?? []) {
         const produced = at(observed, 'diagnostics')
@@ -236,6 +275,8 @@ export function runBehaviorCases(family: Family, log: (line: string) => void) {
         )
           throw new Error('declared behavioural diagnostic was not produced')
         result.codes.add(expected.code)
+        if (expected.phase !== undefined)
+          result.phases.push({ code: expected.code, phase: expected.phase as Phase })
       }
       for (const [path, expected] of Object.entries(c.expect)) {
         const value = pointer(observed, path)
@@ -245,7 +286,7 @@ export function runBehaviorCases(family: Family, log: (line: string) => void) {
       }
       for (const requirement of c.requirements) result.requirements.add(requirement)
       result.ran++
-      log(`  ✓ ${family.name}/${family.major}/${c.id} (${c.profile})`)
+      log(`  ✓ ${family.name}/${family.major}/${c.id} (${c.suite})`)
     } catch (error) {
       result.failures.push(`${family.name}/${c.id}: ${(error as Error).message}`)
     }

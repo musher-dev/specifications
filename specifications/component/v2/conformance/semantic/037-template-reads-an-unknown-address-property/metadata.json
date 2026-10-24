@@ -1,0 +1,10 @@
+{
+  "id": "semantic-037-template-reads-an-unknown-address-property",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#outputs",
+  "requirements": [
+    "COMP-PLACEHOLDER-001"
+  ],
+  "summary": "A template reading a property the address table does not define, of a declared endpoint, is rejected."
+}

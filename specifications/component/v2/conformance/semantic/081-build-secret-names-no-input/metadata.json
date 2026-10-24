@@ -1,0 +1,10 @@
+{
+  "id": "semantic-081-build-secret-names-no-input",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#source",
+  "requirements": [
+    "COMP-BUILD-004"
+  ],
+  "summary": "A build secret naming an input the component does not declare is rejected."
+}

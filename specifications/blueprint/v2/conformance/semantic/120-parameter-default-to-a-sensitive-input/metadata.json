@@ -1,0 +1,11 @@
+{
+  "id": "semantic-120-parameter-default-to-a-sensitive-input",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#value-sources",
+  "requirements": [
+    "BP-PARAM-014"
+  ],
+  "summary": "A parameter default that reaches a sensitive input is an authored literal, and is rejected.",
+  "document": "app/blueprint.yaml"
+}

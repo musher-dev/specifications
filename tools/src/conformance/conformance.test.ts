@@ -14,6 +14,7 @@ import {
   checkClauseConsistency,
   loadContext,
   runConformance,
+  scopeFor,
 } from './conformance.ts'
 
 let repo: FixtureRepo | null = null
@@ -75,7 +76,7 @@ function kindSpec(options: {
       : [
           '## <a id="envelope"></a>2. Document envelope',
           '',
-          '| Core parameter | This family |',
+          '| Left to the family | This family |',
           '|---|---|',
           `| \`kind\` | \`${upper}\` |`,
           '| `metadata` | [§3](#metadata) |',
@@ -84,7 +85,7 @@ function kindSpec(options: {
           '',
           '**Normative dependencies**',
           '',
-          '| Specification | Line |',
+          '| Specification | Major version |',
           '|---|---|',
           ...dependencies.map((d) => `| [${d}](../../${d}/v1/spec.md) | v1 |`),
           '',
@@ -351,6 +352,53 @@ describe('the core corpus', () => {
         `${join(fx.root, familyPaths(CORE_FAMILY, 'v1').spec)} but no indexed case in any corpus ` +
         'exercises it. Add a fixture, or record it in UNCOVERED with a reason.',
     )
+  })
+})
+
+describe('codes named in the prose', () => {
+  const withMigration = (row: string) =>
+    [
+      CORE_ONLY_SPEC,
+      '',
+      '### <a id="migration"></a>1.4 Migration from v1',
+      '',
+      '| v1 | v2 | Why |',
+      '|---|---|---|',
+      row,
+      '',
+      '## <a id="envelope"></a>2. Document envelope',
+      '',
+      'Prose naming `ERR_WITHDRAWN_LATER`.',
+    ].join('\n')
+
+  test("a migration table's first column may name a withdrawn code; the rest may not", () => {
+    const fx = fixture()
+    writeCore(fx, withMigration('| `ERR_WITHDRAWN` | `ERR_DUPLICATE_KEY` | Renamed. |'))
+    writeCoreIndex(fx, [])
+    const messages = runConformance(fx.root, () => {}).failures.messages
+    expect(messages.some((m) => m.includes('ERR_WITHDRAWN is named'))).toBe(false)
+    // The section ends at the next heading of its level or above.
+    expect(messages.some((m) => m.includes('ERR_WITHDRAWN_LATER is named'))).toBe(true)
+  })
+
+  test("a migration table's new column is checked like any prose", () => {
+    const fx = fixture()
+    writeCore(fx, withMigration('| `ERR_DUPLICATE_KEY` | `ERR_NOWHERE` | Renamed. |'))
+    writeCoreIndex(fx, [])
+    const messages = runConformance(fx.root, () => {}).failures.messages
+    expect(messages.some((m) => m.includes('ERR_NOWHERE is named'))).toBe(true)
+  })
+})
+
+describe('scopeFor', () => {
+  test('climbs the lattice only as far as the implemented phases and suites reach', () => {
+    const document = new Set(['parser', 'structural', 'semantic'] as const)
+    expect(scopeFor(new Set())).toBeNull()
+    expect(scopeFor(new Set(['parser'] as const))).toBe('parser')
+    expect(scopeFor(document, new Set(['resolution'] as const))).toBe('document')
+    const all = new Set([...document, 'admission'] as const)
+    expect(scopeFor(all)).toBe('publication')
+    expect(scopeFor(all, new Set(['resolution'] as const))).toBe('deployment')
   })
 })
 

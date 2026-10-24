@@ -29,9 +29,9 @@ the deploying user's to supply, and that the two arrive together.
 
 ### What the graph already does, and the one thing it cannot
 
-[Component §6](../../specifications/component/v1/spec.md#contract) already
+[Component §6](../../specifications/component/v2/spec.md#contract) already
 models what a node consumes and publishes, and
-[blueprint §4.2](../../specifications/blueprint/v1/spec.md#connections) already
+[blueprint §4.2](../../specifications/blueprint/v2/spec.md#connections) already
 wires one node's output into another node's input, consumer-anchored, one wire
 per input. A composition of a thing-we-run and a thing-we-do-not is a graph of
 two nodes and three wires, and every part of that is expressible today except
@@ -93,7 +93,7 @@ inputs and outputs with no restructuring, and the block itself carries only what
 
 **Rejected: `spec.remote`.** `remote` is spent twice. CLAUDE.md's second
 non-negotiable uses it for a `$ref` that leaves the bundle, and
-[listing §5](../../specifications/listing/v1/spec.md#media) for a URL outside
+[listing §5](../../specifications/listing/v2/spec.md#media) for a URL outside
 the item. Both mean *the bytes are somewhere else*; this block means *this
 platform does not run it*. It is also an adjective about location, and a
 workload in another region is remote and is still ours.
@@ -119,7 +119,7 @@ forbid `source`, `endpoints`, `command`, `schedule`, `volumes`, `health` and
 only the discriminator. Every existing branch in that block *adds* a constraint
 to a kind; this one would subtract the block's own `required: ["source"]`,
 making `source` "required except on one kind", which is the inverse shape. And
-[component §5](../../specifications/component/v1/spec.md#workload) opens by
+[component §5](../../specifications/component/v2/spec.md#workload) opens by
 saying `spec.workload` is how the component runs, which a kind that runs nothing
 falsifies in the section's first sentence.
 
@@ -138,7 +138,7 @@ set of well-known entries, never a set of independent fields.
 
 An external node exists so another node can consume something. One publishing
 nothing is a node nothing can need, which is the argument
-[component §5](../../specifications/component/v1/spec.md#workload) already makes
+[component §5](../../specifications/component/v2/spec.md#workload) already makes
 for a `SERVICE` that exposes no endpoint. Both spellings of "none" are rejected
 and carry the codes that section gives them: an absent `contract` is
 `ERR_MISSING_FIELD` and an empty `outputs` mapping is `ERR_INVALID_VALUE`.
@@ -148,7 +148,7 @@ running workload. `DECLARED` stays available, and so does §3's `INPUT`.
 
 A `platformDefault` and a `generator` are both rejected on an external
 component's inputs, for the pair of reasons
-[component §6.1](../../specifications/component/v1/spec.md#inputs) already gives
+[component §6.1](../../specifications/component/v2/spec.md#inputs) already gives
 for excluding them beside `suppliedBy: CONNECTION`: a platform default derives
 from the component's own public addressing, which an external node does not
 have, and a generator mints a secret this platform would then not be sharing
@@ -190,7 +190,7 @@ says an output MUST NOT depend on a value the component received over an inbound
 connection, and states its own reason immediately after: every output in a
 composition is resolvable before any connection is bound, so a cycle among the
 connections leaves nothing unresolved — which is what makes
-[blueprint §4.2](../../specifications/blueprint/v1/spec.md#connections)'s legal
+[blueprint §4.2](../../specifications/blueprint/v2/spec.md#connections)'s legal
 cycles sound.
 
 Measured against that reason rather than its wording, a `USER` input resolves at
@@ -244,7 +244,7 @@ connection compares. A node's says what the node is, which is what a consumer of
 the graph reads to know it is looking at one thing rather than three. Three
 tagged outputs do not compose into a node identity, and electing one of them as
 the node's identity is the designated-primary mistake
-[listing §3](../../specifications/listing/v1/spec.md#identity) rejects for a
+[listing §3](../../specifications/listing/v2/spec.md#identity) rejects for a
 `COMPONENT` item. One grammar, one registry, two placements answering two
 questions — the same grammar-here, membership-there split blueprint `size`
 already has.

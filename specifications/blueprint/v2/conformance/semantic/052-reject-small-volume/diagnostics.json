@@ -1,0 +1,6 @@
+[
+  {
+    "code": "ERR_INVALID_VOLUME_ALLOCATION",
+    "path": "/spec/nodes/web/volumes/data"
+  }
+]

@@ -1,0 +1,16 @@
+# §5's file rules reach every overview image, including one in
+# `gettingStarted`. `media/first-query.png` is a well-formed media path naming a
+# file the item does not ship; the icon resolves, so this is the only fault.
+specVersion: v2
+kind: LISTING
+metadata:
+  slug: pgvector
+spec:
+  itemType: COMPONENT
+  displayName: pgvector
+  summary: Vector similarity search for PostgreSQL
+  category: DATABASES
+  lifecycleStage: STABLE
+  gettingStarted: |
+    ![First query](media/first-query.png)
+  icon: media/icon.png

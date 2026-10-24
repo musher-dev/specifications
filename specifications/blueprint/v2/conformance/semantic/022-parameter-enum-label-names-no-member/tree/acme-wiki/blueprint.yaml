@@ -1,0 +1,25 @@
+specVersion: v2
+kind: BLUEPRINT
+metadata:
+  slug: acme-wiki
+  revision: 1
+  description: Synthetic conformance fixture blueprint.
+spec:
+  parameters:
+    backend:
+      ui:
+        label: Storage backend
+        enumLabels:
+          S3: Amazon S3
+          AZUR: Azure Blob Storage
+  nodes:
+    db:
+      componentRef: ./components/postgres.yaml
+      compute:
+        profile: general.standard.small
+      volumes: {}
+      exposure:
+        primary: PRIVATE
+      bindings:
+        backend:
+          parameter: backend

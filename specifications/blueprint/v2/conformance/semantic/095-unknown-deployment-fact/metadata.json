@@ -1,0 +1,11 @@
+{
+  "id": "semantic-095-unknown-deployment-fact",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#value-sources",
+  "requirements": [
+    "BP-PARAM-011"
+  ],
+  "summary": "The deployment namespace defines only the creator facts.",
+  "document": "app/blueprint.yaml"
+}

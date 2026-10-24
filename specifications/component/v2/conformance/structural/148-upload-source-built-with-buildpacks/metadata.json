@@ -1,0 +1,13 @@
+{
+  "id": "structural-148-upload-source-built-with-buildpacks",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#source",
+  "requirements": [
+    "COMP-SRC-001",
+    "COMP-SRC-005",
+    "COMP-BUILD-001",
+    "COMP-BUILD-002"
+  ],
+  "summary": "An upload source named by its digest, built with a buildpacks builder, validates."
+}

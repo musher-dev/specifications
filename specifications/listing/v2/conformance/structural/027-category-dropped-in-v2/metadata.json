@@ -1,0 +1,7 @@
+{
+  "id": "structural-027-category-dropped-in-v2",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/listing/v2/spec.md#vocabularies",
+  "summary": "The v1 category AI_ML is outside the v2 vocabulary."
+}

@@ -7,12 +7,12 @@ import { discoverKinds, type Json } from '../lib/layout.ts'
 import { MAX_DEPTH, parseDocument, parseDocumentBytes } from './document.ts'
 import {
   credential,
-  type InstallationContext,
   inspectValue,
   type RecordContext,
+  type ResolutionContext,
   type ResolvedValue,
   resolutionRecord,
-  resolveInstallation,
+  resolveDeployment,
   sameResolution,
 } from './resolution.ts'
 import { validateDocument } from './validator.ts'
@@ -26,19 +26,19 @@ afterEach(() => {
   for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true })
 })
 const component = (inputs: object = {}, outputs: object = {}) => ({
-  specVersion: 'v1',
+  specVersion: 'v2',
   kind: 'COMPONENT',
   metadata: { revision: 1, description: 'A synthetic worker.' },
   spec: {
     type: 'WORKER',
-    workload: { source: { image: 'example/worker:1' } },
+    workload: { source: { image: 'example/worker@sha256:' + 'a'.repeat(64) } },
     contract: { inputs, outputs },
   },
 })
 const input = (schema: object = { type: 'string' }, extra: object = {}) => ({
   description: 'A value',
   schema,
-  target: { envVarKey: 'VALUE' },
+  target: { envVar: 'VALUE' },
   ...extra,
 })
 function item(
@@ -64,10 +64,10 @@ function item(
     }),
   )
   const document = {
-    specVersion: 'v1',
+    specVersion: 'v2',
     kind: 'BLUEPRINT',
     metadata: { slug: 'app', revision: 1, description: 'A synthetic application.' },
-    spec: { components: nodes, parameters },
+    spec: { nodes, parameters },
   }
   const documentPath = join(itemRoot, 'blueprint.yaml')
   writeFileSync(documentPath, JSON.stringify(document))
@@ -118,19 +118,19 @@ test('definition defaults and secrets are validated', () => {
     value: input({ type: 'string' }, { sensitive: true, default: 'synthetic' }),
   })
   expect(validateDocument(componentFamily, JSON.stringify(secret)).diagnostics).toContainEqual(
-    expect.objectContaining({ code: 'ERR_SECRET_LITERAL' }),
+    expect.objectContaining({ code: 'ERR_SENSITIVE_LITERAL' }),
   )
 })
 test('unrelated nodes never inherit existing parameter bindings', () => {
   const c = component({ apiKey: input({ type: 'string' }, { required: false }) })
   const first = item({ web: c }, { web: { apiKey: { parameter: 'key' } } }, { key: {} })
-  const result = resolveInstallation(first.document, {
+  const result = resolveDeployment(first.document, {
     ...first.context,
     parameters: { key: { value: 'synthetic', sensitive: true } },
   })
   expect(result.status).toBe('VALID')
   const second = item({ web: c, other: c }, { web: { apiKey: { parameter: 'key' } } }, { key: {} })
-  const added = resolveInstallation(second.document, {
+  const added = resolveDeployment(second.document, {
     ...second.context,
     parameters: { key: { value: 'synthetic', sensitive: true } },
   })
@@ -151,28 +151,28 @@ test('a variable is authorized, typed, sensitive and never submitted', () => {
     version: '7',
     authorized: true,
   }
-  const resolved = resolveInstallation(setup.document, {
+  const resolved = resolveDeployment(setup.document, {
     ...setup.context,
     variables: { 'errors.reportingURL': variable },
   })
   expect(resolved.status).toBe('VALID')
   expect(resolved.inputs['web:in:url']?.sensitive).toBe(true)
   expect(inspectValue(resolved.inputs['web:in:url']!)).toEqual({ sensitive: true, redacted: true })
-  expect(resolveInstallation(setup.document, setup.context).status).toBe('INCOMPLETE')
+  expect(resolveDeployment(setup.document, setup.context).status).toBe('INCOMPLETE')
   expect(
-    resolveInstallation(setup.document, {
+    resolveDeployment(setup.document, {
       ...setup.context,
       variables: { 'errors.reportingURL': { ...variable, authorized: false } },
     }).diagnostics,
   ).toContainEqual(expect.objectContaining({ code: 'ERR_VARIABLE_NOT_AUTHORIZED' }))
   expect(
-    resolveInstallation(setup.document, {
+    resolveDeployment(setup.document, {
       ...setup.context,
       variables: { 'errors.reportingURL': { ...variable, value: 123 } },
     }).diagnostics,
   ).toContainEqual(expect.objectContaining({ code: 'ERR_VALUE_CONSTRAINT' }))
   expect(
-    resolveInstallation(setup.document, {
+    resolveDeployment(setup.document, {
       ...setup.context,
       variables: { 'errors.reportingURL': variable },
       parameters: { baseURL: { value: 'https://other.invalid', sensitive: false } },
@@ -202,7 +202,7 @@ test('a variable failure is reported once per parameter, at its from', () => {
     version: '7',
     authorized: false,
   }
-  const denied = resolveInstallation(setup.document, {
+  const denied = resolveDeployment(setup.document, {
     ...setup.context,
     variables: { 'errors.reportingURL': variable },
   })
@@ -214,7 +214,7 @@ test('a variable failure is reported once per parameter, at its from', () => {
       stage: 'parameters',
     }),
   ])
-  expect(resolveInstallation(setup.document, setup.context).deferred).toEqual([
+  expect(resolveDeployment(setup.document, setup.context).deferred).toEqual([
     {
       rule: 'BP-PARAM-009',
       path: '/spec/parameters/reportingURL/from',
@@ -239,9 +239,10 @@ test('forwarding retains sensitivity and rejects value cycles', () => {
       web: { value: { parameter: 'key' } },
       other: { value: { node: 'web', output: 'value' } },
     },
-    { key: {} },
+    // BP-UI-005: a submitted parameter binding a required input is offered.
+    { key: { ui: { label: 'Key' } } },
   )
-  const result = resolveInstallation(setup.document, {
+  const result = resolveDeployment(setup.document, {
     ...setup.context,
     parameters: { key: { value: 'synthetic', sensitive: true } },
   })
@@ -254,30 +255,29 @@ test('forwarding retains sensitivity and rejects value cycles', () => {
       other: { value: { node: 'web', output: 'value' } },
     },
   )
-  expect(resolveInstallation(cycle.document, cycle.context).diagnostics).toContainEqual(
+  expect(resolveDeployment(cycle.document, cycle.context).diagnostics).toContainEqual(
     expect.objectContaining({ code: 'ERR_VALUE_CYCLE' }),
   )
 })
 test('published dependencies are incomplete without context and invalid with a bad digest', () => {
   const ref = '12345678-1234-1234-1234-123456789abc'
   const d = {
-    specVersion: 'v1',
+    specVersion: 'v2',
     kind: 'BLUEPRINT',
     metadata: { slug: 'app', revision: 1, description: 'A synthetic application.' },
     spec: {
-      components: {
+      nodes: {
         web: { componentRef: ref, revision: 1, compute: { profile: 'general.standard.small' } },
       },
     },
   }
   expect(validateDocument(blueprintFamily, JSON.stringify(d)).status).toBe('INCOMPLETE')
   expect(
-    validateDocument(blueprintFamily, JSON.stringify(d), { validationProfile: 'structural' })
-      .status,
+    validateDocument(blueprintFamily, JSON.stringify(d), { validationScope: 'structural' }).status,
   ).toBe('VALID')
   const source = JSON.stringify(component())
   const invalid = validateDocument(blueprintFamily, JSON.stringify(d), {
-    contracts: { [ref + '@1']: { source, digest: 'wrong' } },
+    componentDocuments: { [ref + '@1']: { source, digest: 'wrong' } },
   })
   expect(invalid.status).toBe('INVALID')
   const root = mkdtempSync(join(tmpdir(), 'musher-foundation-'))
@@ -287,7 +287,7 @@ test('published dependencies are incomplete without context and invalid with a b
   expect(
     validateDocument(blueprintFamily, JSON.stringify(d), {
       itemRoot,
-      contracts: {
+      componentDocuments: {
         [ref + '@1']: { source, digest: createHash('sha256').update(source).digest('hex') },
       },
     }).status,
@@ -322,8 +322,8 @@ function recordSetup() {
       compute: { identity: 'general.standard.small', version: '1' },
       identity: './web.yaml',
       revision: 1,
-      digest: createHash('sha256').update(JSON.stringify(c)).digest('hex'),
-      imageDigest: 'sha256:' + 'b'.repeat(64),
+      digest: 'sha256:' + createHash('sha256').update(JSON.stringify(c)).digest('hex'),
+      imageDigest: 'sha256:' + 'a'.repeat(64),
       volumes: {},
       exposure: {},
     },
@@ -332,7 +332,7 @@ function recordSetup() {
     ...setup.context,
     snapshot: {
       formatVersion: 1,
-      identity: 'installation-snapshot',
+      identity: 'deployment-snapshot',
       version: '1',
       parameters: { level: { value: 'debug', sensitive: true } },
       variables: {},
@@ -341,18 +341,18 @@ function recordSetup() {
     },
     specificationDependencies: {
       core: {},
-      component: { core: '1.0.0' },
-      blueprint: { core: '1.0.0', component: '1.0.0' },
+      component: { core: '2.0.0' },
+      blueprint: { core: '2.0.0', component: '2.0.0' },
     },
   }
-  const versions = { core: '1.0.0', component: '1.0.0', blueprint: '1.0.0' }
+  const versions = { core: '2.0.0', component: '2.0.0', blueprint: '2.0.0' }
   const bytes = Buffer.from(JSON.stringify(setup.document))
   return { setup, components, context, versions, bytes }
 }
 test('resolution record pins immutable snapshot without exposing submitted values', () => {
   const { bytes, versions, components, context } = recordSetup()
   const first = resolutionRecord(bytes, versions, components, {}, {}, context)
-  expect(first.installationSnapshot).toEqual({ identity: 'installation-snapshot', version: '1' })
+  expect(first.deploymentSnapshot).toEqual({ identity: 'deployment-snapshot', version: '1' })
   expect(JSON.stringify(first)).not.toContain('debug')
   const second = resolutionRecord(
     bytes,
@@ -374,7 +374,7 @@ test('resolution record pins immutable snapshot without exposing submitted value
     sameResolution(first, resolutionRecord(bytes, versions, components, {}, {}, context)),
   ).toBe(true)
 })
-test('record rejects arbitrary bytes, mismatched nodes, components and dependency editions', () => {
+test('record rejects arbitrary bytes, mismatched nodes, components and dependency releases', () => {
   const { bytes, versions, components, context } = recordSetup()
   expect(() =>
     resolutionRecord(Buffer.from('blueprint'), versions, components, {}, {}, context),
@@ -398,7 +398,7 @@ test('record rejects arbitrary bytes, mismatched nodes, components and dependenc
       ),
     ).toThrow()
   expect(() =>
-    resolutionRecord(bytes, { ...versions, core: '1.1.0' }, components, {}, {}, context),
+    resolutionRecord(bytes, { ...versions, core: '2.1.0' }, components, {}, {}, context),
   ).toThrow()
   expect(() =>
     resolutionRecord(
@@ -426,7 +426,7 @@ test('reference-free templates validate known values and authored secrets', () =
         path: '/spec/contract/outputs/value/from/template',
       }),
       expect.objectContaining({
-        code: 'ERR_SECRET_LITERAL',
+        code: 'ERR_SENSITIVE_LITERAL',
         path: '/spec/contract/outputs/value/from/template',
       }),
     ]),
@@ -434,7 +434,7 @@ test('reference-free templates validate known values and authored secrets', () =
 })
 test('unknown submitted parameter keys fail before defaults can hide misspellings', () => {
   const { setup } = recordSetup()
-  const result = resolveInstallation(setup.document, {
+  const result = resolveDeployment(setup.document, {
     ...setup.context,
     parameters: { verbosity: { value: 'debug', sensitive: false } },
   })
@@ -485,13 +485,13 @@ test('endpoint ports derive from declarations and allocation views cannot disagr
       ...c.spec,
       type: 'SERVICE',
       workload: {
-        source: { image: 'example/service:1' },
+        source: { image: 'example/service@sha256:' + 'a'.repeat(64) },
         endpoints: { web: { protocol: 'HTTP', targetPort: 8080 } },
       },
     },
   }
   const setup = item({ web: service }, {})
-  expect(resolveInstallation(setup.document, setup.context)).toMatchObject({
+  expect(resolveDeployment(setup.document, setup.context)).toMatchObject({
     status: 'VALID',
     outputs: { 'web:out:port': { value: 8080 } },
   })
@@ -502,7 +502,7 @@ test('endpoint ports derive from declarations and allocation views cannot disagr
     privatePort: 9090,
   }
   expect(
-    resolveInstallation(setup.document, {
+    resolveDeployment(setup.document, {
       ...setup.context,
       allocations: { web: { web: invalid } },
     }),
@@ -523,9 +523,9 @@ test('malformed allocation context returns diagnostics without throwing', () => 
     { web: { web: { identity: 'allocation', version: '1', public: null } } },
   ]) {
     expect(
-      resolveInstallation(setup.document, {
+      resolveDeployment(setup.document, {
         ...setup.context,
-        allocations: allocations as unknown as InstallationContext['allocations'],
+        allocations: allocations as unknown as ResolutionContext['allocations'],
       }).status,
     ).toBe('INVALID')
   }
@@ -548,14 +548,14 @@ test('dynamic output constraints report actual component location and resolution
       ...c.spec,
       type: 'SERVICE',
       workload: {
-        source: { image: 'example/service:1' },
+        source: { image: 'example/service@sha256:' + 'a'.repeat(64) },
         endpoints: { web: { protocol: 'HTTP', targetPort: 8080 } },
       },
     },
   }
   const setup = item({ web: service }, {})
   expect(
-    resolveInstallation(setup.document, {
+    resolveDeployment(setup.document, {
       ...setup.context,
       allocations: {
         web: { web: { identity: 'allocation', version: '1', privateHostname: 'short.internal' } },
@@ -566,7 +566,7 @@ test('dynamic output constraints report actual component location and resolution
       code: 'ERR_VALUE_CONSTRAINT',
       phase: 'resolution',
       stage: 'values',
-      path: '/spec/components/web/componentRef',
+      path: '/spec/nodes/web/componentRef',
       related: [{ artifact: './web.yaml', path: '/spec/contract/outputs/hostname' }],
     }),
   )

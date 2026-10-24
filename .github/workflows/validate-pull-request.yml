@@ -38,12 +38,22 @@ jobs:
 
       - uses: ./.github/actions/setup-tools
         with:
-          install-args: aqua:oven-sh/bun aqua:go-task/task
+          install-args: github:crate-ci/committed aqua:oven-sh/bun aqua:go-task/task
 
-      # Held to .github/conventional-commits.yaml by the same task a developer
-      # runs. The title reaches the shell through the environment, never
-      # through ${{ }} interpolation into the script: it is attacker-chosen.
-      - name: Check the title against the commit vocabulary
+      # The title is attacker-chosen, so it reaches the shell through the
+      # environment, never through ${{ }} interpolation into the script.
+      #
+      # committed applies .config/commits/committed.toml, the rules the
+      # commit-msg hook applies, with the title on stdin (COMMIT-04).
+      - name: Check the title passes committed
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: printf '%s\n' "$TITLE" | committed --config .config/commits/committed.toml --commit-file -
+
+      # committed cannot require a scope or a lowercase subject, so the same
+      # task a developer runs checks those, against the same file.
+      - name: Check the title has a scope and a lowercase subject
+        if: always()
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}
         run: task check:title

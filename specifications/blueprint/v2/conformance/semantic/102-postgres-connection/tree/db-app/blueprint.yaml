@@ -1,0 +1,49 @@
+{
+  "specVersion": "v2",
+  "kind": "BLUEPRINT",
+  "metadata": {
+    "slug": "db-app",
+    "revision": 1,
+    "description": "Synthetic conformance fixture blueprint."
+  },
+  "spec": {
+    "parameters": {
+      "db": {
+        "from": "${{ connections.postgres.default }}",
+        "ui": {
+          "label": "Database"
+        }
+      }
+    },
+    "nodes": {
+      "db": {
+        "componentRef": "./postgres.yaml",
+        "bindings": {
+          "postgres": {
+            "parameter": "db"
+          }
+        }
+      },
+      "app": {
+        "componentRef": "./app.yaml",
+        "compute": {
+          "profile": "general.standard.small"
+        },
+        "bindings": {
+          "databaseURL": {
+            "node": "db",
+            "output": "url"
+          },
+          "databaseHost": {
+            "node": "db",
+            "output": "host"
+          },
+          "databasePort": {
+            "node": "db",
+            "output": "port"
+          }
+        }
+      }
+    }
+  }
+}

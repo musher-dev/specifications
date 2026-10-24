@@ -1,0 +1,10 @@
+{
+  "id": "semantic-079-sensitive-member-into-an-insensitive-output",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#outputs",
+  "requirements": [
+    "COMP-OUT-004"
+  ],
+  "summary": "Forwarding the sensitive password member through an output not declared sensitive is rejected."
+}

@@ -1,0 +1,6 @@
+[
+  {
+    "code": "ERR_UNKNOWN_PARAMETER",
+    "path": "/spec/nodes/app-llm/bindings/llm/parameter"
+  }
+]

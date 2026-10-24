@@ -1,0 +1,11 @@
+{
+  "id": "semantic-072-deployment-fact-in-a-template",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#outputs",
+  "requirements": [
+    "COMP-PLACEHOLDER-001",
+    "CORE-PLACEHOLDER-003"
+  ],
+  "summary": "A component template admits only self, so a deployment fact is out of scope there."
+}

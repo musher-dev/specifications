@@ -1,0 +1,6 @@
+[
+  {
+    "code": "ERR_VALUE_CONSTRAINT",
+    "path": "/spec/nodes/web/bindings/value/value"
+  }
+]

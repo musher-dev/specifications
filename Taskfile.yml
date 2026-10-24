@@ -24,24 +24,33 @@ vars:
   # promises a directory the repository holds (TASK-08).
   SITE: site
 
-env:
-  # Keep bun's cache inside the workspace-visible cache dir the dev container
-  # already provisions, so a rebuild does not re-download the world.
-  BUN_INSTALL_CACHE_DIR: '{{.BUN_INSTALL_CACHE_DIR | default "/home/vscode/.cache/bun"}}'
+# No `env:` sets BUN_INSTALL_CACHE_DIR: the dev container sets it in
+# devcontainer.json, and anywhere else bun's own default applies. A path into
+# one user's home here would break every other checkout (TASK-16).
 
-# Namespaced except for build, which is flattened so `task bundle` and
-# `task site:build` keep the names CI, the hooks and CONTRIBUTING use. An
-# included file's `default` becomes the bare namespace, so `task setup` and
-# `task check` still work.
+# Every fragment is flattened (TASK-20), so each task answers to the name its
+# fragment writes. The fragments write their full names (`check:format`,
+# `ci:lint`, `setup:tools`), so those names, which CI, the hooks and
+# CONTRIBUTING use, did not change when the namespaces went away.
 includes:
-  setup: taskfiles/setup.Taskfile.yml
+  setup:
+    taskfile: taskfiles/setup.Taskfile.yml
+    flatten: true
   build:
     taskfile: taskfiles/build.Taskfile.yml
     flatten: true
-  check: taskfiles/check.Taskfile.yml
-  ci: taskfiles/ci.Taskfile.yml
-  release: taskfiles/release.Taskfile.yml
-  contracts: taskfiles/contracts.Taskfile.yml
+  check:
+    taskfile: taskfiles/check.Taskfile.yml
+    flatten: true
+  ci:
+    taskfile: taskfiles/ci.Taskfile.yml
+    flatten: true
+  release:
+    taskfile: taskfiles/release.Taskfile.yml
+    flatten: true
+  contracts:
+    taskfile: taskfiles/contracts.Taskfile.yml
+    flatten: true
 
 tasks:
   default:
@@ -88,10 +97,12 @@ tasks:
       - task: check:test
       - task: check:commits
       - task: check:docs
+      - task: check:terms
       - task: check:links
       - task: check:adr
       - task: check:md
       - task: check:spelling
+      - task: check:prose
       - task: check:shell
       - task: check:workflow
 
@@ -120,7 +131,7 @@ tasks:
         tools/node_modules/.bin/markdownlint-cli2 --fix
         --config .config/markdown/markdownlint.jsonc
         "**/*.md" "#tools/node_modules" "#site" "#.claude/worktrees" "#.github/pull_request_template.md"
-        "#specifications/*/v*/CHANGELOG.md"
+        "#specifications/*/v*/CHANGELOG.md" "#.config/markdown/styles"
 
   # ===========================================================================
   # Environment

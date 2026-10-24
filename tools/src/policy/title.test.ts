@@ -53,12 +53,12 @@ describe('titleProblems', () => {
 })
 
 describe('readVocabulary', () => {
-  test('reads this repository’s conventional-commits.yaml', () => {
+  test('reads this repository’s committed.toml, and requires a scope', () => {
     const vocabulary = readVocabulary()
     expect(vocabulary.types).toContain('chore')
     expect(vocabulary.scopes).toContain('repo')
     expect(vocabulary.scopes).not.toContain('main')
-    expect(vocabulary.requireScope).toBe(false)
+    expect(vocabulary.requireScope).toBe(true)
   })
 })
 
@@ -78,5 +78,6 @@ describe('the command line', () => {
   test('passes a valid title and fails an invalid one', () => {
     expect(run({ PR_TITLE: 'feat(component): add restartPolicy' }).status).toBe(0)
     expect(run({ PR_TITLE: 'chore(main): release component 1.0.0' }).status).toBe(1)
+    expect(run({ PR_TITLE: 'fix: an unscoped fix' }).status).toBe(1)
   })
 })

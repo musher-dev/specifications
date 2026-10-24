@@ -1,0 +1,10 @@
+{
+  "id": "structural-056-build-argument-name-outside-the-grammar",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#source",
+  "summary": "A build-argument name outside the environment-variable grammar is rejected.",
+  "requirements": [
+    "COMP-BUILD-003"
+  ]
+}

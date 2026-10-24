@@ -1,0 +1,50 @@
+specVersion: v2
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: SERVICE
+  workload:
+    source:
+      image: nginx:1.29.4-alpine
+    endpoints:
+      web:
+        targetPort: 8080
+        protocol: HTTP
+  contract:
+    inputs:
+      databaseURL:
+        description: Connection URL of the database the service reads and writes.
+        schema:
+          type: string
+        suppliedBy: CONNECTION
+        target:
+          envVar: DATABASE_URL
+      siteTitle:
+        description: Title shown in the site header.
+        schema:
+          type: string
+        ui:
+          label: Site title
+        target:
+          envVar: SITE_TITLE
+      sessionSecret:
+        description: Secret the service signs session cookies with.
+        schema:
+          type: string
+        generator:
+          byteLength: 32
+        sensitive: true
+        target:
+          envVar: SESSION_SECRET
+      publicURL:
+        description: Public URL the service is reached at.
+        schema:
+          type: string
+        platformDefault:
+          type: SELF_ADDRESS
+          source: PUBLIC_URL
+        target:
+          envVar: PUBLIC_URL
+    outputs: {}

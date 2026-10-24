@@ -1,0 +1,10 @@
+{
+  "id": "semantic-021-reject-secret-literal",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#value-schema",
+  "requirements": [
+    "COMP-VAL-005"
+  ],
+  "summary": "A literal default on a sensitive input is rejected with ERR_SENSITIVE_LITERAL."
+}

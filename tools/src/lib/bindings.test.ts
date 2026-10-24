@@ -21,7 +21,7 @@ function template(options: {
     '',
     'Scope prose, with an unrelated table.',
     '',
-    '| Core parameter | This family |',
+    '| Left to the family | This family |',
     '|---|---|',
     '| `kind` | `DECOY` |',
     '',
@@ -39,7 +39,7 @@ function template(options: {
     'every rule of core v1 applies to it. This family binds the parameters',
     '[core v1 §1.1](../../core/v1/spec.md#bindings) leaves to a family:',
     '',
-    '| Core parameter | This family |',
+    '| Left to the family | This family |',
     '|---|---|',
     `| \`kind\` ([\`CORE-ENV-002\`](../../core/v1/spec.md#CORE-ENV-002)) | \`${options.kind}\` |`,
     `| \`metadata\` ([\`CORE-ENV-003\`](../../core/v1/spec.md#CORE-ENV-003)) | ${options.metadata} |`,
@@ -53,14 +53,14 @@ function template(options: {
     '',
     '**Normative dependencies**',
     '',
-    '| Specification | Line |',
+    '| Specification | Major version |',
     '|---|---|',
     '| [core](../../core/v1/spec.md) | v1 |',
     ...(options.extraDependencies ?? []),
     '',
     '## <a id="metadata"></a>3. Metadata',
     '',
-    '| Specification | Line |',
+    '| Specification | Major version |',
     '|---|---|',
     '| [decoy](../../decoy/v9/spec.md) | v9 |',
     '',
@@ -158,11 +158,27 @@ describe('parseBindings', () => {
   })
 
   test('throws when only one of the two tables is present', () => {
-    const noDependencies = LISTING.replace('| Specification | Line |', '| Something | Else |')
+    const noDependencies = LISTING.replace(
+      '| Specification | Major version |',
+      '| Something | Else |',
+    )
     expect(thrown(() => parseBindings(noDependencies))).toBeInstanceOf(BindingsError)
 
-    const noParameters = LISTING.replace(/\| Core parameter \| This family \|/g, '| A | B |')
+    const noParameters = LISTING.replace(/\| Left to the family \| This family \|/g, '| A | B |')
     expect(thrown(() => parseBindings(noParameters))).toBeInstanceOf(BindingsError)
+  })
+
+  test('rejects the headers from before the v2 renames', () => {
+    const legacyParameters = LISTING.replace(
+      /\| Left to the family \| This family \|/g,
+      '| Core parameter | This family |',
+    )
+    expect(thrown(() => parseBindings(legacyParameters))).toBeInstanceOf(BindingsError)
+    const legacyDependencies = LISTING.replace(
+      /\| Specification \| Major version \|/g,
+      '| Specification | Line |',
+    )
+    expect(thrown(() => parseBindings(legacyDependencies))).toBeInstanceOf(BindingsError)
   })
 
   test('throws on a row the template does not describe, rather than skipping it', () => {

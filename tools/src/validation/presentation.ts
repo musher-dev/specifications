@@ -1,8 +1,8 @@
 /** Non-normative presentation adapter over validated contracts. */
 import { HtmlRenderer, Parser } from 'commonmark'
 import type { Json } from '../lib/layout.ts'
-import { parameterSource } from './connections.ts'
 import { MEDIA_PATH, schemeIsPermitted } from './listing-policy.ts'
+import { parameterOrigin } from './selections.ts'
 import { at, record } from './semantic.ts'
 export function renderListing(
   markdown: string,
@@ -36,23 +36,23 @@ export function formControls(blueprint: Json, components: ReadonlyMap<string, Js
     // Blueprint §5.4: generated values, hashes, variables and deployment facts are
     // never editable fields. A connection is offered as a whole selection, never
     // as its members.
-    const source = parameterSource(p)
+    const origin = parameterOrigin(p)
     if (
       !p.ui ||
       p.generator ||
       p.hash ||
-      source?.namespace === 'variables' ||
-      source?.namespace === 'deployment'
+      origin?.namespace === 'variables' ||
+      origin?.namespace === 'deployment'
     )
       continue
     const receivers: Record<string, Json>[] = []
-    for (const [node, n] of Object.entries(record(at(blueprint, 'spec', 'components'))).sort())
+    for (const [node, n] of Object.entries(record(at(blueprint, 'spec', 'nodes'))).sort())
       for (const [key, b] of Object.entries(record(at(n, 'bindings'))).sort())
         if (at(b, 'parameter') === name)
           receivers.push(record(at(components.get(node), 'spec', 'contract', 'inputs', key)))
     const schema = record(receivers[0]?.schema)
     const control =
-      source?.namespace === 'connections'
+      origin?.namespace === 'connections'
         ? 'connection'
         : receivers.some((v) => v.sensitive === true)
           ? 'secret'

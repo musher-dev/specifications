@@ -51,7 +51,7 @@ describe('install-form controls', () => {
           key: { generator: {}, ui: { label: 'Key' } },
           title: { ui: { label: 'Title', order: 1 } },
         },
-        components: { web: { bindings: { title: { parameter: 'title' } } } },
+        nodes: { web: { bindings: { title: { parameter: 'title' } } } },
       },
     }
     const components = new Map([

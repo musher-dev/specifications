@@ -83,6 +83,32 @@ describe('replayRelease', () => {
       expect(failures.count).toBe(0)
     })
 
+    test('skips a retired major whose directory is gone, and says why', () => {
+      const fx = cut()
+      fx.remove(COMPONENT.dir)
+      fx.commit('refactor(component): retire v1')
+      const failures = new Failures()
+      expect(replayAll(fx.root, failures)).toEqual({ replayed: 0, checked: 1 })
+      expect(failures.count).toBe(0)
+    })
+
+    test('fails a tagged major that is missing but not retired', () => {
+      const fx = new FixtureRepo()
+      repo = fx
+      const p = new Pipeline(fx)
+      const v3 = familyPaths('component', 'v3')
+      p.releaseKind('component', 'v3', '3.0.0', fx.bundleDoc('component', 'v3'), {
+        publish: false,
+      })
+      fx.remove(v3.dir)
+      fx.commit('refactor(component): drop v3 without retiring it')
+      const failures = new Failures()
+      replayAll(fx.root, failures)
+      expect(failures.messages.join('\n')).toContain(
+        'component/v3.0.0: no component/v3 in the working tree, and v3 is not a retired major',
+      )
+    })
+
     test('still replays a kind release beside a core one', () => {
       const fx = cut()
       const failures = new Failures()

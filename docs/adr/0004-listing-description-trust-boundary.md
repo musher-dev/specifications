@@ -17,7 +17,7 @@ conforming listing may contain `<script>`, and
 the specification forbids, where the gap has a security consequence" as a
 vulnerability class in this repository.
 
-The asymmetry in [listing §4](../../specifications/listing/v1/spec.md#presentation)
+The asymmetry in [listing §4](../../specifications/listing/v2/spec.md#presentation)
 made the gap visible before this ADR did. `summary` — a 280-character tagline
 that cannot hurt anyone — is constrained: it "MUST NOT be rendered as Markdown".
 `description` — the field that can — is not.
@@ -64,7 +64,7 @@ repository's.
 |---|---|---|
 | Raw HTML | Forbidden | The direct script-execution vector. |
 | Link destination | `https`, `http`, `mailto`, or a fragment | `javascript:` is script execution wearing a link. |
-| Image destination | An item media path per [listing §5](../../specifications/listing/v1/spec.md#media) | A remote image is a per-view beacon. |
+| Image destination | An item media path per [listing §5](../../specifications/listing/v2/spec.md#media) | A remote image is a per-view beacon. |
 
 The image rule is the one that needs its reasoning written down, because it is
 the one that looks like overreach. A remote image does not execute anything. It

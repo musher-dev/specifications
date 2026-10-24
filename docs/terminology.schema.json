@@ -1,0 +1,258 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Term records",
+  "description": "The shape of docs/terminology.yaml: one record per concept per context. Field names follow musher-dev/engineering-conventions' terminology schema wherever the two overlap (id, display_name, definition or authority, tags, stability, aliases, deprecated); the rest extend it with the concept relations and identifier claims this repository checks. Informative: tools/src/policy/terms.ts is what enforces the rules a schema cannot state.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "description", "terms"],
+  "properties": {
+    "schema_version": {
+      "description": "Version of this file's shape. Always 1.",
+      "const": 1
+    },
+    "description": {
+      "description": "What this file covers.",
+      "$ref": "#/$defs/nonEmptyString"
+    },
+    "terms": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/term" }
+    }
+  },
+  "$defs": {
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "termId": {
+      "description": "A term identifier: dot-separated lower-case kebab-case segments, the first naming the context, e.g. blueprint.node.",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*(\\.[a-z][a-z0-9]*(-[a-z0-9]+)*)*$"
+    },
+    "context": {
+      "description": "The bounded context a record belongs to. A homonym across contexts is two records.",
+      "enum": ["core", "component", "blueprint", "listing", "catalog", "deployment", "repository"]
+    },
+    "identifierList": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/nonEmptyString" }
+    },
+    "term": {
+      "description": "One concept in one context. It either defines itself (definition) or points at the upstream document that does (authority), never both.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "display_name", "context", "tags", "stability", "status"],
+      "properties": {
+        "id": { "$ref": "#/$defs/termId" },
+        "display_name": {
+          "description": "How the term is written in prose: lower case unless it is an identifier or a proper name.",
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "context": { "$ref": "#/$defs/context" },
+        "definition": {
+          "description": "Genus and differentia: what kind of thing this is, and what sets it apart from its siblings. It never starts with the term, never uses the term, and never begins 'is when'. It must read correctly when put in place of the term in a spec sentence.",
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "authority": {
+          "description": "The upstream document that defines this term. The term is listed so it can be linked and found, not redefined.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["repo", "path"],
+          "properties": {
+            "repo": {
+              "description": "A GitHub repository as owner/name.",
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9-]*/[A-Za-z0-9._-]+$"
+            },
+            "path": {
+              "description": "A path relative to that repository's root.",
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^([^/.\\s]|\\.[^/\\s])[^\\s]*$"
+            },
+            "anchor": {
+              "description": "The heading anchor within that document, without the leading #.",
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9-]*$"
+            }
+          }
+        },
+        "shortDefinition": {
+          "description": "One line for a tooltip or a table cell.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "pattern": "\\S"
+        },
+        "tags": {
+          "description": "Groupings the glossary page and the checks project from.",
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/termId" }
+        },
+        "stability": {
+          "description": "stable: changing it is a breaking change; provisional: may still change in a minor release.",
+          "enum": ["stable", "provisional"]
+        },
+        "status": {
+          "description": "approved: decided and reviewed; proposed: an open item the plan has not settled.",
+          "enum": ["proposed", "approved"]
+        },
+        "kind_of": {
+          "description": "The generic concepts this one is a kind of (ISO 1087 generic relation).",
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/termId" }
+        },
+        "part_of": {
+          "description": "The comprehensive concepts this one is a part of (ISO 1087 partitive relation).",
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/termId" }
+        },
+        "associated": {
+          "description": "Other named relations to other records (ISO 1087 associative relations).",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["relation", "term"],
+            "properties": {
+              "relation": {
+                "description": "The relation, as a lower-case kebab-case verb phrase read from this record to the other: deploys, receives-values-through.",
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$"
+              },
+              "term": { "$ref": "#/$defs/termId" }
+            }
+          }
+        },
+        "identifiers": {
+          "description": "The identifiers this record claims. check:terms fails on any identifier in a schema source or spec.md that no record claims.",
+          "type": "object",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "properties": {
+            "fields": {
+              "description": "Schema property names, written as a document path (/spec/nodes/*) or a bare name; the last segment other than * is the name claimed.",
+              "$ref": "#/$defs/identifierList"
+            },
+            "values": {
+              "description": "Enum and const string values.",
+              "$ref": "#/$defs/identifierList"
+            },
+            "codes": {
+              "description": "Diagnostic codes.",
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": { "type": "string", "pattern": "^ERR_[A-Z0-9_]+$" }
+            },
+            "requirement_prefixes": {
+              "description": "Requirement ID prefixes, the ID without its number: COMP-EP.",
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": { "type": "string", "pattern": "^[A-Z]{2,6}-[A-Z0-9]{2,12}$" }
+            },
+            "namespaces": {
+              "description": "Reserved placeholder namespaces.",
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": { "type": "string", "pattern": "^[a-z][a-zA-Z0-9]*$" }
+            },
+            "defs": {
+              "description": "Schema $defs keys.",
+              "$ref": "#/$defs/identifierList"
+            },
+            "grammars": {
+              "description": "x-musher-grammar values.",
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" }
+            }
+          }
+        },
+        "verbs": {
+          "description": "The verbs and derived forms the specs use with this term.",
+          "$ref": "#/$defs/identifierList"
+        },
+        "example": {
+          "description": "One sentence using the term correctly.",
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "confusables": {
+          "description": "Senses of the same word elsewhere that a reader may bring with them.",
+          "$ref": "#/$defs/identifierList"
+        },
+        "source": {
+          "description": "Where the concept is stated: spec sections as '<family> v<N> §<number>' and decisions as 'ADR <NNNN>'.",
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^((core|component|blueprint|listing) v[0-9]+ §[0-9]+(\\.[0-9]+)*|ADR [0-9]{4}( §[0-9]+)?|docs/[a-z0-9./-]+\\.md(#[a-z0-9-]+)?)$"
+          }
+        },
+        "aliases": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/alias" }
+        },
+        "deprecated": {
+          "description": "Set when the term should no longer be used.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["note"],
+          "properties": {
+            "note": { "$ref": "#/$defs/nonEmptyString" },
+            "replaced_by": { "$ref": "#/$defs/termId" }
+          }
+        }
+      },
+      "oneOf": [{ "required": ["definition"] }, { "required": ["authority"] }]
+    },
+    "alias": {
+      "description": "A word to avoid in favour of the term. banned aliases fail; discouraged ones warn. scope says where: prose (checked by the generated MusherSpecifications Vale style) or identifier (schema property names, enum values, $defs keys, diagnostic codes, requirement ID prefixes, reserved namespaces and grammar names, checked by check:terms within the record's context).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text", "status", "scope"],
+      "properties": {
+        "text": {
+          "description": "The word, phrase or identifier to avoid. A prose alias is lower case.",
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_][A-Za-z0-9 ._-]*$"
+        },
+        "status": { "enum": ["banned", "discouraged"] },
+        "scope": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["prose", "identifier"] }
+        },
+        "suggest": {
+          "description": "What to write instead, when that is not simply the term's display name.",
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "note": {
+          "description": "Why the alias is avoided.",
+          "$ref": "#/$defs/nonEmptyString"
+        }
+      },
+      "if": { "properties": { "scope": { "contains": { "const": "prose" } } } },
+      "then": { "properties": { "text": { "pattern": "^[a-z0-9][a-z0-9 ._-]*$" } } }
+    }
+  }
+}

@@ -1,0 +1,19 @@
+# `gettingStarted` is written in the overview Markdown profile and held to the
+# same rules, with the same diagnostics reported at its own pointer. The overview
+# here is clean, so the field this case measures is the only one at fault.
+specVersion: v2
+kind: LISTING
+metadata:
+  slug: pgvector
+spec:
+  itemType: COMPONENT
+  displayName: pgvector
+  summary: Vector similarity search for PostgreSQL
+  category: DATABASES
+  lifecycleStage: STABLE
+  overview: |
+    A PostgreSQL extension for vector similarity search.
+  gettingStarted: |
+    Enable the extension in each database that needs it.
+
+    <iframe src="https://tracker.example/embed"></iframe>

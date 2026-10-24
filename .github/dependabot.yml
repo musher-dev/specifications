@@ -10,7 +10,7 @@
 # Every `prefix` below is a Conventional Commits TYPE, optionally with a scope
 # appended by `include: 'scope'` -- Dependabot emits the prefix as the type, so
 # a value that is only a valid scope produces a message no gate will accept.
-# `task check:commits` holds these against .github/conventional-commits.yaml;
+# `task check:commits` holds these against .config/commits/committed.toml;
 # it was added because `prefix: 'devcontainer'` sat here wrong for months.
 #
 # `build`, `ci` and `chore` are all hidden in .github/release-please/config.json,

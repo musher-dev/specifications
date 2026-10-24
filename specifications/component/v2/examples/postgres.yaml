@@ -1,0 +1,67 @@
+specVersion: v2
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: PostgreSQL database reached through a connection, which Musher or the organization provides, handing its address and credentials to the nodes that use it.
+spec:
+  type: EXTERNAL
+  contract:
+    inputs:
+      postgres:
+        description: PostgreSQL database this node stands for.
+        connection:
+          protocol: POSTGRES
+    outputs:
+      url:
+        description: Connection URL, composed from the other members with the credential and sslmode.
+        schema:
+          type: string
+        sensitive: true
+        presentationHint: CONNECTION_STRING
+        from:
+          input: postgres
+          member: url
+      host:
+        description: Hostname of the database server.
+        schema:
+          type: string
+        presentationHint: HOSTNAME
+        from:
+          input: postgres
+          member: host
+      port:
+        description: Port the database server listens on.
+        schema:
+          type: integer
+        from:
+          input: postgres
+          member: port
+      database:
+        description: Name of the database to connect to.
+        schema:
+          type: string
+        from:
+          input: postgres
+          member: database
+      username:
+        description: User the deployment connects as.
+        schema:
+          type: string
+        from:
+          input: postgres
+          member: username
+      password:
+        description: Password of that user.
+        schema:
+          type: string
+        sensitive: true
+        from:
+          input: postgres
+          member: password
+      sslMode:
+        description: TLS mode the client uses, as PostgreSQL's sslmode.
+        schema:
+          type: string
+        from:
+          input: postgres
+          member: sslMode

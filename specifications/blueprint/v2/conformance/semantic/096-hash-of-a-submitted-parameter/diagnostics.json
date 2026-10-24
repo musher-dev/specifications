@@ -1,0 +1,6 @@
+[
+  {
+    "code": "ERR_INVALID_HASHED_PARAMETER",
+    "path": "/spec/parameters/passwordHash/hash/parameter"
+  }
+]

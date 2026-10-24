@@ -14,7 +14,7 @@ members:
 POSTGRES  MYSQL  REDIS  MONGODB  S3_BUCKET  HTTP_SERVICE  SMTP
 ```
 
-[Blueprint §4.2](../../specifications/blueprint/v1/spec.md#connections) makes it
+[Blueprint §4.2](../../specifications/blueprint/v2/spec.md#connections) makes it
 load-bearing: a consumer declaring a tag requires a producer declaring the same
 one, and a mismatch is `ERR_INCOMPATIBLE_SEMANTIC_TYPE`. It exists because
 `type` alone cannot catch the mistake worth catching — "A Postgres connection
@@ -40,7 +40,7 @@ from happening one defensible pull request at a time.
 **It cannot express anything this repository did not think of.** A component
 publishing a value specific to a service Musher does not offer has no way to say
 so. Its author's choice is `null`, which
-[§4.2](../../specifications/blueprint/v1/spec.md#connections) makes acceptable to
+[§4.2](../../specifications/blueprint/v2/spec.md#connections) makes acceptable to
 every consumer — so the one case where a compatibility tag would prevent a real
 mistake is the case where the vocabulary has nothing to offer.
 
@@ -74,7 +74,7 @@ The grammar is fixed by this contract:
 
 Reverse-DNS namespace, then one or more lowercase segments. Lookahead-free, so
 it compiles under RE2 as well as ECMA-262, as
-[component §11](../../specifications/component/v1/spec.md#security) requires of
+[component §11](../../specifications/component/v2/spec.md#security) requires of
 every pattern this repository publishes.
 
 ### 2. This is ADR 0003 placement two, and the reasoning is that ADR's

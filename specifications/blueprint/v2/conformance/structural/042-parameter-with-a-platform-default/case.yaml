@@ -1,0 +1,22 @@
+specVersion: v2
+kind: BLUEPRINT
+metadata:
+  slug: acme-wiki
+  revision: 1
+  description: Synthetic conformance fixture blueprint.
+spec:
+  parameters:
+    publicURL:
+      platformDefault:
+        type: SELF_ADDRESS
+        source: PUBLIC_URL
+      ui:
+        label: Public URL
+  nodes:
+    web:
+      componentRef: ./components/web.yaml
+      compute:
+        profile: general.standard.small
+      bindings:
+        publicURL:
+          parameter: publicURL

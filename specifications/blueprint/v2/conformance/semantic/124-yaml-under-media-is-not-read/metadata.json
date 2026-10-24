@@ -1,0 +1,11 @@
+{
+  "id": "semantic-124-yaml-under-media-is-not-read",
+  "phase": "semantic",
+  "expected": "pass",
+  "clause": "specifications/core/v2/spec.md#item-directory",
+  "requirements": [
+    "CORE-ITEM-002"
+  ],
+  "summary": "A YAML file under the item's media directory is no component document, and is not read.",
+  "document": "app/blueprint.yaml"
+}

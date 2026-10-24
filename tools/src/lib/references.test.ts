@@ -1,6 +1,6 @@
 /**
- * The `${{ namespace.path }}` grammar: what opens a reference, what is an
- * escape, and which of `CORE-REF-001..003` a bad one is.
+ * The `${{ namespace.path }}` grammar: what opens a placeholder, what is an
+ * escape, and which of `CORE-PLACEHOLDER-001..003` a bad one is.
  */
 import { describe, expect, test } from 'bun:test'
 import { isWholeValueReference, scanReferences as scan } from './references.ts'
@@ -83,7 +83,7 @@ describe('the escape', () => {
   })
 })
 
-describe('CORE-REF-001 — an unescaped ${{ must open a well-formed reference', () => {
+describe('CORE-PLACEHOLDER-001: an unescaped ${{ must open a well-formed placeholder', () => {
   test('rejects an unclosed opener', () => {
     expect(kinds('${{ self.publicURL }')).toEqual(['malformed'])
   })
@@ -100,8 +100,20 @@ describe('CORE-REF-001 — an unescaped ${{ must open a well-formed reference', 
   })
 
   test('rejects a segment outside the grammar', () => {
-    for (const written of ['${{ self.public-url }}', '${{ Self.publicURL }}', '${{ self.0 }}']) {
+    for (const written of [
+      '${{ self.public- }}',
+      '${{ self.-url }}',
+      '${{ Self.publicURL }}',
+      '${{ self.0 }}',
+      '${{ self.public_url }}',
+    ]) {
       expect(kinds(written)).toEqual(['malformed'])
+    }
+  })
+
+  test('accepts a DNS-label segment, so a node name is addressable', () => {
+    for (const written of ['${{ self.web-ui }}', '${{ self.endpoints.a1-b2.publicURL }}']) {
+      expect(kinds(written)).toEqual([])
     }
   })
 
@@ -116,7 +128,7 @@ describe('CORE-REF-001 — an unescaped ${{ must open a well-formed reference', 
   })
 })
 
-describe('CORE-REF-002 and CORE-REF-003 — the closed set, and what a position admits', () => {
+describe('CORE-PLACEHOLDER-002 and CORE-PLACEHOLDER-003: the closed set, and what a position permits', () => {
   test('a namespace outside the reserved set is unknown, never a pass-through', () => {
     // A misspelling lands here too: the set is closed precisely so a typo in it
     // is reportable rather than shipped as literal text.
@@ -126,9 +138,14 @@ describe('CORE-REF-002 and CORE-REF-003 — the closed set, and what a position 
   test('a reserved namespace the position does not admit is out of scope', () => {
     // The distinction matters: "core reserves no such name" and "this field
     // does not take that one" send an author to two different places.
-    for (const namespace of ['parameters', 'variables', 'connections', 'deployment', 'output']) {
+    for (const namespace of ['parameters', 'variables', 'connections', 'deployment', 'nodes']) {
       expect(kinds(`\${{ ${namespace}.thing }}`)).toEqual(['not-in-scope'])
     }
+  })
+
+  test('the v1 namespace output is no longer reserved', () => {
+    // v2 renamed it to nodes (core v2 §1.4), so it is unknown, not out of scope.
+    expect(kinds('${{ output.thing }}')).toEqual(['unknown-namespace'])
   })
 
   test('admitting a namespace is what makes it resolvable', () => {

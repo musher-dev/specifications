@@ -1,0 +1,10 @@
+{
+  "id": "structural-205-uppercase-commit",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#source",
+  "requirements": [
+    "COMP-SRC-006"
+  ],
+  "summary": "A commit in uppercase hexadecimal is rejected; a commit is lowercase."
+}

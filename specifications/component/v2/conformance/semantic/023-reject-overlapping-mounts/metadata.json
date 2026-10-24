@@ -1,0 +1,10 @@
+{
+  "id": "semantic-023-reject-overlapping-mounts",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#volumes",
+  "requirements": [
+    "COMP-VOL-001"
+  ],
+  "summary": "reject overlapping mounts"
+}

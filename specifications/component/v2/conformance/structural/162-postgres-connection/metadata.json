@@ -1,0 +1,10 @@
+{
+  "id": "structural-162-postgres-connection",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#connection-requirements",
+  "requirements": [
+    "COMP-CONNECTION-002"
+  ],
+  "summary": "An external component with a POSTGRES connection input, forwarding every member, validates."
+}

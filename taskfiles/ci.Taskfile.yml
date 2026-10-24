@@ -1,5 +1,5 @@
-# The two entry points .github/workflows/validate.yml calls, under the `ci`
-# namespace.
+# CI: the two entry points .github/workflows/validate.yml calls, `ci:lint` and
+# `ci:test`.
 #
 # They exist so the workflow names one task per job rather than a list of
 # checks: a check added to a job is added here, where a developer can run the
@@ -11,35 +11,35 @@
 # Specifications / Schema also names `contracts:check contracts:breaking` on its
 # command line, which is where the conventions look for them (IFACE-12).
 #
-# The leading colon on each reference is load-bearing: inside an included
-# taskfile a bare `task: check:format` resolves within this file's own
-# namespace, as `ci:check:format`, and fails. `:` anchors it to the root.
+# Every fragment is included flattened (TASK-20), so a reference such as
+# `task: check:format` names the task exactly as its fragment writes it.
 version: '3'
 
 tasks:
-  lint:
+  ci:lint:
     desc: Lint suite as run in CI
     deps:
-      - task: :check:format
-      - task: :check:config
-      - task: :check:rulesets
-      - task: :check:commits
-      - task: :check:docs
-      - task: :check:links
-      - task: :check:adr
-      - task: :check:md
-      - task: :check:spelling
-      - task: :check:shell
-      - task: :check:workflow
+      - task: check:format
+      - task: check:config
+      - task: check:rulesets
+      - task: check:commits
+      - task: check:docs
+      - task: check:links
+      - task: check:adr
+      - task: check:md
+      - task: check:spelling
+      - task: check:prose
+      - task: check:shell
+      - task: check:workflow
 
   # The interface checks, check:schema, check:generated, check:examples and
   # check:compat, run in the same job as `task contracts:check
   # contracts:breaking`, the names the conventions look for (IFACE-12).
-  test:
+  ci:test:
     desc: Schema and conformance suite as run in CI, beside contracts:check and contracts:breaking
     deps:
-      - task: :check:conformance
-      - task: :check:standards
-      - task: :check:parity
-      - task: :check:editions
-      - task: :check:test
+      - task: check:conformance
+      - task: check:standards
+      - task: check:parity
+      - task: check:editions
+      - task: check:test

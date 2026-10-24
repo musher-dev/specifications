@@ -1,0 +1,316 @@
+{
+  "family": "listing",
+  "specVersion": "v2",
+  "cases": [
+    {
+      "id": "parser-001-reject-duplicate-keys",
+      "phase": "parser",
+      "path": "parser/001-reject-duplicate-keys"
+    },
+    {
+      "id": "structural-001-minimal-valid",
+      "phase": "structural",
+      "path": "structural/001-minimal-valid"
+    },
+    {
+      "id": "structural-002-wrong-kind",
+      "phase": "structural",
+      "path": "structural/002-wrong-kind"
+    },
+    {
+      "id": "structural-003-unknown-field",
+      "phase": "structural",
+      "path": "structural/003-unknown-field"
+    },
+    {
+      "id": "structural-004-unsupported-spec-version",
+      "phase": "structural",
+      "path": "structural/004-unsupported-spec-version"
+    },
+    {
+      "id": "structural-005-nested-unknown-field",
+      "phase": "structural",
+      "path": "structural/005-nested-unknown-field"
+    },
+    {
+      "id": "structural-006-featured-not-in-contract",
+      "phase": "structural",
+      "path": "structural/006-featured-not-in-contract"
+    },
+    {
+      "id": "structural-007-icon-escaping-the-item",
+      "phase": "structural",
+      "path": "structural/007-icon-escaping-the-item"
+    },
+    {
+      "id": "structural-008-media-outside-the-media-directory",
+      "phase": "structural",
+      "path": "structural/008-media-outside-the-media-directory"
+    },
+    {
+      "id": "structural-009-unsupported-media-format",
+      "phase": "structural",
+      "path": "structural/009-unsupported-media-format"
+    },
+    {
+      "id": "structural-010-media-paths",
+      "phase": "structural",
+      "path": "structural/010-media-paths"
+    },
+    {
+      "id": "structural-011-url-field-disallowed-scheme",
+      "phase": "structural",
+      "path": "structural/011-url-field-disallowed-scheme"
+    },
+    {
+      "id": "structural-012-support-url-mailto",
+      "phase": "structural",
+      "path": "structural/012-support-url-mailto"
+    },
+    {
+      "id": "structural-013-url-field-uppercase-scheme",
+      "phase": "structural",
+      "path": "structural/013-url-field-uppercase-scheme"
+    },
+    {
+      "id": "structural-014-url-field-uppercase-disallowed-scheme",
+      "phase": "structural",
+      "path": "structural/014-url-field-uppercase-disallowed-scheme"
+    },
+    {
+      "id": "structural-015-category-agents",
+      "phase": "structural",
+      "path": "structural/015-category-agents"
+    },
+    {
+      "id": "structural-016-category-outside-the-vocabulary",
+      "phase": "structural",
+      "path": "structural/016-category-outside-the-vocabulary"
+    },
+    {
+      "id": "structural-017-tag-outside-the-grammar",
+      "phase": "structural",
+      "path": "structural/017-tag-outside-the-grammar"
+    },
+    {
+      "id": "structural-018-license-outside-the-spdx-grammar",
+      "phase": "structural",
+      "path": "structural/018-license-outside-the-spdx-grammar"
+    },
+    {
+      "id": "structural-019-duplicate-tag",
+      "phase": "structural",
+      "path": "structural/019-duplicate-tag"
+    },
+    {
+      "id": "structural-020-too-many-screenshots",
+      "phase": "structural",
+      "path": "structural/020-too-many-screenshots"
+    },
+    {
+      "id": "structural-021-missing-spec-version",
+      "phase": "structural",
+      "path": "structural/021-missing-spec-version"
+    },
+    {
+      "id": "structural-022-missing-metadata",
+      "phase": "structural",
+      "path": "structural/022-missing-metadata"
+    },
+    {
+      "id": "structural-023-missing-spec",
+      "phase": "structural",
+      "path": "structural/023-missing-spec"
+    },
+    {
+      "id": "structural-024-getting-started-too-long",
+      "phase": "structural",
+      "path": "structural/024-getting-started-too-long"
+    },
+    {
+      "id": "structural-025-license-parenthesised-group",
+      "phase": "structural",
+      "path": "structural/025-license-parenthesised-group"
+    },
+    {
+      "id": "structural-026-license-nested-group",
+      "phase": "structural",
+      "path": "structural/026-license-nested-group"
+    },
+    {
+      "id": "structural-027-category-dropped-in-v2",
+      "phase": "structural",
+      "path": "structural/027-category-dropped-in-v2"
+    },
+    {
+      "id": "structural-028-category-models",
+      "phase": "structural",
+      "path": "structural/028-category-models"
+    },
+    {
+      "id": "semantic-001-duplicate-screenshot-basename",
+      "phase": "semantic",
+      "path": "semantic/001-duplicate-screenshot-basename"
+    },
+    {
+      "id": "semantic-002-slug-disagrees-with-directory",
+      "phase": "semantic",
+      "path": "semantic/002-slug-disagrees-with-directory"
+    },
+    {
+      "id": "semantic-003-media-file-absent",
+      "phase": "semantic",
+      "path": "semantic/003-media-file-absent"
+    },
+    {
+      "id": "semantic-004-media-symlink-escaping-the-item",
+      "phase": "semantic",
+      "path": "semantic/004-media-symlink-escaping-the-item"
+    },
+    {
+      "id": "semantic-005-well-formed-item",
+      "phase": "semantic",
+      "path": "semantic/005-well-formed-item"
+    },
+    {
+      "id": "semantic-006-component-item-resolves-against-its-root",
+      "phase": "semantic",
+      "path": "semantic/006-component-item-resolves-against-its-root"
+    },
+    {
+      "id": "semantic-007-overview-raw-html",
+      "phase": "semantic",
+      "path": "semantic/007-overview-raw-html"
+    },
+    {
+      "id": "semantic-008-overview-html-in-code-fence",
+      "phase": "semantic",
+      "path": "semantic/008-overview-html-in-code-fence"
+    },
+    {
+      "id": "semantic-009-overview-javascript-url",
+      "phase": "semantic",
+      "path": "semantic/009-overview-javascript-url"
+    },
+    {
+      "id": "semantic-010-overview-remote-image",
+      "phase": "semantic",
+      "path": "semantic/010-overview-remote-image"
+    },
+    {
+      "id": "semantic-011-overview-uppercase-scheme",
+      "phase": "semantic",
+      "path": "semantic/011-overview-uppercase-scheme"
+    },
+    {
+      "id": "semantic-012-overview-image-absent",
+      "phase": "semantic",
+      "path": "semantic/012-overview-image-absent"
+    },
+    {
+      "id": "semantic-013-overview-image-escaping-the-item",
+      "phase": "semantic",
+      "path": "semantic/013-overview-image-escaping-the-item"
+    },
+    {
+      "id": "semantic-014-overview-image-resolves",
+      "phase": "semantic",
+      "path": "semantic/014-overview-image-resolves"
+    },
+    {
+      "id": "semantic-015-item-type-claims-a-blueprint-the-item-lacks",
+      "phase": "semantic",
+      "path": "semantic/015-item-type-claims-a-blueprint-the-item-lacks"
+    },
+    {
+      "id": "semantic-016-item-type-denies-the-blueprint-beside-it",
+      "phase": "semantic",
+      "path": "semantic/016-item-type-denies-the-blueprint-beside-it"
+    },
+    {
+      "id": "semantic-017-component-item-holds-two-components",
+      "phase": "semantic",
+      "path": "semantic/017-component-item-holds-two-components"
+    },
+    {
+      "id": "semantic-018-component-item-holds-no-component",
+      "phase": "semantic",
+      "path": "semantic/018-component-item-holds-no-component"
+    },
+    {
+      "id": "semantic-019-icon-too-large",
+      "phase": "semantic",
+      "path": "semantic/019-icon-too-large"
+    },
+    {
+      "id": "semantic-020-getting-started-raw-html",
+      "phase": "semantic",
+      "path": "semantic/020-getting-started-raw-html"
+    },
+    {
+      "id": "semantic-021-getting-started-javascript-url",
+      "phase": "semantic",
+      "path": "semantic/021-getting-started-javascript-url"
+    },
+    {
+      "id": "semantic-022-getting-started-remote-image",
+      "phase": "semantic",
+      "path": "semantic/022-getting-started-remote-image"
+    },
+    {
+      "id": "semantic-023-getting-started-image-absent",
+      "phase": "semantic",
+      "path": "semantic/023-getting-started-image-absent"
+    },
+    {
+      "id": "admission-001-media-within-bounds",
+      "phase": "admission",
+      "path": "admission/001-media-within-bounds"
+    },
+    {
+      "id": "admission-002-icon-not-square",
+      "phase": "admission",
+      "path": "admission/002-icon-not-square"
+    },
+    {
+      "id": "admission-003-icon-too-small",
+      "phase": "admission",
+      "path": "admission/003-icon-too-small"
+    },
+    {
+      "id": "admission-004-screenshot-too-wide",
+      "phase": "admission",
+      "path": "admission/004-screenshot-too-wide"
+    },
+    {
+      "id": "admission-005-overview-image-too-wide",
+      "phase": "admission",
+      "path": "admission/005-overview-image-too-wide"
+    },
+    {
+      "id": "admission-006-header-is-not-the-extension",
+      "phase": "admission",
+      "path": "admission/006-header-is-not-the-extension"
+    },
+    {
+      "id": "semantic-040-item-file-that-does-not-parse",
+      "phase": "semantic",
+      "path": "semantic/040-item-file-that-does-not-parse"
+    },
+    {
+      "id": "semantic-041-yaml-under-media-is-not-counted",
+      "phase": "semantic",
+      "path": "semantic/041-yaml-under-media-is-not-counted"
+    },
+    {
+      "id": "structural-040-url-with-a-non-ascii-character",
+      "phase": "structural",
+      "path": "structural/040-url-with-a-non-ascii-character"
+    },
+    {
+      "id": "structural-041-url-with-a-control-character",
+      "phase": "structural",
+      "path": "structural/041-url-with-a-control-character"
+    }
+  ]
+}

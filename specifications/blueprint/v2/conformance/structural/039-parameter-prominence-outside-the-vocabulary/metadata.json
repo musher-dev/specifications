@@ -1,0 +1,10 @@
+{
+  "id": "structural-039-parameter-prominence-outside-the-vocabulary",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#deploy-form",
+  "requirements": [
+    "BP-UI-002"
+  ],
+  "summary": "A parameter prominence outside PRIMARY and SECONDARY is rejected."
+}

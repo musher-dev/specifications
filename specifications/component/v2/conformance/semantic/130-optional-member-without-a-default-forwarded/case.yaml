@@ -1,0 +1,37 @@
+specVersion: v2
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: EXTERNAL
+  contract:
+    inputs:
+      cache:
+        description: Connection this node stands for
+        connection:
+          protocol: REDIS
+    outputs:
+      username:
+        description: Forwarded username, absent when the server names no user
+        schema:
+          type: string
+        from:
+          input: cache
+          member: username
+      password:
+        description: Forwarded password, absent when the server requires none
+        schema:
+          type: string
+        sensitive: true
+        from:
+          input: cache
+          member: password
+      url:
+        description: Forwarded url
+        schema:
+          type: string
+        sensitive: true
+        from:
+          input: cache
+          member: url

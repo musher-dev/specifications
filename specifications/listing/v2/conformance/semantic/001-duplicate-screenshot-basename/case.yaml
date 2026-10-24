@@ -1,0 +1,13 @@
+specVersion: v2
+kind: LISTING
+metadata:
+  slug: postgres
+spec:
+  itemType: COMPONENT
+  displayName: PostgreSQL
+  summary: The open-source relational database
+  category: DATABASES
+  lifecycleStage: STABLE
+  screenshots:
+    - file: media/desktop/overview.png
+    - file: media/desktop/overview.png

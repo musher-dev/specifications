@@ -79,3 +79,16 @@ unindexed
 unioned
 vendored
 worktrees
+Airbyte
+confusables
+Crossplane
+Dapr
+Pelorus
+servicebinding
+exemptible
+CONN
+sslmode
+rediss
+AKIDSYNTHETIC
+ustar
+UNSATISFIABLE

@@ -1,0 +1,10 @@
+{
+  "id": "structural-059-resource-type-outside-the-grammar",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#value-schema",
+  "requirements": [
+    "CORE-ENV-005"
+  ],
+  "summary": "Removed resourceType fields are rejected regardless of identifier spelling."
+}

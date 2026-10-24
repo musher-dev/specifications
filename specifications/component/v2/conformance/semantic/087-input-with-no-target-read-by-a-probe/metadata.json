@@ -1,0 +1,10 @@
+{
+  "id": "semantic-087-input-with-no-target-read-by-a-probe",
+  "phase": "semantic",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#inputs",
+  "requirements": [
+    "COMP-INPUT-001"
+  ],
+  "summary": "A workload input with no target that a probe credential reads validates, and stays out of the environment."
+}

@@ -1,5 +1,5 @@
-# The interface tasks, under the `contracts` namespace (IFACE-11 in the
-# engineering conventions; docs/adr/0037).
+# Contracts: the interface tasks, each named `contracts:<task>` (IFACE-11 in
+# the engineering conventions; docs/adr/0037).
 #
 # Every repository that declares interfaces in .repo/outputs.toml offers these
 # names, so a reader or a workflow can check, compare and bundle any producer's
@@ -8,28 +8,28 @@
 # them all. The interfaces are the kind families' schemas, which are authored,
 # not generated, so there is no `contracts:generate`.
 #
-# The leading colon on each reference anchors it to the root, as in
-# ci.Taskfile.yml.
+# Included flattened, as every fragment is, so each reference names a task
+# exactly as its fragment writes it.
 version: '3'
 
 tasks:
-  check:
+  contracts:check:
     desc: Check every interface's schema sources, build output and examples
     deps:
-      - task: :check:schema
-      - task: :check:generated
-      - task: :check:examples
+      - task: check:schema
+      - task: check:generated
+      - task: check:examples
 
-  breaking:
+  contracts:breaking:
     desc: Fail a change that breaks a released interface inside its major version
     deps:
-      - task: :check:compat
+      - task: check:compat
 
-  bundle:
+  contracts:bundle:
     desc: Stage a tagged release's bundle, archive and release record (TAG=<family>/vX.Y.Z)
     requires:
       vars: [TAG]
     cmds:
-      - task: :release:stage
+      - task: release:stage
         vars:
           TAG: '{{.TAG}}'

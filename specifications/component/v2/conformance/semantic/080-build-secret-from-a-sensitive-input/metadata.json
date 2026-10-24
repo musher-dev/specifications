@@ -1,0 +1,10 @@
+{
+  "id": "semantic-080-build-secret-from-a-sensitive-input",
+  "phase": "semantic",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#source",
+  "requirements": [
+    "COMP-BUILD-004"
+  ],
+  "summary": "A build secret reading a required sensitive input with no target validates; the build secret is what reads it."
+}

@@ -1,0 +1,10 @@
+{
+  "id": "structural-202-branch-and-tag-in-one-ref",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#source",
+  "requirements": [
+    "COMP-SRC-001"
+  ],
+  "summary": "A Git ref naming both a branch and a tag is rejected."
+}

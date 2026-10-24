@@ -1,0 +1,10 @@
+{
+  "id": "semantic-035-template-in-the-withdrawn-self-order",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#outputs",
+  "requirements": [
+    "COMP-PLACEHOLDER-001"
+  ],
+  "summary": "A self path written property first names no endpoint explicitly and is rejected."
+}

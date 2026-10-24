@@ -1,0 +1,28 @@
+specVersion: v2
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: SERVICE
+  workload:
+    source:
+      image: nginx:1.29.4-alpine
+    endpoints:
+      web:
+        targetPort: 8080
+        protocol: HTTP
+  contract:
+    inputs:
+      databaseURL:
+        description: Connection URL of the database.
+        schema:
+          type: string
+        target:
+          envVar: DATABASE_URL
+      replicaURL:
+        description: Connection URL of the read replica.
+        schema:
+          type: string
+        target:
+          envVar: DATABASE_URL

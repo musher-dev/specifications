@@ -1,0 +1,10 @@
+{
+  "id": "semantic-018-output-value-names-self",
+  "phase": "semantic",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#outputs",
+  "requirements": [
+    "COMP-PLACEHOLDER-001"
+  ],
+  "summary": "A template output may compose text around a self placeholder."
+}

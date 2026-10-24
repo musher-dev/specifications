@@ -2,10 +2,10 @@
 
 The Musher Document Core Specification states the rules every Musher document
 family shares: the document envelope, version compatibility, the
-[catalog item](v1/spec.md#item-directory),
-the identifier grammars more than one family uses, the validation layers and
-the YAML profile, the shared diagnostic codes, and what a conformance claim
-covers.
+[catalog item](v2/spec.md#item-directory),
+the identifier grammars more than one family uses, the validation phases and
+scopes, the YAML profile, the shared diagnostic codes, and what a conformance
+claim covers.
 
 Core **defines no kind** and **ships no schema**: each
 [kind family](../README.md#kind-family) applies it, as
@@ -16,21 +16,28 @@ own executable form is a parser-phase conformance corpus.
 
 | Major | Specification | Corpus | Released? |
 |---|---|---|---|
-| `v1` | [`v1/spec.md`](v1/spec.md) | [`v1/conformance/`](v1/conformance/) | Released from [`1.0.0`](https://github.com/musher-dev/specifications/releases/tag/core%2Fv1.0.0). Every release is in [`published.json`](../../published.json) ([how to tell](../../docs/publication.md#draft-or-released)) |
+| `v2` | [`v2/spec.md`](v2/spec.md) | [`v2/conformance/`](v2/conformance/) | Not until a `core/v2.*` tag exists. Every release is in [`published.json`](../../published.json) ([how to tell](../../docs/publication.md#draft-or-released)) |
+| `v1` | Retired. Its released bytes stay at their pinned URLs and in [`published.json`](../../published.json) | Retired | Released from [`1.0.0`](https://github.com/musher-dev/specifications/releases/tag/core%2Fv1.0.0); superseded by v2 |
 
-Core has its own release line, tagged `core/v<MAJOR>.<MINOR>.<PATCH>`. Each
-family release records the core edition it was built and tested against
-([§9](v1/spec.md#editions)).
+v1 is a retired major version: it is tagged and recorded, but has no directory
+on the main branch and receives no further release. v2 supersedes it, and
+[§1.4 Migration from v1](v2/spec.md#migration) lists every name core v2 changed.
+
+Core has its own tag prefix, `core/v<MAJOR>.<MINOR>.<PATCH>`. Each family release
+records the core release it was built and tested against
+([§9](v2/spec.md#core-releases)).
 
 ## Start here
 
-1. [§1 Scope](v1/spec.md#scope) and [§1.1 Bindings](v1/spec.md#bindings)
-2. [§2 Document envelope](v1/spec.md#envelope)
-3. [§4 Items](v1/spec.md#items)
-4. [§6 Validation layers](v1/spec.md#validation-layers), including
-   [§6.1 The Musher YAML profile](v1/spec.md#yaml-profile)
-5. [§7 Diagnostics](v1/spec.md#diagnostics) and
-   [§8 Conformance](v1/spec.md#conformance)
+1. [§1 Scope](v2/spec.md#scope), [§1.1 What a family fixes](v2/spec.md#family-fixes)
+   and [§1.3 Terms](v2/spec.md#terms)
+2. [§2 Document envelope](v2/spec.md#envelope)
+3. [§4 Items](v2/spec.md#items)
+4. [§6 Validation phases](v2/spec.md#validation-phases), including
+   [§6.0 Validation scope](v2/spec.md#validation-scope) and
+   [§6.1 The Musher YAML profile](v2/spec.md#yaml-profile)
+5. [§7 Diagnostics](v2/spec.md#diagnostics) and
+   [§8 Conformance](v2/spec.md#conformance)
 
 An implementation implements every section of this specification, together with
 the external specifications it cites: [YAML
@@ -41,17 +48,17 @@ above is where to begin, not what to implement.
 
 Nothing. Core is the base: [component](../component/README.md),
 [blueprint](../blueprint/README.md) and [listing](../listing/README.md) each
-apply core v1 and say so in their own §2.
+apply core v2 and say so in their own §2.
 
 ## Requirement IDs
 
 | Prefix | Covers | Section |
 |---|---|---|
-| `CORE-ENV` | The document envelope | [§2](v1/spec.md#envelope) |
-| `CORE-ITEM` | Item identity | [§4.2](v1/spec.md#item-identity) |
-| `CORE-REF` | The reference grammar and its reserved namespaces | [§5.2](v1/spec.md#reference-grammar) |
-| `CORE-ADMISSION` | Completing deferred obligations before admission | [§6.0](v1/spec.md#coverage) |
-| `CORE-YAML` | The Musher YAML profile | [§6.1](v1/spec.md#yaml-profile) |
+| `CORE-ENV` | The document envelope | [§2](v2/spec.md#envelope) |
+| `CORE-ITEM` | Item identity | [§4.2](v2/spec.md#item-identity) |
+| `CORE-PLACEHOLDER` | The placeholder grammar and its reserved namespaces | [§5.2](v2/spec.md#placeholder-grammar) |
+| `CORE-ADMISSION` | Completing every obligation of a publication or deployment scope | [§6.0](v2/spec.md#validation-scope) |
+| `CORE-YAML` | The Musher YAML profile | [§6.1](v2/spec.md#yaml-profile) |
 
 Every ID, the clause stating it, and the cases pinning it:
-[core/v1 in docs/traceability.md](../../docs/traceability.md#corev1).
+[core/v2 in docs/traceability.md](../../docs/traceability.md#corev2).

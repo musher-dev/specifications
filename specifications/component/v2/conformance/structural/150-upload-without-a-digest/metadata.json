@@ -1,0 +1,10 @@
+{
+  "id": "structural-150-upload-without-a-digest",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#source",
+  "requirements": [
+    "COMP-SRC-005"
+  ],
+  "summary": "An upload source without a digest is rejected."
+}

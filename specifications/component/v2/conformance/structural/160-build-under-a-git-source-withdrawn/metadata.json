@@ -1,0 +1,10 @@
+{
+  "id": "structural-160-build-under-a-git-source-withdrawn",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#source",
+  "requirements": [
+    "COMP-SRC-001"
+  ],
+  "summary": "The v1 build recipe under a Git source is rejected; the recipe is workload.build."
+}

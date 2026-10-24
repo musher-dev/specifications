@@ -1,0 +1,32 @@
+specVersion: v2
+kind: BLUEPRINT
+metadata:
+  slug: acme-wiki
+  revision: 1
+  description: Synthetic conformance fixture blueprint.
+spec:
+  parameters:
+    adminPassword:
+      ui:
+        label: Administrator password
+  nodes:
+    api:
+      componentRef: ./components/api.yaml
+      compute:
+        profile: general.standard.small
+      volumes: {}
+      exposure:
+        primary: PRIVATE
+      bindings:
+        adminPassword:
+          parameter: adminPassword
+    db:
+      componentRef: ./components/postgres.yaml
+      compute:
+        profile: general.standard.small
+      volumes: {}
+      exposure:
+        primary: PRIVATE
+      bindings:
+        adminPassword:
+          parameter: adminPassword

@@ -14,7 +14,7 @@
  *
  * Two kinds of corpus live in the tree. A kind family's corpus runs through the
  * whole pipeline against that family's bundle. The core corpus runs through the
- * parser alone, with no bundle and no dispatch on `kind` (core v1 §8.1).
+ * parser alone, with no bundle and no dispatch on `kind` (core v2 §8.1).
  */
 import {
   cpSync,
@@ -51,9 +51,10 @@ import {
   type Phase,
   parseDocument,
   parseDocumentBytes,
+  type ValidationScope,
   validateDocument,
 } from '../validation/validator.ts'
-import { runBehaviorCases } from './behavior.ts'
+import { runBehaviorCases, SUITES, type Suite } from './behavior.ts'
 
 export interface CaseIndexEntry {
   readonly id: string
@@ -104,36 +105,64 @@ interface DeclaredDiagnostic {
   readonly path: string
 }
 
-const PHASES: readonly Phase[] = ['parser', 'structural', 'semantic', 'capability']
+/**
+ * The phases a document case may declare (docs/conformance.md, `metadata.json`).
+ *
+ * `resolution` is a validation phase (core v2 §6) but never a document case's:
+ * resolving needs a deployment context, which only a behavioural entry carries,
+ * so resolution-phase diagnostics are pinned in `behavior.json` alone.
+ */
+const CASE_PHASES: readonly Phase[] = ['parser', 'structural', 'semantic', 'admission']
+
+/** Every phase a diagnostics table may assign a code (core v2 §6). */
+const REGISTRY_PHASES: readonly Phase[] = [...CASE_PHASES, 'resolution']
 
 /**
- * `capability` is the one phase this repository cannot run: it needs an account,
- * a region and a quota, which is a server. The other three are executed here —
- * see ADR 0002 §5 for why running them is not this repository publishing a
- * reference validator.
+ * `admission` is the one case phase this repository cannot run: it needs an
+ * account, a region, a quota and a catalog, which is a server. The other three
+ * are executed here. See ADR 0002 §5 for why running them is not this
+ * repository publishing a reference validator.
  */
 const IMPLEMENTED_PHASES = new Set<Phase>(['parser', 'structural', 'semantic'])
 
 /**
- * The profiles docs/conformance.md defines, cumulative and in order.
+ * The validation scopes docs/conformance.md defines for a conformance claim,
+ * cumulative and in order (core v2 §6.1). Each names the document-case phases
+ * and the behaviour suites a claim at that scope must pass every case in.
  *
  * Naming them here rather than only in prose is what stops the two drifting: if
- * a phase is added to `IMPLEMENTED_PHASES`, the profile this runner reports
- * changes with it, and if a profile's phase list is edited the runner's own
- * claim moves. A profile nobody computes is a profile nobody checks.
+ * a phase is added to `IMPLEMENTED_PHASES`, the scope this runner reports
+ * changes with it, and if a scope's phase list is edited the runner's own claim
+ * moves. A scope nobody computes is a scope nobody checks.
  */
-const PROFILES: readonly { readonly name: string; readonly phases: readonly Phase[] }[] = [
-  { name: 'parser', phases: ['parser'] },
-  { name: 'structural', phases: ['parser', 'structural'] },
-  { name: 'offline', phases: ['parser', 'structural', 'semantic'] },
-  { name: 'platform', phases: ['parser', 'structural', 'semantic', 'capability'] },
+const SCOPES: readonly {
+  readonly name: ValidationScope
+  readonly phases: readonly Phase[]
+  readonly suites: readonly Suite[]
+}[] = [
+  { name: 'parser', phases: ['parser'], suites: [] },
+  { name: 'structural', phases: ['parser', 'structural'], suites: [] },
+  { name: 'document', phases: ['parser', 'structural', 'semantic'], suites: [] },
+  { name: 'publication', phases: ['parser', 'structural', 'semantic', 'admission'], suites: [] },
+  {
+    name: 'deployment',
+    phases: ['parser', 'structural', 'semantic', 'admission'],
+    suites: ['resolution'],
+  },
 ]
 
-/** The highest profile a given set of implemented phases satisfies. */
-export function profileFor(implemented: ReadonlySet<Phase>): string | null {
-  let highest: string | null = null
-  for (const profile of PROFILES) {
-    if (profile.phases.every((phase) => implemented.has(phase))) highest = profile.name
+/** The highest validation scope a set of implemented phases and suites satisfies. */
+export function scopeFor(
+  implemented: ReadonlySet<Phase>,
+  suites: ReadonlySet<Suite> = new Set(),
+): ValidationScope | null {
+  let highest: ValidationScope | null = null
+  for (const scope of SCOPES) {
+    if (
+      scope.phases.every((phase) => implemented.has(phase)) &&
+      scope.suites.every((suite) => suites.has(suite))
+    )
+      highest = scope.name
   }
   return highest
 }
@@ -150,6 +179,10 @@ const SPEC_ANCHOR = /<a id="([^"]+)"><\/a>/g
  * matched by nothing — see `checkProseCodes`.
  */
 const PROSE_CODE = /`(ERR_[A-Z0-9_]+)`/g
+/** An ATX heading: its marks, and its text. */
+const MARKDOWN_HEADING = /^(#{1,6})\s+(.*)$/
+/** A heading whose section maps a previous major version's names onto this one's. */
+const MIGRATION_HEADING = /\bMigration from v\d+\s*$/
 
 interface SpecIndex {
   /** Diagnostic code to the phase the prose assigns it. */
@@ -175,7 +208,9 @@ function specIndex(path: string): SpecIndex | undefined {
       if (row?.[1] !== undefined && row[2] !== undefined)
         codes.set(
           row[1],
-          [...row[2].matchAll(/`([a-z]+)`/g)].map((m) => m[1] as Phase),
+          [...row[2].matchAll(/`([a-z]+)`/g)]
+            .map((m) => m[1] as Phase)
+            .filter((phase) => REGISTRY_PHASES.includes(phase)),
         )
     }
     const anchors = new Set<string>()
@@ -283,7 +318,7 @@ export function resolveReach(
   if (bindings === null) {
     failures.add(
       `${where} declares no normative dependencies. A kind family is built on core and ` +
-        'MUST list it (core v1 §1.1), or no core diagnostic code is reachable from its corpus.',
+        'MUST list it (core v2 §1.1), or no core diagnostic code is reachable from its corpus.',
     )
     return ownOnly
   }
@@ -305,7 +340,7 @@ export function resolveReach(
   if (!bindings.dependencies.some((d) => d.family === CORE_FAMILY)) {
     failures.add(
       `${where} does not list core among its normative dependencies. Every kind family is ` +
-        'built on core and MUST declare the core line it applies (core v1 §1.1).',
+        'built on core and MUST declare the core major version it applies (core v2 §1.1).',
     )
   }
 
@@ -316,7 +351,7 @@ export function resolveReach(
       failures.add(
         `${relativeToRepo(family.specPath)}: ${code} is declared in ` +
           `${relativeToRepo(core.specPath)} §7 and again in this family's diagnostics table. ` +
-          'A family adds codes to core’s and MUST NOT declare one of them again (core v1 §7).',
+          'A family adds codes to core’s and MUST NOT declare one of them again (core v2 §7).',
       )
     }
   }
@@ -477,7 +512,7 @@ function checkCaseSubject(
 }
 
 /**
- * The shape a core case has beyond every case's (core v1 §8.1): a `case.yaml`
+ * The shape a core case has beyond every case's (core v2 §8.1): a `case.yaml`
  * and never a `tree/`, because a case about an item needs a document of some
  * family inside a directory; and no `effective` map, because the parser alone
  * decides nothing about what a document means. The phase is checked with the
@@ -488,14 +523,14 @@ function checkCoreCase(caseDir: string, label: string, metadata: CaseMetadata, f
   if (existsSync(join(caseDir, 'tree'))) {
     failures.add(
       `${label}: a core case is a case.yaml, never a tree/ — a case about an item needs a ` +
-        'document of some family (core v1 §8.1)',
+        'document of some family (core v2 §8.1)',
     )
     ok = false
   }
   if (metadata.effective !== undefined) {
     failures.add(
       `${label}: a core case runs through the parser alone and declares no "effective" ` +
-        'values (core v1 §8.1)',
+        'values (core v2 §8.1)',
     )
     ok = false
   }
@@ -569,7 +604,7 @@ export function checkClauseConsistency(
     if (metadata.phase !== 'parser') {
       fail(
         `a core case is a parser case, not ${metadata.phase} — core publishes no schema, and ` +
-          'an adapter runs a core case through its parser alone (core v1 §8.1)',
+          'an adapter runs a core case through its parser alone (core v2 §8.1)',
       )
     }
     if (clause !== undefined && clause.specPath !== own) {
@@ -662,8 +697,11 @@ function checkCaseShape(
 ): DeclaredDiagnostic[] | null {
   let ok = true
 
-  if (!PHASES.includes(metadata.phase)) {
-    failures.add(`${label}: phase "${metadata.phase}" is not one of ${PHASES.join(', ')}`)
+  if (!CASE_PHASES.includes(metadata.phase)) {
+    failures.add(
+      `${label}: phase "${metadata.phase}" is not one of ${CASE_PHASES.join(', ')}. ` +
+        'A resolution-phase diagnostic is pinned in behavior.json, never in a document case.',
+    )
     return null
   }
   if (entry.phase !== metadata.phase) {
@@ -839,15 +877,24 @@ function checkEffective(
 }
 
 /**
+ * The validation scope a document case runs at (docs/conformance.md, Validation
+ * coverage): a `structural` case at `structural`, every later one at `document`.
+ * `admission` cases do not run here.
+ */
+function scopeOfCase(metadata: CaseMetadata): ValidationScope {
+  return metadata.phase === 'structural' ? 'structural' : 'document'
+}
+
+/**
  * Validate a case's subject, supplying an item root only when the case declares
- * one. A `case.yaml` deliberately supplies none: core v1 §4.1 says a document
+ * one. A `case.yaml` deliberately supplies none: core v2 §4.1 says a document
  * arriving without a directory has no item root, and the rules measured against
  * one MUST NOT be reported for it.
  */
 function runValidation(family: Family, caseDir: string, metadata: CaseMetadata) {
   if (metadata.document === undefined) {
     return validateDocument(family, readFileSync(join(caseDir, 'case.yaml')), {
-      validationProfile: metadata.phase === 'structural' ? 'structural' : 'document',
+      validationScope: scopeOfCase(metadata),
     })
   }
 
@@ -855,7 +902,7 @@ function runValidation(family: Family, caseDir: string, metadata: CaseMetadata) 
   try {
     const documentPath = join(scratch, metadata.document)
     return validateDocument(family, readFileSync(documentPath), {
-      validationProfile: metadata.phase === 'structural' ? 'structural' : 'document',
+      validationScope: scopeOfCase(metadata),
       itemRoot: dirname(documentPath),
       documentPath,
     })
@@ -865,7 +912,7 @@ function runValidation(family: Family, caseDir: string, metadata: CaseMetadata) 
 }
 
 /**
- * Run a core case the way core v1 §8.1 says an adapter does: through the parser
+ * Run a core case the way core v2 §8.1 says an adapter does: through the parser
  * alone. No bundle is read, no later phase is entered, and nothing looks at the
  * document's `kind` — the parser runs before a family is chosen, so there is no
  * family to choose.
@@ -1085,8 +1132,8 @@ const UNPINNED: ReadonlyMap<string, string> = new Map([
   ],
   [
     'BP-ACCESS-006',
-    "That one person has one subject across an installation's identity modes and its " +
-      'installer facts, and that a released email is verified, are facts of the platform ' +
+    "That one person has one subject across a deployment's identity modes and its " +
+      'creator facts, and that a released email is verified, are facts of the platform ' +
       'identity service; resolution reads the facts it is given but cannot observe a person',
   ],
   [
@@ -1112,6 +1159,56 @@ const UNPINNED: ReadonlyMap<string, string> = new Map([
     'BP-ACCESS-010',
     'Forwarding a bearer request without a viewer session, and identifying one with a ' +
       'session, is a runtime obligation of the platform edge; no document phase or ' +
+      'behavioural operation observes a request',
+  ],
+  [
+    'BP-ACCESS-011',
+    'That a PRIVATE endpoint is reachable only from nodes of its own deployment and the ' +
+      "platform's probing host, at the network level whatever DNS resolves, is a fact of " +
+      'the platform network; no document phase or behavioural operation opens a network ' +
+      'connection',
+  ],
+  [
+    'COMP-VOL-002',
+    'That a non-shared volume is mounted into at most one replica at a time is a runtime ' +
+      'obligation of the platform; no document phase or behavioural operation observes a mount',
+  ],
+  [
+    'COMP-SEC-001',
+    'That a workload trusts viewer identity headers only from a peer inside ' +
+      'trustedProxyCIDRs is an obligation of the workload; no document phase or behavioural ' +
+      'operation observes a workload',
+  ],
+  [
+    'COMP-SEC-002',
+    'That a workload verifies a viewer assertion before trusting it is an obligation of the ' +
+      'workload; no document phase or behavioural operation observes a workload',
+  ],
+  [
+    'COMP-SRC-007',
+    'Which upload archives the platform extracts, and which it rejects for an absolute or ' +
+      'parent path, a duplicate entry, a device, FIFO or hard link, or a symbolic link out of ' +
+      'the archive root, is a runtime obligation of the extractor; a fixture carries no ' +
+      'archive bytes, so the sources stage is pinned only on the digest (BP-RESOLVE-001)',
+  ],
+  [
+    'COMP-BUILD-005',
+    'That a build reads nothing of the source outside its context, symbolic links included, ' +
+      'is a runtime obligation of the builder; the context grammar is pinned by component ' +
+      'cases (COMP-BUILD-002), but no document phase or behavioural operation runs a build',
+  ],
+  [
+    'COMP-BUILD-006',
+    'How a build secret reaches a Dockerfile or buildpacks build, and that its value never ' +
+      'reaches an image layer, provenance, the build log, the launch environment or the ' +
+      'record, are runtime obligations of the builder; no document phase or behavioural ' +
+      'operation runs a build',
+  ],
+  [
+    'COMP-EP-017',
+    'That a probe carries no viewer identity, carries Forwarded and X-Forwarded-For naming ' +
+      'one non-loopback address of the probing host, and under HEADER arrives from a peer ' +
+      'inside trustedProxyCIDRs is a runtime obligation of the prober; no document phase or ' +
       'behavioural operation observes a request',
   ],
 ])
@@ -1164,16 +1261,33 @@ const HYPOTHETICAL: ReadonlyMap<string, string> = new Map([
  * Scoped to the spec.md files. An ADR is immutable and records withdrawn codes
  * as history, so a code that no longer exists is correct there; a named code is
  * a promise only in a normative document.
+ *
+ * One place in a spec.md is history too: the first column of a table under a
+ * "Migration from v<N>" heading names what the previous major version called a
+ * thing, and a withdrawn code is correct there. Only that column is exempt; the
+ * column naming the new form is checked like any other prose.
  */
 function checkProseCodes(families: readonly Family[], failures: Failures): void {
   const declared = declaredCodes(families)
   for (const family of families) {
     if (!existsSync(family.specPath)) continue
     const lines = readFileSync(family.specPath, 'utf8').split('\n')
+    let migrationLevel: number | null = null
     for (const [offset, line] of lines.entries()) {
+      const heading = MARKDOWN_HEADING.exec(line)
+      if (heading?.[1] !== undefined) {
+        const level = heading[1].length
+        if (migrationLevel !== null && level <= migrationLevel) migrationLevel = null
+        if (MIGRATION_HEADING.test(heading[2] ?? '')) migrationLevel = level
+      }
+      const history =
+        migrationLevel !== null && line.trimStart().startsWith('|')
+          ? (line.trim().slice(1).split('|')[0] ?? '')
+          : ''
       for (const match of line.matchAll(PROSE_CODE)) {
         const code = match[1]
         if (code === undefined || declared.has(code) || HYPOTHETICAL.has(code)) continue
+        if (history.includes(`\`${code}\``)) continue
         failures.add(
           `${relativeToRepo(family.specPath)}:${offset + 1}: ${code} is named in the prose but ` +
             'is declared by no diagnostics table. Add it to a registry, or record it in ' +
@@ -1191,7 +1305,7 @@ function checkProseCodes(families: readonly Family[], failures: Failures): void 
  */
 function checkOrphans(family: Family, entries: CaseIndexEntry[], failures: Failures): void {
   const indexed = new Set(entries.map((entry) => normalize(entry.path)))
-  for (const phase of PHASES) {
+  for (const phase of CASE_PHASES) {
     const phaseDir = join(family.conformanceDir, phase)
     if (!existsSync(phaseDir)) continue
     for (const name of readdirSync(phaseDir)) {
@@ -1259,6 +1373,16 @@ export function runConformance(
         failures.add(`unknown behavioural diagnostic ${code}`)
       exercised.add(code)
     }
+    // A behavioural diagnostic's phase is checked against the registry exactly
+    // as a document case's is: one code, the phases its table lists.
+    for (const { code, phase } of behavior.phases) {
+      const phases = reachOf(context, family).registry.get(code)
+      if (phases !== undefined && !phases.includes(phase))
+        failures.add(
+          `${familyKey(family)} behavior.json: ${code} is a ${phases.join(', ')}-phase code but ` +
+            `a case declares it in the ${phase} phase`,
+        )
+    }
     for (const code of exercised) exercisedAnywhere.add(code)
 
     checkOrphans(family, entries, failures)
@@ -1289,12 +1413,12 @@ export function runConformance(
 function main(): void {
   const result = runConformance()
   const suffix = result.skipped > 0 ? ` (${result.skipped} skipped)` : ''
-  const profile = profileFor(IMPLEMENTED_PHASES) ?? 'none'
+  const scope = scopeFor(IMPLEMENTED_PHASES, new Set(Object.keys(SUITES) as Suite[])) ?? 'none'
   const corpora = [...result.corpora].map(([key, count]) => `${key} ${count}`).join(', ')
   result.failures.report(
     result.ran === 0
       ? `No conformance cases executed${suffix}.`
-      : `${result.ran} conformance case(s) passed${suffix} — profile: ${profile}; ` +
+      : `${result.ran} conformance case(s) passed${suffix}; scope: ${scope}; ` +
           `${result.pinned}/${result.requirements} requirement(s) pinned. Cases per corpus: ${corpora}.`,
   )
 }

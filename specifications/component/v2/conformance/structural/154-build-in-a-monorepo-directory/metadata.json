@@ -1,0 +1,13 @@
+{
+  "id": "structural-154-build-in-a-monorepo-directory",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#source",
+  "requirements": [
+    "COMP-BUILD-002"
+  ],
+  "summary": "A build context naming a directory of the repository, with a Dockerfile relative to it, validates.",
+  "effective": {
+    "/spec/workload/build/context": "services/api"
+  }
+}

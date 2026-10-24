@@ -1,0 +1,19 @@
+specVersion: v2
+kind: BLUEPRINT
+metadata:
+  slug: web
+  revision: 1
+  description: Synthetic conformance fixture blueprint.
+spec:
+  parameters:
+    Site_Title:
+      ui:
+        label: Site title
+  nodes:
+    web:
+      componentRef: ./components/web.yaml
+      compute:
+        profile: general.standard.small
+      bindings:
+        Site_Title:
+          parameter: Site_Title

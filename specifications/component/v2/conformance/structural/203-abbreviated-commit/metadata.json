@@ -1,0 +1,10 @@
+{
+  "id": "structural-203-abbreviated-commit",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#source",
+  "requirements": [
+    "COMP-SRC-006"
+  ],
+  "summary": "An abbreviated commit is rejected; a commit is a full 40- or 64-digit object ID."
+}

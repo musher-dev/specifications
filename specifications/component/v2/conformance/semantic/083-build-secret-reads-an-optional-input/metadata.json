@@ -1,0 +1,10 @@
+{
+  "id": "semantic-083-build-secret-reads-an-optional-input",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#source",
+  "requirements": [
+    "COMP-BUILD-004"
+  ],
+  "summary": "A build secret reading an optional sensitive input, which carries no default, is rejected."
+}

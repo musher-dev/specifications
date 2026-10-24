@@ -1,0 +1,15 @@
+# The link rule of the overview Markdown profile reaches `gettingStarted`: the
+# first thing a person reads after deploying is no place for a script URL.
+specVersion: v2
+kind: LISTING
+metadata:
+  slug: pgvector
+spec:
+  itemType: COMPONENT
+  displayName: pgvector
+  summary: Vector similarity search for PostgreSQL
+  category: DATABASES
+  lifecycleStage: STABLE
+  gettingStarted: |
+    [Open the console](javascript:alert(document.cookie)) and run
+    `CREATE EXTENSION vector;`.

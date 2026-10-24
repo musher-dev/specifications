@@ -1,0 +1,10 @@
+{
+  "id": "structural-055-binding-output-without-node",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#bindings",
+  "requirements": [
+    "BP-BIND-003"
+  ],
+  "summary": "A binding naming an output and no node is rejected: node and output go together."
+}

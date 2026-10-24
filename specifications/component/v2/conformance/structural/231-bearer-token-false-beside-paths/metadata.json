@@ -1,0 +1,10 @@
+{
+  "id": "structural-231-bearer-token-false-beside-paths",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#endpoints",
+  "requirements": [
+    "COMP-EP-015"
+  ],
+  "summary": "bearerToken false beside paths offers the paths."
+}

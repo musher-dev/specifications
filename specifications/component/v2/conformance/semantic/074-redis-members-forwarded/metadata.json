@@ -1,0 +1,12 @@
+{
+  "id": "semantic-074-redis-members-forwarded",
+  "phase": "semantic",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#contract",
+  "requirements": [
+    "COMP-CONNECTION-002",
+    "COMP-OUT-003",
+    "COMP-OUT-004"
+  ],
+  "summary": "Every guaranteed REDIS member is forwarded with its protocol's type and sensitivity, the optional database taking its default."
+}

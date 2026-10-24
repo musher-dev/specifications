@@ -1,0 +1,15 @@
+specVersion: v2
+kind: BLUEPRINT
+metadata:
+  slug: postgres
+  revision: 1
+  description: A PostgreSQL database deployed from revision 3 of a published component.
+spec:
+  parameters: {}
+  nodes:
+    db:
+      componentRef: 550e8400-e29b-41d4-a716-446655440000
+      revision: 3
+      compute:
+        profile: general.standard.small
+      bindings: {}

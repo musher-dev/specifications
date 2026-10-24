@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=https://specifications.musher.dev/listing/v2/listing.schema.json
+#
+# The smallest listing that validates.
+specVersion: v2
+kind: LISTING
+metadata:
+  slug: postgres
+spec:
+  itemType: COMPONENT
+  displayName: PostgreSQL
+  summary: The open-source relational database, with SQL, ACID transactions and JSONB in one engine
+  category: DATABASES
+  lifecycleStage: STABLE

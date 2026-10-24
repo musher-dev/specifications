@@ -1,13 +1,13 @@
 /**
- * The `${{ namespace.path }}` reference grammar.
+ * The `${{ namespace.path }}` placeholder grammar.
  *
  * NON-NORMATIVE, like everything under tools/. The definitive rule is
- * [core v1 §5.2](../../../specifications/core/v1/spec.md#reference-grammar);
+ * [core v2 §5.2](../../../specifications/core/v2/spec.md#placeholder-grammar);
  * this module is one adapter's reading of it, and where the two disagree the
  * prose wins.
  *
  * Purely syntactic: it turns a string into an ordered sequence of literal text
- * and reference nodes, and resolves nothing. Which namespaces a position admits
+ * and placeholder nodes, and resolves nothing. Which namespaces a position permits
  * is the family's to say, so a caller passes them in rather than this module
  * knowing them.
  *
@@ -17,12 +17,15 @@
  */
 
 /**
- * Core v1 §5.2 — the closed reserved set. An author cannot extend it, and a
- * namespace outside it is `CORE-REF-002` wherever it is written.
+ * Core v2 §5.2: the closed reserved set. An author cannot extend it, and a
+ * namespace outside it is `CORE-PLACEHOLDER-002` wherever it is written.
  *
- * Every member but `self` is reserved without a meaning: no family admits one,
- * so writing it is `CORE-REF-003`. They are listed because reserving a name is
- * the only part of this that cannot be done later.
+ * A position permits only the namespaces its family names: `self` in component
+ * and blueprint values, and `variables`, `connections` and `deployment` in a
+ * blueprint parameter's `from`. `parameters`, `environment`, `organization` and
+ * `nodes` have no meaning yet, so writing one anywhere is
+ * `CORE-PLACEHOLDER-003`. They are listed because reserving a name is the only
+ * part of this that cannot be done later.
  */
 export const RESERVED_NAMESPACES = [
   'self',
@@ -32,43 +35,47 @@ export const RESERVED_NAMESPACES = [
   'deployment',
   'environment',
   'organization',
-  'output',
+  'nodes',
 ] as const
 
 export type Namespace = (typeof RESERVED_NAMESPACES)[number]
 
 const RESERVED = new Set<string>(RESERVED_NAMESPACES)
 
-/** Core v1 §5.2 — a path segment. Excludes `.`, so a dotted path reads one way. */
-const SEGMENT = /^[a-z][a-zA-Z0-9]*$/
+/**
+ * Core v2 §5.2: a path segment. A lowerCamelCase name or a DNS label, so a node
+ * name such as `web-ui` is addressable. Excludes `.`, so a dotted path reads
+ * one way.
+ */
+const SEGMENT = /^[a-z](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?$/
 
 const OPEN = '${{'
 const ESCAPE = '$${{'
 const CLOSE = '}}'
 
-/** One reference, as written. */
+/** One placeholder, as written. */
 export interface Reference {
   /** The namespace, which may be one the reserved set does not hold. */
   readonly namespace: string
   /** Path segments after the namespace, at least one. */
   readonly path: readonly string[]
-  /** The reference exactly as written, braces included, for a diagnostic. */
+  /** The placeholder exactly as written, braces included, for a diagnostic. */
   readonly raw: string
   /** Index of the opening `$` within the scanned string. */
   readonly offset: number
 }
 
 export type ReferenceFailure =
-  /** `CORE-REF-001` — an unescaped `${{` that does not open a well-formed reference. */
+  /** `CORE-PLACEHOLDER-001`: an unescaped `${{` that does not open a well-formed placeholder. */
   | {
       readonly kind: 'malformed'
       readonly raw: string
       readonly offset: number
       readonly why: string
     }
-  /** `CORE-REF-002` — a well-formed reference naming a namespace core does not reserve. */
+  /** `CORE-PLACEHOLDER-002`: a well-formed placeholder naming a namespace core does not reserve. */
   | { readonly kind: 'unknown-namespace'; readonly reference: Reference }
-  /** `CORE-REF-003` — a reserved namespace the position does not admit. */
+  /** `CORE-PLACEHOLDER-003`: a reserved namespace the position does not permit. */
   | { readonly kind: 'not-in-scope'; readonly reference: Reference }
 
 export interface ScanResult {
@@ -79,11 +86,11 @@ export interface ScanResult {
 /**
  * Scan one authored string.
  *
- * `admitted` is the set of namespaces the position admits, which the family's
- * clause names — component `COMP-REF-001` and blueprint `BP-REF-001` both name
- * exactly `self` today.
+ * `admitted` is the set of namespaces the position permits, which the family's
+ * clause names: component `COMP-PLACEHOLDER-001` and blueprint
+ * `BP-PLACEHOLDER-001` both name exactly `self` today.
  *
- * A resolved value is never scanned again (core v1 §5.2), so this is the only
+ * A resolved value is never scanned again (core v2 §5.2), so this is the only
  * pass there is: there is no chain, no cycle and no depth to bound.
  */
 export function scanReferences(value: string, admitted: readonly string[]): ScanResult {
@@ -138,12 +145,12 @@ export function scanReferences(value: string, admitted: readonly string[]): Scan
 
 /**
  * The text between the braces, already trimmed. Returns the parsed halves, or a
- * sentence saying what is wrong with it — the sentence is a message and carries
+ * sentence saying what is wrong with it. The sentence is a message and carries
  * no normative weight, but the refusal does.
  */
 function parseInner(inner: string): { namespace: string; path: string[] } | string {
   if (inner === '') return 'it names nothing'
-  if (inner.includes('${{')) return 'a reference cannot contain another'
+  if (inner.includes('${{')) return 'a placeholder cannot contain another'
 
   const segments = inner.split('.')
   if (segments.length < 2) {
@@ -160,7 +167,7 @@ function parseInner(inner: string): { namespace: string; path: string[] } | stri
   return { namespace: namespace as string, path }
 }
 
-/** True where the whole string is one reference and nothing else. */
+/** True where the whole string is one placeholder and nothing else. */
 export function isWholeValueReference(value: string, reference: Reference): boolean {
   return reference.offset === 0 && reference.raw.length === value.length
 }

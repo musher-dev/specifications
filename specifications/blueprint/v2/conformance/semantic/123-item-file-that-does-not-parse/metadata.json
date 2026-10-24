@@ -1,0 +1,11 @@
+{
+  "id": "semantic-123-item-file-that-does-not-parse",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/core/v2/spec.md#item-directory",
+  "requirements": [
+    "CORE-ITEM-002"
+  ],
+  "summary": "A YAML file of the item that does not parse is reported, not skipped, because deciding whether it is a component document reads it.",
+  "document": "app/blueprint.yaml"
+}

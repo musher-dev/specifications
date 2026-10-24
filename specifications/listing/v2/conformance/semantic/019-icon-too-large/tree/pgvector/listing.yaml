@@ -1,0 +1,15 @@
+# LIST-MEDIA-004 reads a file's length from the filesystem and never decodes it.
+# `media/icon.png` is 1 048 577 zero bytes, one past the icon's bound, and is not
+# an image at all: the size rule does not care, and it is the only rule this case
+# measures. Git stores the run of zeros in a few hundred bytes.
+specVersion: v2
+kind: LISTING
+metadata:
+  slug: pgvector
+spec:
+  itemType: COMPONENT
+  displayName: pgvector
+  summary: Vector similarity search for PostgreSQL
+  category: DATABASES
+  lifecycleStage: STABLE
+  icon: media/icon.png

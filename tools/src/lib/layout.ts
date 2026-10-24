@@ -105,7 +105,8 @@ export const GENERATED_PATH_PATTERNS: readonly string[] = [
 /**
  * Every entry the repository root may hold, which `task check:config` enforces
  * as CFG-09 (docs/adr/0024 §1, and docs/adr/0036 §2 and §4 for `.repo` and
- * `AGENTS.md`). Visible entries are content a contributor edits or a file a
+ * `AGENTS.md`, which docs/adr/0041 makes the agent brief; `.claude` holds only
+ * Claude Code's settings and rules). Visible entries are content a contributor edits or a file a
  * tool or GitHub reads only from the root; dotted entries are the machinery
  * that operates on them. Build output never appears here, because it
  * is gitignored rather than allowed.
@@ -253,6 +254,31 @@ const ABSENT_BY_ROLE: { readonly [role in FamilyRole]: readonly FamilyPart[] } =
  */
 const ABSENT_PARTS: { readonly [familyVersion: string]: readonly FamilyPart[] } = {}
 
+/**
+ * Majors that are recorded and tagged but have no directory on `main`: the
+ * **retired majors** (docs/adr/0038, docs/publication.md#retired-majors).
+ *
+ * A retired major's releases stay exactly as published. Their tags, immutable
+ * GitHub releases and ledger entries are untouched, and the site keeps serving
+ * their pinned bytes from the verified release assets. What retirement removes
+ * is the working tree, so a retired major is released history and never a
+ * candidate: `task check:compat` does not replay it against the working tree,
+ * and `task check:published` and `task site:fetch` verify it from its tags
+ * alone. A tagged major missing from the working tree and absent here is a
+ * failure, never a silent skip.
+ */
+export const RETIRED_MAJORS: { readonly [family: string]: readonly string[] } = {
+  [CORE_FAMILY]: ['v1'],
+  component: ['v1'],
+  blueprint: ['v1'],
+  listing: ['v1'],
+}
+
+/** Whether a family major is retired: released history with no working tree. */
+export function isRetiredMajor(name: string, major: string): boolean {
+  return (RETIRED_MAJORS[name] ?? []).includes(major)
+}
+
 /** Whether the layout says this family version carries `part`. */
 export function hasPart(name: string, major: string, part: FamilyPart): boolean {
   if (ABSENT_BY_ROLE[familyRole(name)].includes(part)) return false
@@ -379,7 +405,7 @@ export const METASCHEMA = 'https://json-schema.org/draft/2020-12/schema'
 export const REPO_URL = 'https://github.com/musher-dev/specifications'
 
 /**
- * A bundle's publication URL. `segment` is the major (`v1`) for the moving
+ * A bundle's publication URL. `segment` is the major (`v2`) for the moving
  * alias, or `v<X.Y.Z>` for an exact release.
  */
 export function bundleUrl(name: string, segment: string): string {
@@ -391,7 +417,7 @@ export interface Family {
   readonly repoRoot: string
   /** Family name, e.g. `component`. */
   readonly name: string
-  /** Major-version directory, e.g. `v1`. */
+  /** Major-version directory, e.g. `v2`. */
   readonly major: string
   /** `core` for the schema-less base family, `kind` for every other. */
   readonly role: FamilyRole
@@ -625,3 +651,24 @@ export class Failures {
     process.exit(1)
   }
 }
+
+// -----------------------------------------------------------------------------
+// Term records (docs/adr/0038). The glossary of the document vocabulary, its
+// shape, what `task docs` generates from it, and the Vale styles that hold
+// prose to it. Read by `tools/src/policy/terms.ts` and
+// `tools/src/render/terminology.ts`.
+// -----------------------------------------------------------------------------
+
+/** The term records: the hand-edited source of the document vocabulary. */
+export const TERMINOLOGY_FILE = 'docs/terminology.yaml'
+/** The JSON Schema the term records are validated against. */
+export const TERMINOLOGY_SCHEMA_FILE = 'docs/terminology.schema.json'
+/** The generated glossary page, committed; `task check:docs` fails when it is stale. */
+export const TERMINOLOGY_DOC_FILE = 'docs/terminology.md'
+/** The generated Vale style the prose-scope aliases project into. */
+export const VALE_STYLE_DIR = '.config/markdown/styles/MusherSpecifications'
+/** Banned prose aliases, as a Vale substitution rule at level error. */
+export const VALE_TERMS_FILE = `${VALE_STYLE_DIR}/Terms.yml`
+/** Discouraged prose aliases, as a Vale substitution rule at level warning. */
+export const VALE_DISCOURAGED_FILE = `${VALE_STYLE_DIR}/Discouraged.yml`
+// --- end of term records block -----------------------------------------------

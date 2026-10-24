@@ -1,0 +1,7 @@
+{
+  "id": "structural-010-catalog-reference-without-revision",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#component-reference",
+  "summary": "A catalog reference without a revision is rejected rather than floating on the catalog."
+}

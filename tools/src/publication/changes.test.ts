@@ -70,14 +70,14 @@ const COMPONENT = familyPaths('component', 'v1')
 const BINDINGS = [
   '## <a id="envelope"></a>2. Document envelope',
   '',
-  '| Core parameter | This family |',
+  '| Left to the family | This family |',
   '|---|---|',
   '| `kind` | `COMPONENT` |',
   '| `metadata` | [§3](#metadata) |',
   '| Fields accepting `null` | none |',
   '| Item document | `component.yaml` |',
   '',
-  '| Specification | Line |',
+  '| Specification | Major version |',
   '|---|---|',
   '| [core](../../core/v1/spec.md) | v1 |',
   '',
@@ -220,5 +220,46 @@ describe('reportFamily for a kind family', () => {
     expect(text).toContain('`image` — **added** (optional)')
     expect(text).toContain('`git` — **added** (optional)')
     expect(text).not.toContain('REQUIRED')
+  })
+})
+
+describe('reportFamily for a major the base does not carry', () => {
+  test('a new major of a family is breaking by definition, for core and a kind family', () => {
+    const fx = new FixtureRepo()
+    repo = fx
+    fx.writeCoreSkeleton('v1')
+    fx.writeSources('component', 'v1', fx.bundleDoc('component', 'v1'))
+    fx.writeFile(COMPONENT.spec, BINDINGS)
+    fx.commit('feat: v1')
+    const base = fx.head()
+
+    for (const name of [CORE_FAMILY, 'component']) {
+      fx.remove(familyPaths(name, 'v1').dir)
+    }
+    fx.writeCoreSkeleton('v2')
+    fx.writeSources('component', 'v2', fx.bundleDoc('component', 'v2'))
+    fx.writeFile(familyPaths('component', 'v2').spec, BINDINGS.replaceAll('v1', 'v2'))
+    fx.commit('feat!: v2')
+
+    for (const family of discoverFamilies(fx.root)) {
+      const report = reportFamily(family, base, fx.root)
+      expect(report.lines.join('\n')).toContain('**New major: breaking by definition.**')
+      expect(report.lines.join('\n')).toContain(`supersedes \`${family.name}/v1\``)
+      expect(report.narrowing).toBe(1)
+    }
+  })
+
+  test('a family the base never carried is new, not breaking', () => {
+    const fx = new FixtureRepo()
+    repo = fx
+    fx.writeCoreSkeleton('v1')
+    fx.commit('feat: core')
+    const base = fx.head()
+    fx.writeSources('component', 'v1', fx.bundleDoc('component', 'v1'))
+    fx.writeFile(COMPONENT.spec, BINDINGS)
+    fx.commit('feat: component')
+    const report = reportFamily(component(fx), base, fx.root)
+    expect(report.lines.join('\n')).toContain('_New family: nothing to compare._')
+    expect(report.narrowing).toBe(0)
   })
 })

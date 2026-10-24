@@ -11,7 +11,7 @@ This contract states defaults everywhere. A probe that declares only `path`
 takes `initialDelaySeconds: 10`, `periodSeconds: 10`, `timeoutSeconds: 5`,
 `successThreshold: 1` and `failureThreshold: 3`. An input's `isRequired`
 defaults true and a parameter's defaults false, and
-[blueprint §5.3](../../specifications/blueprint/v1/spec.md#authored-parameters)
+[blueprint §5.3](../../specifications/blueprint/v2/spec.md#authored-parameters)
 turns that difference into a diagnostic. Roughly forty `default` keywords across
 the three bundles decide behaviour.
 

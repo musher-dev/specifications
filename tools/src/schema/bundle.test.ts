@@ -173,3 +173,73 @@ describe('the downstream contract', () => {
     expect(external).toEqual([])
   })
 })
+
+describe('the DNS-label grammar', () => {
+  const DNS = '^[a-z][a-z0-9-]{0,61}[a-z0-9]$'
+
+  /** A component naming the grammar, whose §2 cites `coreLine`, beside core prose at `coreDir`. */
+  function grammarSources(coreLine: string, coreDir: string, anchor: string) {
+    const fx = new FixtureRepo()
+    repo = fx
+    fx.writeFile(familyPaths('component', 'v2').spec, fx.kindSpec('component', undefined, coreLine))
+    fx.writeFile(
+      familyPaths('core', coreDir).spec,
+      [
+        `### ${anchor}5.1 The DNS-label grammar`,
+        '',
+        `A **DNS label** matches \`${DNS}\`.`,
+        '',
+        '### <a id="placeholder-grammar"></a>5.2 Placeholders',
+        '',
+        'Not this one: `^[a-z]+$`.',
+        '',
+      ].join('\n'),
+    )
+    fx.writeSources(
+      'component',
+      'v2',
+      fx.bundleDoc('component', 'v2', {
+        properties: { slug: { type: 'string', 'x-musher-grammar': 'dns-label' } },
+      }),
+    )
+    return { fx, family: { name: 'component', major: 'v2', repoRoot: fx.root } }
+  }
+
+  test('is inlined from the core major the family cites, under either anchor', () => {
+    for (const anchor of [
+      '<a id="label-grammar"></a><a id="dns-label-grammar"></a>',
+      '<a id="label-grammar"></a>',
+    ]) {
+      const { family } = grammarSources('v2', 'v2', anchor)
+      const slug = JSON.parse(buildBundle(family) as string).properties.slug
+      expect(slug).toEqual({ type: 'string', pattern: DNS, maxLength: 63 })
+      repo?.cleanup()
+      repo = null
+    }
+  })
+
+  test('is never read from a core major the family does not cite', () => {
+    const { family } = grammarSources('v2', 'v1', '<a id="label-grammar"></a>')
+    expect(() => buildBundle(family)).toThrow(/DNS-label grammar is missing from .*core\/v2/)
+  })
+
+  test('the retired marker is refused', () => {
+    const { fx, family } = grammarSources('v2', 'v2', '<a id="label-grammar"></a>')
+    fx.writeSources(
+      'component',
+      'v2',
+      fx.bundleDoc('component', 'v2', {
+        properties: { slug: { type: 'string', 'x-musher-grammar': 'label' } },
+      }),
+    )
+    expect(() => buildBundle(family)).toThrow(/unknown core grammar/)
+  })
+
+  test('a core edit reaches the memoized bundle', () => {
+    const { fx, family } = grammarSources('v2', 'v2', '<a id="label-grammar"></a>')
+    expect(familyBundle(family)).toContain('{0,61}')
+    const core = familyPaths('core', 'v2').spec
+    fx.writeFile(core, readFileSync(join(fx.root, core), 'utf8').replace('{0,61}', '{0,30}'))
+    expect(familyBundle(family)).toContain('{0,30}')
+  })
+})

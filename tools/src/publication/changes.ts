@@ -531,6 +531,57 @@ function tally(changes: readonly Change[]): { narrowing: number; moved: number }
   }
 }
 
+/** A report that changes nothing. */
+const NONE = { narrowing: 0, moved: 0, before: null, after: null } as const
+
+/**
+ * The highest major below `family.major` whose prose the base carries, or
+ * null. A family version absent at the base is either a new family or a new
+ * major of one; only the second supersedes anything.
+ */
+function previousMajorAtBase(family: Family, base: string, repoRoot: string): string | null {
+  for (let n = Number(family.major.slice(1)) - 1; n >= 1; n -= 1) {
+    if (readBlobAtRef(repoRoot, base, familyPaths(family.name, `v${n}`).spec) !== null) {
+      return `v${n}`
+    }
+  }
+  return null
+}
+
+/**
+ * The report for a family version the base does not carry. A new major is
+ * breaking by definition: it exists because its rules reject documents the
+ * previous major accepted, so it counts once as narrowing, and nothing is
+ * compared field by field across the two.
+ */
+function reportAbsentAtBase(
+  family: Family,
+  base: string,
+  repoRoot: string,
+  heading: string,
+  after: string | null,
+): FamilyReport {
+  const previous = previousMajorAtBase(family, base, repoRoot)
+  if (previous === null) {
+    return { lines: [heading, '', '_New family: nothing to compare._', ''], ...NONE, after }
+  }
+  return {
+    lines: [
+      heading,
+      '',
+      `- **New major: breaking by definition.** \`${family.name}/${family.major}\` supersedes ` +
+        `\`${family.name}/${previous}\`, which the base carries and this tree does not. ` +
+        'A new major is how a narrowing ships, so it is not compared field by field; its ' +
+        '`spec.md` maps every renamed field, value, code and requirement ID from the previous ' +
+        'major.',
+      '',
+    ],
+    ...NONE,
+    narrowing: 1,
+    after,
+  }
+}
+
 /**
  * A family with no schema — core — has only prose to compare: its diagnostics
  * and its requirement IDs. It is headed as affecting every family, because
@@ -546,9 +597,7 @@ function reportProseOnly(
   const heading = `### ${family.name}/${family.major} — affects every family`
   const beforeSpec = readBlobAtRef(repoRoot, base, familyPaths(family.name, family.major).spec)
   const empty = { narrowing: 0, moved: 0, before: null, after: null }
-  if (beforeSpec === null) {
-    return { lines: [heading, '', '_New family — nothing to compare._', ''], ...empty }
-  }
+  if (beforeSpec === null) return reportAbsentAtBase(family, base, repoRoot, heading, null)
 
   const named = namedChanges(family, families, base, repoRoot, beforeSpec.toString('utf8'))
   const all = [...named.codes, ...named.requirements]
@@ -588,6 +637,13 @@ export function reportFamily(
 ): FamilyReport {
   const families = options.families ?? discoverFamilies(repoRoot)
   if (family.role === 'core') return reportProseOnly(family, families, base, repoRoot)
+  if (
+    readBlobAtRef(repoRoot, base, familyPaths(family.name, family.major).spec) === null &&
+    previousMajorAtBase(family, base, repoRoot) !== null
+  ) {
+    const heading = `### ${family.name}/${family.major}`
+    return reportAbsentAtBase(family, base, repoRoot, heading, familyBundle(family))
+  }
 
   const buildBase =
     options.baseBundle ?? ((f: Family) => buildBundle(f, { reader: gitReader(repoRoot, base) }))
@@ -595,10 +651,8 @@ export function reportFamily(
   const after = familyBundle(family)
   if (before === null) {
     return {
-      lines: [`### ${family.name}/${family.major}`, '', '_New family — nothing to compare._', ''],
-      narrowing: 0,
-      moved: 0,
-      before: null,
+      lines: [`### ${family.name}/${family.major}`, '', '_New family: nothing to compare._', ''],
+      ...NONE,
       after,
     }
   }

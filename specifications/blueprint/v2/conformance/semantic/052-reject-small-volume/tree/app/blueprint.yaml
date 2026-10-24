@@ -1,0 +1,29 @@
+{
+  "specVersion": "v2",
+  "kind": "BLUEPRINT",
+  "metadata": {
+    "slug": "app",
+    "revision": 1,
+    "description": "Synthetic conformance fixture blueprint."
+  },
+  "spec": {
+    "nodes": {
+      "web": {
+        "componentRef": "./web.yaml",
+        "compute": {
+          "profile": "general.standard.small"
+        },
+        "volumes": {
+          "data": {
+            "sizeGiB": 1
+          }
+        },
+        "bindings": {
+          "value": {
+            "value": "fixture"
+          }
+        }
+      }
+    }
+  }
+}

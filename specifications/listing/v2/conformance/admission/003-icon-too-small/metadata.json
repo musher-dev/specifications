@@ -1,0 +1,11 @@
+{
+  "id": "admission-003-icon-too-small",
+  "phase": "admission",
+  "expected": "fail",
+  "clause": "specifications/listing/v2/spec.md#media",
+  "requirements": [
+    "LIST-MEDIA-005"
+  ],
+  "summary": "A square icon under 256 px per side is rejected at admission.",
+  "document": "pgvector/listing.yaml"
+}

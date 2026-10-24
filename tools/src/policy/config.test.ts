@@ -57,7 +57,7 @@ describe('CFG-09: the root allowlist', () => {
 
   test('accepts every entry ROOT_ENTRIES names', () => {
     const fx = intact()
-    for (const path of ['.claude/CLAUDE.md', 'docs/README.md', 'LICENSE', 'published.json']) {
+    for (const path of ['.claude/settings.json', 'docs/README.md', 'LICENSE', 'published.json']) {
       fx.writeFile(path, '\n')
     }
     fx.commit('add allowed entries')

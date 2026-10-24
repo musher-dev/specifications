@@ -1,0 +1,11 @@
+{
+  "id": "admission-005-overview-image-too-wide",
+  "phase": "admission",
+  "expected": "fail",
+  "clause": "specifications/listing/v2/spec.md#media",
+  "requirements": [
+    "LIST-MEDIA-005"
+  ],
+  "summary": "An overview image is held to the screenshot bounds.",
+  "document": "pgvector/listing.yaml"
+}

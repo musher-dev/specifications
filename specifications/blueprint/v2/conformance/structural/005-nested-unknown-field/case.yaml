@@ -1,0 +1,19 @@
+specVersion: v2
+kind: BLUEPRINT
+metadata:
+  slug: web-and-database
+  revision: 1
+  description: Synthetic conformance fixture blueprint.
+spec:
+  parameters:
+    siteTitle:
+      ui:
+        lable: Site title
+  nodes:
+    db:
+      componentRef: ./components/postgres.yaml
+      compute:
+        profile: general.standard.small
+      bindings:
+        siteTitle:
+          parameter: siteTitle

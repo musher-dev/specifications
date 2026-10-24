@@ -1,0 +1,10 @@
+{
+  "id": "semantic-007-overview-raw-html",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/listing/v2/spec.md#overview-markdown",
+  "requirements": [
+    "LIST-MD-001"
+  ],
+  "summary": "An overview containing raw HTML is rejected."
+}

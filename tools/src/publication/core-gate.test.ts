@@ -3,9 +3,15 @@
  * `record.test.ts` and `verify.test.ts` exercise the gate itself.
  */
 import { afterEach, describe, expect, test } from 'bun:test'
-import { CORE_FAMILY, familyPaths } from '../lib/layout.ts'
+import { CORE_FAMILY, Failures, familyPaths } from '../lib/layout.ts'
 import { FixtureRepo, RELEASE_SECTIONS } from '../testing/fixture.ts'
-import { classifyCommit, coreCommitsBetween, releasableTypes } from './core-gate.ts'
+import {
+  assertCoreGatePending,
+  classifyCommit,
+  coreCommitsBetween,
+  coreManifestVersionFor,
+  releasableTypes,
+} from './core-gate.ts'
 
 const CORE = familyPaths(CORE_FAMILY, 'v1')
 const TYPES = new Set(['feat', 'fix', 'docs'])
@@ -105,9 +111,34 @@ describe('coreCommitsBetween', () => {
     fx.checkout('main')
     fx.merge('topic', 'feat(core): a merge commit is never read')
 
-    const commits = coreCommitsBetween(fx.root, 'core/v1.0.0', 'HEAD')
+    const commits = coreCommitsBetween(fx.root, 'core/v1.0.0', 'HEAD', { line: 'v1' })
     expect(commits.map((c) => [c.subject, c.class])).toEqual([
       ['chore(core): tidy', 'non-releasable'],
     ])
+  })
+})
+
+describe('a core major that has not released', () => {
+  test('is never satisfied by a previous major’s manifest version', () => {
+    const fx = fixture()
+    fx.writeReleaseConfig()
+    const component = familyPaths('component', 'v2')
+    fx.writeFile(component.spec, fx.kindSpec('component', undefined, 'v2'))
+    // core moved to v2, and its manifest key still carries v1's version.
+    fx.setManifest({ [familyPaths(CORE_FAMILY, 'v2').manifestKey]: '1.1.1' })
+    fx.commit('feat(component): cite core v2')
+    expect(coreManifestVersionFor(fx.root, component.dir)).toBe('0.0.0')
+
+    const failures = new Failures()
+    assertCoreGatePending(
+      fx.root,
+      failures,
+      [],
+      [{ tag: 'component/v2.0.0', path: component.dir, requiresCore: '1.1.1' }],
+    )
+    expect(failures.messages.join('\n')).toContain(
+      'core v2 has never been released: .github/release-please/manifest.json reads 1.1.1',
+    )
+    expect(failures.messages.join('\n')).toContain('so core releases first')
   })
 })

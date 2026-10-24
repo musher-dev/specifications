@@ -1,0 +1,6 @@
+[
+  {
+    "code": "ERR_UNUSED_INPUT",
+    "path": "/spec/contract/inputs/greeting"
+  }
+]

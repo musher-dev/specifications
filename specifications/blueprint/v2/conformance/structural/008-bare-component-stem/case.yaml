@@ -1,0 +1,14 @@
+specVersion: v2
+kind: BLUEPRINT
+metadata:
+  slug: postgres
+  revision: 1
+  description: Synthetic conformance fixture blueprint.
+spec:
+  parameters: {}
+  nodes:
+    db:
+      componentRef: postgres
+      compute:
+        profile: general.standard.small
+      bindings: {}

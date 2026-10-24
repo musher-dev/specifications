@@ -1,0 +1,13 @@
+# A group does not nest. SPDX permits this expression, and §9 records it as
+# not supported in v2: admitting it later is a relaxation.
+specVersion: v2
+kind: LISTING
+metadata:
+  slug: pgvector
+spec:
+  itemType: COMPONENT
+  displayName: pgvector
+  summary: Vector similarity search for PostgreSQL
+  category: DATABASES
+  lifecycleStage: STABLE
+  license: ((MIT OR Apache-2.0) AND BSD-3-Clause) OR GPL-2.0-only

@@ -24,17 +24,19 @@ explained in [Draft or released](publication.md#draft-or-released).
 
 ## <a id="in-your-editor"></a>In your editor
 
-Add a modeline to the top of a document, naming its family's alias:
+v2 is the current major of every family, and a v2 document declares
+`specVersion: v2`. Add a modeline to the top of a document, naming its
+family's alias:
 
 ```yaml
-# yaml-language-server: $schema=https://specifications.musher.dev/<family>/v1/<family>.schema.json
+# yaml-language-server: $schema=https://specifications.musher.dev/<family>/v2/<family>.schema.json
 ```
 
 | Family | Modeline |
 |---|---|
-| component | `# yaml-language-server: $schema=https://specifications.musher.dev/component/v1/component.schema.json` |
-| blueprint | `# yaml-language-server: $schema=https://specifications.musher.dev/blueprint/v1/blueprint.schema.json` |
-| listing | `# yaml-language-server: $schema=https://specifications.musher.dev/listing/v1/listing.schema.json` |
+| component | `# yaml-language-server: $schema=https://specifications.musher.dev/component/v2/component.schema.json` |
+| blueprint | `# yaml-language-server: $schema=https://specifications.musher.dev/blueprint/v2/blueprint.schema.json` |
+| listing | `# yaml-language-server: $schema=https://specifications.musher.dev/listing/v2/listing.schema.json` |
 
 Or bind by file name in VS Code's `settings.json`, with the Red Hat YAML
 extension. These are the same patterns the catalog below publishes:
@@ -42,7 +44,7 @@ extension. These are the same patterns the catalog below publishes:
 ```json
 {
   "yaml.schemas": {
-    "https://specifications.musher.dev/component/v1/component.schema.json": [
+    "https://specifications.musher.dev/component/v2/component.schema.json": [
       "**/components/*.yaml",
       "**/components/*.yml",
       "**/component.yaml",
@@ -50,11 +52,11 @@ extension. These are the same patterns the catalog below publishes:
       "**/component-*.yaml",
       "**/component-*.yml"
     ],
-    "https://specifications.musher.dev/blueprint/v1/blueprint.schema.json": [
+    "https://specifications.musher.dev/blueprint/v2/blueprint.schema.json": [
       "**/blueprint.yaml",
       "**/blueprint.yml"
     ],
-    "https://specifications.musher.dev/listing/v1/listing.schema.json": [
+    "https://specifications.musher.dev/listing/v2/listing.schema.json": [
       "**/listing.yaml",
       "**/listing.yml"
     ]
@@ -62,9 +64,24 @@ extension. These are the same patterns the catalog below publishes:
 }
 ```
 
+Before v2's first release, the v2 alias serves a build of `main` and moves with
+every push. Once `2.0.0` is tagged, it serves the newest v2 release.
+
 A tool that reads SchemaStore-format catalogs can discover all of this from
 `https://specifications.musher.dev/catalog.json`, which binds each family's
-file patterns to its major-version alias.
+file patterns to its major-version alias. Its `url` names the newest released
+major, so it moves to v2 when v2 is tagged, and its `versions` lists every
+major, v1 included.
+
+### <a id="v1-urls"></a>v1 URLs
+
+v1 is retired ([ADR 0038](adr/0038-v2-one-vocabulary-and-v1-retires.md)). Its
+URLs keep working, because released bytes never change: every exact v1 release
+URL, such as `https://specifications.musher.dev/component/v1.6.1/component.schema.json`,
+serves its release asset for good, and the v1 alias keeps serving the newest
+v1 release. They validate v1 documents only. v1 takes no further release, so
+move a document to v2 with the "Migration from v1" section of its family's
+`spec.md`.
 
 ## <a id="pinning"></a>Pinning in automation
 
@@ -80,7 +97,7 @@ and build the bundle from it:
 
 ```sh
 git -C specifications checkout <commit>
-bun specifications/tools/src/schema/bundle.ts --stdout <family>/v1 > <family>.schema.json
+bun specifications/tools/src/schema/bundle.ts --stdout <family>/v2 > <family>.schema.json
 ```
 
 The bundler needs no `bun install`

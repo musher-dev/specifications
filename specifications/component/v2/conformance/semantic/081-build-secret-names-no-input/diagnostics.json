@@ -1,0 +1,6 @@
+[
+  {
+    "code": "ERR_UNKNOWN_INPUT",
+    "path": "/spec/workload/build/secrets/NPM_TOKEN/input"
+  }
+]

@@ -9,7 +9,7 @@
 ## Context
 
 A value's `schema.type` is one of `STRING`, `NUMBER`, `BOOLEAN`, `JSON`
-([component §6.3](../../specifications/component/v1/spec.md#value-schema),
+([component §6.3](../../specifications/component/v2/spec.md#value-schema),
 `COMP-VAL-001`). An author who wants a parameter meaning "pick several of these"
 has no way to say so, and the two workarounds both fail in a way the reader can
 see:
@@ -17,7 +17,7 @@ see:
 - a `STRING` carrying a comma convention the contract cannot describe, so
   nothing validates the members and `enum` — which would have named them —
   cannot be used, because the submitted value is not one member;
-- a `JSON` value, which [§6.4](../../specifications/blueprint/v1/spec.md#install-form)'s
+- a `JSON` value, which [§6.4](../../specifications/blueprint/v2/spec.md#install-form)'s
   derivation sends to a control accepting text over more than one line. The
   deploying user is handed a document editor and asked to get JSON right by
   hand, for a question whose whole content is a list of three words the document
@@ -94,16 +94,16 @@ parameter as a string, and its `AllowedValues` constrains each member of the lis
 rather than the joined text, which is what `enum` does here. HTML is the one
 precedent for the word `multiple`, and there it is an attribute of `<select>` —
 a statement about a control, which
-[§6.4](../../specifications/blueprint/v1/spec.md#install-form) says this block
+[§6.4](../../specifications/blueprint/v2/spec.md#install-form) says this block
 never makes. `ui` says how a value is asked for, never what it is, and a control
 word inside `schema` would be the first exception to it.
 
 **And a member is compared everywhere the day it is added.**
-[Blueprint §4.2](../../specifications/blueprint/v1/spec.md#connections) compares
+[Blueprint §4.2](../../specifications/blueprint/v2/spec.md#connections) compares
 `type` for equality across a wire,
-[§5.3](../../specifications/blueprint/v1/spec.md#authored-parameters) requires a
+[§5.3](../../specifications/blueprint/v2/spec.md#authored-parameters) requires a
 parameter's to equal the input it covers, and
-[§5.2](../../specifications/blueprint/v1/spec.md#merge) compares whole `schema`
+[§5.2](../../specifications/blueprint/v2/spec.md#merge) compares whole `schema`
 blocks for merging. A new member inherits all three. A field beside `type` would
 have had to be added to each of them by hand — a comparison axis in §4.2, an
 agreement rule in §5.3, and an entry in the defaults §5.2 applies before it

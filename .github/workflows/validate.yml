@@ -46,7 +46,7 @@ jobs:
 
       - uses: ./.github/actions/setup-tools
         with:
-          install-args: aqua:oven-sh/bun node aqua:go-task/task aqua:rhysd/actionlint
+          install-args: aqua:oven-sh/bun node aqua:go-task/task aqua:rhysd/actionlint aqua:vale-cli/vale
 
       # BASE_REF is empty on a push, where check:adr falls back to origin/main.
       # The suite includes check:docs, which fails when docs/traceability.md or

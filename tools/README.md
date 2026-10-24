@@ -72,8 +72,9 @@ process of its own; both report in the order they would sequentially.
 | `check:editions` | Where core stands, and the core gate on every pending kind family release | `src/publication/core-gate.ts` | — |
 | `check:compat` | No released version's accepted documents are rejected by the candidate schema | `src/publication/compat.ts` | — |
 | `check:test` | The tooling test suite | `bun test` | — |
-| `check:commits` | The Conventional Commits vocabulary agrees across all five of its copies | `src/policy/commits.ts` | — |
+| `check:commits` | Every copy of the commit vocabulary agrees with `.config/commits/committed.toml` | `src/policy/commits.ts` | — |
 | `check:docs` | `docs/traceability.md` and the ADR index match a fresh generation | `src/policy/docs.ts` | — |
+| `check:terms` | Term records in `docs/terminology.yaml` are valid, every v2 identifier is claimed by a record, no banned alias is used, and every defined term has a record | `src/policy/terms.ts` | — |
 | `check:links` | Every internal Markdown link and anchor resolves | `src/policy/links.ts` | — |
 | `check:adr` | ADR numbering, headers and relations, and link-target-only edits to accepted ADRs | `src/policy/adr.ts` | ADR-01..ADR-04 |
 | `check:md` | markdownlint over every Markdown file | `markdownlint-cli2` | — |
@@ -92,12 +93,12 @@ not run them. Everything else CI runs, `task check` runs locally.
 | Step | Job | When | Script |
 |---|---|---|---|
 | DCO sign-off on every commit | `Commits / Sign-off` | Pull requests | `.github/workflows/validate-pull-request.yml` |
-| `check:title`: the pull request title is a Conventional Commit, with a type and scope from `.github/conventional-commits.yaml` | `Title / Conventional Commit` | Pull requests | `src/policy/title.ts` |
+| committed, then `check:title`: the pull request title passes `.config/commits/committed.toml`, and has a listed scope and a lowercase subject | `Title / Conventional Commit` | Pull requests | `committed`, `src/policy/title.ts` |
 | `check:ledger`: `published.json` edits no entry the base branch holds | `Site / Build` | Pull requests | `src/publication/ledger.ts check` |
 | `site:fetch`, then `site:build` | `Site / Build` | Every run | `src/publication/fetch.ts`, `src/publication/site.ts` |
 
 `repository-pull-request-title.yml` still runs on pull requests, to lowercase a
-Dependabot title, but the title is enforced by `check:title`.
+Dependabot title, but the title is enforced by committed and `check:title`.
 
 ## Build, release and site tasks
 
@@ -110,7 +111,7 @@ the command line) and environment variables shown.
 | `docs` | Regenerates `docs/traceability.md` and the ADR index | `src/render/traceability.ts`, `src/render/adr-index.ts` | — |
 | `catalog` | Regenerates `dist/catalog.json` | `src/publication/catalog.ts` | — |
 | `changes` | Reports what the branch does to the published contract | `src/publication/changes.ts` | `BASE` variable, default `origin/main`; `-- --diff` |
-| `check:title` | Fails unless the pull request title is a Conventional Commit using the vocabulary in `.github/conventional-commits.yaml` | `src/policy/title.ts` | `PR_TITLE` environment variable, required |
+| `check:title` | Fails unless the pull request title is a Conventional Commit with a type and a scope from `.config/commits/committed.toml` | `src/policy/title.ts` | `PR_TITLE` environment variable, required |
 | `check:ledger` | Fails if `published.json` changed a recorded entry | `src/publication/ledger.ts check` | `BASE_REF` environment variable; without it, only parses |
 | `check:published:online` | Verifies every tagged release's GitHub release and assets, without caching | `src/publication/fetch.ts --verify-only` | `GITHUB_TOKEN`, else `gh auth token`; `GITHUB_REPOSITORY` |
 | `release:record` | Records every pending release in `published.json`, applying the core gate | `src/publication/record.ts` | — |

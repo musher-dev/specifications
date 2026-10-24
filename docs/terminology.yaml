@@ -1,0 +1,3331 @@
+# The term records: one concept per context, for the Musher document
+# vocabulary (docs/adr/0038).
+#
+# This file is the source. `task docs` generates docs/terminology.md and the
+# MusherSpecifications Vale style (Terms.yml, Discouraged.yml) from it, and
+# `task check:terms` holds it to docs/terminology.schema.json, to the
+# identifiers in every v2 schema source and diagnostics table, and to the terms
+# each spec.md bold-defines. spec.md is normative: a record quotes it and may
+# not disagree with it.
+#
+# Writing a record:
+# - The definition is genus + differentia. It never starts with the term,
+#   never uses it, and never begins "is when". Put it in place of the term in a
+#   real spec sentence and check that the sentence still reads.
+# - A word with two meanings in two contexts is two records.
+# - A retired spelling is an alias: scope identifier for a schema or code
+#   spelling, scope prose for a word, with `suggest` when the replacement is not
+#   the display name.
+# - status: approved for a decided term, proposed for an open item.
+schema_version: 1
+description: >-
+  The vocabulary of the Musher documents: the envelope and families core
+  defines, the component, blueprint and listing concepts, what a deployment
+  resolves, and the repository's own terms for releases and conformance.
+
+terms:
+  # ===========================================================================
+  # core: what every document shares
+  # ===========================================================================
+
+  - id: core.musher-document
+    display_name: Musher document
+    context: core
+    definition: >-
+      A YAML document written to one family's specification, carrying the
+      four-member envelope core defines and validated as that family's kind.
+    shortDefinition: A document of one family, in the shared envelope.
+    kind_of: [core.yaml-document]
+    associated:
+      - { relation: belongs-to, term: core.family }
+      - { relation: carries, term: core.envelope }
+    example: "A component, a blueprint and a listing are each a Musher document."
+    aliases:
+      - { text: specification document, status: banned, scope: [prose], suggest: Musher document, note: "A document is written to a specification; it is not one." }
+    source: [core v2 §1.3, core v2 §2, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [document]
+
+  - id: core.yaml-document
+    display_name: YAML document
+    context: core
+    definition: >-
+      The single node tree one file holds when it is read under the Musher YAML
+      profile, before any family's schema has been applied to it.
+    shortDefinition: One parsed YAML tree, before any schema applies.
+    source: [core v2 §6.2]
+    stability: stable
+    status: approved
+    tags: [document, parsing]
+
+  - id: core.envelope
+    display_name: envelope
+    context: core
+    definition: >-
+      The four top-level members every Musher document carries, specVersion,
+      kind, metadata and spec, and the rules core states for them once for
+      every family.
+    shortDefinition: specVersion, kind, metadata and spec.
+    part_of: [core.musher-document]
+    identifiers: { requirement_prefixes: [CORE-ENV], codes: [ERR_UNKNOWN_FIELD, ERR_MISSING_FIELD, ERR_INVALID_TYPE, ERR_INVALID_VALUE] }
+    confusables: ["Kubernetes apiVersion/kind/metadata/spec: a different discriminator (ADR 0001)."]
+    source: [core v2 §2]
+    stability: stable
+    status: approved
+    tags: [document]
+
+  - id: core.spec-version
+    display_name: specVersion
+    context: core
+    definition: >-
+      The envelope member that names the major version a document is written
+      against, such as v2, and never an exact release.
+    shortDefinition: The major version a document declares.
+    part_of: [core.envelope]
+    associated:
+      - { relation: names, term: core.major-version }
+    identifiers: { fields: [/specVersion], values: [v2], codes: [ERR_UNSUPPORTED_SPEC_VERSION] }
+    confusables: ["An API URL version: independent of it.", "A release such as 2.3.0: a document never names one."]
+    source: [core v2 §2, core v2 §3]
+    stability: stable
+    status: approved
+    tags: [document, versioning]
+
+  - id: core.kind
+    display_name: kind
+    context: core
+    definition: >-
+      The envelope member naming which family's format a document is written
+      in: COMPONENT, BLUEPRINT or LISTING.
+    shortDefinition: Which family's format a document is.
+    part_of: [core.envelope]
+    identifiers: { fields: [/kind], values: [COMPONENT, BLUEPRINT, LISTING], codes: [ERR_WRONG_KIND] }
+    confusables:
+      - "A component's type, which says what the platform runs; ADR 0007 §1 reserves kind for the document format."
+      - "A listing's itemType, which says what shape of catalog item is presented."
+      - "Kubernetes kind, which names an API object type."
+    source: [core v2 §2, ADR 0007]
+    stability: stable
+    status: approved
+    tags: [document]
+
+  - id: core.metadata
+    display_name: metadata
+    context: core
+    definition: >-
+      The envelope member holding a document's identity and any description its
+      family requires, and nothing about what the document defines.
+    shortDefinition: Identity and description.
+    part_of: [core.envelope]
+    identifiers: { fields: [/metadata] }
+    source: [core v2 §2]
+    stability: stable
+    status: approved
+    tags: [document]
+
+  - id: core.spec
+    display_name: spec
+    context: core
+    definition: >-
+      The envelope member holding the definition itself, whose shape each
+      family's schema states.
+    shortDefinition: The definition itself.
+    part_of: [core.envelope]
+    identifiers: { fields: [/spec] }
+    confusables: ["The specification (spec.md) a family is defined by."]
+    source: [core v2 §2]
+    stability: stable
+    status: approved
+    tags: [document]
+
+  - id: core.family
+    display_name: family
+    context: core
+    definition: >-
+      One specification of the Musher document format, released on its own tag
+      line with its own corpus; every one but core also fixes a kind and
+      publishes a schema bundle.
+    shortDefinition: One specification, released on its own tag line.
+    associated:
+      - { relation: is-versioned-by, term: core.major-version }
+    verbs: [a family applies core, a family fixes what core leaves open, a family permits a namespace]
+    example: "The blueprint family depends on core and component."
+    confusables: ["A compute family (general, memory, gpu), which is a part of a compute profile slug."]
+    source: [core v2 §1.3, core v2 §1, ADR 0022]
+    stability: stable
+    status: approved
+    tags: [document, versioning]
+
+  - id: core.core
+    display_name: core
+    context: core
+    definition: >-
+      The base family: the specification that defines no kind and states the envelope, compatibility, item, grammar, phase and
+      shared-diagnostic rules every other family applies.
+    shortDefinition: The family with no kind, which every family applies.
+    kind_of: [core.family]
+    source: [core v2 §1, ADR 0022]
+    stability: stable
+    status: approved
+    tags: [document]
+
+  - id: core.family-parameter
+    display_name: what a family fixes
+    context: core
+    definition: >-
+      The set of choices core leaves open, kind, metadata, the fields accepting
+      null and the item document, that each family's §2 settles in a table
+      with the column "Left to the family".
+    shortDefinition: The choices core leaves to each family's §2.
+    part_of: [core.core]
+    aliases:
+      - { text: core parameter, status: banned, scope: [prose], suggest: left to the family, note: "Parameter means only a deployment parameter." }
+    source: [core v2 §1.1, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [document]
+
+  - id: core.normative-dependency
+    display_name: normative dependency
+    context: core
+    definition: >-
+      Another family whose rules a family applies, named with its major
+      version in the family's §2 so that its diagnostics table joins the
+      family's registry.
+    shortDefinition: A family whose rules another family applies.
+    associated:
+      - { relation: relates, term: core.family }
+    source: [core v2 §1.1]
+    stability: stable
+    status: approved
+    tags: [document, versioning]
+
+  - id: core.membership-test
+    display_name: what belongs in core
+    context: core
+    definition: >-
+      The three-part test a rule passes before it moves into core: it names no
+      kind, at least two families apply it, and within a major version it can
+      grow only by addition.
+    shortDefinition: The three conditions for a rule to live in core.
+    part_of: [core.core]
+    aliases:
+      - { text: core admission, status: banned, scope: [prose], suggest: what belongs in core, note: "Admission names only the validation phase." }
+    source: [core v2 §1.2, ADR 0022]
+    stability: stable
+    status: approved
+    tags: [document]
+
+  - id: core.major-version
+    display_name: major version
+    context: core
+    definition: >-
+      The compatibility boundary of a family, written v<N> as a directory and
+      in specVersion, inside which validation never becomes stricter.
+    shortDefinition: v<N>; validation never narrows inside it.
+    associated:
+      - { relation: contains, term: repository.release }
+    verbs: [a document declares a major version, a breaking change needs a new major version]
+    example: "v2 is the major version every family moved to in one release set."
+    aliases:
+      - { text: compatibility family, status: banned, scope: [prose] }
+      - { text: major line, status: banned, scope: [prose] }
+      - { text: release line, status: banned, scope: [prose] }
+    source: [core v2 §1.3, core v2 §3, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [versioning]
+
+  - id: core.retired-major
+    display_name: retired major
+    context: core
+    definition: >-
+      A major version that is tagged and recorded in the ledger but has no
+      directory in the tree, whose released bytes are still served and are
+      treated as history rather than as a candidate.
+    shortDefinition: A recorded, tagged major with no directory.
+    kind_of: [core.major-version]
+    example: "v1 is a retired major once v2 lands."
+    source: [ADR 0038]
+    stability: stable
+    status: approved
+    tags: [versioning, publication]
+
+  - id: core.core-release
+    display_name: core release
+    context: core
+    definition: >-
+      One tagged release of the base family, which each release of another
+      family records as the one it was built and tested against.
+    shortDefinition: One release of core, recorded by every dependent release.
+    kind_of: [repository.release]
+    verbs: [a family release records its core release, every core release re-releases its dependent families]
+    confusables: ["Protobuf and Rust editions, which are semantics epochs, not releases."]
+    aliases:
+      - { text: edition, status: banned, scope: [prose] }
+      - { text: editions, status: banned, scope: [prose], suggest: core releases }
+      - { text: dependency editions, status: banned, scope: [prose], suggest: dependency releases }
+    source: [core v2 §1.3, core v2 §9, ADR 0023, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [versioning, publication]
+
+  - id: core.item-document
+    display_name: item document
+    context: core
+    definition: >-
+      A document whose file name its family fixes, blueprint.yaml or
+      listing.yaml, so that the directory holding it is the root of a catalog
+      item.
+    shortDefinition: A document whose fixed file name marks an item root.
+    kind_of: [core.musher-document]
+    part_of: [catalog.catalog-item]
+    source: [core v2 §1.3, core v2 §4.1]
+    stability: stable
+    status: approved
+    tags: [catalog, document]
+
+  - id: core.item-root
+    display_name: item root
+    context: core
+    definition: >-
+      The directory holding a catalog item's item documents, against which
+      slug, containment and media rules are measured.
+    shortDefinition: The directory an item's rules are measured against.
+    part_of: [catalog.catalog-item]
+    example: "A document handed over without a directory has no item root."
+    source: [core v2 §1.3, core v2 §4.1]
+    stability: stable
+    status: approved
+    tags: [catalog]
+
+  - id: core.slug
+    display_name: slug
+    context: core
+    definition: >-
+      The identity field of an item document, a DNS label that MUST equal the
+      name of the item directory.
+    shortDefinition: An item's name, equal to its directory name.
+    part_of: [core.metadata]
+    identifiers: { fields: [/metadata/slug], codes: [ERR_SLUG_MISMATCH] }
+    source: [core v2 §4.2]
+    stability: stable
+    status: approved
+    tags: [catalog, identity]
+
+  - id: core.dns-label-grammar
+    display_name: DNS-label grammar
+    context: core
+    definition: >-
+      The identifier grammar `^[a-z][a-z0-9-]{0,61}[a-z0-9]$`, two to sixty-three
+      characters, for a name composed into a host name or materialized under
+      its own name.
+    shortDefinition: The lowercase DNS label, 2 to 63 characters.
+    identifiers: { grammars: [dns-label] }
+    example: "A slug, a node name and a component volume name take the DNS-label grammar."
+    confusables: ["A deploy-form label (ui.label), which is display text.", "Kubernetes labels, which are key-value selectors."]
+    aliases:
+      - { text: label, status: banned, scope: [identifier], suggest: dns-label, note: "x-musher-grammar value." }
+      - { text: the label grammar, status: banned, scope: [prose], suggest: the DNS-label grammar, note: "Bare 'label grammar' is not flagged, since it sits inside 'DNS-label grammar'." }
+    source: [core v2 §5.1, ADR 0007]
+    stability: stable
+    status: approved
+    tags: [grammar]
+
+  - id: core.placeholder
+    display_name: placeholder
+    context: core
+    definition: >-
+      A `${{ <namespace>.<path> }}` expression standing where a value would
+      stand, naming a fact the document cannot contain, which is substituted
+      once and never scanned again.
+    shortDefinition: "`${{ namespace.path }}`: a value named, not written."
+    identifiers:
+      requirement_prefixes: [CORE-PLACEHOLDER, COMP-PLACEHOLDER, BP-PLACEHOLDER]
+      codes: [ERR_MALFORMED_PLACEHOLDER]
+    verbs: [a placeholder names a fact, a placeholder is substituted, a position is open to placeholders]
+    example: "`${{ self.endpoints.web.publicURL }}` is a placeholder in the self namespace."
+    confusables: ["A document reference (componentRef), which names another document.", "An OCI image reference, OCI's own term."]
+    aliases:
+      - { text: ERR_MALFORMED_REFERENCE, status: banned, scope: [identifier], suggest: ERR_MALFORMED_PLACEHOLDER }
+      - { text: CORE-REF, status: banned, scope: [identifier], suggest: CORE-PLACEHOLDER }
+      - { text: COMP-REF, status: banned, scope: [identifier], suggest: COMP-PLACEHOLDER }
+      - { text: malformed reference, status: banned, scope: [prose], suggest: malformed placeholder }
+      - { text: whole reference, status: banned, scope: [prose], suggest: whole placeholder }
+    source: [core v2 §1.3, core v2 §5.2, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [grammar, placeholder]
+
+  - id: core.placeholder-grammar
+    display_name: placeholder grammar
+    context: core
+    definition: >-
+      The syntax of a `${{ }}` expression: the opening `${{`, a namespace, one
+      or more dot-separated segments, and the closing `}}`, with `$${{` as the
+      only escape.
+    shortDefinition: The syntax and escape of `${{ }}`.
+    part_of: [core.placeholder]
+    aliases:
+      - { text: reference grammar, status: banned, scope: [prose] }
+    source: [core v2 §5.2]
+    stability: stable
+    status: approved
+    tags: [grammar, placeholder]
+
+  - id: core.placeholder-namespace
+    display_name: namespace
+    context: core
+    definition: >-
+      One name from the closed set core reserves for the first segment of a
+      `${{ }}` expression, which a family permits at a named position or leaves
+      unused.
+    shortDefinition: The closed set of first segments of `${{ }}`.
+    part_of: [core.placeholder]
+    identifiers:
+      namespaces: [self, parameters, variables, connections, deployment, environment, organization, nodes]
+      codes: [ERR_UNKNOWN_PLACEHOLDER_NAMESPACE, ERR_NAMESPACE_NOT_PERMITTED]
+    verbs: [a family permits a namespace at a position]
+    aliases:
+      - { text: output, status: banned, scope: [identifier], suggest: nodes, note: "The namespace for another node's value is nodes." }
+      - { text: ERR_UNKNOWN_REFERENCE_NAMESPACE, status: banned, scope: [identifier], suggest: ERR_UNKNOWN_PLACEHOLDER_NAMESPACE }
+      - { text: ERR_REFERENCE_NOT_IN_SCOPE, status: banned, scope: [identifier], suggest: ERR_NAMESPACE_NOT_PERMITTED }
+      - { text: reference namespace, status: banned, scope: [prose], suggest: placeholder namespace }
+      - { text: admits a namespace, status: banned, scope: [prose], suggest: permits a namespace }
+    source: [core v2 §1.3, core v2 §5.2, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [grammar, placeholder]
+
+  - id: core.reserved-namespace
+    display_name: reserved namespace
+    context: core
+    definition: >-
+      A placeholder namespace with no meaning yet in any family, held back so
+      that no author can ever address it: parameters, environment,
+      organization and nodes.
+    shortDefinition: A namespace held back, with no meaning yet.
+    kind_of: [core.placeholder-namespace]
+    source: [core v2 §5.2, core v2 §10]
+    stability: stable
+    status: approved
+    tags: [placeholder]
+
+  - id: core.self-namespace
+    display_name: self namespace
+    context: core
+    definition: >-
+      The placeholder namespace naming the addressing of the thing a value is
+      bound to, which component defines as `self.endpoints.<endpoint>.<property>`.
+    shortDefinition: "self.endpoints.<endpoint>.<property>."
+    kind_of: [core.placeholder-namespace]
+    associated:
+      - { relation: names, term: component.endpoint-property }
+    source: [core v2 §5.2, component v2 §6.2]
+    stability: stable
+    status: approved
+    tags: [placeholder]
+
+  - id: core.environment-namespace
+    display_name: environment namespace
+    context: core
+    definition: >-
+      The reserved placeholder namespace for facts about the environment a
+      deployment reads variable values from.
+    shortDefinition: Reserved, for the environment a deployment reads from.
+    kind_of: [core.reserved-namespace]
+    confusables: ["A workload's environment variables, which its inputs' targets write."]
+    source: [core v2 §5.2]
+    stability: stable
+    status: approved
+    tags: [placeholder]
+
+  - id: core.validation-phase
+    display_name: validation phase
+    context: core
+    definition: >-
+      One of the five ordered steps an implementation applies to a document,
+      parser, structural, semantic, admission and resolution, each of which
+      reports only once the earlier ones pass.
+    shortDefinition: parser, structural, semantic, admission, resolution.
+    verbs: [a rule is decided in a phase, a diagnostic reports its phase]
+    aliases:
+      - { text: validation layer, status: banned, scope: [prose], suggest: validation phase }
+      - { text: validation layers, status: banned, scope: [prose], suggest: validation phases }
+      - { text: validation stage, status: banned, scope: [prose], suggest: validation phase }
+    source: [core v2 §1.3, core v2 §6, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [validation]
+
+  - id: core.parser-phase
+    display_name: parser phase
+    context: core
+    definition: >-
+      The first validation phase, which reads bytes under the Musher YAML
+      profile before any family is chosen.
+    shortDefinition: Reads bytes under the YAML profile.
+    kind_of: [core.validation-phase]
+    source: [core v2 §6, core v2 §6.2]
+    stability: stable
+    status: approved
+    tags: [validation]
+
+  - id: core.structural-phase
+    display_name: structural phase
+    context: core
+    definition: >-
+      The validation phase that checks a document against its family's JSON
+      Schema 2020-12 bundle.
+    shortDefinition: Checks the document against its family's schema.
+    kind_of: [core.validation-phase]
+    source: [core v2 §6]
+    stability: stable
+    status: approved
+    tags: [validation]
+
+  - id: core.semantic-phase
+    display_name: semantic phase
+    context: core
+    definition: >-
+      The validation phase for rules a JSON Schema cannot state, such as
+      containment, uniqueness across collections and agreement between
+      documents, decided offline.
+    shortDefinition: Offline rules no schema can express.
+    kind_of: [core.validation-phase]
+    source: [core v2 §6]
+    stability: stable
+    status: approved
+    tags: [validation]
+
+  - id: core.admission-phase
+    display_name: admission phase
+    context: core
+    definition: >-
+      The validation phase run by the publisher or the platform, for
+      obligations that need the catalog, an account or a policy, such as a
+      revision that increases or a description present at publication.
+    shortDefinition: Publisher and platform checks that need the catalog or policy.
+    kind_of: [core.validation-phase]
+    aliases:
+      - { text: capability, status: banned, scope: [identifier], suggest: admission, note: "The phase value and the case-tree directory." }
+      - { text: capability phase, status: banned, scope: [prose], suggest: admission phase }
+      - { text: capability check, status: banned, scope: [prose], suggest: admission check }
+      - { text: capability checks, status: banned, scope: [prose], suggest: admission checks }
+    source: [core v2 §6, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [validation]
+
+  - id: core.resolution-phase
+    display_name: resolution phase
+    context: core
+    definition: >-
+      The last validation phase, run while a deployment is resolved, whose
+      diagnostics also name the resolution stage that found them.
+    shortDefinition: Run while a deployment is resolved; names its stage.
+    kind_of: [core.validation-phase]
+    associated:
+      - { relation: runs-during, term: deployment.resolution }
+    source: [core v2 §6, core v2 §7, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [validation, deployment]
+
+  - id: core.validation-scope
+    display_name: validation scope
+    context: core
+    definition: >-
+      The set of obligations a validation result claims to have completed,
+      from the lattice parser ⊂ structural ⊂ document ⊂ publication ⊂
+      deployment, and the level an implementation declares it conforms at.
+    shortDefinition: "parser ⊂ structural ⊂ document ⊂ publication ⊂ deployment."
+    identifiers: { requirement_prefixes: [CORE-ADMISSION] }
+    example: "An editor integration conforms at structural validation scope."
+    aliases:
+      - { text: validationProfile, status: banned, scope: [identifier], suggest: validationScope }
+      - { text: validation profile, status: banned, scope: [prose], suggest: validation scope }
+      - { text: conformance profile, status: discouraged, scope: [prose], suggest: validation scope }
+    source: [core v2 §1.3, core v2 §6.1, core v2 §8, docs/conformance.md, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [validation, conformance]
+
+  - id: core.validation-status
+    display_name: validation status
+    context: core
+    definition: >-
+      The verdict of a validation result: VALID when every obligation of the
+      claimed scope completed, INVALID on a known failure, and INCOMPLETE when
+      context was missing and an obligation was deferred.
+    shortDefinition: VALID, INVALID or INCOMPLETE.
+    part_of: [core.validation-scope]
+    example: "No caller may read INCOMPLETE as approval."
+    source: [core v2 §6.1]
+    stability: stable
+    status: approved
+    tags: [validation]
+
+  - id: core.deferred-obligation
+    display_name: deferred obligation
+    context: core
+    definition: >-
+      A rule a validator could not decide for lack of context, reported with
+      its requirement, its document pointer and the missing context, and
+      making the result INCOMPLETE.
+    shortDefinition: A rule left undecided for lack of context.
+    part_of: [core.validation-scope]
+    source: [core v2 §1.3, core v2 §6.1]
+    stability: stable
+    status: approved
+    tags: [validation]
+
+  - id: core.yaml-profile
+    display_name: Musher YAML profile
+    context: core
+    definition: >-
+      The restriction of YAML 1.2.2 every Musher document is written in: one
+      UTF-8 document, string keys, no duplicate keys, anchors, aliases, merge
+      keys or tags, core-schema scalars, and fixed size bounds.
+    shortDefinition: The restricted YAML 1.2.2 every document is written in.
+    identifiers:
+      requirement_prefixes: [CORE-YAML]
+      codes: [ERR_INVALID_YAML, ERR_INVALID_UTF8, ERR_INVALID_NUMBER, ERR_DUPLICATE_KEY, ERR_ANCHOR_OR_ALIAS, ERR_MULTIPLE_DOCUMENTS, ERR_NON_STRING_KEY, ERR_MERGE_KEY, ERR_EXPLICIT_TAG, ERR_DOCUMENT_TOO_LARGE, ERR_DEPTH_EXCEEDED, ERR_SCALAR_TOO_LONG]
+    confusables: ["The overview Markdown profile and the value-schema profile: every profile is named with what it restricts."]
+    source: [core v2 §6.2]
+    stability: stable
+    status: approved
+    tags: [parsing]
+
+  - id: core.diagnostic
+    display_name: diagnostic
+    context: core
+    definition: >-
+      One reported failure of a document: a normative code, the phase that
+      found it, a JSON Pointer path into the submitted document, and
+      non-normative message text.
+    shortDefinition: Code, phase and path of one failure.
+    identifiers: { codes: [ERR_UNKNOWN_FIELD] }
+    verbs: [a diagnostic anchors at a path, an implementation reports a diagnostic]
+    source: [core v2 §1.3, core v2 §7]
+    stability: stable
+    status: approved
+    tags: [validation]
+
+  - id: core.diagnostic-code
+    display_name: diagnostic code
+    context: core
+    definition: >-
+      The stable ERR_ name of one condition a document can fail, declared in
+      exactly one diagnostics table with every phase it may be reported in.
+    shortDefinition: The ERR_ name of one condition.
+    part_of: [core.diagnostic]
+    source: [core v2 §7]
+    stability: stable
+    status: approved
+    tags: [validation]
+
+  - id: core.diagnostic-registry
+    display_name: diagnostic registry
+    context: core
+    definition: >-
+      The set of diagnostic codes a family's documents may be reported with:
+      the family's own diagnostics table, core's, and those of the families it
+      declares as normative dependencies, each code with every phase that may
+      report it.
+    shortDefinition: Every code a family may report, with its phases.
+    associated:
+      - { relation: lists, term: core.diagnostic-code }
+    source: [core v2 §1.1, core v2 §1.3, core v2 §7]
+    stability: stable
+    status: approved
+    tags: [validation]
+
+  - id: core.logical-value
+    display_name: logical value
+    context: core
+    definition: >-
+      A JSON value as a value schema constrains it, before any encoding into an
+      environment variable or a string.
+    shortDefinition: A JSON value before encoding.
+    example: "Booleans are encoded lower case only after the logical value is validated."
+    source: [core v2 §6.2, component v2 §5.3]
+    stability: stable
+    status: approved
+    tags: [values]
+
+  - id: core.network-connection
+    display_name: network connection
+    context: core
+    definition: >-
+      A TCP or WebSocket session between two hosts, such as one the platform
+      opens to an endpoint or one a viewer holds open.
+    shortDefinition: A TCP-level session between hosts.
+    confusables: ["A connection: the members of one protocol, acquired together. Bare 'connection' means only that."]
+    source: [component v2 §5.2, blueprint v2 §4.5, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [networking]
+
+  # ===========================================================================
+  # catalog: where items are published
+  # ===========================================================================
+
+  - id: catalog.catalog
+    display_name: catalog
+    context: catalog
+    definition: >-
+      The published collection of items, keyed by identity and revision, that
+      a component reference by UUID resolves against and a storefront
+      browses.
+    shortDefinition: The published collection of items.
+    verbs: [publish to the catalog, the catalog holds an item]
+    confusables: ["An OCI registry, which holds images; a registry is never the catalog, and 'registry' stays legitimate for an OCI registry or a model registry."]
+    aliases:
+      - { text: component registry, status: discouraged, scope: [prose], suggest: catalog }
+      - { text: the registry, status: discouraged, scope: [prose], suggest: the catalog, note: "Say catalog for the published collection; an OCI registry stays a registry." }
+    source: [listing v2 §1.1, core v2 §4.1, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [catalog]
+
+  - id: catalog.storefront
+    display_name: storefront
+    context: catalog
+    definition: >-
+      The browsing interface that renders listings so that people can find,
+      compare and deploy catalog items.
+    shortDefinition: The UI that renders listings.
+    associated:
+      - { relation: renders, term: listing.listing }
+    source: [listing v2 §1.1, listing v2 §1, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [catalog, presentation]
+
+  - id: catalog.catalog-item
+    display_name: catalog item
+    context: catalog
+    definition: >-
+      A directory the catalog publishes as one unit, holding its item documents
+      and component documents at one item root: a blueprint item or a
+      component item.
+    shortDefinition: A directory published as one unit.
+    part_of: [catalog.catalog]
+    identifiers: { requirement_prefixes: [CORE-ITEM] }
+    aliases:
+      - { text: deployable thing, status: banned, scope: [prose], suggest: catalog item }
+    source: [listing v2 §1.1, core v2 §1.3, core v2 §4.1, core v2 §4.2, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [catalog]
+
+  - id: catalog.blueprint-item
+    display_name: blueprint item
+    context: catalog
+    definition: >-
+      A catalog item whose root holds blueprint.yaml and listing.yaml, and
+      every component document the blueprint's nodes reference.
+    shortDefinition: blueprint.yaml, listing.yaml and the components they use.
+    kind_of: [catalog.catalog-item]
+    identifiers: { codes: [ERR_UNREFERENCED_COMPONENT] }
+    source: [listing v2 §1.1, blueprint v2 §3, blueprint v2 §3.1]
+    stability: stable
+    status: approved
+    tags: [catalog]
+
+  - id: catalog.component-item
+    display_name: component item
+    context: catalog
+    definition: >-
+      A catalog item whose root holds listing.yaml with itemType COMPONENT and
+      exactly one component document, and no blueprint.
+    shortDefinition: listing.yaml and exactly one component.
+    kind_of: [catalog.catalog-item]
+    identifiers: { codes: [ERR_COMPONENT_COUNT] }
+    source: [listing v2 §1.1, listing v2 §3.1, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [catalog]
+
+  - id: catalog.publication
+    display_name: publication
+    context: catalog
+    definition: >-
+      The act of admitting a document or an item into the catalog, after every
+      admission-phase obligation it carries has completed.
+    shortDefinition: Admitting a document into the catalog.
+    associated:
+      - { relation: completes, term: core.admission-phase }
+    verbs: [publish a component, a revision counts publications]
+    aliases:
+      - { text: counts releases, status: banned, scope: [prose], suggest: counts publications, note: "Release means only a specification release." }
+    source: [component v2 §4, blueprint v2 §3]
+    stability: stable
+    status: approved
+    tags: [catalog, publication]
+
+  - id: catalog.publication-obligation
+    display_name: publication obligation
+    context: catalog
+    definition: >-
+      A requirement a document may leave unmet while it is being written and
+      MUST meet when it is published, checked in the admission phase and never
+      offline.
+    shortDefinition: Required to publish, never offline.
+    part_of: [catalog.publication]
+    example: "A SERVICE without an endpoint validates, and fails the publication obligation ERR_ENDPOINT_REQUIRED."
+    source: [component v2 §5]
+    stability: stable
+    status: approved
+    tags: [catalog, validation]
+
+  # ===========================================================================
+  # component
+  # ===========================================================================
+
+  - id: component.component
+    display_name: component
+    context: component
+    definition: >-
+      A reusable, versioned definition that a blueprint node deploys: what the
+      platform runs for it, if anything, and the values it consumes and
+      produces.
+    shortDefinition: A reusable, versioned definition a node deploys.
+    kind_of: [core.musher-document]
+    identifiers: { defs: [ComponentSpec, ComponentMetadata] }
+    verbs: [a node deploys a component, publish a component]
+    example: "./components/postgres.yaml is the component the db node deploys."
+    confusables: ["A node: one use of a component inside a blueprint."]
+    aliases:
+      - { text: graph node, status: discouraged, scope: [prose], suggest: component, note: "A component is the definition; the graph holds nodes." }
+    source: [component v2 §1.1, component v2 §1, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [component]
+
+  - id: component.revision
+    display_name: component revision
+    context: component
+    definition: >-
+      A positive integer naming one position in a single component's lineage,
+      strictly greater at each publication, and carrying no compatibility
+      meaning.
+    shortDefinition: Position in one component's lineage.
+    part_of: [core.metadata]
+    associated:
+      - { relation: orders, term: component.lineage }
+    identifiers: { fields: [/metadata/revision], requirement_prefixes: [COMP-ID], codes: [ERR_REVISION_NOT_INCREASING] }
+    confusables: ["The item revision a blueprint carries, which counts publications of the item.", "A SemVer version."]
+    aliases:
+      - { text: ERR_VERSION_NOT_MONOTONIC, status: banned, scope: [identifier], suggest: ERR_REVISION_NOT_INCREASING }
+    source: [component v2 §4]
+    stability: stable
+    status: approved
+    tags: [component, versioning]
+
+  - id: component.lineage
+    display_name: lineage
+    context: component
+    definition: >-
+      The ordered sequence of every published revision of one component, which
+      the catalog holds and an offline validator never sees.
+    shortDefinition: Every published revision of one component, in order.
+    source: [component v2 §4]
+    stability: stable
+    status: approved
+    tags: [component, versioning]
+
+  - id: component.description
+    display_name: component description
+    context: component
+    definition: >-
+      The plain-text sentence or two, 1 to 280 characters, saying what a
+      component, an input or an output is, for the person composing a
+      blueprint.
+    shortDefinition: Plain text for the person composing a blueprint.
+    identifiers: { fields: [/metadata/description, description], requirement_prefixes: [COMP-DESC], codes: [ERR_DESCRIPTION_REQUIRED] }
+    confusables: ["A listing summary or overview, which is storefront copy."]
+    source: [component v2 §4, component v2 §6]
+    stability: stable
+    status: approved
+    tags: [component, presentation]
+
+  - id: component.type
+    display_name: component type
+    context: component
+    definition: >-
+      The field naming what the platform runs for a component: its workload as
+      a SERVICE, WORKER or JOB, or nothing, for an EXTERNAL one.
+    shortDefinition: What the platform runs.
+    part_of: [component.component]
+    identifiers: { fields: [/spec/type], requirement_prefixes: [COMP-TYPE] }
+    confusables: ["A document's kind, which names its format.", "A value schema's type keyword."]
+    source: [component v2 §5, ADR 0039]
+    stability: stable
+    status: approved
+    tags: [component]
+
+  - id: component.service
+    display_name: SERVICE
+    context: component
+    definition: >-
+      The component type of a long-running, request-driven workload that
+      declares at least one endpoint before it is published.
+    shortDefinition: Long-running, request-driven.
+    kind_of: [component.type]
+    identifiers: { values: [SERVICE], codes: [ERR_ENDPOINT_REQUIRED] }
+    confusables: ["A Kubernetes Service, which is a stable network address for pods."]
+    source: [component v2 §5]
+    stability: stable
+    status: approved
+    tags: [component]
+
+  - id: component.worker
+    display_name: WORKER
+    context: component
+    definition: >-
+      The component type of a long-running workload that is not request-driven,
+      whose endpoints serve the platform and sibling nodes and are never
+      PUBLIC.
+    shortDefinition: Long-running, not request-driven.
+    kind_of: [component.type]
+    identifiers: { values: [WORKER] }
+    source: [component v2 §5]
+    stability: stable
+    status: approved
+    tags: [component]
+
+  - id: component.job
+    display_name: JOB
+    context: component
+    definition: >-
+      The component type of a workload that runs to completion, once per
+      rollout or on a schedule, and serves and declares nothing to probe.
+    shortDefinition: Runs to completion.
+    kind_of: [component.type]
+    identifiers: { values: [JOB], requirement_prefixes: [COMP-JOB] }
+    source: [component v2 §5, component v2 §5.7]
+    stability: stable
+    status: approved
+    tags: [component]
+
+  - id: component.external
+    display_name: EXTERNAL
+    context: component
+    definition: >-
+      The component type of a node the platform runs nothing for, which stands
+      in the graph for a connection or an outside service whose values arrive
+      from outside the graph.
+    shortDefinition: Runs nothing; stands in for something outside the graph.
+    kind_of: [component.type]
+    identifiers: { values: [EXTERNAL], requirement_prefixes: [COMP-EXT], codes: [ERR_OUTPUT_REQUIRED] }
+    example: "An EXTERNAL component with a POSTGRES connection input hands its members to the nodes that use the database."
+    confusables: ["Kubernetes ExternalName, Backstage and Pelorus 'external', which match.", "A Kafka Connect or Airbyte connector, which is code that runs."]
+    aliases:
+      - { text: connector, status: discouraged, scope: [prose], suggest: external component }
+    source: [component v2 §5.6, ADR 0039]
+    stability: stable
+    status: approved
+    tags: [component]
+
+  - id: component.workload
+    display_name: workload
+    context: component
+    definition: >-
+      The part of a SERVICE, WORKER or JOB that says how the platform runs it:
+      source, build recipe, command, endpoints, probes, volumes and schedule.
+    shortDefinition: How the platform runs a component.
+    part_of: [component.component]
+    identifiers: { fields: [/spec/workload], defs: [ComponentWorkload], codes: [ERR_WORKLOAD_REQUIRED] }
+    source: [component v2 §1.1, component v2 §5]
+    stability: stable
+    status: approved
+    tags: [component, workload]
+
+  - id: component.source
+    display_name: source
+    context: component
+    definition: >-
+      The part of a workload naming where its image or the material to build
+      it comes from: exactly one of an image, a git repository or an upload.
+    shortDefinition: image, git or upload.
+    part_of: [component.workload]
+    identifiers: { fields: [/spec/workload/source], defs: [ComponentSource], requirement_prefixes: [COMP-SRC], codes: [ERR_SOURCE_REQUIRED] }
+    confusables: ["Origin: where a value comes from. Source means only a workload source."]
+    source: [component v2 §1.1, component v2 §5.1, ADR 0040]
+    stability: stable
+    status: approved
+    tags: [component, workload, build]
+
+  - id: component.image-source
+    display_name: image source
+    context: component
+    definition: >-
+      A workload source naming an existing OCI image by reference, a name with
+      an optional tag and an optional SHA-256 digest, which takes no build
+      recipe.
+    shortDefinition: An existing OCI image.
+    kind_of: [component.source]
+    identifiers: { fields: [image], values: [IMAGE], defs: [ComponentImageReference] }
+    example: "nginx:1.29.4-alpine is an image source."
+    source: [component v2 §5.1]
+    stability: stable
+    status: approved
+    tags: [workload, build]
+
+  - id: component.git-source
+    display_name: git source
+    context: component
+    definition: >-
+      A workload source naming an https git repository URL and an optional
+      ref, a branch, a tag or a full commit, that the platform builds into an
+      image with a build recipe.
+    shortDefinition: A repository the platform builds.
+    kind_of: [component.source]
+    identifiers: { fields: [git, repositoryURL, ref, branch, tag, commit], values: [GIT], defs: [ComponentGitSource, ComponentGitRef] }
+    confusables: ["Pelorus GITHUB snapshot origin."]
+    source: [component v2 §5.1, ADR 0040]
+    stability: stable
+    status: approved
+    tags: [workload, build]
+
+  - id: component.upload-source
+    display_name: upload source
+    context: component
+    definition: >-
+      A workload source naming an uploaded POSIX tar archive, optionally
+      gzip-compressed, by the SHA-256 digest of its bytes, which the platform
+      builds with a build recipe.
+    shortDefinition: An uploaded archive, named by its digest.
+    kind_of: [component.source]
+    identifiers: { fields: [upload], values: [UPLOAD], defs: [ComponentUploadSource] }
+    source: [component v2 §5.1, ADR 0040]
+    stability: provisional
+    status: approved
+    tags: [workload, build]
+
+  - id: component.build-recipe
+    display_name: build recipe
+    context: component
+    definition: >-
+      The part of a workload stating how a git or upload source becomes an
+      image: a context, exactly one of a Dockerfile or buildpacks, arguments
+      and secrets, always named and never detected.
+    shortDefinition: How a source becomes an image.
+    part_of: [component.workload]
+    identifiers: { fields: [build, dockerfile, buildpacks, builderImage], defs: [ComponentBuild, ComponentBuildpacks], requirement_prefixes: [COMP-BUILD] }
+    verbs: [a document names a build recipe, a tool may write a recipe before publication]
+    confusables: ["Pelorus BuildRecipe, which this matches."]
+    source: [component v2 §1.1, component v2 §5.1, ADR 0040]
+    stability: provisional
+    status: approved
+    tags: [workload, build]
+
+  - id: component.source-root
+    display_name: source root
+    context: component
+    definition: >-
+      The top directory of a git commit or an uploaded archive, against which
+      a build context and a Dockerfile path are resolved.
+    shortDefinition: The top of a git commit or an upload.
+    part_of: [component.source]
+    source: [component v2 §5.1, ADR 0040]
+    stability: provisional
+    status: approved
+    tags: [build]
+
+  - id: component.source-content-key
+    display_name: source content key
+    context: component
+    definition: >-
+      The pin naming exactly the content a build reads: the resolved commit
+      of a git source, or the upload digest of an upload source.
+    shortDefinition: The commit or upload digest a build reads.
+    part_of: [component.source]
+    source: [component v2 §5.1, blueprint v2 §5.2, ADR 0040]
+    stability: provisional
+    status: approved
+    tags: [build, resolution]
+
+  - id: component.build-context
+    display_name: build context
+    context: component
+    definition: >-
+      The canonical directory, relative to the source root and defaulting to
+      ., outside which a build reads nothing.
+    shortDefinition: The directory a build may read.
+    part_of: [component.build-recipe]
+    identifiers: { fields: [context] }
+    source: [component v2 §5.1, ADR 0040]
+    stability: provisional
+    status: approved
+    tags: [build]
+
+  - id: component.build-argument
+    display_name: build argument
+    context: component
+    definition: >-
+      A non-sensitive literal, keyed by an environment-variable name, passed to
+      the build only and never to the running workload.
+    shortDefinition: A build-time literal.
+    part_of: [component.build-recipe]
+    identifiers: { fields: [arguments] }
+    source: [component v2 §5.1]
+    stability: stable
+    status: approved
+    tags: [build]
+
+  - id: component.build-secret
+    display_name: build secret
+    context: component
+    definition: >-
+      A sensitive, guaranteed input a build mounts under an ID, as a BuildKit
+      secret or to the buildpacks detect and build steps, and that never
+      reaches an image layer, provenance, the build log or the launch
+      environment.
+    shortDefinition: A sensitive input mounted into the build only.
+    part_of: [component.build-recipe]
+    identifiers: { fields: [secrets], defs: [ComponentBuildSecret] }
+    source: [component v2 §5.1, ADR 0040]
+    stability: provisional
+    status: approved
+    tags: [build, sensitivity]
+
+  - id: component.command
+    display_name: command
+    context: component
+    definition: >-
+      The exec-form list of arguments that replaces an image's CMD and keeps
+      its ENTRYPOINT, passed verbatim with no shell.
+    shortDefinition: Exec-form CMD replacement.
+    part_of: [component.workload]
+    identifiers: { fields: [command], requirement_prefixes: [COMP-CMD], codes: [ERR_COMMAND_REQUIRED] }
+    confusables: ["Kubernetes command, which replaces ENTRYPOINT."]
+    source: [component v2 §5]
+    stability: stable
+    status: approved
+    tags: [workload]
+
+  - id: component.endpoint
+    display_name: endpoint
+    context: component
+    definition: >-
+      A named port a workload listens on, with the protocol the platform speaks
+      to it, through which the platform forwards traffic and sends probes.
+    shortDefinition: A named port and protocol a workload serves.
+    part_of: [component.workload]
+    identifiers: { fields: [endpoints, endpoint], defs: [ComponentEndpoint], requirement_prefixes: [COMP-EP], codes: [ERR_UNKNOWN_ENDPOINT] }
+    verbs: [a component declares an endpoint, a node exposes an endpoint, a field names an endpoint]
+    confusables: ["The S3 member endpointURL, which is the address of an outside API."]
+    aliases:
+      - { text: endpoint reference, status: banned, scope: [prose], suggest: a field naming an endpoint }
+      - { text: primary endpoint, status: banned, scope: [prose], suggest: the named endpoint, note: "Every field names its endpoint; none is primary." }
+    source: [component v2 §1.1, component v2 §5.2]
+    stability: stable
+    status: approved
+    tags: [workload, networking]
+
+  - id: component.target-port
+    display_name: target port
+    context: component
+    definition: >-
+      The port, 1 to 65535, that a workload listens on and that traffic for an
+      endpoint is forwarded to, never the public port.
+    shortDefinition: The port the workload listens on.
+    part_of: [component.endpoint]
+    identifiers: { fields: [targetPort], codes: [ERR_PRIVILEGED_PORT] }
+    source: [component v2 §5.2]
+    stability: stable
+    status: approved
+    tags: [networking]
+
+  - id: component.protocol
+    display_name: protocol
+    context: component
+    definition: >-
+      The wire contract a client speaks, independent of vendor: for an
+      endpoint one of HTTP, HTTPS, WS, GRPC, TCP and UDP, and for a connection
+      input one of the connection protocols, which fixes its members.
+    shortDefinition: The vendor-neutral wire contract a client speaks.
+    identifiers:
+      fields: [protocol]
+      values: [HTTP, HTTPS, WS, GRPC, TCP, UDP, OPENAI_CHAT_COMPLETIONS, ANTHROPIC_MESSAGES, POSTGRES, REDIS, S3]
+    example: "A connection input with protocol POSTGRES receives host, port, database, username, password and sslMode, and a url composed from them."
+    source: [component v2 §5.2, component v2 §6.4, ADR 0039]
+    stability: stable
+    status: approved
+    tags: [networking, connections]
+
+  - id: component.url-addressed
+    display_name: URL-addressed
+    context: component
+    definition: >-
+      Said of an endpoint protocol a public URL can address: HTTP, HTTPS, WS or
+      GRPC, the protocols publicURL and publicHostname may be read from.
+    shortDefinition: HTTP, HTTPS, WS, GRPC.
+    kind_of: [component.protocol]
+    identifiers: { codes: [ERR_ENDPOINT_NOT_URL_ADDRESSED] }
+    aliases:
+      - { text: address family, status: banned, scope: [prose], suggest: URL-addressed or port-addressed }
+    source: [component v2 §5.2, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [networking]
+
+  - id: component.port-addressed
+    display_name: port-addressed
+    context: component
+    definition: >-
+      Said of an endpoint protocol reached at a host and port with no URL: TCP
+      or UDP, the protocols publicAddress and publicPort may be read from.
+    shortDefinition: TCP, UDP.
+    kind_of: [component.protocol]
+    identifiers: { codes: [ERR_ENDPOINT_NOT_PORT_ADDRESSED] }
+    aliases:
+      - { text: ERR_ENDPOINT_NOT_L4, status: banned, scope: [identifier], suggest: ERR_ENDPOINT_NOT_PORT_ADDRESSED }
+    source: [component v2 §5.2, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [networking]
+
+  - id: component.http-routed
+    display_name: HTTP-routed
+    context: component
+    definition: >-
+      Said of an endpoint protocol the platform's proxy routes per request:
+      HTTP, HTTPS or WS, the only ones that carry sign-in, viewer identity, an
+      OIDC client or exemptible requests.
+    shortDefinition: HTTP, HTTPS, WS.
+    kind_of: [component.protocol]
+    identifiers: { codes: [ERR_ENDPOINT_NOT_HTTP] }
+    aliases:
+      - { text: http-family, status: banned, scope: [prose], suggest: HTTP-routed }
+      - { text: http family, status: banned, scope: [prose], suggest: HTTP-routed }
+    source: [component v2 §5.2, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [networking]
+
+  - id: component.endpoint-property
+    display_name: endpoint property
+    context: component
+    definition: >-
+      A fact the platform allocates for one named endpoint before workloads
+      start, such as privateAddress or publicURL, that an output or a template
+      may read.
+    shortDefinition: An allocated fact about one endpoint.
+    part_of: [component.endpoint]
+    identifiers:
+      fields: [property]
+      values: [privateHostname, privatePort, privateAddress, publicURL, publicHostname, publicPort, publicAddress]
+      codes: [ERR_UNKNOWN_ENDPOINT_PROPERTY, ERR_ENDPOINT_NOT_EXPOSABLE]
+    aliases:
+      - { text: ERR_UNKNOWN_ADDRESS_PROPERTY, status: banned, scope: [identifier], suggest: ERR_UNKNOWN_ENDPOINT_PROPERTY }
+      - { text: address property, status: banned, scope: [prose], suggest: endpoint property }
+    source: [component v2 §5.2]
+    stability: stable
+    status: approved
+    tags: [networking]
+
+  - id: component.public-port
+    display_name: public port
+    context: component
+    definition: >-
+      The port the platform allocates for a port-addressed endpoint exposed
+      PUBLIC, read as publicPort.
+    shortDefinition: The allocated publicPort of a TCP or UDP endpoint.
+    kind_of: [component.endpoint-property]
+    aliases:
+      - { text: edge port, status: banned, scope: [prose] }
+    source: [component v2 §5.2, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [networking]
+
+  - id: component.public-address
+    display_name: public address
+    context: component
+    definition: >-
+      The host and port the platform allocates for a PUBLIC port-addressed
+      endpoint, with an IPv6 host bracketed, read as publicAddress.
+    shortDefinition: The allocated host:port of a TCP or UDP endpoint.
+    kind_of: [component.endpoint-property]
+    aliases:
+      - { text: edge address, status: banned, scope: [prose] }
+    source: [component v2 §5.2, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [networking]
+
+  - id: component.viewer-identity-property
+    display_name: viewer identity property
+    context: component
+    definition: >-
+      An endpoint property the platform supplies only when a blueprint signs
+      viewers in and forwards who they are, such as viewerIdentityHeader,
+      trustedProxyCIDRs or oidcClientSecret.
+    shortDefinition: An endpoint property for a viewer identity mode.
+    kind_of: [component.endpoint-property]
+    identifiers:
+      values: [viewerIdentityHeader, trustedProxyCIDRs, viewerEmailHeader, viewerNameHeader, viewerAssertionHeader, viewerAssertionIssuer, viewerAssertionAudience, viewerAssertionKeysURL, oidcIssuerURL, oidcClientID, oidcClientSecret]
+    associated:
+      - { relation: requires, term: blueprint.viewer-identity-mode }
+    source: [component v2 §5.2]
+    stability: stable
+    status: approved
+    tags: [networking, viewer]
+
+  - id: component.oidc-client
+    display_name: OIDC client
+    context: component
+    definition: >-
+      An HTTP-routed endpoint that signs viewers in itself as an OpenID Connect
+      client of the platform, declaring the redirect paths the platform
+      registers after its publicURL.
+    shortDefinition: An endpoint that signs viewers in as an OpenID Connect client.
+    part_of: [component.endpoint]
+    identifiers: { fields: [oidc, redirectPaths], defs: [ComponentEndpointOidc], codes: [ERR_ENDPOINT_NOT_OIDC_CLIENT] }
+    source: [component v2 §5.2, blueprint v2 §4.5]
+    stability: stable
+    status: approved
+    tags: [viewer]
+
+  - id: component.endpoint-path
+    display_name: endpoint path
+    context: component
+    definition: >-
+      A literal, segment-matched request path beginning with /, at most 256
+      characters, with no empty, dot or encoded segment, and never under
+      /.musher.
+    shortDefinition: A literal request path, matched by segment.
+    part_of: [component.endpoint]
+    identifiers: { defs: [ComponentEndpointPath] }
+    source: [component v2 §5.2]
+    stability: stable
+    status: approved
+    tags: [networking]
+
+  - id: component.exemptible-requests
+    display_name: exemptible requests
+    context: component
+    definition: >-
+      An endpoint's statement of which requests it can safely take without a
+      signed-in viewer: the paths that serve machines, and whether every
+      route checks the bearer token a request carries.
+    shortDefinition: The requests an endpoint can take without a viewer.
+    part_of: [component.endpoint]
+    associated:
+      - { relation: is-granted-by, term: blueprint.access-exemption }
+    identifiers: { fields: [exemptibleRequests, paths, bearerToken], defs: [ComponentEndpointExemptibleRequests] }
+    confusables: ["Access exemptions on a blueprint exposure: the grant, where this is the offer.", "A probe's bearer credential."]
+    aliases:
+      - { text: accessExemptions, status: banned, scope: [identifier], suggest: exemptibleRequests, note: "Blueprint keeps accessExemptions for the grant." }
+      - { text: ComponentEndpointAccessExemptions, status: banned, scope: [identifier], suggest: ComponentEndpointExemptibleRequests }
+    source: [component v2 §5.2, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [viewer, access]
+
+  - id: component.trust-policy
+    display_name: trust policy
+    context: component
+    definition: >-
+      How the platform verifies the certificate an HTTPS endpoint presents on
+      the hop to the workload: SYSTEM roots, a BUNDLE of roots from an input,
+      or NONE, with an optional server name.
+    shortDefinition: How the platform verifies an HTTPS endpoint's certificate.
+    part_of: [component.endpoint]
+    identifiers: { fields: [tls, verify, serverName, trustBundle], values: [SYSTEM, BUNDLE, NONE], defs: [ComponentEndpointTls] }
+    source: [component v2 §5.2]
+    stability: stable
+    status: approved
+    tags: [networking, security]
+
+  - id: component.probe
+    display_name: probe
+    context: component
+    definition: >-
+      A periodic HTTP GET the platform sends to a named endpoint of a SERVICE
+      or WORKER, over that endpoint's protocol and trust policy, from a peer
+      inside trustedProxyCIDRs and with no viewer identity.
+    shortDefinition: A periodic HTTP check of a named endpoint.
+    part_of: [component.workload]
+    identifiers:
+      fields: [health, http, path, expectedStatuses, initialDelaySeconds, periodSeconds, timeoutSeconds, successThreshold, failureThreshold]
+      defs: [ComponentHealthProbes, ComponentHttpProbe, ComponentProbe]
+    confusables: ["Kubernetes probes, which these follow."]
+    aliases:
+      - { text: health stage, status: banned, scope: [prose], suggest: probe }
+      - { text: health stages, status: banned, scope: [prose], suggest: probes }
+    source: [component v2 §1.1, component v2 §5.4, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [workload, health]
+
+  - id: component.startup-probe
+    display_name: startup probe
+    context: component
+    definition: >-
+      The probe gating initialization, until whose success readiness and
+      liveness are suspended, and whose exhausted failures restart the
+      workload.
+    shortDefinition: Gates initialization.
+    kind_of: [component.probe]
+    identifiers: { fields: [startup] }
+    source: [component v2 §5.4]
+    stability: stable
+    status: approved
+    tags: [health]
+
+  - id: component.readiness-probe
+    display_name: readiness probe
+    context: component
+    definition: >-
+      The probe gating whether traffic is forwarded, without restarting the
+      workload, which every URL-addressed endpoint a blueprint exposes PUBLIC
+      requires, GRPC included.
+    shortDefinition: Gates traffic, without restart.
+    kind_of: [component.probe]
+    identifiers: { fields: [readiness], codes: [ERR_READINESS_REQUIRED] }
+    source: [component v2 §5.4, blueprint v2 §4.3]
+    stability: stable
+    status: approved
+    tags: [health]
+
+  - id: component.liveness-probe
+    display_name: liveness probe
+    context: component
+    definition: >-
+      The probe whose consecutive failures restart the workload.
+    shortDefinition: Restarts on failure.
+    kind_of: [component.probe]
+    identifiers: { fields: [liveness] }
+    source: [component v2 §5.4]
+    stability: stable
+    status: approved
+    tags: [health]
+
+  - id: component.probe-credential
+    display_name: probe credential
+    context: component
+    definition: >-
+      A basic username and password or a bearer token sent on a probe's
+      request only, each a literal or a guaranteed input, and sensitive when it
+      is a password or token.
+    shortDefinition: Basic or bearer credentials sent on the probe only.
+    part_of: [component.probe]
+    identifiers:
+      fields: [auth, basic, bearer, username, password, token]
+      defs: [ComponentProbeAuth, ComponentBasicAuth, ComponentBearerAuth, ComponentProbeCredential]
+    confusables: ["A catalog token, which is a vocabulary value.", "Exemptible requests' bearerToken."]
+    source: [component v2 §5.4]
+    stability: stable
+    status: approved
+    tags: [health, sensitivity]
+
+  - id: component.volume
+    display_name: volume
+    context: component
+    definition: >-
+      Named persistent storage a workload mounts at a canonical absolute path,
+      with the smallest size it can run with, read-only or shared on request.
+    shortDefinition: Named storage a workload mounts.
+    part_of: [component.workload]
+    identifiers: { fields: [volumes, mountPath, minSizeGiB, readOnly, shared], defs: [ComponentVolume], requirement_prefixes: [COMP-VOL], codes: [ERR_INVALID_MOUNT] }
+    confusables: ["A volume allocation, the size a blueprint node gives it."]
+    source: [component v2 §5.5]
+    stability: stable
+    status: approved
+    tags: [workload, storage]
+
+  - id: component.schedule
+    display_name: schedule
+    context: component
+    definition: >-
+      A five-field cron expression, evaluated in UTC, that makes a JOB recur,
+      skipping a run that falls due while the previous one is still executing.
+    shortDefinition: A UTC cron expression for a recurring JOB.
+    part_of: [component.workload]
+    identifiers: { fields: [schedule, cron], defs: [ComponentSchedule], codes: [ERR_INVALID_SCHEDULE] }
+    source: [component v2 §5.7]
+    stability: stable
+    status: approved
+    tags: [workload]
+
+  - id: component.component-contract
+    display_name: component contract
+    context: component
+    definition: >-
+      The inputs a component consumes and the outputs it produces, each named,
+      described and typed, which a blueprint binds and which never names where
+      a value comes from at deployment.
+    shortDefinition: A component's inputs and outputs.
+    part_of: [component.component]
+    identifiers: { fields: [/spec/contract], defs: [ComponentContract], requirement_prefixes: [COMP-CONTRACT] }
+    confusables: ["The specification itself: say 'this specification', never 'this contract'."]
+    aliases:
+      - { text: configuration contract, status: banned, scope: [prose], suggest: component contract }
+      - { text: supplied contracts, status: banned, scope: [prose], suggest: supplied component documents }
+      - { text: sensitive contracts, status: banned, scope: [prose], suggest: sensitive inputs }
+      - { text: this contract, status: discouraged, scope: [prose], suggest: this specification }
+    source: [component v2 §1.1, component v2 §6, ADR 0026, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [component, values]
+
+  - id: component.input
+    display_name: input
+    context: component
+    definition: >-
+      A named value or connection a component consumes, which a blueprint binds
+      or leaves to its default and which a workload reads only through its
+      target, a build secret, a probe credential, a trust bundle or an output.
+    shortDefinition: A named value a component consumes.
+    part_of: [component.component-contract]
+    identifiers:
+      fields: [inputs, required, default, target, input]
+      requirement_prefixes: [COMP-INPUT]
+      defs: [ComponentInput, ComponentInputTarget, ComponentInputReference]
+      codes: [ERR_UNKNOWN_INPUT, ERR_INPUT_NOT_GUARANTEED, ERR_UNUSED_INPUT]
+    verbs: [bind an input, an input is guaranteed, an input is always supplied]
+    aliases:
+      - { text: ERR_UNKNOWN_INPUT_REFERENCE, status: banned, scope: [identifier], suggest: ERR_UNKNOWN_INPUT }
+    source: [component v2 §1.1, component v2 §6.1, ADR 0033]
+    stability: stable
+    status: approved
+    tags: [component, values]
+
+  - id: component.guaranteed-input
+    display_name: guaranteed input
+    context: component
+    definition: >-
+      An input that always has a value at resolution: one that is required, or
+      one that carries a default.
+    shortDefinition: Required, or with a default.
+    kind_of: [component.input]
+    source: [component v2 §6.2]
+    stability: stable
+    status: approved
+    tags: [values]
+
+  - id: component.value-input
+    display_name: value input
+    context: component
+    definition: >-
+      An input that declares a value schema and optionally a default,
+      sensitivity and an environment target.
+    shortDefinition: An input with a value schema.
+    kind_of: [component.input]
+    source: [component v2 §6.1]
+    stability: stable
+    status: approved
+    tags: [values]
+
+  - id: component.connection-input
+    display_name: connection input
+    context: component
+    definition: >-
+      An input that declares a protocol instead of a schema, always required
+      and filled whole by a connection parameter, whose members are those the
+      protocol fixes.
+    shortDefinition: An input filled by a whole connection.
+    kind_of: [component.input]
+    associated:
+      - { relation: is-filled-by, term: blueprint.connection-parameter }
+    identifiers: { fields: [connection], defs: [ComponentConnection], requirement_prefixes: [COMP-CONNECTION] }
+    source: [component v2 §6.4, ADR 0030, ADR 0039]
+    stability: stable
+    status: approved
+    tags: [values, connections]
+
+  - id: component.connection-capability
+    display_name: connection capability
+    context: component
+    definition: >-
+      A feature a language-model connection input requires beyond plain
+      conversation, STREAMING or TOOL_CALLS, permitted only for the LLM
+      protocols.
+    shortDefinition: STREAMING or TOOL_CALLS, LLM protocols only.
+    part_of: [component.connection-input]
+    identifiers: { fields: [capabilities], values: [STREAMING, TOOL_CALLS] }
+    confusables: ["A host privilege, such as binding a port below 1024."]
+    source: [component v2 §6.4, ADR 0039]
+    stability: stable
+    status: approved
+    tags: [connections]
+
+  - id: component.connection-member
+    display_name: connection member
+    context: component
+    definition: >-
+      One named, typed value a protocol fixes for the connections that speak
+      it, such as baseURL, host, port or secretAccessKey: required, optional
+      with a default, optional without one, or derived, as the url resolution
+      composes is, and forwarded through an output's member.
+    shortDefinition: One value a protocol fixes, such as host or apiKey.
+    part_of: [blueprint.connection]
+    identifiers:
+      fields: [member]
+      values: [baseURL, apiKey, model, host, port, database, username, password, sslMode, url, tls, endpointURL, region, bucket, accessKeyID, secretAccessKey, pathStyle]
+      codes: [ERR_UNKNOWN_CONNECTION_MEMBER]
+    confusables:
+      - "endpointURL is AWS's term for an S3 API address without the bucket, not a component endpoint."
+      - "A url member is never stored: resolution composes it from the other members and the credential."
+    source: [component v2 §6.4, ADR 0039]
+    stability: provisional
+    status: approved
+    tags: [connections]
+
+  - id: component.environment-variable
+    display_name: environment variable
+    context: component
+    definition: >-
+      The process variable an input's target names, written with the input's
+      encoded value and by nothing else.
+    shortDefinition: Where an input's encoded value is written.
+    associated:
+      - { relation: is-written-from, term: component.input }
+    identifiers: { fields: [envVar], requirement_prefixes: [COMP-ENVVAR], codes: [ERR_CONFLICTING_ENV_VAR, ERR_ENV_ENCODING] }
+    aliases:
+      - { text: envVarKey, status: banned, scope: [identifier], suggest: envVar }
+      - { text: ERR_CONFLICTING_ENV_KEY, status: banned, scope: [identifier], suggest: ERR_CONFLICTING_ENV_VAR }
+      - { text: env key, status: banned, scope: [prose], suggest: environment variable }
+    source: [component v2 §5.3]
+    stability: stable
+    status: approved
+    tags: [workload, values]
+
+  - id: component.output
+    display_name: output
+    context: component
+    definition: >-
+      A named value a component produces for other nodes, from exactly one
+      origin: a literal, one of its own inputs or connection members, an
+      endpoint property, or a template.
+    shortDefinition: A named value a component produces.
+    part_of: [component.component-contract]
+    identifiers: { fields: [outputs, from], defs: [ComponentOutput, ComponentOutputFrom], requirement_prefixes: [COMP-OUT] }
+    verbs: [an output produces a value, an output forwards an input]
+    aliases:
+      - { text: ERR_OUTPUT_NOT_PRODUCIBLE, status: banned, scope: [identifier], suggest: ERR_INPUT_NOT_GUARANTEED }
+      - { text: republishes, status: banned, scope: [prose], suggest: forwards }
+      - { text: republish, status: banned, scope: [prose], suggest: forward }
+    source: [component v2 §1.1, component v2 §6.2]
+    stability: stable
+    status: approved
+    tags: [component, values]
+
+  - id: component.output-origin
+    display_name: output origin
+    context: component
+    definition: >-
+      The key of an output's from that says where its value comes from: value,
+      input with an optional member, endpoint with property, or template.
+    shortDefinition: Where an output's value comes from.
+    part_of: [component.output]
+    identifiers: { fields: [endpoint, property] }
+    source: [component v2 §6.2]
+    stability: stable
+    status: approved
+    tags: [values]
+
+  - id: component.template
+    display_name: template
+    context: component
+    definition: >-
+      An output origin that substitutes self placeholders into a string in a
+      single pass, and so always produces a string.
+    shortDefinition: A string with self placeholders substituted.
+    kind_of: [component.output-origin]
+    identifiers: { fields: [template] }
+    example: "\"`${{ self.endpoints.web.publicURL }}`/oauth/callback\" is a template."
+    source: [component v2 §6.2]
+    stability: stable
+    status: approved
+    tags: [values, placeholder]
+
+  - id: component.value-schema
+    display_name: value schema
+    context: component
+    definition: >-
+      The bounded JSON Schema 2020-12 subset an input or output declares to
+      constrain its logical value, with no references, composition or
+      conditionals.
+    shortDefinition: The bounded JSON Schema that types a value.
+    identifiers:
+      fields: [schema, enum, minLength, maxLength, pattern, minimum, maximum, exclusiveMinimum, exclusiveMaximum, items, minItems, maxItems, uniqueItems, properties, additionalProperties]
+      values: [string, integer, number, boolean, "null", array, object]
+      defs: [ComponentValueSchema]
+      requirement_prefixes: [COMP-VAL]
+      codes: [ERR_INVALID_VALUE_SCHEMA, ERR_VALUE_CONSTRAINT]
+    aliases:
+      - { text: logical schema, status: banned, scope: [prose], suggest: value schema }
+      - { text: logical schemas, status: banned, scope: [prose], suggest: value schemas }
+      - { text: value shape, status: banned, scope: [prose], suggest: value schema }
+      - { text: value shapes, status: banned, scope: [prose], suggest: value schemas }
+    source: [component v2 §1.1, component v2 §6.3, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [values]
+
+  - id: component.presentation-hint
+    display_name: presentation hint
+    context: component
+    definition: >-
+      A UI annotation beside an input's value schema, such as EMAIL or
+      CONNECTION_STRING, that asserts nothing about the value.
+    shortDefinition: A UI annotation that asserts nothing.
+    part_of: [component.value-input]
+    identifiers: { fields: [presentationHint], values: [URI, ENDPOINT_URL, CONNECTION_STRING, HOSTNAME, TIMEZONE] }
+    confusables: ["ENDPOINT_URL and CONNECTION_STRING are display hints, not endpoints or connections."]
+    source: [component v2 §6.3]
+    stability: stable
+    status: approved
+    tags: [values, presentation]
+
+  - id: component.sensitive
+    display_name: sensitive
+    context: component
+    definition: >-
+      The property of a value that must never be written as an authored
+      literal, published, previewed or quoted in a diagnostic, and that
+      propagates to every value derived from it.
+    shortDefinition: Never authored as a literal, never disclosed.
+    identifiers: { fields: [sensitive], requirement_prefixes: [COMP-SEC], codes: [ERR_SENSITIVE_LITERAL] }
+    verbs: [an input is sensitive, sensitivity propagates]
+    aliases:
+      - { text: ERR_SECRET_LITERAL, status: banned, scope: [identifier], suggest: ERR_SENSITIVE_LITERAL }
+      - { text: secret literal, status: banned, scope: [prose], suggest: sensitive literal }
+    source: [component v2 §1.1, component v2 §6.1, component v2 §11, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [sensitivity]
+
+  - id: component.secret
+    display_name: secret
+    context: component
+    definition: >-
+      A sensitive value that is a credential, such as a password, a token or an
+      API key.
+    shortDefinition: A sensitive credential.
+    associated:
+      - { relation: is, term: component.sensitive }
+    confusables: ["A deployment fact, which is sensitive personal data but not a secret.", "A CA certificate, which is neither."]
+    source: [component v2 §1.1, component v2 §11, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [sensitivity]
+
+  # ===========================================================================
+  # blueprint
+  # ===========================================================================
+
+  - id: blueprint.blueprint
+    display_name: blueprint
+    context: blueprint
+    definition: >-
+      The unit of deployment: a document naming the nodes that participate,
+      what compute each runs on, how they are bound together, and what a
+      deployment takes from outside the documents.
+    shortDefinition: The unit of deployment.
+    kind_of: [core.musher-document]
+    identifiers: { defs: [BlueprintSpec, BlueprintMetadata], requirement_prefixes: [BP-ID] }
+    example: "Deploying a blueprint creates a deployment."
+    confusables:
+      - "A Render Blueprint (render.yaml), a similar idea in another format."
+      - "The customer-facing word 'stack', which is admitted."
+      - "'application' and 'app' in their general senses (application cookies, application/json, a GitHub App), which stay; the thing a person deploys is a blueprint."
+      - "'composition' in its JSON Schema sense (allOf, anyOf, oneOf) and string composition around a placeholder, which stay; a composed set of nodes is a blueprint."
+    aliases:
+      - { text: deployable application, status: banned, scope: [prose], suggest: blueprint }
+      - { text: composition time, status: discouraged, scope: [prose], suggest: the blueprint }
+    source: [blueprint v2 §1, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [blueprint]
+
+  - id: blueprint.item-revision
+    display_name: item revision
+    context: blueprint
+    definition: >-
+      The positive integer on a blueprint's metadata that counts publications
+      of its catalog item, and that no other item document carries.
+    shortDefinition: Counts publications of a blueprint item.
+    part_of: [blueprint.blueprint]
+    confusables: ["A component revision, which counts one component's publications."]
+    source: [blueprint v2 §3]
+    stability: stable
+    status: approved
+    tags: [blueprint, versioning]
+
+  - id: blueprint.node
+    display_name: node
+    context: blueprint
+    definition: >-
+      A named use of one component inside a blueprint, together with the
+      compute, storage, exposure and bindings that this use gives it.
+    shortDefinition: One component, placed and wired in a blueprint.
+    part_of: [blueprint.blueprint]
+    associated:
+      - { relation: deploys, term: component.component }
+      - { relation: receives-values-through, term: blueprint.binding }
+    identifiers: { fields: [/spec/nodes, /spec/nodes/*], defs: [BlueprintNode], requirement_prefixes: [BP-NODE], codes: [ERR_UNKNOWN_NODE, ERR_NODE_REQUIRED] }
+    verbs: [place a node, bind a node's input, a node deploys a component]
+    example: "The web node deploys ./components/web.yaml on general.standard.small."
+    confusables: ["Kubernetes and Nomad 'node' (a host machine); these specs say 'host' for that."]
+    aliases:
+      - { text: components, status: banned, scope: [identifier], suggest: nodes, note: "A component is the definition a node deploys." }
+    source: [blueprint v2 §1.1, blueprint v2 §4, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [blueprint, composition]
+
+  - id: blueprint.node-graph
+    display_name: node graph
+    context: blueprint
+    definition: >-
+      The set of a blueprint's nodes and the bindings between them, which at
+      publication holds at least one node.
+    shortDefinition: A blueprint's nodes and their bindings.
+    part_of: [blueprint.blueprint]
+    identifiers: { requirement_prefixes: [BP-GRAPH] }
+    aliases:
+      - { text: component graph, status: banned, scope: [prose], suggest: node graph }
+    source: [blueprint v2 §1.1, blueprint v2 §4, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [composition]
+
+  - id: blueprint.value-dependency
+    display_name: value dependency
+    context: blueprint
+    definition: >-
+      The edge from a value to the value it is computed from, through a node
+      binding or an output that forwards an input, which together MUST form
+      no cycle.
+    shortDefinition: An edge a value cycle is made of.
+    part_of: [blueprint.node-graph]
+    identifiers: { codes: [ERR_VALUE_CYCLE] }
+    confusables: ["A discovery dependency on an allocated endpoint property, which may form a loop."]
+    source: [blueprint v2 §4.2]
+    stability: stable
+    status: approved
+    tags: [composition, values]
+
+  - id: blueprint.document-reference
+    display_name: document reference
+    context: blueprint
+    definition: >-
+      A node's componentRef naming the component document it deploys, either
+      as an item-local path or as a catalog identity with a revision.
+    shortDefinition: componentRef, item-local or catalog.
+    part_of: [blueprint.node]
+    identifiers:
+      fields: [componentRef]
+      requirement_prefixes: [BP-REF]
+      codes: [ERR_COMPONENT_NOT_FOUND, ERR_REFERENCE_ESCAPE, ERR_INVALID_DEPENDENCY]
+    confusables:
+      - "A placeholder, `${{ }}`, which is never a reference."
+      - "Blueprint §4.1's title, Component reference, which names the field rather than the term."
+    source: [blueprint v2 §1.1, blueprint v2 §4.1]
+    stability: stable
+    status: approved
+    tags: [composition]
+
+  - id: blueprint.item-local-reference
+    display_name: item-local reference
+    context: blueprint
+    definition: >-
+      A component reference written as a ./ or ../ path to a .yaml or .yml file
+      whose real path stays inside the item root, and which takes its revision
+      from that document.
+    shortDefinition: A path to a component inside the same item.
+    kind_of: [blueprint.document-reference]
+    aliases:
+      - { text: repo-local, status: banned, scope: [prose], suggest: item-local }
+    source: [blueprint v2 §1.1, blueprint v2 §4.1, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [composition]
+
+  - id: blueprint.catalog-reference
+    display_name: catalog reference
+    context: blueprint
+    definition: >-
+      A component reference written as the UUID of a published component,
+      beside a revision on the node that selects which publication.
+    shortDefinition: A UUID and a revision naming a published component.
+    kind_of: [blueprint.document-reference]
+    associated:
+      - { relation: resolves-in, term: catalog.catalog }
+    aliases:
+      - { text: published reference, status: discouraged, scope: [prose], suggest: catalog reference }
+    source: [blueprint v2 §1.1, blueprint v2 §4.1, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [composition, catalog]
+
+  - id: blueprint.binding
+    display_name: binding
+    context: blueprint
+    definition: >-
+      The authored edge that supplies one input of one node from exactly one
+      origin: a deployment parameter, another node's output, or a literal
+      value.
+    shortDefinition: Supplies one input of one node from one origin.
+    part_of: [blueprint.node]
+    associated:
+      - { relation: supplies, term: component.input }
+      - { relation: names, term: blueprint.origin }
+    identifiers:
+      fields: [bindings]
+      defs: [BlueprintBinding]
+      requirement_prefixes: [BP-BIND]
+      codes: [ERR_INCOMPATIBLE_TYPE, ERR_UNSATISFIED_REQUIRED_INPUT]
+    verbs: [bind an input, a binding supplies an input from an origin]
+    confusables: ["Dapr bindings, which are event triggers.", "A connection, which is the stored thing a binding may deliver through a connection parameter."]
+    aliases:
+      - { text: BP-CONN, status: banned, scope: [identifier], suggest: BP-BIND }
+      - { text: explicit binding, status: discouraged, scope: [prose], suggest: binding, note: "Every binding is explicit." }
+    source: [blueprint v2 §1.1, blueprint v2 §4.2, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [composition, values]
+
+  - id: blueprint.origin
+    display_name: origin
+    context: blueprint
+    definition: >-
+      The provenance of a value, named by the key present in a binding, an
+      output's from or a parameter, and never spelled 'source'.
+    shortDefinition: Where a value comes from.
+    verbs: [a binding names its origin]
+    aliases:
+      - { text: supplier, status: banned, scope: [prose], suggest: origin }
+      - { text: value source, status: banned, scope: [prose], suggest: origin }
+      - { text: value sources, status: banned, scope: [prose], suggest: origins }
+    source: [component v2 §1.1, blueprint v2 §1.1, blueprint v2 §4.2, blueprint v2 §5, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [values]
+
+  - id: blueprint.parameter-binding
+    display_name: parameter binding
+    context: blueprint
+    definition: >-
+      A binding whose origin is a deployment parameter, the only way a value
+      from outside the documents reaches a node.
+    shortDefinition: "Binds { parameter }."
+    kind_of: [blueprint.binding]
+    identifiers: { fields: [parameter] }
+    source: [blueprint v2 §4.2]
+    stability: stable
+    status: approved
+    tags: [values]
+
+  - id: blueprint.node-output-binding
+    display_name: node output binding
+    context: blueprint
+    definition: >-
+      A binding whose origin is a named output of another node, or of the same
+      node for a discovery dependency.
+    shortDefinition: "Binds { node, output }."
+    kind_of: [blueprint.binding]
+    identifiers: { fields: [node, output], codes: [ERR_UNKNOWN_OUTPUT] }
+    source: [blueprint v2 §4.2]
+    stability: stable
+    status: approved
+    tags: [values]
+
+  - id: blueprint.value-binding
+    display_name: value binding
+    context: blueprint
+    definition: >-
+      A binding whose origin is a non-sensitive logical literal written in the
+      blueprint.
+    shortDefinition: "Binds { value }."
+    kind_of: [blueprint.binding]
+    identifiers: { fields: [value] }
+    source: [blueprint v2 §4.2]
+    stability: stable
+    status: approved
+    tags: [values]
+
+  - id: blueprint.compute
+    display_name: compute
+    context: blueprint
+    definition: >-
+      The part of a node naming the machine its workload runs on, a profile
+      and placement constraints, required for a running component and
+      forbidden for an EXTERNAL one.
+    shortDefinition: A node's compute profile and placement.
+    part_of: [blueprint.node]
+    identifiers: { fields: [compute], defs: [BlueprintCompute], codes: [ERR_COMPUTE_REQUIRED, ERR_COMPUTE_FORBIDDEN] }
+    aliases:
+      - { text: ERR_CONFLICTING_NODE_COMPUTE, status: banned, scope: [identifier], suggest: ERR_COMPUTE_REQUIRED or ERR_COMPUTE_FORBIDDEN }
+    source: [blueprint v2 §4.3, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [compute]
+
+  - id: blueprint.compute-profile
+    display_name: compute profile
+    context: blueprint
+    definition: >-
+      A catalog-defined size of machine, written family.tier.size, whose
+      version resolution selects and the resolution record keeps.
+    shortDefinition: family.tier.size, such as general.standard.small.
+    part_of: [blueprint.compute]
+    identifiers: { fields: [profile], codes: [ERR_COMPUTE_PROFILE_UNAVAILABLE] }
+    example: "general.standard.small is a compute profile."
+    source: [blueprint v2 §4.3]
+    stability: stable
+    status: approved
+    tags: [compute]
+
+  - id: blueprint.compute-family
+    display_name: compute family
+    context: blueprint
+    definition: >-
+      The first segment of a compute profile slug, naming the class of
+      machine: general, compute, memory, storage, gpu or accelerator.
+    shortDefinition: general, compute, memory, storage, gpu, accelerator.
+    part_of: [blueprint.compute-profile]
+    confusables: ["A specification family, such as component."]
+    source: [blueprint v2 §4.3, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [compute]
+
+  - id: blueprint.compute-tier
+    display_name: compute tier
+    context: blueprint
+    definition: >-
+      The second segment of a compute profile slug: economy, standard,
+      performance or premium.
+    shortDefinition: economy, standard, performance, premium.
+    part_of: [blueprint.compute-profile]
+    source: [blueprint v2 §4.3]
+    stability: stable
+    status: approved
+    tags: [compute]
+
+  - id: blueprint.compute-size
+    display_name: compute size
+    context: blueprint
+    definition: >-
+      The third segment of a compute profile slug: nano, small, medium, large
+      or xlarge.
+    shortDefinition: nano, small, medium, large, xlarge.
+    part_of: [blueprint.compute-profile]
+    source: [blueprint v2 §4.3]
+    stability: stable
+    status: approved
+    tags: [compute]
+
+  - id: blueprint.placement-constraint
+    display_name: placement constraint
+    context: blueprint
+    definition: >-
+      A requirement that narrows which hosts may serve a node's compute
+      profile, such as cpuDedication or acceleratorRuntimes, and never
+      substitutes a profile or grants a resource.
+    shortDefinition: Narrows the hosts eligible for a profile.
+    part_of: [blueprint.compute]
+    identifiers:
+      fields: [placement, cpuArchitectures, cpuDedication, minAcceleratorMemoryGiB, acceleratorRuntimes, acceleratorInterconnect, acceleratorSKUClass, networkClass]
+      values: [dedicated, shared]
+      defs: [BlueprintPlacement]
+      codes: [ERR_PLACEMENT_UNSATISFIABLE]
+    confusables: ["Pinning a version or a digest: pin means only that."]
+    aliases:
+      - { text: placement pin, status: banned, scope: [prose], suggest: placement constraint }
+      - { text: placement pins, status: banned, scope: [prose], suggest: placement constraints }
+      - { text: advanced constraint, status: discouraged, scope: [prose], suggest: placement constraint }
+    source: [blueprint v2 §1.1, blueprint v2 §4.4, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [compute]
+
+  - id: blueprint.catalog-value
+    display_name: catalog value
+    context: blueprint
+    definition: >-
+      A lowercase value from a catalog-versioned vocabulary, such as a storage
+      class or a network class, written in a placement constraint or a volume
+      allocation.
+    shortDefinition: A value from a catalog-versioned vocabulary.
+    example: "local-nvme is a storage class catalog value."
+    confusables: ["A credential token, such as a probe's bearer token or a JWT: 'token' means only that.", "A term record, which is what 'term' now means."]
+    aliases:
+      - { text: storage class term, status: banned, scope: [prose], suggest: storage class catalog value }
+      - { text: placement term, status: banned, scope: [prose], suggest: placement catalog value }
+      - { text: storage class token, status: banned, scope: [prose], suggest: storage class catalog value }
+      - { text: placement token, status: banned, scope: [prose], suggest: placement catalog value }
+    source: [blueprint v2 §1.1, blueprint v2 §4.3, blueprint v2 §4.4, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [compute, catalog]
+
+  - id: blueprint.volume-allocation
+    display_name: volume allocation
+    context: blueprint
+    definition: >-
+      The storage a node gives one volume its component declares: a size at or
+      above the volume's minimum, and optionally a storage class and an IOPS
+      floor.
+    shortDefinition: The size and class a node gives a volume.
+    part_of: [blueprint.node]
+    associated:
+      - { relation: allocates, term: component.volume }
+    identifiers: { fields: [sizeGiB, minIOPS], defs: [BlueprintVolumeAllocation], codes: [ERR_INVALID_VOLUME_ALLOCATION, ERR_STORAGE_UNAVAILABLE, ERR_VOLUME_TOO_LARGE] }
+    source: [blueprint v2 §4.3]
+    stability: stable
+    status: approved
+    tags: [storage]
+
+  - id: blueprint.storage-class
+    display_name: storage class
+    context: blueprint
+    definition: >-
+      The token naming what kind of storage may serve a volume allocation,
+      such as local-nvme, from the catalog's versioned vocabulary.
+    shortDefinition: What kind of storage serves an allocation.
+    part_of: [blueprint.volume-allocation]
+    identifiers: { fields: [storageClass] }
+    confusables: ["A Kubernetes StorageClass, which is a provisioner configuration."]
+    source: [blueprint v2 §4.3]
+    stability: stable
+    status: approved
+    tags: [storage]
+
+  - id: blueprint.exposure
+    display_name: exposure
+    context: blueprint
+    definition: >-
+      A node's per-endpoint choice of who may reach the endpoint and what the
+      platform does in front of it: visibility, access, viewer identity, viewer
+      claims and access exemptions.
+    shortDefinition: Who reaches an endpoint, and how.
+    part_of: [blueprint.node]
+    identifiers: { fields: [exposure], defs: [BlueprintExposure], codes: [ERR_ENDPOINT_NOT_PUBLIC] }
+    confusables: ["Compose expose, which only publishes a port to linked services."]
+    source: [blueprint v2 §4.3, blueprint v2 §4.5]
+    stability: stable
+    status: approved
+    tags: [networking, access]
+
+  - id: blueprint.visibility
+    display_name: visibility
+    context: blueprint
+    definition: >-
+      Whether an endpoint is reachable from outside the deployment, PUBLIC, or
+      only by the platform and sibling nodes, PRIVATE, the default.
+    shortDefinition: PUBLIC or PRIVATE.
+    part_of: [blueprint.exposure]
+    identifiers: { fields: [visibility], values: [PUBLIC, PRIVATE] }
+    example: "A PRIVATE endpoint is unreachable from another deployment, another organization or the public."
+    source: [blueprint v2 §4.3, blueprint v2 §4.5]
+    stability: stable
+    status: approved
+    tags: [networking, access]
+
+  - id: blueprint.access
+    display_name: access
+    context: blueprint
+    definition: >-
+      Whether the platform forwards every request to a PUBLIC endpoint, OPEN,
+      or signs viewers in first and admits only those the deployment's policy
+      admits, RESTRICTED.
+    shortDefinition: OPEN or RESTRICTED.
+    part_of: [blueprint.exposure]
+    identifiers: { fields: [access], requirement_prefixes: [BP-ACCESS] }
+    aliases:
+      - { text: AUTHENTICATED, status: banned, scope: [identifier], suggest: RESTRICTED }
+    source: [blueprint v2 §4.5, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [access]
+
+  - id: blueprint.open-access
+    display_name: OPEN
+    context: blueprint
+    definition: >-
+      The access value under which the platform forwards every request
+      without signing a viewer in.
+    shortDefinition: Every request is forwarded.
+    kind_of: [blueprint.access]
+    identifiers: { values: [OPEN] }
+    source: [blueprint v2 §4.5]
+    stability: stable
+    status: approved
+    tags: [access]
+
+  - id: blueprint.restricted-access
+    display_name: RESTRICTED
+    context: blueprint
+    definition: >-
+      The access value under which only viewers who sign in and whom the
+      deployment's access policy admits reach the endpoint.
+    shortDefinition: Only signed-in viewers the access policy admits.
+    kind_of: [blueprint.access]
+    identifiers: { values: [RESTRICTED] }
+    source: [blueprint v2 §4.5, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [access]
+
+  - id: blueprint.access-policy
+    display_name: access policy
+    context: blueprint
+    definition: >-
+      The deployment's rule, resolved in its owning organization and project
+      and named by no document, deciding which signed-in viewers a RESTRICTED
+      endpoint admits.
+    shortDefinition: Which viewers a RESTRICTED endpoint admits.
+    associated:
+      - { relation: belongs-to, term: deployment.deployment }
+    source: [blueprint v2 §4.5]
+    stability: provisional
+    status: approved
+    tags: [access]
+
+  - id: blueprint.viewer
+    display_name: viewer
+    context: blueprint
+    definition: >-
+      A person reaching a PUBLIC endpoint through the platform's proxy, whom
+      the platform may sign in and identify to the workload.
+    shortDefinition: A person reaching a public endpoint.
+    confusables: ["A deployer, who creates or changes the deployment."]
+    source: [blueprint v2 §4.5]
+    stability: stable
+    status: approved
+    tags: [access, viewer]
+
+  - id: blueprint.viewer-identity-mode
+    display_name: viewer identity mode
+    context: blueprint
+    definition: >-
+      How the workload behind a RESTRICTED endpoint learns who the viewer is:
+      NONE, a HEADER, a signed ASSERTION, or as an OIDC client.
+    shortDefinition: NONE, HEADER, ASSERTION or OIDC.
+    part_of: [blueprint.exposure]
+    identifiers: { fields: [viewerIdentity], values: [HEADER, ASSERTION, OIDC], codes: [ERR_VIEWER_IDENTITY_NOT_FORWARDED] }
+    source: [blueprint v2 §4.5, component v2 §5.2, ADR 0035]
+    stability: stable
+    status: approved
+    tags: [viewer]
+
+  - id: blueprint.viewer-claim
+    display_name: viewer claim
+    context: blueprint
+    definition: >-
+      A fact about the viewer released to the workload beside their identity,
+      EMAIL or NAME, never by default.
+    shortDefinition: EMAIL or NAME, released on request.
+    part_of: [blueprint.exposure]
+    identifiers: { fields: [viewerClaims], values: [EMAIL, NAME] }
+    confusables: ["An OIDC claim in general; only these two are released."]
+    source: [blueprint v2 §4.5]
+    stability: stable
+    status: approved
+    tags: [viewer]
+
+  - id: blueprint.access-exemption
+    display_name: access exemption
+    context: blueprint
+    definition: >-
+      A node's grant letting through, without a viewer, one kind of request an
+      endpoint's exemptible requests offer: PATHS or BEARER.
+    shortDefinition: The grant of an endpoint's exemptible requests.
+    part_of: [blueprint.exposure]
+    identifiers: { fields: [accessExemptions], values: [PATHS, BEARER], codes: [ERR_EXEMPTION_NOT_DECLARED] }
+    source: [blueprint v2 §4.5]
+    stability: stable
+    status: approved
+    tags: [access]
+
+  - id: blueprint.deployment-parameter
+    display_name: deployment parameter
+    context: blueprint
+    definition: >-
+      A named value a deployment takes from outside the documents, with
+      exactly one parameter origin, that a node reaches only through a
+      parameter binding.
+    shortDefinition: A named value from outside the documents.
+    part_of: [blueprint.blueprint]
+    identifiers:
+      fields: [parameters]
+      defs: [BlueprintParameter]
+      requirement_prefixes: [BP-PARAM]
+      codes: [ERR_UNKNOWN_PARAMETER, ERR_UNBOUND_PARAMETER, ERR_CONFLICTING_INPUT_SCHEMA, ERR_INVALID_PARAMETER_ORIGIN, ERR_PARAMETER_NOT_SUBMITTABLE]
+    confusables: ["Terraform variables and Helm values, which an author sets directly; here a node reaches a value only through a parameter."]
+    aliases:
+      - { text: ERR_INVALID_PARAMETER_SOURCE, status: banned, scope: [identifier], suggest: ERR_INVALID_PARAMETER_ORIGIN }
+      - { text: installation parameter, status: banned, scope: [prose], suggest: deployment parameter }
+      - { text: installation parameters, status: banned, scope: [prose], suggest: deployment parameters }
+    source: [blueprint v2 §1.1, blueprint v2 §5, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [parameters]
+
+  - id: blueprint.parameter-origin
+    display_name: parameter origin
+    context: blueprint
+    definition: >-
+      The way one deployment parameter's value is obtained, named by the keys
+      present: submitted, generated, hash, variable, deployment-fact or
+      connection.
+    shortDefinition: How a parameter's value is obtained.
+    kind_of: [blueprint.origin]
+    part_of: [blueprint.deployment-parameter]
+    source: [blueprint v2 §5]
+    stability: stable
+    status: approved
+    tags: [parameters]
+
+  - id: blueprint.submitted-parameter
+    display_name: submitted parameter
+    context: blueprint
+    definition: >-
+      A deployment parameter whose value the deployer submits, falling back to
+      its default, and the only kind a deploy form edits.
+    shortDefinition: Submitted by the deployer, or its default.
+    kind_of: [blueprint.deployment-parameter]
+    identifiers: { codes: [ERR_MISSING_PARAMETER_VALUE] }
+    source: [blueprint v2 §5, blueprint v2 §5.2]
+    stability: stable
+    status: approved
+    tags: [parameters]
+
+  - id: blueprint.optional-parameter
+    display_name: optional parameter
+    context: blueprint
+    definition: >-
+      A submitted parameter that a deployment can be created without, because
+      it carries a default or every input it binds is optional, which a
+      deployment then leaves absent.
+    shortDefinition: A submitted parameter a deployment can do without.
+    kind_of: [blueprint.submitted-parameter]
+    identifiers: { codes: [ERR_PARAMETER_NOT_OFFERED] }
+    source: [blueprint v2 §1.1, blueprint v2 §5.2, blueprint v2 §5.4]
+    stability: stable
+    status: approved
+    tags: [parameters]
+
+  - id: blueprint.generated-parameter
+    display_name: generated parameter
+    context: blueprint
+    definition: >-
+      A deployment parameter whose value the platform creates once per
+      deployment as a persisted random credential of a fixed byte length and
+      encoding.
+    shortDefinition: A persisted random credential.
+    kind_of: [blueprint.deployment-parameter]
+    identifiers: { fields: [generator, byteLength, encoding], values: [HEX, BASE64, BASE64URL], defs: [BlueprintParameterGenerator] }
+    source: [blueprint v2 §5.2]
+    stability: stable
+    status: approved
+    tags: [parameters, sensitivity]
+
+  - id: blueprint.hash-parameter
+    display_name: hash parameter
+    context: blueprint
+    definition: >-
+      A deployment parameter whose value is a persisted BCRYPT or ARGON2ID
+      password hash of a generated parameter, recomputed only when its source
+      rotates.
+    shortDefinition: A persisted hash of a generated parameter.
+    kind_of: [blueprint.deployment-parameter]
+    identifiers: { fields: [hash, algorithm], values: [BCRYPT, ARGON2ID], defs: [BlueprintParameterHash], codes: [ERR_INVALID_HASHED_PARAMETER] }
+    aliases:
+      - { text: ERR_INVALID_HASH_SOURCE, status: banned, scope: [identifier], suggest: ERR_INVALID_HASHED_PARAMETER }
+    source: [blueprint v2 §5.2, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [parameters, sensitivity]
+
+  - id: blueprint.variable-parameter
+    display_name: variable parameter
+    context: blueprint
+    definition: >-
+      A deployment parameter taking one organization variable, named by
+      `${{ variables.<path> }}`, as visible to the environment the deployment
+      reads variable values from.
+    shortDefinition: "One organization variable, `${{ variables.x }}`."
+    kind_of: [blueprint.deployment-parameter]
+    associated:
+      - { relation: reads, term: blueprint.organization-variable }
+    identifiers: { codes: [ERR_VARIABLE_NOT_AUTHORIZED] }
+    source: [blueprint v2 §5.2]
+    stability: stable
+    status: approved
+    tags: [parameters]
+
+  - id: blueprint.organization-variable
+    display_name: organization variable
+    context: blueprint
+    definition: >-
+      A value an organization configures once under an exact dotted key, which
+      an environment may override and a variable parameter reads by identity
+      and version.
+    shortDefinition: An organization's configured value, by key.
+    confusables: ["The customer glossary's 'shared variable', an admitted customer-facing synonym.", "An environment variable, which a workload reads."]
+    source: [blueprint v2 §5.2]
+    stability: stable
+    status: approved
+    tags: [parameters]
+
+  - id: blueprint.deployment-fact-parameter
+    display_name: deployment-fact parameter
+    context: blueprint
+    definition: >-
+      A deployment parameter taking one deployment fact, named by
+      `${{ deployment.creator.<fact> }}`.
+    shortDefinition: "One deployment fact, `${{ deployment.creator.x }}`."
+    kind_of: [blueprint.deployment-parameter]
+    associated:
+      - { relation: reads, term: deployment.deployment-fact }
+    identifiers: { codes: [ERR_UNKNOWN_DEPLOYMENT_FACT, ERR_DEPLOYMENT_FACT_UNAVAILABLE] }
+    source: [blueprint v2 §5.2]
+    stability: stable
+    status: approved
+    tags: [parameters]
+
+  - id: blueprint.connection-parameter
+    display_name: connection parameter
+    context: blueprint
+    definition: >-
+      A deployment parameter whose from is `${{ connections.<path> }}`, naming one
+      connection the organization has configured, which binds only connection
+      inputs.
+    shortDefinition: "One connection, `${{ connections.x }}`."
+    kind_of: [blueprint.deployment-parameter]
+    associated:
+      - { relation: selects, term: blueprint.connection }
+    identifiers: { codes: [ERR_INVALID_CONNECTION_BINDING] }
+    source: [blueprint v2 §5.3, ADR 0030]
+    stability: stable
+    status: approved
+    tags: [parameters, connections]
+
+  - id: blueprint.parameter-from
+    display_name: parameter from
+    context: blueprint
+    definition: >-
+      The member of a deployment parameter holding exactly one whole
+      placeholder in the variables, deployment or connections namespace.
+    shortDefinition: One whole placeholder in variables, deployment or connections.
+    part_of: [blueprint.deployment-parameter]
+    source: [blueprint v2 §5.2]
+    stability: stable
+    status: approved
+    tags: [parameters, placeholder]
+
+  - id: blueprint.connection
+    display_name: connection
+    context: blueprint
+    definition: >-
+      The members of one protocol, acquired together, all of them or none, for
+      one parameter of one deployment: a stored set the organization configures or
+      the platform supplies, reached through a parameter in the connections
+      namespace.
+    shortDefinition: The members of one protocol, acquired together.
+    associated:
+      - { relation: speaks, term: component.protocol }
+    identifiers: { requirement_prefixes: [BP-CONNECTION] }
+    verbs: [an organization has connections, a parameter selects a connection, a binding delivers it]
+    confusables:
+      - "A network connection (TCP), always written that way."
+      - "Radius connections, which are graph edges; here the edge is a binding."
+      - "Airflow and n8n connections and Cloud Foundry service instances, which match."
+      - "The customer glossary's LLM Connection, one protocol's case."
+    aliases:
+      - { text: atomic connection, status: banned, scope: [prose], suggest: connection }
+      - { text: atomic connections, status: banned, scope: [prose], suggest: connections }
+    source: [component v2 §1.1, component v2 §6.4, blueprint v2 §1.1, blueprint v2 §5.3, ADR 0030, ADR 0039]
+    stability: stable
+    status: approved
+    tags: [connections]
+
+  - id: blueprint.selection
+    display_name: selection
+    context: blueprint
+    definition: >-
+      The immutable, authorized record of which connection one deployment uses
+      for one connection parameter, with its identity, version, kind,
+      credential and protocol views.
+    shortDefinition: Which connection a deployment uses for one parameter.
+    part_of: [deployment.deployment-snapshot]
+    associated:
+      - { relation: chooses, term: blueprint.connection }
+    identifiers: { codes: [ERR_CONNECTION_NOT_FOUND, ERR_CONNECTION_DENIED, ERR_CONNECTION_INCOMPATIBLE] }
+    aliases:
+      - { text: source reference, status: banned, scope: [prose], suggest: requested path }
+    source: [blueprint v2 §1.1, blueprint v2 §5.3]
+    stability: stable
+    status: approved
+    tags: [connections]
+
+  - id: blueprint.selection-kind
+    display_name: selection kind
+    context: blueprint
+    definition: >-
+      Who supplies a selected connection: MANAGED, supplied and operated by
+      Musher, or USER, a complete set the deployer supplies.
+    shortDefinition: MANAGED or USER.
+    part_of: [blueprint.selection]
+    source: [blueprint v2 §1.1, blueprint v2 §5.3, ADR 0039]
+    stability: stable
+    status: approved
+    tags: [connections]
+
+  - id: blueprint.managed
+    display_name: managed
+    context: blueprint
+    definition: >-
+      Supplied and operated by Musher, as one selection kind is, whose
+      offering decides whether the connection is granted or provisioned.
+    shortDefinition: Supplied and operated by Musher.
+    kind_of: [blueprint.selection-kind]
+    aliases:
+      - { text: managed database, status: banned, scope: [prose], suggest: a database an external node stands for, note: "Managed means only supplied and operated by Musher." }
+    source: [blueprint v2 §5.3, ADR 0039]
+    stability: stable
+    status: approved
+    tags: [connections]
+
+  - id: blueprint.user-selection
+    display_name: USER selection
+    context: blueprint
+    definition: >-
+      A selection kind under which the deployer supplies every member of the
+      protocol, never merged with a managed selection.
+    shortDefinition: A complete set the deployer supplies.
+    kind_of: [blueprint.selection-kind]
+    source: [blueprint v2 §5.3]
+    stability: stable
+    status: approved
+    tags: [connections]
+
+  - id: blueprint.granted
+    display_name: granted
+    context: blueprint
+    definition: >-
+      Said of a managed connection that already exists and is scoped to the
+      deployment, connection parameter and permitted service on acquisition.
+    shortDefinition: An existing managed connection, scoped on acquisition.
+    kind_of: [blueprint.managed]
+    source: [blueprint v2 §1.1, blueprint v2 §5.3, ADR 0039]
+    stability: provisional
+    status: approved
+    tags: [connections]
+
+  - id: blueprint.provisioned
+    display_name: provisioned
+    context: blueprint
+    definition: >-
+      Said of a managed connection created at its first acquisition for the
+      deployment, reused across retry, redeploy and update, and released only
+      when the deployment is deleted.
+    shortDefinition: Created on first acquisition, released at deletion.
+    kind_of: [blueprint.managed]
+    source: [blueprint v2 §1.1, blueprint v2 §5.3, ADR 0039]
+    stability: provisional
+    status: approved
+    tags: [connections]
+
+  - id: blueprint.view
+    display_name: view
+    context: blueprint
+    definition: >-
+      The members of one protocol taken from a selection for one consumer,
+      which MUST satisfy the requested protocol, capabilities and input
+      schemas.
+    shortDefinition: One protocol's members of a selection, for one consumer.
+    part_of: [blueprint.selection]
+    source: [blueprint v2 §5.3]
+    stability: stable
+    status: approved
+    tags: [connections]
+
+  - id: blueprint.deploy-form
+    display_name: deploy form
+    context: blueprint
+    definition: >-
+      The form a client offers the deployer, built from each parameter's ui:
+      its label, order, prominence, enum labels and examples.
+    shortDefinition: The form a deployer fills in.
+    associated:
+      - { relation: presents, term: blueprint.deployment-parameter }
+    identifiers:
+      fields: [ui, label, order, prominence, enumLabels, examples]
+      values: [PRIMARY, SECONDARY]
+      defs: [BlueprintParameterUi]
+      requirement_prefixes: [BP-UI]
+      codes: [ERR_UNKNOWN_ENUM_MEMBER]
+    aliases:
+      - { text: install form, status: banned, scope: [prose], suggest: deploy form }
+      - { text: install-form, status: banned, scope: [prose], suggest: deploy form }
+    source: [blueprint v2 §1.1, blueprint v2 §5.4, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [parameters, presentation]
+
+  # ===========================================================================
+  # deployment
+  # ===========================================================================
+
+  - id: deployment.deployment
+    display_name: deployment
+    context: deployment
+    definition: >-
+      One blueprint revision instantiated for an organization, with its
+      parameters, selections and allocations, which rollouts apply and which
+      lives until it is deleted.
+    shortDefinition: A blueprint revision instantiated for an organization.
+    associated:
+      - { relation: instantiates, term: blueprint.blueprint }
+    verbs: [deploy a blueprint, create a deployment, redeploy, update a deployment, delete a deployment]
+    confusables: ["A Kubernetes Deployment, which is one workload's replica set.", "A deployment environment in the engineering conventions."]
+    aliases:
+      - { text: installation, status: banned, scope: [prose, identifier], suggest: deployment }
+      - { text: installations, status: banned, scope: [prose], suggest: deployments }
+    source: [blueprint v2 §1.1, blueprint v2 §5, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [deployment]
+
+  - id: deployment.deployer
+    display_name: deployer
+    context: deployment
+    definition: >-
+      The person or principal who creates or changes a deployment, filling in
+      its deploy form.
+    shortDefinition: Who creates or changes a deployment.
+    confusables: ["A viewer, who uses what a deployment serves.", "The creator, the deployer who created it, whose facts are captured once."]
+    aliases:
+      - { text: installer, status: banned, scope: [prose], suggest: deployer }
+    source: [blueprint v2 §1.1, blueprint v2 §5, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [deployment]
+
+  - id: deployment.creator
+    display_name: creator
+    context: deployment
+    definition: >-
+      The deployer who created a deployment, whose identity, email and name
+      are captured once at creation as deployment facts.
+    shortDefinition: The deployer who created the deployment.
+    kind_of: [deployment.deployer]
+    confusables: ["Pelorus Installer, renamed Creator."]
+    aliases:
+      - { text: deployment.installer, status: banned, scope: [identifier], suggest: deployment.creator }
+    source: [blueprint v2 §1.1, blueprint v2 §5.2, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [deployment]
+
+  - id: deployment.deployment-fact
+    display_name: deployment fact
+    context: deployment
+    definition: >-
+      A sensitive fact about a deployment's creator, deployment.creator.identity,
+      email or name, captured once at creation and kept in the deployment
+      snapshot.
+    shortDefinition: A fact about the creator, captured once.
+    part_of: [deployment.deployment-snapshot]
+    source: [blueprint v2 §5.2]
+    stability: stable
+    status: approved
+    tags: [deployment, sensitivity]
+
+  - id: deployment.rollout
+    display_name: rollout
+    context: deployment
+    definition: >-
+      One applied generation of a deployment: the workloads started from one
+      resolution record, at creation, at each update and at each redeploy,
+      during which each unscheduled JOB runs once.
+    shortDefinition: One applied generation of a deployment.
+    part_of: [deployment.deployment]
+    confusables: ["Pelorus Release, the same concept."]
+    source: [component v2 §5.7, blueprint v2 §1.1, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [deployment]
+
+  - id: deployment.replica
+    display_name: replica
+    context: deployment
+    definition: >-
+      One running copy of a node's workload; a non-shared volume is mounted
+      into at most one at a time.
+    shortDefinition: One running copy of a workload.
+    part_of: [deployment.deployment]
+    aliases:
+      - { text: running instance, status: banned, scope: [prose], suggest: replica }
+      - { text: running instances, status: banned, scope: [prose], suggest: replicas }
+    confusables: ["'instance' in its general sense, such as a Cloud Foundry service instance or an instance of a JSON Schema; a running copy of a workload is a replica, and the platform glossary bans 'instance' for it."]
+    source: [component v2 §5.5, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [deployment]
+
+  - id: deployment.resolution
+    display_name: resolution
+    context: deployment
+    definition: >-
+      The ordered process that turns a blueprint and its pinned dependencies
+      into the effective values of one deployment, before any workload starts,
+      producing the public record and the private snapshot.
+    shortDefinition: Turns a blueprint into a deployment's effective values.
+    part_of: [deployment.deployment]
+    identifiers: { requirement_prefixes: [BP-RESOLVE], codes: [ERR_INVALID_RESOLUTION_CONTEXT] }
+    source: [blueprint v2 §1.1, blueprint v2 §5.2]
+    stability: stable
+    status: approved
+    tags: [deployment, resolution]
+
+  - id: deployment.resolution-stage
+    display_name: stage
+    context: deployment
+    definition: >-
+      One step of resolution, in order sources, parameters, allocation,
+      connections, values, build, environment and record, that a
+      resolution-phase diagnostic names.
+    shortDefinition: One ordered step of resolution.
+    part_of: [deployment.resolution]
+    confusables: ["A validation phase; stage means only a resolution step, and is written 'resolution stage' where the context does not say so."]
+    source: [core v2 §1.3, core v2 §6.4, core v2 §7, blueprint v2 §5.2, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [resolution]
+
+  - id: deployment.sources-stage
+    display_name: sources stage
+    context: deployment
+    definition: >-
+      The first resolution stage, which pins content without building it: a
+      git ref to a commit, an upload to its verified digest, and a tag-only
+      image or a buildpacks builder to an image digest.
+    shortDefinition: Pins source content to commits and digests.
+    kind_of: [deployment.resolution-stage]
+    source: [core v2 §6.4, blueprint v2 §5.2, ADR 0040]
+    stability: provisional
+    status: approved
+    tags: [resolution, build]
+
+  - id: deployment.build-stage
+    display_name: build stage
+    context: deployment
+    definition: >-
+      The resolution stage, after values, that builds each git or upload
+      source from its pinned content into an image digest, reading its build
+      secrets from resolved values.
+    shortDefinition: Builds pinned source content into images.
+    kind_of: [deployment.resolution-stage]
+    source: [core v2 §6.4, blueprint v2 §5.2, ADR 0040]
+    stability: provisional
+    status: approved
+    tags: [resolution, build]
+
+  - id: deployment.parameters-stage
+    display_name: parameters stage
+    context: deployment
+    definition: >-
+      The resolution stage that obtains submitted values, organization
+      variables, deployment facts and persisted generated values.
+    shortDefinition: Obtains every parameter's value.
+    kind_of: [deployment.resolution-stage]
+    source: [blueprint v2 §5.2]
+    stability: stable
+    status: approved
+    tags: [resolution]
+
+  - id: deployment.allocation-stage
+    display_name: allocation stage
+    context: deployment
+    definition: >-
+      The resolution stage that selects compute, storage and exposure and
+      allocates endpoint addresses.
+    shortDefinition: Selects compute and allocates addresses.
+    kind_of: [deployment.resolution-stage]
+    source: [blueprint v2 §5.2]
+    stability: stable
+    status: approved
+    tags: [resolution]
+
+  - id: deployment.connections-stage
+    display_name: connections stage
+    context: deployment
+    definition: >-
+      The resolution stage that acquires one selection per connection
+      parameter.
+    shortDefinition: Acquires the selections.
+    kind_of: [deployment.resolution-stage]
+    source: [blueprint v2 §5.3]
+    stability: stable
+    status: approved
+    tags: [resolution, connections]
+
+  - id: deployment.values-stage
+    display_name: values stage
+    context: deployment
+    definition: >-
+      The resolution stage that evaluates value dependencies and validates
+      every input and output against its value schema.
+    shortDefinition: Evaluates and validates every value.
+    kind_of: [deployment.resolution-stage]
+    source: [blueprint v2 §5.2]
+    stability: stable
+    status: approved
+    tags: [resolution]
+
+  - id: deployment.environment-stage
+    display_name: environment stage
+    context: deployment
+    definition: >-
+      The resolution stage that encodes each workload's inputs into its
+      environment variables.
+    shortDefinition: Encodes values into environment variables.
+    kind_of: [deployment.resolution-stage]
+    source: [blueprint v2 §5.2, component v2 §5.3]
+    stability: stable
+    status: approved
+    tags: [resolution]
+
+  - id: deployment.record-stage
+    display_name: record stage
+    context: deployment
+    definition: >-
+      The last resolution stage, which persists the deployment snapshot and
+      writes the resolution record.
+    shortDefinition: Persists the snapshot, writes the record.
+    kind_of: [deployment.resolution-stage]
+    source: [blueprint v2 §5.2]
+    stability: stable
+    status: approved
+    tags: [resolution]
+
+  - id: deployment.resolution-record
+    display_name: resolution record
+    context: deployment
+    definition: >-
+      The generated, public JSON artifact pinning what one resolution chose,
+      blueprint digest, specification releases, nodes, artifacts, compute,
+      variables and credential references, with no secret in it.
+    shortDefinition: The public JSON pin of one resolution.
+    part_of: [deployment.resolution]
+    identifiers:
+      fields: [blueprintDigest, imageDigest, gitCommit, uploadDigest, recipeDigest, builderDigest, credentials, rotation, variables, /version]
+      defs: [BlueprintResolutionRecord, BlueprintResolvedNode, BlueprintResolvedComponent, BlueprintResolvedCredential]
+    confusables: ["A Terraform state file, which holds secrets; this never does."]
+    source: [blueprint v2 §1.1, blueprint v2 §5.2]
+    stability: stable
+    status: approved
+    tags: [resolution]
+
+  - id: deployment.specification-releases
+    display_name: specification releases
+    context: deployment
+    definition: >-
+      The map in a resolution record naming the exact release of each family a
+      resolution was performed against: core, component and blueprint.
+    shortDefinition: The exact family releases a resolution used.
+    part_of: [deployment.resolution-record]
+    identifiers: { fields: [specifications, core, component, blueprint], defs: [BlueprintResolvedSpecifications] }
+    source: [blueprint v2 §5.2]
+    stability: stable
+    status: approved
+    tags: [resolution, versioning]
+
+  - id: deployment.versioned-identity
+    display_name: versioned identity
+    context: deployment
+    definition: >-
+      An opaque identity paired with an immutable version, the way a record
+      names a variable, a snapshot or an allocation it does not contain.
+    shortDefinition: An opaque identity and an immutable version.
+    identifiers: { fields: [identity, version], defs: [BlueprintVersionedIdentity] }
+    source: [blueprint v2 §5.2]
+    stability: stable
+    status: approved
+    tags: [resolution]
+
+  - id: deployment.artifact-digest
+    display_name: artifact digest
+    context: deployment
+    definition: >-
+      The SHA-256 digest of a component document's bytes as resolved, which
+      with its identity and revision fixes exactly what a node deployed.
+    shortDefinition: SHA-256 of a resolved component document.
+    part_of: [deployment.resolution-record]
+    identifiers: { fields: [digest] }
+    source: [blueprint v2 §4.1, blueprint v2 §5.2]
+    stability: stable
+    status: approved
+    tags: [resolution]
+
+  - id: deployment.deployment-snapshot
+    display_name: deployment snapshot
+    context: deployment
+    definition: >-
+      The private, versioned state behind a resolution record: submitted
+      values, selected variables, deployment facts, credential references,
+      endpoint allocations and connection selections.
+    shortDefinition: The private state behind a resolution record.
+    part_of: [deployment.deployment]
+    identifiers: { fields: [deploymentSnapshot] }
+    aliases:
+      - { text: installationSnapshot, status: banned, scope: [identifier], suggest: deploymentSnapshot }
+      - { text: installation snapshot, status: banned, scope: [prose], suggest: deployment snapshot }
+    source: [blueprint v2 §1.1, blueprint v2 §5.2, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [resolution, sensitivity]
+
+  - id: deployment.allocation
+    display_name: allocation
+    context: deployment
+    definition: >-
+      The platform's assignment of a concrete resource to a deployment, an
+      endpoint address, an OIDC client registration or a volume, kept in the
+      snapshot and changed only by reallocation.
+    shortDefinition: A concrete resource assigned to a deployment.
+    part_of: [deployment.deployment-snapshot]
+    source: [component v2 §5.2, blueprint v2 §4.5]
+    stability: stable
+    status: approved
+    tags: [resolution]
+
+  - id: deployment.acquisition
+    display_name: acquisition
+    context: deployment
+    definition: >-
+      The authorized operation, separate from every validation phase, that
+      obtains external context such as a catalog component, an organization
+      variable or a connection selection.
+    shortDefinition: Obtaining external context, with authority.
+    associated:
+      - { relation: supplies, term: deployment.resolution }
+    source: [blueprint v2 §4.1, blueprint v2 §5.3]
+    stability: stable
+    status: approved
+    tags: [resolution]
+
+  - id: deployment.materialization
+    display_name: materialization
+    context: deployment
+    definition: >-
+      The step that hands resolved values, secrets included, to the running
+      workload through private channels, after the snapshot is persisted.
+    shortDefinition: Handing resolved values to the workload.
+    associated:
+      - { relation: follows, term: deployment.resolution }
+    source: [blueprint v2 §5.2]
+    stability: stable
+    status: approved
+    tags: [resolution]
+
+  # ===========================================================================
+  # listing
+  # ===========================================================================
+
+  - id: listing.listing
+    display_name: listing
+    context: listing
+    definition: >-
+      The presentation-only document of a catalog item, how a storefront
+      shows, categorizes and lets people discover it, which never influences
+      how anything runs.
+    shortDefinition: How a catalog item is presented.
+    kind_of: [core.musher-document]
+    part_of: [catalog.catalog-item]
+    identifiers: { defs: [ListingSpec, ListingMetadata], requirement_prefixes: [LIST-ITEM, LIST-PRES] }
+    source: [listing v2 §1]
+    stability: stable
+    status: approved
+    tags: [presentation]
+
+  - id: listing.item-type
+    display_name: item type
+    context: listing
+    definition: >-
+      The listing field saying which shape of catalog item it presents,
+      BLUEPRINT exactly when the item root holds blueprint.yaml, otherwise
+      COMPONENT.
+    shortDefinition: BLUEPRINT or COMPONENT.
+    part_of: [listing.listing]
+    identifiers: { fields: [itemType], codes: [ERR_ITEM_TYPE_MISMATCH] }
+    confusables: ["A document's kind."]
+    source: [listing v2 §3]
+    stability: stable
+    status: approved
+    tags: [presentation, catalog]
+
+  - id: listing.display-name
+    display_name: display name
+    context: listing
+    definition: >-
+      The item's title on the storefront, at most 200 characters.
+    shortDefinition: The item's storefront title.
+    part_of: [listing.listing]
+    identifiers: { fields: [displayName] }
+    source: [listing v2 §4]
+    stability: stable
+    status: approved
+    tags: [presentation]
+
+  - id: listing.summary
+    display_name: summary
+    context: listing
+    definition: >-
+      The plain-text tagline of a listing, at most 280 characters, never
+      rendered as Markdown.
+    shortDefinition: A one-line plain-text tagline.
+    part_of: [listing.listing]
+    identifiers: { fields: [summary] }
+    source: [listing v2 §4]
+    stability: stable
+    status: approved
+    tags: [presentation]
+
+  - id: listing.overview
+    display_name: overview
+    context: listing
+    definition: >-
+      The Markdown body of a listing, at most 20 000 characters, in the
+      Markdown profile listing §4.1 states.
+    shortDefinition: The listing's Markdown body.
+    part_of: [listing.listing]
+    identifiers: { fields: [overview] }
+    aliases:
+      - { text: description, status: banned, scope: [identifier], suggest: overview, note: "listing spec.description." }
+    source: [listing v2 §1.1, listing v2 §4, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [presentation]
+
+  - id: listing.overview-markdown-profile
+    display_name: overview Markdown profile
+    context: listing
+    definition: >-
+      CommonMark 0.31.2 narrowed to have no raw HTML, only https, http, mailto
+      or fragment link destinations, and only media-path images, which a
+      renderer also MUST NOT exceed.
+    shortDefinition: CommonMark with no raw HTML and local images only.
+    part_of: [listing.overview]
+    identifiers: { requirement_prefixes: [LIST-MD], codes: [ERR_RAW_HTML, ERR_DISALLOWED_SCHEME, ERR_IMAGE_NOT_LOCAL] }
+    aliases:
+      - { text: description markdown profile, status: banned, scope: [prose], suggest: overview Markdown profile }
+    source: [listing v2 §1.1, listing v2 §4.1, ADR 0004, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [presentation, security]
+
+  - id: listing.getting-started
+    display_name: getting started
+    context: listing
+    definition: >-
+      The optional Markdown, at most 5 000 characters in the overview Markdown
+      profile, saying what a person does right after the deployment is
+      running, and never holding a value.
+    shortDefinition: What to do once the deployment is running.
+    part_of: [listing.listing]
+    identifiers: { fields: [gettingStarted] }
+    source: [listing v2 §1.1, listing v2 §4, ADR 0038]
+    stability: provisional
+    status: approved
+    tags: [presentation]
+
+  - id: listing.category
+    display_name: category
+    context: listing
+    definition: >-
+      The one closed-vocabulary value a storefront shelves a listing under,
+      which grows by minor release and shrinks only in a new major version.
+    shortDefinition: The closed-vocabulary shelf of a listing.
+    part_of: [listing.listing]
+    identifiers:
+      fields: [category]
+      values: [AGENTS, AUTOMATION, COMMUNICATION, DATABASES, DEVELOPER_TOOLS, INFRASTRUCTURE, MEDIA, MODELS, NETWORKING, OBSERVABILITY, PRODUCTIVITY, SECURITY, STORAGE]
+    confusables: ["A tag, whose vocabulary is open and which a listing may carry up to sixteen of."]
+    aliases:
+      - { text: AI_ML, status: banned, scope: [identifier], suggest: AGENTS or MODELS, note: "Retired in v2: AGENTS for an agent or an agent builder, MODELS for anything else." }
+      - { text: GAMING, status: banned, scope: [identifier], suggest: MEDIA, note: "Retired in v2: a game is entertainment, which MEDIA holds." }
+    source: [listing v2 §1.2, listing v2 §4.2, ADR 0003, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [presentation, vocabulary]
+
+  - id: listing.lifecycle-stage
+    display_name: lifecycle stage
+    context: listing
+    definition: >-
+      The listing's claim of maturity on the ordered scale EXPERIMENTAL, BETA,
+      STABLE, or the terminal SUNSET saying the item is going away.
+    shortDefinition: EXPERIMENTAL, BETA, STABLE or SUNSET.
+    part_of: [listing.listing]
+    identifiers: { fields: [lifecycleStage], values: [EXPERIMENTAL, BETA, STABLE, SUNSET] }
+    confusables: ["Backstage lifecycle (experimental, production, deprecated), a different scale."]
+    source: [listing v2 §4.2]
+    stability: stable
+    status: approved
+    tags: [presentation, vocabulary]
+
+  - id: listing.tag
+    display_name: tag
+    context: listing
+    definition: >-
+      A lowercase kebab-case discovery key, at most sixteen and unique per
+      listing, whose vocabulary stays open.
+    shortDefinition: An open, kebab-case discovery key.
+    part_of: [listing.listing]
+    identifiers: { fields: [tags], requirement_prefixes: [LIST-TAG] }
+    confusables: ["An OCI image tag.", "A release tag."]
+    source: [listing v2 §4]
+    stability: stable
+    status: approved
+    tags: [presentation]
+
+  - id: listing.license
+    display_name: license
+    context: listing
+    definition: >-
+      The SPDX expression naming the listed software's licence, whose shape is
+      structural and whose identifiers are checked against the pinned SPDX
+      list at admission.
+    shortDefinition: An SPDX licence expression.
+    part_of: [listing.listing]
+    identifiers: { fields: [license], codes: [ERR_UNKNOWN_LICENSE], requirement_prefixes: [LIST-LICENSE] }
+    source: [listing v2 §4, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [presentation]
+
+  - id: listing.listing-url
+    display_name: listing URL
+    context: listing
+    definition: >-
+      One absolute https, http or mailto address a listing links to: its
+      homepage, its source repository or its support channel.
+    shortDefinition: homepageURL, sourceRepositoryURL or supportURL.
+    part_of: [listing.listing]
+    identifiers:
+      fields: [homepageURL, sourceRepositoryURL, supportURL]
+      requirement_prefixes: [LIST-URL]
+    aliases:
+      - { text: sourceRepoURL, status: banned, scope: [identifier], suggest: sourceRepositoryURL }
+    source: [listing v2 §4, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [presentation]
+
+  - id: listing.media-path
+    display_name: media path
+    context: listing
+    definition: >-
+      A relative path to a file under media/ in the item root, with an image
+      extension, for an icon, a screenshot or an overview image, read by stat
+      and image headers and never decoded before admission.
+    shortDefinition: A path to an image under media/.
+    part_of: [listing.listing]
+    identifiers:
+      requirement_prefixes: [LIST-MEDIA]
+      codes: [ERR_MEDIA_NOT_FOUND, ERR_PATH_ESCAPE, ERR_DUPLICATE_MEDIA_PATH, ERR_MEDIA_TOO_LARGE, ERR_MEDIA_DIMENSIONS]
+    source: [listing v2 §1.1, listing v2 §5, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [presentation, media]
+
+  - id: listing.overview-image
+    display_name: overview image
+    context: listing
+    definition: >-
+      A Markdown image in a listing's overview or getting-started text, which
+      is a media path and is not part of the screenshot gallery.
+    shortDefinition: A Markdown image in the overview.
+    kind_of: [listing.media-path]
+    source: [listing v2 §1.1, listing v2 §4.1]
+    stability: stable
+    status: approved
+    tags: [media]
+
+  - id: listing.published-media-set
+    display_name: published media set
+    context: listing
+    definition: >-
+      The mapping from each media path of an item to the location a consumer
+      serves that file's bytes from after ingest.
+    shortDefinition: Media path to served location, after ingest.
+    part_of: [listing.listing]
+    source: [listing v2 §1.1, listing v2 §5.1]
+    stability: stable
+    status: approved
+    tags: [media, publication]
+
+  - id: listing.icon
+    display_name: icon
+    context: listing
+    definition: >-
+      The square media file, at least 256 pixels and at most 1 MiB, that
+      stands for an item on the storefront.
+    shortDefinition: The item's square image.
+    part_of: [listing.listing]
+    identifiers: { fields: [icon] }
+    source: [listing v2 §5, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [media]
+
+  - id: listing.screenshot
+    display_name: screenshot
+    context: listing
+    definition: >-
+      One media file of a listing's gallery, at most 5 MiB and 4096 pixels per
+      side, with an optional caption and a basename unique in the gallery.
+    shortDefinition: One gallery image.
+    part_of: [listing.listing]
+    identifiers: { fields: [screenshots, file, caption], defs: [ListingScreenshot] }
+    source: [listing v2 §5, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [media]
+
+  # ===========================================================================
+  # repository: how the specifications are made
+  # ===========================================================================
+
+  - id: repository.release
+    display_name: release
+    context: repository
+    definition: >-
+      One tagged, immutable version of one family, X.Y.Z on the family's tag
+      line, recorded in the ledger and served from immutable GitHub assets.
+    shortDefinition: One tagged, immutable version of a family.
+    verbs: [release a family, a release records its core release]
+    confusables: ["A publication to the catalog, which these specs never call a release.", "Pelorus Release, which is a rollout."]
+    source: [docs/publication.md, ADR 0006, ADR 0023]
+    stability: stable
+    status: approved
+    tags: [publication, versioning]
+
+  - id: repository.specification
+    display_name: specification
+    context: repository
+    definition: >-
+      The normative spec.md of one family version, the definitive statement of
+      its rules, beside which schemas, examples and generated pages are
+      informative.
+    shortDefinition: A family version's normative spec.md.
+    associated:
+      - { relation: defines, term: core.family }
+    source: [docs/conventions.md]
+    stability: stable
+    status: approved
+    tags: [repository]
+
+  - id: repository.requirement-id
+    display_name: requirement ID
+    context: repository
+    definition: >-
+      The stable anchor of one rule a document or an implementation can
+      violate, PREFIX-AREA-NNN such as COMP-EP-004, which conformance cases
+      cite.
+    shortDefinition: The stable name of one rule, such as COMP-EP-004.
+    source: [docs/conformance.md]
+    stability: stable
+    status: approved
+    tags: [conformance]
+
+  - id: repository.conformance-case
+    display_name: conformance case
+    context: repository
+    definition: >-
+      One fixture of a family version's corpus: a document or behaviour, the
+      phase it reaches, the requirements it pins and the outcome an
+      implementation MUST produce.
+    shortDefinition: One fixture with a declared outcome.
+    part_of: [repository.conformance-corpus]
+    source: [docs/conformance.md]
+    stability: stable
+    status: approved
+    tags: [conformance]
+
+  - id: repository.conformance-corpus
+    display_name: conformance corpus
+    context: repository
+    definition: >-
+      The set of every case a family version ships under conformance/, which a
+      conforming implementation runs in its own CI together with the core
+      corpus of the core release it records.
+    shortDefinition: Every case one family version ships.
+    source: [core v2 §8, docs/conformance.md]
+    stability: stable
+    status: approved
+    tags: [conformance]
+
+  - id: repository.behaviour-suite
+    display_name: behaviour suite
+    context: repository
+    definition: >-
+      A named group of behavioural cases, normalization, resolution, rendering
+      or lifecycle, that an implementation claims in addition to a validation
+      scope.
+    shortDefinition: A claimable group of behavioural cases.
+    part_of: [repository.conformance-corpus]
+    aliases:
+      - { text: behavioural profile, status: banned, scope: [prose], suggest: behaviour suite }
+      - { text: behaviour profile, status: banned, scope: [prose], suggest: behaviour suite }
+    source: [docs/conformance.md, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [conformance]
+
+  - id: repository.term-record
+    display_name: term record
+    context: repository
+    definition: >-
+      One entry of docs/terminology.yaml naming a concept in one context, with
+      its definition, relations, identifiers and the words to avoid in its
+      place.
+    shortDefinition: One concept in one context, in docs/terminology.yaml.
+    confusables: ["A catalog token, formerly called a term."]
+    source: [docs/terminology.md, ADR 0038]
+    stability: provisional
+    status: approved
+    tags: [repository]
+
+  - id: repository.not-supported
+    display_name: not supported in v2
+    context: repository
+    definition: >-
+      The table closing each specification that lists what a document cannot
+      yet declare, each row with how it would close, and every closure a
+      relaxation.
+    shortDefinition: What v2 rejects today, each closable by relaxation.
+    aliases:
+      - { text: unsupported capabilities, status: banned, scope: [prose], suggest: not supported in v2 }
+      - { text: known debt, status: banned, scope: [prose], suggest: not supported in v2 }
+    source: [ADR 0038]
+    stability: stable
+    status: approved
+    tags: [repository, versioning]
+
+  - id: repository.privilege
+    display_name: privilege
+    context: repository
+    definition: >-
+      A permission a runtime grants a workload beyond the ordinary, such as
+      binding a port below 1024, which admission may refuse.
+    shortDefinition: A runtime permission beyond the ordinary.
+    confusables: ["A connection capability such as STREAMING."]
+    source: [component v2 §5.2, ADR 0038]
+    stability: stable
+    status: approved
+    tags: [security]

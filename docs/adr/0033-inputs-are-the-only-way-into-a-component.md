@@ -50,7 +50,7 @@ dependencies:
 
 Every one of them treats an outside dependency as a peer node with outputs, not
 as a field on the consumer. Score and Terraform wire those outputs one at a time,
-which is what [blueprint §4.2](../../specifications/blueprint/v1/spec.md#bindings)
+which is what [blueprint §4.2](../../specifications/blueprint/v2/spec.md#bindings)
 already does for a managed database.
 
 Separately, `COMP-SRC-002` and `COMP-SRC-003` rejected an image reference Docker
@@ -135,7 +135,7 @@ installation and parameter.
 ### 5. A one-time reset of the v1 compatibility baseline
 
 **The compatibility guarantee of
-[core v1 §3](../../specifications/core/v1/spec.md#compatibility) runs, for
+[core v1 §3](../../specifications/core/v2/spec.md#compatibility) runs, for
 component and blueprint, from the first release that carries this record, and
 not from these five:**
 

@@ -20,12 +20,16 @@ tasks:
       - task: docs
 
   docs:
-    desc: Regenerate docs/traceability.md and the ADR index in docs/adr/README.md
+    desc: Regenerate docs/traceability.md, the ADR index, and docs/terminology.md with its Vale styles
     dir: '{{.ROOT_DIR}}/{{.TOOLS_DIR}}'
     cmds:
-      # Both are committed, and `task check:docs` fails when either is stale.
+      # All are committed, and `task check:docs` fails when any is stale. The
+      # terminology step writes docs/terminology.md and the generated
+      # MusherSpecifications Vale style (Terms.yml, Discouraged.yml) from
+      # docs/terminology.yaml.
       - bun run src/render/traceability.ts
       - bun run src/render/adr-index.ts
+      - bun run src/render/terminology.ts
 
   catalog:
     desc: Regenerate the SchemaStore catalog index into dist/

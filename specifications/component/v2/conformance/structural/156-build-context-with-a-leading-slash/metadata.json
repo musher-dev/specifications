@@ -1,0 +1,10 @@
+{
+  "id": "structural-156-build-context-with-a-leading-slash",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#source",
+  "requirements": [
+    "COMP-BUILD-002"
+  ],
+  "summary": "A build context written as an absolute path is rejected; it is relative to the source root."
+}

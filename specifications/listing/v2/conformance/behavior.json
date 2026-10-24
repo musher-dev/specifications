@@ -1,0 +1,361 @@
+[
+  {
+    "id": "rendering-escapes-code",
+    "suite": "rendering",
+    "operation": "render",
+    "requirements": [],
+    "input": {
+      "markdown": "`<script>alert(1)</script>`"
+    },
+    "expect": {
+      "/html": "<p><code>&lt;script&gt;alert(1)&lt;/script&gt;</code></p>\n"
+    }
+  },
+  {
+    "id": "rendering-full-media-path",
+    "suite": "rendering",
+    "operation": "render",
+    "requirements": [
+      "LIST-MEDIA-003"
+    ],
+    "input": {
+      "markdown": "![Overview](media/mobile/overview.png)",
+      "media": {
+        "media/mobile/overview.png": "https://assets.invalid/item/media/mobile/overview.png"
+      }
+    },
+    "expect": {
+      "/html": "<p><img src=\"https://assets.invalid/item/media/mobile/overview.png\" alt=\"Overview\" /></p>\n"
+    }
+  },
+  {
+    "id": "rendering-suppresses-raw-html",
+    "suite": "rendering",
+    "operation": "render",
+    "requirements": [
+      "LIST-MD-001"
+    ],
+    "input": {
+      "markdown": "<script>alert(1)</script>"
+    },
+    "expect": {
+      "/html": "<!-- raw HTML omitted -->\n"
+    }
+  },
+  {
+    "id": "rendering-permits-fragment",
+    "suite": "rendering",
+    "operation": "render",
+    "requirements": [
+      "LIST-MD-002"
+    ],
+    "input": {
+      "markdown": "[Details](#details)"
+    },
+    "expect": {
+      "/html": "<p><a href=\"#details\">Details</a></p>\n"
+    }
+  },
+  {
+    "id": "rendering-rejects-ftp",
+    "suite": "rendering",
+    "operation": "render",
+    "requirements": [
+      "LIST-MD-002"
+    ],
+    "input": {
+      "markdown": "[Link](ftp://example.com/file)"
+    },
+    "expect": {
+      "/error": "disallowed link destination"
+    }
+  },
+  {
+    "id": "rendering-rejects-relative",
+    "suite": "rendering",
+    "operation": "render",
+    "requirements": [
+      "LIST-MD-002"
+    ],
+    "input": {
+      "markdown": "[Link](guide.md)"
+    },
+    "expect": {
+      "/error": "disallowed link destination"
+    }
+  },
+  {
+    "id": "rendering-rejects-protocol-relative",
+    "suite": "rendering",
+    "operation": "render",
+    "requirements": [
+      "LIST-MD-002"
+    ],
+    "input": {
+      "markdown": "[Link](//example.com/path)"
+    },
+    "expect": {
+      "/error": "disallowed link destination"
+    }
+  },
+  {
+    "id": "rendering-rejects-javascript",
+    "suite": "rendering",
+    "operation": "render",
+    "requirements": [
+      "LIST-MD-002"
+    ],
+    "input": {
+      "markdown": "[Link](javascript:alert(1))"
+    },
+    "expect": {
+      "/error": "disallowed link destination"
+    }
+  },
+  {
+    "id": "rendering-rejects-unresolved-media",
+    "suite": "rendering",
+    "operation": "render",
+    "requirements": [
+      "LIST-MEDIA-003"
+    ],
+    "input": {
+      "markdown": "![Image](media/missing.png)"
+    },
+    "expect": {
+      "/error": "unresolved media"
+    }
+  },
+  {
+    "id": "publication-rejects-an-unknown-licence",
+    "suite": "resolution",
+    "operation": "validate",
+    "requirements": [
+      "LIST-LICENSE-002"
+    ],
+    "input": {
+      "specVersion": "v2",
+      "kind": "LISTING",
+      "metadata": {
+        "slug": "postgres"
+      },
+      "spec": {
+        "itemType": "COMPONENT",
+        "displayName": "PostgreSQL",
+        "summary": "The open-source relational database",
+        "category": "DATABASES",
+        "lifecycleStage": "STABLE",
+        "license": "MTI"
+      }
+    },
+    "context": {
+      "validationScope": "publication",
+      "licenseList": {
+        "licenses": [
+          "Apache-2.0",
+          "GPL-2.0-only",
+          "MIT",
+          "PostgreSQL"
+        ],
+        "exceptions": [
+          "Classpath-exception-2.0",
+          "LLVM-exception"
+        ]
+      }
+    },
+    "expect": {
+      "/status": "INVALID",
+      "/phase": "admission"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_UNKNOWN_LICENSE",
+        "path": "/spec/license",
+        "phase": "admission"
+      }
+    ]
+  },
+  {
+    "id": "publication-rejects-an-unknown-licence-exception",
+    "suite": "resolution",
+    "operation": "validate",
+    "requirements": [
+      "LIST-LICENSE-002"
+    ],
+    "input": {
+      "specVersion": "v2",
+      "kind": "LISTING",
+      "metadata": {
+        "slug": "postgres"
+      },
+      "spec": {
+        "itemType": "COMPONENT",
+        "displayName": "PostgreSQL",
+        "summary": "The open-source relational database",
+        "category": "DATABASES",
+        "lifecycleStage": "STABLE",
+        "license": "GPL-2.0-only WITH Acme-linking-exception"
+      }
+    },
+    "context": {
+      "validationScope": "publication",
+      "licenseList": {
+        "licenses": [
+          "Apache-2.0",
+          "GPL-2.0-only",
+          "MIT",
+          "PostgreSQL"
+        ],
+        "exceptions": [
+          "Classpath-exception-2.0",
+          "LLVM-exception"
+        ]
+      }
+    },
+    "expect": {
+      "/status": "INVALID",
+      "/phase": "admission"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_UNKNOWN_LICENSE",
+        "path": "/spec/license",
+        "phase": "admission"
+      }
+    ]
+  },
+  {
+    "id": "publication-rejects-a-licence-used-as-an-exception",
+    "suite": "resolution",
+    "operation": "validate",
+    "requirements": [
+      "LIST-LICENSE-002"
+    ],
+    "input": {
+      "specVersion": "v2",
+      "kind": "LISTING",
+      "metadata": {
+        "slug": "postgres"
+      },
+      "spec": {
+        "itemType": "COMPONENT",
+        "displayName": "PostgreSQL",
+        "summary": "The open-source relational database",
+        "category": "DATABASES",
+        "lifecycleStage": "STABLE",
+        "license": "GPL-2.0-only WITH MIT"
+      }
+    },
+    "context": {
+      "validationScope": "publication",
+      "licenseList": {
+        "licenses": [
+          "Apache-2.0",
+          "GPL-2.0-only",
+          "MIT",
+          "PostgreSQL"
+        ],
+        "exceptions": [
+          "Classpath-exception-2.0",
+          "LLVM-exception"
+        ]
+      }
+    },
+    "expect": {
+      "/status": "INVALID",
+      "/phase": "admission"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_UNKNOWN_LICENSE",
+        "path": "/spec/license",
+        "phase": "admission"
+      }
+    ]
+  },
+  {
+    "id": "publication-admits-pinned-licences",
+    "suite": "resolution",
+    "operation": "validate",
+    "requirements": [
+      "LIST-LICENSE-002"
+    ],
+    "input": {
+      "specVersion": "v2",
+      "kind": "LISTING",
+      "metadata": {
+        "slug": "postgres"
+      },
+      "spec": {
+        "itemType": "COMPONENT",
+        "displayName": "PostgreSQL",
+        "summary": "The open-source relational database",
+        "category": "DATABASES",
+        "lifecycleStage": "STABLE",
+        "license": "(mit OR Apache-2.0+) AND GPL-2.0-only WITH classpath-exception-2.0 AND LicenseRef-Acme-Enterprise"
+      }
+    },
+    "context": {
+      "validationScope": "publication",
+      "licenseList": {
+        "licenses": [
+          "Apache-2.0",
+          "GPL-2.0-only",
+          "MIT",
+          "PostgreSQL"
+        ],
+        "exceptions": [
+          "Classpath-exception-2.0",
+          "LLVM-exception"
+        ]
+      }
+    },
+    "expect": {
+      "/status": "INCOMPLETE",
+      "/diagnostics": []
+    }
+  },
+  {
+    "id": "publication-admits-a-deprecated-licence",
+    "suite": "resolution",
+    "operation": "validate",
+    "requirements": [
+      "LIST-LICENSE-002"
+    ],
+    "input": {
+      "specVersion": "v2",
+      "kind": "LISTING",
+      "metadata": {
+        "slug": "postgres"
+      },
+      "spec": {
+        "itemType": "COMPONENT",
+        "displayName": "PostgreSQL",
+        "summary": "The open-source relational database",
+        "category": "DATABASES",
+        "lifecycleStage": "STABLE",
+        "license": "GPL-2.0"
+      }
+    },
+    "context": {
+      "validationScope": "publication",
+      "licenseList": {
+        "licenses": [
+          "Apache-2.0",
+          "GPL-2.0-only",
+          "MIT",
+          "PostgreSQL",
+          "GPL-2.0"
+        ],
+        "exceptions": [
+          "Classpath-exception-2.0",
+          "LLVM-exception"
+        ]
+      }
+    },
+    "expect": {
+      "/status": "INCOMPLETE",
+      "/diagnostics": []
+    }
+  }
+]

@@ -44,15 +44,33 @@ export function readManifest(repoRoot: string): { readonly [dir: string]: string
 /** The placeholder a manifest carries for a package that has never released. */
 export const UNRELEASED_VERSION = '0.0.0'
 
+/**
+ * The version the manifest says one family major has released, or null when
+ * that major has never released: its key is absent, reads `0.0.0`, or reads a
+ * version of another major. The last is a package moved to a new major
+ * directory before its first release there, whose manifest still carries the
+ * previous major's version (docs/publication.md#retired-majors); a release of
+ * one major never satisfies a dependency on another.
+ */
+export function releasedManifestVersion(
+  manifest: { readonly [dir: string]: string },
+  key: string,
+  major: string,
+): string | null {
+  const version = manifest[key]
+  if (version === undefined || version === UNRELEASED_VERSION) return null
+  return `v${version.split('.')[0]}` === major ? version : null
+}
+
 /** Release tags are `<family>/v<MAJOR>.<MINOR>.<PATCH>` and nothing else. */
 const RELEASE_TAG = /^(?<family>[a-z][a-z0-9-]*)\/v(?<version>\d+\.\d+\.\d+)$/
 const VERSION = /^\d+\.\d+\.\d+$/
 
 export interface Release {
-  /** The tag verbatim, e.g. `component/v1.2.0`. */
+  /** The tag verbatim, e.g. `component/v2.0.0`. */
   readonly tag: string
   readonly family: string
-  /** Major-version directory the release belongs to, e.g. `v1`. */
+  /** Major-version directory the release belongs to, e.g. `v2`. */
   readonly major: string
   /** Exact version without the `v`, e.g. `1.2.0`. */
   readonly version: string

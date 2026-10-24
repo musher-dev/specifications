@@ -3,8 +3,8 @@
  *
  * Two URL shapes per family:
  *
- *   /<family>/v1/<family>.schema.json        moving alias within the major
- *   /<family>/v1.2.0/<family>.schema.json    immutable, published once
+ *   /<family>/v2/<family>.schema.json        moving alias within the major
+ *   /<family>/v2.0.0/<family>.schema.json    immutable, published once
  *
  * **Pinned paths are served from verified immutable release assets, never
  * from the working tree and never rebuilt.** Releases are enumerated from
@@ -165,7 +165,7 @@ const RESERVED_PATH = 'reference'
  * `schemaPath` are null, and it renders a specification page and nothing else.
  */
 interface ReferenceTarget {
-  /** Exact dependency editions of the release being described. */
+  /** Exact dependency releases of the release being described. */
   readonly requires?: Readonly<Record<string, string>>
   readonly family: string
   readonly major: string
@@ -963,7 +963,7 @@ function renderIndex(
     const proseReleases = proseReleasesByFamily.get(family)
     if (lines.length > 0 || proseReleases !== undefined) {
       // A schema-less family: no alias, no versions.json, prose only.
-      const line = newestLine(lines)
+      const line = newestMajor(lines)
       const latest = proseReleases?.[proseReleases.length - 1]
       return [
         '<tr>',
@@ -976,7 +976,9 @@ function renderIndex(
         '</tr>',
       ].join('')
     }
-    const alias = aliases.find((a) => a.family === family)
+    // The newest major, not the first: `aliases` arrives in release order, so
+    // once a family has both v1 and v2 the first entry is the older one.
+    const alias = newestMajor(aliases.filter((a) => a.family === family))
     const versions = versionsByFamily.get(family) ?? []
     const latest = versions[versions.length - 1]
     return [
@@ -1000,8 +1002,8 @@ function renderIndex(
       'the conformance suite and the publication ledger live in',
       `${link(REPO_URL, 'musher-dev/specifications')}.</p>`,
       ...families.map((family) => {
-        const alias = aliases.find((a) => a.family === family)
-        const line = newestLine(proseLines.filter((l) => l.family === family))
+        const alias = newestMajor(aliases.filter((a) => a.family === family))
+        const line = newestMajor(proseLines.filter((l) => l.family === family))
         const major = alias?.major ?? line?.major
         const examples = references.find((r) => r.family === family && r.version === major)
           ?.examples.length
@@ -1136,9 +1138,9 @@ function renderFamilyIndex(
   )
 }
 
-/** The line with the highest major, which is the one a reader should start from. */
-function newestLine(lines: readonly ProseLine[]): ProseLine | undefined {
-  return [...lines].sort((a, b) => Number(a.major.slice(1)) - Number(b.major.slice(1))).pop()
+/** The entry with the highest major, which is the one a reader should start from. */
+function newestMajor<T extends { readonly major: string }>(items: readonly T[]): T | undefined {
+  return [...items].sort((a, b) => Number(a.major.slice(1)) - Number(b.major.slice(1))).pop()
 }
 
 /**
@@ -1175,7 +1177,7 @@ function renderProseFamilyIndex(
       ].join(''),
     )
 
-  const newest = newestLine(lines)
+  const newest = newestMajor(lines)
 
   return page(
     `${family} specification`,
@@ -1194,7 +1196,7 @@ function renderProseFamilyIndex(
       '<h2>Lines</h2>',
       ...(lineRows.length === 0
         ? [
-            '<p class="muted">This family is no longer authored here. Its released editions',
+            '<p class="muted">This family is no longer authored here. Its released versions',
             'remain listed below.</p>',
           ]
         : [
@@ -1203,7 +1205,7 @@ function renderProseFamilyIndex(
             `<tbody>${lineRows.join('')}</tbody>`,
             '</table>',
           ]),
-      '<h2>Released editions</h2>',
+      '<h2>Released versions</h2>',
       ...(releaseRows.length === 0
         ? ['<p class="muted">Nothing has been released.</p>']
         : [
@@ -1224,8 +1226,8 @@ function renderNotFound(): string {
       '<h1>Not found</h1>',
       '<p>No schema is published at this path.</p>',
       '<p class="muted">This host serves two schema path shapes per family —',
-      '<code>/&lt;family&gt;/v1/&lt;family&gt;.schema.json</code> for the moving alias and',
-      '<code>/&lt;family&gt;/v1.2.0/&lt;family&gt;.schema.json</code> for an exact version.',
+      '<code>/&lt;family&gt;/v2/&lt;family&gt;.schema.json</code> for the moving alias and',
+      '<code>/&lt;family&gt;/v2.0.0/&lt;family&gt;.schema.json</code> for an exact version.',
       'A version that was never released has no URL; nothing is ever unpublished.</p>',
       `<p class="muted">The generated reference is under ${link(`/${RESERVED_PATH}/`, '/reference/')}.</p>`,
       `<p>${link('/', 'Index')}</p>`,

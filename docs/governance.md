@@ -54,7 +54,7 @@ Structural changes need an accepted ADR first. That covers:
 - Any change requiring a new major version
 - Changing the conformance fixture contract
 - Changing core — admitting a rule to the
-  [core specification](../specifications/core/v1/spec.md), moving one out of it, or
+  [core specification](../specifications/core/v2/spec.md), moving one out of it, or
   changing what a family takes from it
 
 ADRs live in [`docs/adr/`](adr/README.md), are numbered sequentially, and are
@@ -108,10 +108,25 @@ is created.
 
 That window was opened once more, after the first tags, by
 [ADR 0033](adr/0033-inputs-are-the-only-way-into-a-component.md) §5, for
-component and blueprint, before anyone outside the project had adopted them.
+component and blueprint v1, before anyone outside the project had adopted them.
 `check:compat` stops replaying exactly the five releases that record names, and a
-test pins that list. The reset is spent: the next narrowing of either family is a
-new major on the terms above.
+test pins that list. That reset was spent, so the next narrowing was a new major
+on the terms above: v2, for all four families
+([ADR 0038](adr/0038-v2-one-vocabulary-and-v1-retires.md)). v2 is the current
+major, and the guarantee runs from its first tag, `2.0.0`. v1 is retired.
+
+**A retired major** is a major that is recorded and tagged but has no directory
+on `main`. Requirement 2 above says the previous major keeps working unchanged,
+and for a retired one that means its released bytes: its tags, immutable GitHub
+Releases, ledger entries and pinned URLs never change, and the site keeps
+serving them. It takes no further release, because its release-please package
+is removed with its directory. It is history, not a candidate: `check:compat`
+does not replay it against the working tree, and `check:published` and
+`site:fetch` verify it from its tags alone. Retiring a major needs an accepted
+ADR, and the retired majors are listed in `RETIRED_MAJORS` in
+`tools/src/lib/layout.ts`; a tagged major missing from the tree and absent from
+that list fails `check:compat`. How a retired major is served is in
+[Publication → Retired majors](publication.md#retired-majors).
 
 ## Changing a controlled vocabulary
 
@@ -166,9 +181,9 @@ of any other vocabulary of this shape.
 
 ## Release process
 
-Releases are automated, one release line per family version, core included.
-Merging a Conventional Commit to `main` makes release-please, running as the
-release GitHub App, open a release PR. The App's permissions and credentials are
+Releases are automated, one release-please package per family version, core
+included. Merging a Conventional Commit to `main` makes release-please, running
+as the release GitHub App, open a release PR. The App's permissions and credentials are
 listed in
 [Publication → Prerequisites](publication.md#prerequisites-before-the-first-tag).
 That PR records the pending version in the
@@ -201,7 +216,9 @@ makes released bytes immutable release assets.
    `Sunset` header that is not generated yet (ADR 0012 follow-up 1). Minimum six
    months from deprecation.
 3. **Retire** — removal happens only in a new major version. Migration rules
-   ship alongside it.
+   ship alongside it. A whole major may itself retire once a newer one
+   supersedes it, as v1 did for v2: see
+   [A retired major](#compatibility-review).
 
 ## Binary policy
 

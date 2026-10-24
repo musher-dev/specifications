@@ -1,0 +1,6 @@
+[
+  {
+    "code": "ERR_CONFLICTING_ENV_VAR",
+    "path": "/spec/contract/inputs/replicaURL/target/envVar"
+  }
+]

@@ -1,0 +1,10 @@
+{
+  "id": "semantic-131-boolean-member-into-a-string-output",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#outputs",
+  "requirements": [
+    "COMP-OUT-004"
+  ],
+  "summary": "The boolean S3 pathStyle member forwarded into a string output is rejected."
+}

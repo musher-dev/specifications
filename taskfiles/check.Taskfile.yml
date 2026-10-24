@@ -1,4 +1,6 @@
-# Every gate this repository runs, under the `check` namespace.
+# Check: every gate this repository runs, each named `check:<gate>`.
+#
+# Included flattened (TASK-20), so each task answers to the name written here.
 #
 # The aggregate entry point is `task check`, defined in the root Taskfile.yml:
 # it runs all of these at once, as parallel deps. None may depend on another's
@@ -15,31 +17,31 @@ version: '3'
 tasks:
   # --- The non-normative surface: formatting, types, and repository layout ---
 
-  format:
+  check:format:
     desc: Check formatting and lint of the tooling sources
     dir: '{{.ROOT_DIR}}/{{.TOOLS_DIR}}'
     cmds:
       - bun run biome ci .
 
-  types:
+  check:types:
     desc: Typecheck the tooling sources
     dir: '{{.ROOT_DIR}}/{{.TOOLS_DIR}}'
     cmds:
       - bun run tsc --noEmit
 
-  config:
+  check:config:
     desc: Verify the repository root holds only ROOT_ENTRIES (CFG-09)
     dir: '{{.ROOT_DIR}}/{{.TOOLS_DIR}}'
     cmds:
       - bun run src/policy/config.ts
 
-  rulesets:
+  check:rulesets:
     desc: Verify the review gate holds together (RUL-01..RUL-08)
     dir: '{{.ROOT_DIR}}/{{.TOOLS_DIR}}'
     cmds:
       - bun run src/policy/rulesets.ts
 
-  conventions:
+  check:conventions:
     desc: Check the repository against the pinned engineering-conventions release
     dir: '{{.ROOT_DIR}}'
     cmds:
@@ -52,43 +54,43 @@ tasks:
 
   # --- The normative gates ---------------------------------------------------
 
-  schema:
+  check:schema:
     desc: Meta-validate schema modules, $id uniqueness, and $ref locality
     dir: '{{.ROOT_DIR}}/{{.TOOLS_DIR}}'
     cmds:
       - bun run src/schema/lint.ts
 
-  generated:
+  check:generated:
     desc: Fail if git tracks any build output (dist/, schemas/dist, a root catalog.json)
     dir: '{{.ROOT_DIR}}/{{.TOOLS_DIR}}'
     cmds:
       - bun run src/policy/generated.ts
 
-  examples:
+  check:examples:
     desc: Validate every example document against its family bundle
     dir: '{{.ROOT_DIR}}/{{.TOOLS_DIR}}'
     cmds:
       - bun run src/conformance/examples.ts
 
-  conformance:
+  check:conformance:
     desc: Execute the conformance corpus
     dir: '{{.ROOT_DIR}}/{{.TOOLS_DIR}}'
     cmds:
       - bun run src/conformance/conformance.ts
 
-  standards:
+  check:standards:
     desc: Meta-validate schemas with an independent JSON Schema toolchain
     dir: '{{.ROOT_DIR}}/{{.TOOLS_DIR}}'
     cmds:
       - bun run src/schema/standards.ts
 
-  parity:
+  check:parity:
     desc: Require Ajv and Blaze to agree on every structural verdict
     dir: '{{.ROOT_DIR}}/{{.TOOLS_DIR}}'
     cmds:
       - bun run src/conformance/parity.ts
 
-  test:
+  check:test:
     desc: Run the tooling test suite
     dir: '{{.ROOT_DIR}}/{{.TOOLS_DIR}}'
     cmds:
@@ -96,7 +98,7 @@ tasks:
 
   # --- The publication record ------------------------------------------------
 
-  published:
+  check:published:
     desc: Verify every recorded release against git and the ledger, offline (docs/adr/0023 §4)
     dir: '{{.ROOT_DIR}}/{{.TOOLS_DIR}}'
     cmds:
@@ -105,7 +107,7 @@ tasks:
       # and tags: a shallow clone with a non-empty ledger fails.
       - bun run src/publication/verify.ts
 
-  published:online:
+  check:published:online:
     desc: Verify every tagged release's GitHub release and assets, without caching
     dir: '{{.ROOT_DIR}}/{{.TOOLS_DIR}}'
     cmds:
@@ -113,20 +115,20 @@ tasks:
       # GITHUB_REPOSITORY overrides the repository derived from REPO_URL.
       - bun run src/publication/fetch.ts --verify-only
 
-  ledger:
+  check:ledger:
     desc: Fail if published.json changed anything already recorded (BASE_REF=<ref>)
     dir: '{{.ROOT_DIR}}/{{.TOOLS_DIR}}'
     cmds:
       # Compares against BASE_REF; without it only parses the ledger.
       - bun run src/publication/ledger.ts check
 
-  editions:
+  check:editions:
     desc: Report where core stands and gate every pending kind family release on it
     dir: '{{.ROOT_DIR}}/{{.TOOLS_DIR}}'
     cmds:
       - bun run src/publication/core-gate.ts
 
-  compat:
+  check:compat:
     desc: Replay every released version's accepted documents against the candidate schema
     dir: '{{.ROOT_DIR}}/{{.TOOLS_DIR}}'
     cmds:
@@ -134,41 +136,49 @@ tasks:
 
   # --- Prose, workflows, and shell -------------------------------------------
 
-  commits:
-    desc: Hold the Conventional Commits vocabulary in step across all five of its copies
+  check:commits:
+    desc: Hold every copy of the commit vocabulary in step with .config/commits/committed.toml
     dir: '{{.ROOT_DIR}}/{{.TOOLS_DIR}}'
     cmds:
       - bun run src/policy/commits.ts
 
-  title:
-    desc: Validate a pull request title against .github/conventional-commits.yaml (PR_TITLE=<title>)
+  check:title:
+    desc: Validate a pull request title's type, scope and subject against .config/commits/committed.toml (PR_TITLE=<title>)
     dir: '{{.ROOT_DIR}}/{{.TOOLS_DIR}}'
     cmds:
       # CI only, on pull requests: not part of `task check`, which has no title.
       # PR_TITLE is read from the environment and fails when unset.
       - bun run src/policy/title.ts
 
-  docs:
-    desc: Fail if docs/traceability.md or the ADR index differs from a fresh generation
+  check:docs:
+    desc: Fail if docs/traceability.md, the ADR index, or docs/terminology.md and its Vale styles differ from a fresh generation
     dir: '{{.ROOT_DIR}}/{{.TOOLS_DIR}}'
     cmds:
-      # Regenerates both in memory and writes nothing; `task docs` is the fix.
+      # Regenerates each in memory and writes nothing; `task docs` is the fix.
       - bun run src/policy/docs.ts
 
-  links:
+  check:terms:
+    desc: Hold the term records, the schema identifiers and the defined terms of each spec.md together
+    dir: '{{.ROOT_DIR}}/{{.TOOLS_DIR}}'
+    cmds:
+      # Record validity, the identifier scope and the defined terms all fail
+      # the check (docs/adr/0038).
+      - bun run src/policy/terms.ts
+
+  check:links:
     desc: Resolve every internal Markdown link and anchor
     dir: '{{.ROOT_DIR}}/{{.TOOLS_DIR}}'
     cmds:
       - bun run src/policy/links.ts
 
-  adr:
+  check:adr:
     desc: Verify ADR numbering and relations, and hold accepted ADRs to link-target-only edits (ADR-01..ADR-04)
     dir: '{{.ROOT_DIR}}/{{.TOOLS_DIR}}'
     cmds:
       # ADR-04 compares against BASE_REF when set, else origin/main, else skips.
       - bun run src/policy/adr.ts
 
-  md:
+  check:md:
     desc: Lint Markdown against .config/markdown/markdownlint.jsonc
     dir: '{{.ROOT_DIR}}'
     cmds:
@@ -184,9 +194,9 @@ tasks:
         tools/node_modules/.bin/markdownlint-cli2
         --config .config/markdown/markdownlint.jsonc
         "**/*.md" "#tools/node_modules" "#site" "#.claude/worktrees" "#.github/pull_request_template.md"
-        "#specifications/*/v*/CHANGELOG.md"
+        "#specifications/*/v*/CHANGELOG.md" "#.config/markdown/styles"
 
-  spelling:
+  check:spelling:
     desc: Spell-check prose, tooling sources, and schema descriptions
     dir: '{{.ROOT_DIR}}'
     cmds:
@@ -194,7 +204,39 @@ tasks:
         tools/node_modules/.bin/cspell --dot --no-progress --no-summary --unique
         --config .config/spelling/cspell.json "**/*.md" "tools/src/**/*.ts" "**/*.schema.json"
 
-  shell:
+  check:prose:
+    desc: Lint the published prose with Vale against .config/markdown/vale.ini (COPY-01..COPY-04)
+    dir: '{{.ROOT_DIR}}'
+    cmds:
+      # `vale sync` installs the MusherProse package, at the release the
+      # conventions pin names, into the config's StylesPath, which .gitignore
+      # ignores except for this repository's own style.
+      - vale --config .config/markdown/vale.ini sync
+      # The files are the ones the config's styled section matches: every
+      # README, the guides under docs/ and the v2 specifications, without the
+      # decision records, release-please's CHANGELOGs, the two history docs
+      # (docs/downstream-v1-adoption.md and docs/pre-release-migration.md, which
+      # must spell the vocabulary they retired) or the two generated pages,
+      # docs/traceability.md and docs/terminology.md. Vale's globs match
+      # the paths it is given, so it runs from the repository root. Vale exits
+      # non-zero only for an error-level alert, so any alert it prints at the
+      # config's MinAlertLevel fails the check here.
+      - |
+        set -eu
+        alerts="$(git ls-files -z --cached --others --exclude-standard -- \
+          README.md ':(glob)**/README.md' ':(glob)docs/**/*.md' ':(glob)specifications/*/v2/*.md' \
+          ':(exclude,glob)docs/adr/**' ':(exclude,glob)**/CHANGELOG.md' \
+          ':(exclude)docs/traceability.md' ':(exclude)docs/terminology.md' \
+          ':(exclude)docs/downstream-v1-adoption.md' ':(exclude)docs/pre-release-migration.md' \
+          | xargs -0 vale --config .config/markdown/vale.ini --output=line --no-exit)"
+        if [ -n "${alerts}" ]; then
+          printf '%s\n' "${alerts}"
+          printf 'Vale reported %s alert(s); .config/markdown/vale.ini says which styles apply.\n' \
+            "$(printf '%s\n' "${alerts}" | wc -l | tr -d ' ')" >&2
+          exit 1
+        fi
+
+  check:shell:
     desc: ShellCheck the dev container scripts
     dir: '{{.ROOT_DIR}}'
     cmds:
@@ -202,19 +244,19 @@ tasks:
       # has no severity key and ignores unrecognised ones silently.
       - shellcheck -x --source-path=SCRIPTDIR .devcontainer/scripts/*.sh .devcontainer/scripts/lib/*.sh
 
-  shell:files:
+  check:shell:files:
     desc: ShellCheck specific files (used by the pre-commit hook)
     dir: '{{.ROOT_DIR}}'
     cmds:
       - shellcheck -x --source-path=SCRIPTDIR {{.CLI_ARGS}}
 
-  workflow:
+  check:workflow:
     desc: Lint the GitHub Actions workflows
     dir: '{{.ROOT_DIR}}'
     cmds:
       - actionlint -config-file .config/actions/actionlint.yaml
 
-  workflow:files:
+  check:workflow:files:
     desc: Lint specific workflow files (used by the pre-commit hook)
     dir: '{{.ROOT_DIR}}'
     cmds:

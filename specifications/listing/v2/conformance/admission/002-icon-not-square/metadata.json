@@ -1,0 +1,11 @@
+{
+  "id": "admission-002-icon-not-square",
+  "phase": "admission",
+  "expected": "fail",
+  "clause": "specifications/listing/v2/spec.md#media",
+  "requirements": [
+    "LIST-MEDIA-005"
+  ],
+  "summary": "An icon that is not square is rejected at admission.",
+  "document": "pgvector/listing.yaml"
+}

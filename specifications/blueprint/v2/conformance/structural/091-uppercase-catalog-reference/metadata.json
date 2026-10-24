@@ -1,0 +1,7 @@
+{
+  "id": "structural-091-uppercase-catalog-reference",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#component-reference",
+  "summary": "A catalog reference is a lowercase UUID; an uppercase one is no reference."
+}

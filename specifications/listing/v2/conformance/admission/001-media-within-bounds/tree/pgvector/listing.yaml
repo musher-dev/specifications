@@ -1,0 +1,18 @@
+# The media here are real images, because LIST-MEDIA-005 reads their headers.
+# Each sits on a bound and none crosses it: the icon is exactly 256 px square,
+# and the overview image exactly 4096 px wide.
+specVersion: v2
+kind: LISTING
+metadata:
+  slug: pgvector
+spec:
+  itemType: COMPONENT
+  displayName: pgvector
+  summary: Vector similarity search for PostgreSQL
+  category: DATABASES
+  lifecycleStage: STABLE
+  overview: |
+    ![Recall against latency](media/benchmark.png)
+  icon: media/icon.png
+  screenshots:
+    - file: media/query.png

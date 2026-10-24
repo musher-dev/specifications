@@ -1,0 +1,7 @@
+{
+  "id": "structural-106-external-without-outputs",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#external",
+  "summary": "An EXTERNAL component whose component contract declares no outputs mapping is structurally valid: the obligation is COMP-EXT-003's, at publication."
+}

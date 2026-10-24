@@ -1,0 +1,12 @@
+# `MODELS` holds what puts a model within reach: a gateway, an inference
+# server, a chat frontend over models.
+specVersion: v2
+kind: LISTING
+metadata:
+  slug: pgvector
+spec:
+  itemType: COMPONENT
+  displayName: pgvector
+  summary: One OpenAI-compatible endpoint in front of many model providers
+  category: MODELS
+  lifecycleStage: STABLE

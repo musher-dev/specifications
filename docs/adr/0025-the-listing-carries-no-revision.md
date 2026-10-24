@@ -51,7 +51,7 @@ at once.
 `metadata` carries `slug` and nothing else. The item's revision is the
 blueprint's, and a `COMPONENT` item, which holds no blueprint, has no item
 revision at all: its component documents carry their own, which
-[component §4](../../specifications/component/v1/spec.md#metadata) already
+[component §4](../../specifications/component/v2/spec.md#metadata) already
 defines and orders.
 
 **`CORE-ITEM-002` and `ERR_VERSION_MISMATCH` are withdrawn from core.** This
@@ -59,7 +59,7 @@ follows from the removal rather than being a second decision. Blueprint and
 listing are the only two item documents in the contract, so a rule requiring
 every item document in an item to agree on a number has, after the removal, no
 item anywhere with two operands. Core's own admission test
-([core v1 §1.2](../../specifications/core/v1/spec.md#admission), from
+([core v1 §1.2](../../specifications/core/v2/spec.md#admission), from
 [ADR 0022](0022-the-musher-document-core-specification.md) §2) settles where it
 goes: a rule belongs in core only when at least two families apply it, and after
 this none does. Leaving it in place as dormant contract would cost a permanent
@@ -109,7 +109,7 @@ field. The new rule binds both directions, `LIST-ITEM-001`:
 
 `semantic`, reported as `ERR_ITEM_TYPE_MISMATCH`, measured against the item root
 and silent where an implementation was handed a document rather than a directory
-([core v1 §4.1](../../specifications/core/v1/spec.md#item-directory)).
+([core v1 §4.1](../../specifications/core/v2/spec.md#item-directory)).
 
 `LIST-ID-*` is deliberately not reused for this ID.
 [ADR 0022](0022-the-musher-document-core-specification.md) §3 folded

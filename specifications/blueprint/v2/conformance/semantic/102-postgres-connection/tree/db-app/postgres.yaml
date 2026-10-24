@@ -1,0 +1,54 @@
+{
+  "specVersion": "v2",
+  "kind": "COMPONENT",
+  "metadata": {
+    "revision": 1,
+    "description": "Synthetic conformance fixture external database."
+  },
+  "spec": {
+    "type": "EXTERNAL",
+    "contract": {
+      "inputs": {
+        "postgres": {
+          "description": "PostgreSQL database this node stands for.",
+          "connection": {
+            "protocol": "POSTGRES"
+          }
+        }
+      },
+      "outputs": {
+        "url": {
+          "description": "Connection URL, including credentials.",
+          "schema": {
+            "type": "string"
+          },
+          "sensitive": true,
+          "from": {
+            "input": "postgres",
+            "member": "url"
+          }
+        },
+        "host": {
+          "description": "Database host.",
+          "schema": {
+            "type": "string"
+          },
+          "from": {
+            "input": "postgres",
+            "member": "host"
+          }
+        },
+        "port": {
+          "description": "Database port.",
+          "schema": {
+            "type": "integer"
+          },
+          "from": {
+            "input": "postgres",
+            "member": "port"
+          }
+        }
+      }
+    }
+  }
+}

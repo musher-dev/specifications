@@ -1,0 +1,19 @@
+specVersion: v2
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: WORKER
+  workload:
+    source:
+      image: example/worker:1
+  contract:
+    inputs:
+      adminPassword:
+        description: Password the administrator account is created with.
+        schema:
+          type: string
+        sensitive: true
+        target:
+          envVar: ADMIN_PASSWORD

@@ -1,0 +1,11 @@
+{
+  "id": "semantic-049-reject-unknown-parameter",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#recipients",
+  "requirements": [
+    "BP-BIND-007"
+  ],
+  "summary": "A binding naming no parameter is rejected.",
+  "document": "app/blueprint.yaml"
+}

@@ -1,0 +1,10 @@
+{
+  "id": "structural-090-empty-form-label",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#deploy-form",
+  "requirements": [
+    "BP-UI-001"
+  ],
+  "summary": "A form label is never empty."
+}

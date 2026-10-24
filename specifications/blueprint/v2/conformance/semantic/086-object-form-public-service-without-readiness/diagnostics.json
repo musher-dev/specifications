@@ -1,0 +1,6 @@
+[
+  {
+    "code": "ERR_READINESS_REQUIRED",
+    "path": "/spec/nodes/web/exposure/web"
+  }
+]

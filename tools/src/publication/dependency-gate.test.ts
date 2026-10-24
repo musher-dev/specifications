@@ -74,11 +74,11 @@ test('rejects missing dependency releases and a wrong declared major', () => {
   expect(failures.messages.join('\n')).toContain('declared v2 line')
 })
 
-test('rejects conflicting transitive core editions', () => {
+test('rejects conflicting transitive core releases', () => {
   const { fx, p } = fixture()
   p.releaseCore('1.1.0')
   blueprint(fx)
-  expect(() => record(fx.root)).toThrow('conflicting core editions')
+  expect(() => record(fx.root)).toThrow('conflicting core releases')
 })
 
 test('rejects a releasable dependency change that has not been published', () => {
@@ -153,4 +153,13 @@ test('staging refuses a dependency known to remain an unpublished draft, includi
   expect(() =>
     stageRelease(fx.root, 'blueprint/v1.0.0', output(), { baseLedgerRef: 'main' }),
   ).toThrow('dependency core/v1.0.0 has not been published')
+})
+
+test('a manifest key reading a previous major’s version has never released that major', () => {
+  const { fx } = fixture()
+  blueprint(fx, 'v2')
+  // A package moved to a new major directory before its first release there.
+  fx.setManifestVersion(familyPaths('component', 'v2').manifestKey, '1.0.0')
+  fx.commit('chore: component moved to v2')
+  expect(() => record(fx.root)).toThrow('component v2 has never been released')
 })

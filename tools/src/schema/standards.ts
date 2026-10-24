@@ -155,7 +155,7 @@ function main(): void {
     if (bundle !== null)
       for (const name of orphanDefinitions(
         JSON.parse(bundle),
-        family.name === 'blueprint' && family.major === 'v1' ? ['BlueprintResolutionRecord'] : [],
+        family.name === 'blueprint' ? ['BlueprintResolutionRecord'] : [],
       ))
         failures.add(`${family.name}/${family.major}: unreferenced definition ${name}`)
     // The CLI reads files, so the bundle is written to dist/ first.

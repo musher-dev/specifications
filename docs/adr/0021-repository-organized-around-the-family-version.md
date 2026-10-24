@@ -179,10 +179,10 @@ checked them.
 **`registry/` as the container directory.** Rejected because the word already
 means three things here: the resource-type registry
 ([ADR 0009](0009-resource-type-registry.md) §4, and component
-[§6.3](../../specifications/component/v1/spec.md#value-schema)'s "a grammatical
+[§6.3](../../specifications/component/v2/spec.md#value-schema)'s "a grammatical
 identifier the registry does not name is reserved, not invalid"); the platform's
 component registry, whose word decides what counts as published
-([blueprint §4.1](../../specifications/blueprint/v1/spec.md#component-reference));
+([blueprint §4.1](../../specifications/blueprint/v2/spec.md#component-reference));
 and the published site, which [ADR 0017](0017-generated-field-reference.md) calls
 "the registry". A fourth meaning would leave "the registry" in normative prose
 resolving to nothing. `specs` was never available: it named the retired

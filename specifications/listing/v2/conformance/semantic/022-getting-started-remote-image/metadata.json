@@ -1,0 +1,10 @@
+{
+  "id": "semantic-022-getting-started-remote-image",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/listing/v2/spec.md#overview-markdown",
+  "requirements": [
+    "LIST-MD-003"
+  ],
+  "summary": "A remote image in gettingStarted is rejected, reported at that field."
+}

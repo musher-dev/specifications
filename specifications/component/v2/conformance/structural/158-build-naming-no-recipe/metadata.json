@@ -1,0 +1,11 @@
+{
+  "id": "structural-158-build-naming-no-recipe",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#source",
+  "requirements": [
+    "COMP-BUILD-002",
+    "COMP-BUILD-007"
+  ],
+  "summary": "A build recipe naming neither a Dockerfile nor a buildpacks builder is rejected rather than detected."
+}
