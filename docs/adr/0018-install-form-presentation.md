@@ -53,7 +53,7 @@ asked for. §6.3 set that precedent when the shared `schema` block took a
 subsection of its own.
 
 **The clause constrains an implementation's output rather than a document.**
-[Listing §4.1](../../specifications/listing/v1/spec.md#description-markdown) is
+[Listing §4.1](../../specifications/listing/v2/spec.md#description-markdown) is
 the only other place in these specifications to do that, and
 [ADR 0004](0004-listing-description-trust-boundary.md) §3 argues it there on
 security grounds. The grounds here are different and narrower: this contract has

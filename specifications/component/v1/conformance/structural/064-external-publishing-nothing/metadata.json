@@ -1,7 +1,0 @@
-{
-  "id": "structural-064-external-publishing-nothing",
-  "phase": "structural",
-  "expected": "pass",
-  "clause": "specifications/component/v1/spec.md#external",
-  "summary": "An EXTERNAL component whose outputs mapping is empty is structurally valid: the obligation is COMP-EXT-003’s, at publication."
-}

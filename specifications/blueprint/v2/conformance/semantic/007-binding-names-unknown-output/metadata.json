@@ -1,0 +1,11 @@
+{
+  "id": "semantic-007-binding-names-unknown-output",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#recipients",
+  "requirements": [
+    "BP-BIND-006"
+  ],
+  "summary": "A binding naming an output the producing component does not declare is rejected.",
+  "document": "acme-wiki/blueprint.yaml"
+}

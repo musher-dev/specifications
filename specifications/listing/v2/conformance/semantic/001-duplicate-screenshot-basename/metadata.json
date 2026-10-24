@@ -1,0 +1,10 @@
+{
+  "id": "semantic-001-duplicate-screenshot-basename",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/listing/v2/spec.md#media",
+  "requirements": [
+    "LIST-MEDIA-003"
+  ],
+  "summary": "Two screenshots naming the same full media path are rejected."
+}

@@ -1,0 +1,10 @@
+{
+  "id": "structural-163-redis-connection",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#connection-requirements",
+  "requirements": [
+    "COMP-CONNECTION-002"
+  ],
+  "summary": "An external component with a REDIS connection input, forwarding every member, validates."
+}

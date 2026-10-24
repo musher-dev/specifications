@@ -1,0 +1,11 @@
+{
+  "id": "admission-006-header-is-not-the-extension",
+  "phase": "admission",
+  "expected": "fail",
+  "clause": "specifications/listing/v2/spec.md#media",
+  "requirements": [
+    "LIST-MEDIA-005"
+  ],
+  "summary": "A .png file whose header is not a PNG header states no dimensions and is rejected.",
+  "document": "pgvector/listing.yaml"
+}

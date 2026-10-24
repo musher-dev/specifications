@@ -4,20 +4,20 @@
  *
  *   {
  *     "releases": {
- *       "component/v1.0.0": {
+ *       "component/v2.0.0": {
  *         "bundleSha256": "<sha256 of the bytes served at the pinned URL>",
- *         "path": "specifications/component/v1",
- *         "requires": { "core": "1.0.0" },
+ *         "path": "specifications/component/v2",
+ *         "requires": { "core": "2.0.0" },
  *         "tree": "<git tree id of path at the tagged commit>"
  *       },
- *       "core/v1.0.0": { "bundleSha256": null, "path": "…", "tree": "…" }
+ *       "core/v2.0.0": { "bundleSha256": null, "path": "…", "tree": "…" }
  *     },
  *     "version": 2
  *   }
  *
  * The ledger answers what git alone cannot: whether a missing tag means "never
  * fetched" or "never released", where each release lived, which bytes its
- * pinned URL serves, and which core edition a kind family was built against.
+ * pinned URL serves, and which core release a kind family was built against.
  *
  * Entries are written on the release pull request by `record.ts`, and only
  * ever grow: `check` fails a removal or an edit against the base branch.

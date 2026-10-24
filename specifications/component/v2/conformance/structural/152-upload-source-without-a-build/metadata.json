@@ -1,0 +1,11 @@
+{
+  "id": "structural-152-upload-source-without-a-build",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#source",
+  "requirements": [
+    "COMP-BUILD-001",
+    "COMP-BUILD-007"
+  ],
+  "summary": "An upload source without a build recipe is rejected rather than built with a detected one."
+}

@@ -46,7 +46,7 @@ jobs:
 
       - uses: ./.github/actions/setup-tools
         with:
-          install-args: aqua:oven-sh/bun node aqua:go-task/task aqua:rhysd/actionlint
+          install-args: aqua:oven-sh/bun node aqua:go-task/task aqua:rhysd/actionlint aqua:vale-cli/vale
 
       # BASE_REF is empty on a push, where check:adr falls back to origin/main.
       # The suite includes check:docs, which fails when docs/traceability.md or
@@ -105,7 +105,7 @@ jobs:
         run: task changes BASE="origin/$BASE_REF" -- --diff >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload the built bundles
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
         with:
           name: dist
           path: dist/

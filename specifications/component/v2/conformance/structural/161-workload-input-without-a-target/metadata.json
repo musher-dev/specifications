@@ -1,0 +1,10 @@
+{
+  "id": "structural-161-workload-input-without-a-target",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#inputs",
+  "requirements": [
+    "COMP-INPUT-001"
+  ],
+  "summary": "A workload input without an environment target is structurally valid."
+}

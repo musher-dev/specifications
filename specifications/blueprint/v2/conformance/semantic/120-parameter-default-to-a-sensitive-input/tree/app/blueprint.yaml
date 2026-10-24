@@ -1,0 +1,20 @@
+specVersion: v2
+kind: BLUEPRINT
+metadata:
+  slug: app
+  revision: 1
+  description: Synthetic conformance fixture blueprint.
+spec:
+  parameters:
+    adminPassword:
+      ui:
+        label: Administrator password
+      default: synthetic-only
+  nodes:
+    worker:
+      componentRef: ./worker.yaml
+      compute:
+        profile: general.standard.small
+      bindings:
+        adminPassword:
+          parameter: adminPassword

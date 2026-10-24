@@ -1,0 +1,7 @@
+{
+  "id": "structural-007-catalog-component-reference",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/blueprint/v2/spec.md#component-reference",
+  "summary": "A catalog component reference is a UUID carrying the revision it pins."
+}

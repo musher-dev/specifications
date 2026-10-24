@@ -1,0 +1,7 @@
+{
+  "id": "structural-020-constraint-value-not-a-token",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#placement-constraints",
+  "summary": "A placement constraint whose value is not a lowercase token is rejected."
+}

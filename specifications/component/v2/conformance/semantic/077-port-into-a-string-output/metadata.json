@@ -1,0 +1,10 @@
+{
+  "id": "semantic-077-port-into-a-string-output",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#outputs",
+  "requirements": [
+    "COMP-OUT-004"
+  ],
+  "summary": "Forwarding the integer port member into a string output is rejected."
+}

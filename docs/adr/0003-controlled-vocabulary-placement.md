@@ -32,7 +32,7 @@ that can.
 
 Leaving the vocabulary unnamed is not the alternative it appears to be. It is
 what the repository does today, and
-[component §10](../../specifications/component/v1/spec.md#known-debt) records
+[component §10](../../specifications/component/v2/spec.md#known-debt) records
 the cost: a reader outside `musher-dev/platform` is shown
 `general.standard.small` in three examples and has nowhere to look it up.
 
@@ -79,13 +79,13 @@ were counting on to warn them is the one thing they will not check.
 
 An externally fixed vocabulary cannot be resolved without reaching the surface
 that publishes it, and
-[component §7](../../specifications/component/v1/spec.md#validation-layers)
+[component §7](../../specifications/component/v2/spec.md#validation-layers)
 forbids the `parser`, `structural` and `semantic` phases from requiring network
 access. Membership is therefore a `capability` rule: server-side, and an offline
 implementation MUST NOT report it.
 
 This is the same line
-[blueprint §4.1](../../specifications/blueprint/v1/spec.md#component-reference)
+[blueprint §4.1](../../specifications/blueprint/v2/spec.md#component-reference)
 already draws for a published component reference, and it costs the same thing —
 the diagnostic gets no fixture, and appears in the runner's `UNCOVERED` list with
 a reason.
@@ -104,9 +104,9 @@ offline instead of on a round trip to the platform.
 Growing that grammar later — a new segment value, a new permitted token — admits
 documents that were previously rejected, which is a relaxation and therefore a
 minor release under
-[component §3](../../specifications/component/v1/spec.md#compatibility).
+[component §3](../../specifications/component/v2/spec.md#compatibility).
 Narrowing it is major. The asymmetry is what makes the placement safe:
-[component §5.1](../../specifications/component/v1/spec.md#source) keeps its
+[component §5.1](../../specifications/component/v2/spec.md#source) keeps its
 floating-tag list *out* of the schema for the mirror-image reason, because that
 list is a blocklist and growing it is a narrowing.
 

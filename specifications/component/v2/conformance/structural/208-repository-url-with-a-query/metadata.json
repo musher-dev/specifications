@@ -1,0 +1,10 @@
+{
+  "id": "structural-208-repository-url-with-a-query",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#source",
+  "requirements": [
+    "COMP-SRC-006"
+  ],
+  "summary": "A repository URL carrying a query is rejected."
+}

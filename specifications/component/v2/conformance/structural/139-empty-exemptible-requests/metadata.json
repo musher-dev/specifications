@@ -1,0 +1,10 @@
+{
+  "id": "structural-139-empty-exemptible-requests",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#endpoints",
+  "requirements": [
+    "COMP-EP-015"
+  ],
+  "summary": "Access exemptions name paths, bearer requests, or both."
+}

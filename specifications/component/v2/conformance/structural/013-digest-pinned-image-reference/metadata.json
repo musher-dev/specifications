@@ -1,0 +1,10 @@
+{
+  "id": "structural-013-digest-pinned-image-reference",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#source",
+  "requirements": [
+    "COMP-SRC-002"
+  ],
+  "summary": "A digest pin validates, including behind a registry host carrying a port."
+}

@@ -1,0 +1,32 @@
+specVersion: v2
+kind: BLUEPRINT
+metadata:
+  slug: support-assistant
+  revision: 1
+  description: A support assistant that answers questions with the language model the deployer chooses.
+spec:
+  parameters:
+    llm:
+      from: "${{ connections.llm.default }}"
+      ui:
+        label: Language model
+  nodes:
+    llm:
+      componentRef: ./components/openai-chat.yaml
+      bindings:
+        llm:
+          parameter: llm
+    assistant:
+      componentRef: ./components/assistant.yaml
+      compute:
+        profile: general.standard.small
+      bindings:
+        llmBaseURL:
+          node: llm
+          output: baseURL
+        llmAPIKey:
+          node: llm
+          output: apiKey
+        llmModel:
+          node: llm
+          output: model

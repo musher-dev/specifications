@@ -2,9 +2,9 @@
  * The core gate: a kind family release waits for core's releasable changes
  * (docs/adr/0022 §7, docs/adr/0023 §5).
  *
- * A kind family release records `requires.core`, the core edition it was built
- * and tested against, and ships that edition's prose and corpus. If core carries
- * a releasable change that edition does not include, the record would name
+ * A kind family release records `requires.core`, the core release it was built
+ * and tested against, and ships that release's prose and corpus. If core carries
+ * a releasable change that release does not include, the record would name
  * rules the family was not tested against. So:
  *
  *   pending   core's manifest must have released; `core/v<requires.core>` must
@@ -52,6 +52,7 @@ import {
   isCore,
   parseReleaseTag,
   readManifest,
+  releasedManifestVersion,
   releaseTag,
   UNRELEASED_VERSION,
 } from './releases.ts'
@@ -172,17 +173,19 @@ function lineOf(version: string): string {
 }
 
 /**
- * The non-merge commits in `from..to` that touch a core line, classified.
- * A releasable commit anywhere else does not count.
+ * The non-merge commits in `from..to` that touch one core major, classified.
+ * A releasable commit anywhere else does not count. The major is required:
+ * every core major lives in its own directory, so no default could be right
+ * for more than one of them.
  */
 export function coreCommitsBetween(
   repoRoot: string,
   from: string,
   to: string,
-  options: { readonly types?: ReadonlySet<string>; readonly line?: string } = {},
+  options: { readonly types?: ReadonlySet<string>; readonly line: string },
 ): ClassifiedCommit[] {
   const types = options.types ?? releasableTypes(repoRoot)
-  const dir = familyPaths(CORE_FAMILY, options.line ?? 'v1').dir
+  const dir = familyPaths(CORE_FAMILY, options.line).dir
   return logRange(repoRoot, from, to, dir).map((commit) => ({
     ...commit,
     class: classifyCommit(commit.subject, commit.body, types),
@@ -210,7 +213,7 @@ export function citedCoreLine(markdown: string, label: string, failures: Failure
   if (line === undefined) {
     failures.add(
       `${label} §2 cites no core line in its "Normative dependencies" table, so the core ` +
-        'edition a release requires cannot be checked against it.',
+        'release a family release requires cannot be checked against it.',
     )
     return null
   }
@@ -240,14 +243,16 @@ export function pendingKindReleases(repoRoot: string): PendingKindRelease[] {
 /**
  * The core version a kind family at `path` would record now: the manifest
  * version of the core line its working-tree §2 cites. Null when it cites none;
- * `assertCoreGatePending` reports why.
+ * `assertCoreGatePending` reports why. `0.0.0` when that major has never
+ * released, including a manifest that still reads a previous major's version.
  */
 export function coreManifestVersionFor(repoRoot: string, path: string): string | null {
   const spec = inRepo(repoRoot, releaseDirPaths(path).spec)
   if (!existsSync(spec)) return null
   const line = citedCoreLine(readFileSync(spec, 'utf8'), path, new Failures())
   if (line === null) return null
-  return readManifest(repoRoot)[familyPaths(CORE_FAMILY, line).manifestKey] ?? UNRELEASED_VERSION
+  const key = familyPaths(CORE_FAMILY, line).manifestKey
+  return releasedManifestVersion(readManifest(repoRoot), key, line) ?? UNRELEASED_VERSION
 }
 
 /**
@@ -276,12 +281,12 @@ export function assertCoreGatePending(
     if (line === null) continue
 
     const coreKey = familyPaths(CORE_FAMILY, line).manifestKey
-    const manifestVersion = manifest[coreKey]
-    if (manifestVersion === undefined || manifestVersion === UNRELEASED_VERSION) {
+    const manifestVersion = releasedManifestVersion(manifest, coreKey, line)
+    if (manifestVersion === null) {
       failures.add(
-        `${tag}: core ${line} has never been released — ${RELEASE_PLEASE_MANIFEST_FILE} reads ` +
-          `${manifestVersion ?? '<absent>'} for ${coreKey}. A kind family release records the ` +
-          'core edition it was built against, so core releases first.',
+        `${tag}: core ${line} has never been released: ${RELEASE_PLEASE_MANIFEST_FILE} reads ` +
+          `${manifest[coreKey] ?? '<absent>'} for ${coreKey}. A kind family release records the ` +
+          'core release it was built against, so core releases first.',
       )
       continue
     }
@@ -303,7 +308,7 @@ export function assertCoreGatePending(
     if (order < 0) {
       warnings.push(
         `${tag}: requires core ${requiresCore}, which trails core's manifest version ` +
-          `${manifestVersion}. Re-run \`task release:record\` to build against the newer edition.`,
+          `${manifestVersion}. Re-run \`task release:record\` to build against the newer core release.`,
       )
     }
 
@@ -321,7 +326,7 @@ export function assertCoreGatePending(
     if (releasable.length > 0) {
       failures.add(
         `${tag}: core carries ${releasable.length} releasable commit(s) since ${coreTag} — ` +
-          `${describe(releasable)}. Release core first, so this release records the edition ` +
+          `${describe(releasable)}. Release core first, so this release records the core release ` +
           'it is tested against.',
       )
     }
@@ -360,7 +365,7 @@ export function assertCoreGateTagged(
   if (!isAncestor(repoRoot, coreTag, familyTag)) {
     failures.add(
       `${familyTag}: requires core ${coreVersion}, but ${coreTag} is not an ancestor of it — ` +
-        'the release was not built on that edition.',
+        'the release was not built on that core release.',
     )
   }
 }
@@ -403,7 +408,7 @@ export function assertCoreGateTaggedContent(
   const cited = citedCoreLine(spec.toString('utf8'), `${familyTag}:${specPath}`, failures)
   if (cited !== null && cited !== line) {
     failures.add(
-      `${familyTag}: requires core ${coreVersion}, a core ${line} edition, but its §2 cites ` +
+      `${familyTag}: requires core ${coreVersion}, a core ${line} release, but its §2 cites ` +
         `core ${cited}.`,
     )
   }
@@ -417,8 +422,9 @@ function main(): void {
   // see what the gate is measuring against.
   const manifest = readManifest(REPO_ROOT)
   for (const [key, version] of Object.entries(manifest)) {
-    if (parseManifestKey(key)?.name !== CORE_FAMILY) continue
-    if (version === UNRELEASED_VERSION) {
+    const parsed = parseManifestKey(key)
+    if (parsed?.name !== CORE_FAMILY) continue
+    if (releasedManifestVersion(manifest, key, parsed.major) === null) {
       console.log(`  · ${key}: never released`)
       continue
     }
@@ -427,7 +433,7 @@ function main(): void {
       console.log(`  · ${key}: manifest reads ${version}; ${coreTag} is not present`)
       continue
     }
-    const commits = coreCommitsBetween(REPO_ROOT, coreTag, 'HEAD', { line: lineOf(version) })
+    const commits = coreCommitsBetween(REPO_ROOT, coreTag, 'HEAD', { line: parsed.major })
     const releasable = commits.filter((c) => c.class === 'releasable').length
     console.log(
       `  · ${key}: ${coreTag}, then ${releasable} releasable and ` +

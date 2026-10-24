@@ -1,0 +1,10 @@
+{
+  "id": "structural-079-atomic-connection",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#connection-requirements",
+  "requirements": [
+    "COMP-CONNECTION-002"
+  ],
+  "summary": "An external component with a connection input, forwarding each member, validates."
+}

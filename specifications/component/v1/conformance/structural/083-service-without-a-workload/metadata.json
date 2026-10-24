@@ -1,7 +1,0 @@
-{
-  "id": "structural-083-service-without-a-workload",
-  "phase": "structural",
-  "expected": "pass",
-  "clause": "specifications/component/v1/spec.md#workload",
-  "summary": "A SERVICE that does not yet declare a workload is structurally valid: the obligation is COMP-TYPE-006’s, at publication."
-}

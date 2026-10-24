@@ -1,5 +1,12 @@
 # Migrating the unreleased draft
 
+> **History.** This page describes a migration that finished before v1's first
+> release, and v1 is now retired. Its example links now open the v2 examples.
+> The current migration is each v2 `spec.md`'s "Migration from v1" section and
+> [Downstream v2 adoption](downstream-v2-adoption.md). In particular, the
+> `source: {git: {…, build}}` layout below is v1's: in v2 the build recipe is
+> `workload.build`, beside the source, as that page describes.
+
 The foundation reset in [ADR 0028](adr/0028-explicit-binding-and-resolution-before-release.md)
 and the vocabulary pass in [ADR 0031](adr/0031-one-grammar-for-the-authored-documents.md)
 change draft syntax before any family has a formal release. There is no legacy
@@ -104,7 +111,7 @@ into. It does not grant access; installation context supplies an authorized
 value, sensitivity, identity and version. A person installing the blueprint
 cannot submit a value for the parameter. No resource registry or matching input
 name implicitly selects it. See the
-[blueprint](../specifications/blueprint/v1/examples/organization-variables.yaml)
+[blueprint](../specifications/blueprint/v2/examples/organization-variables.yaml)
 example.
 
 ## LLM access
@@ -139,8 +146,8 @@ spec:
 ```
 
 See the paired
-[component](../specifications/component/v1/examples/llm-worker.yaml) and
-[blueprint](../specifications/blueprint/v1/examples/llm-connection.yaml)
+[component](../specifications/component/v2/examples/llm-worker.yaml) and
+[blueprint](../specifications/blueprint/v2/examples/llm-connection.yaml)
 examples.
 
 ## Values and resolution

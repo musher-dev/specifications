@@ -1,0 +1,10 @@
+{
+  "id": "structural-058-resource-type-on-a-value",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#value-schema",
+  "requirements": [
+    "CORE-ENV-005"
+  ],
+  "summary": "Removed resourceType fields are rejected on value inputs."
+}

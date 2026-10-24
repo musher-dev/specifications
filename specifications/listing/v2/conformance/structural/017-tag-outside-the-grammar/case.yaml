@@ -1,0 +1,18 @@
+# A tag is a discovery key a storefront groups listings by, so `Self-Hosted`,
+# `self hosted` and `self-hosted` being three tags rather than one is the defect
+# the grammar prevents. The vocabulary stays open: what a tag says is the
+# author's, and only how it is spelled is this specification's, which is why this
+# case is about an uppercase letter rather than about an unwelcome term.
+specVersion: v2
+kind: LISTING
+metadata:
+  slug: acme-wiki
+spec:
+  itemType: BLUEPRINT
+  displayName: Acme Wiki
+  summary: A wiki for Acme.
+  category: PRODUCTIVITY
+  lifecycleStage: STABLE
+  tags:
+    - wiki
+    - Self-Hosted

@@ -1,0 +1,11 @@
+{
+  "id": "semantic-020-catalog-reference-suppresses-unbound",
+  "phase": "semantic",
+  "expected": "incomplete",
+  "clause": "specifications/blueprint/v2/spec.md#recipients",
+  "requirements": [
+    "BP-PARAM-001"
+  ],
+  "summary": "A parameter bound only to an unavailable catalog component's input is not reported as unbound; that node's rules are deferred.",
+  "document": "acme-wiki/blueprint.yaml"
+}

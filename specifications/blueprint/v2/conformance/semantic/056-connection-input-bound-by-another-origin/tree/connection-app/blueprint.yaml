@@ -1,0 +1,42 @@
+{
+  "specVersion": "v2",
+  "kind": "BLUEPRINT",
+  "metadata": {
+    "slug": "connection-app",
+    "revision": 1,
+    "description": "Synthetic conformance fixture blueprint."
+  },
+  "spec": {
+    "parameters": {},
+    "nodes": {
+      "app": {
+        "componentRef": "./component.yaml",
+        "compute": {
+          "profile": "general.standard.small"
+        },
+        "bindings": {
+          "url": {
+            "node": "app-llm",
+            "output": "baseURL"
+          },
+          "key": {
+            "node": "app-llm",
+            "output": "apiKey"
+          },
+          "model": {
+            "node": "app-llm",
+            "output": "model"
+          }
+        }
+      },
+      "app-llm": {
+        "componentRef": "./component-llm.yaml",
+        "bindings": {
+          "llm": {
+            "value": "https://elsewhere.example"
+          }
+        }
+      }
+    }
+  }
+}

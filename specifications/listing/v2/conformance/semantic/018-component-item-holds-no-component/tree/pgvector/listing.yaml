@@ -1,0 +1,12 @@
+# The other side of LIST-ITEM-002: an item with no blueprint and no component
+# document presents nothing, and a shelf entry for it would deploy nothing.
+specVersion: v2
+kind: LISTING
+metadata:
+  slug: pgvector
+spec:
+  itemType: COMPONENT
+  displayName: pgvector
+  summary: Vector similarity search for PostgreSQL
+  category: DATABASES
+  lifecycleStage: STABLE

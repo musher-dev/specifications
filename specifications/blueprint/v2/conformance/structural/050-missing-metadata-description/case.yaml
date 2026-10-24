@@ -1,0 +1,11 @@
+specVersion: v2
+kind: BLUEPRINT
+metadata:
+  slug: app
+  revision: 1
+spec:
+  nodes:
+    web:
+      componentRef: ./components/web.yaml
+      compute:
+        profile: general.standard.small

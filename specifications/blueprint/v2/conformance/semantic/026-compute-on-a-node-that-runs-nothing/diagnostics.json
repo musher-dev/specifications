@@ -1,0 +1,6 @@
+[
+  {
+    "code": "ERR_COMPUTE_FORBIDDEN",
+    "path": "/spec/nodes/models/compute"
+  }
+]

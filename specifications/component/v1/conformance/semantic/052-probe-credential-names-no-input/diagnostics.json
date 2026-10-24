@@ -1,6 +1,0 @@
-[
-  {
-    "code": "ERR_UNKNOWN_INPUT_REFERENCE",
-    "path": "/spec/workload/health/readiness/http/auth/basic/password/input"
-  }
-]

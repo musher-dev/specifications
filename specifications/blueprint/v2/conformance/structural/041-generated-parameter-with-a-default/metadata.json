@@ -1,0 +1,10 @@
+{
+  "id": "structural-041-generated-parameter-with-a-default",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#parameters",
+  "requirements": [
+    "BP-PARAM-010"
+  ],
+  "summary": "A parameter carrying both a generator and a default is rejected at the default."
+}

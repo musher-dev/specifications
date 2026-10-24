@@ -1,0 +1,11 @@
+{
+  "id": "semantic-012-overview-image-absent",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/listing/v2/spec.md#media",
+  "requirements": [
+    "LIST-MEDIA-001"
+  ],
+  "summary": "An overview image naming a file the item does not ship is rejected.",
+  "document": "acme-wiki/listing.yaml"
+}

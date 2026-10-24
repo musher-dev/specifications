@@ -1,6 +1,6 @@
 /** Synthetic implementation of the durable/idempotent boundary, never production storage. */
 import type { Json } from '../lib/layout.ts'
-import { type ConnectionSelection, selectConnection } from '../validation/connections.ts'
+import { type ConnectionSelection, selectConnection } from '../validation/selections.ts'
 import { at } from '../validation/semantic.ts'
 export function observeConnectionLifecycle(input: Json): Json {
   const persisted = new Map<string, ConnectionSelection>(),
@@ -9,7 +9,7 @@ export function observeConnectionLifecycle(input: Json): Json {
   const steps = at(input, 'steps')
   if (!Array.isArray(steps)) throw new Error('connection lifecycle requires steps')
   for (const step of steps) {
-    const installation = String(at(step, 'installation')),
+    const deployment = String(at(step, 'deployment')),
       parameter = String(at(step, 'parameter'))
     const generation = Number(at(step, 'generation') ?? 0),
       fault = at(step, 'fault')
@@ -27,7 +27,7 @@ export function observeConnectionLifecycle(input: Json): Json {
       }
       const result = selectConnection(
         store,
-        installation,
+        deployment,
         parameter,
         generation,
         (key) => {
@@ -38,12 +38,12 @@ export function observeConnectionLifecycle(input: Json): Json {
             issued.set(key, {
               identity: 'connection-' + id,
               version,
-              installation,
+              deployment,
               parameter,
-              kind: 'MANAGED',
+              selectionKind: 'MANAGED',
               costOwner: 'synthetic-org',
-              source: {
-                reference: '${{ connections.llm.default }}',
+              request: {
+                from: '${{ connections.llm.default }}',
                 identity: 'default-policy',
                 version,
               },
@@ -74,8 +74,8 @@ export function observeConnectionLifecycle(input: Json): Json {
               status: 'SELECTED',
               identity: result.selection.identity,
               version: result.selection.version,
-              credential: result.selection.credential.identity,
-              rotation: result.selection.credential.rotation,
+              credential: result.selection.credential?.identity ?? null,
+              rotation: result.selection.credential?.rotation ?? null,
             }
           : { status: result.status },
       )

@@ -1,0 +1,14 @@
+specVersion: v2
+kind: BLUEPRINT
+metadata:
+  slug: inference
+  revision: 1
+  description: Synthetic conformance fixture blueprint.
+spec:
+  parameters: {}
+  nodes:
+    api:
+      componentRef: ./components/api.yaml
+      compute:
+        profile: gpu.premium.xlarge
+      bindings: {}

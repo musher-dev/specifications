@@ -4,12 +4,13 @@
  * validate-pull-request.yml, on pull requests only.
  *
  * The squash merge lands the title as the commit subject, and release-please
- * reads that subject. So the title is checked against the same
- * `.github/conventional-commits.yaml` `check:commits` holds every other copy
- * to, read with the same parser: `<type>(<scope>)!: <subject>`, a listed type,
- * a listed scope when one is given (or always, under `requireScope: true`), and
- * a subject that starts lowercase and does not end with a period, as
- * repository-pull-request-title.yml words it.
+ * reads that subject. committed checks the title first, in the same job, but
+ * it cannot require a scope or a lowercase subject (COMMIT-04 in
+ * musher-dev/engineering-conventions). So the title is also checked here
+ * against `.config/commits/committed.toml`, the file `check:commits` holds
+ * every other copy to: `<type>(<scope>)!: <subject>`, a listed type, a listed
+ * scope, which is required, and a subject that starts lowercase and does not
+ * end with a period, as repository-pull-request-title.yml words it.
  *
  * release-please titles its own pull requests from
  * `.github/release-please/config.json`'s `chore(release): release${component}
@@ -21,10 +22,8 @@
  *
  * NON-NORMATIVE, like everything under tools/.
  */
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
 import { REPO_ROOT } from '../lib/layout.ts'
-import { yamlList } from './commits.ts'
+import { readCommitRules } from './commits.ts'
 
 export interface Vocabulary {
   readonly types: readonly string[]
@@ -38,14 +37,14 @@ const SUBJECT = /^(?![A-Z])(?!.*\.$).+$/
 const RELEASE_TITLE =
   /^chore\(release\): release(?: [a-z][a-z0-9-]*)? (?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?$/
 
+/**
+ * The vocabulary in `.config/commits/committed.toml`. A title always needs a
+ * scope (COMMIT-04): committed has no setting for that, so it is not read from
+ * the file.
+ */
 export function readVocabulary(repoRoot: string = REPO_ROOT): Vocabulary {
-  const source = readFileSync(join(repoRoot, '.github', 'conventional-commits.yaml'), 'utf8')
-  const types = yamlList(source, 'types')
-  const scopes = yamlList(source, 'scopes')
-  if (types.length === 0 || scopes.length === 0) {
-    throw new Error('.github/conventional-commits.yaml declares no types or no scopes')
-  }
-  return { types, scopes, requireScope: /^requireScope:\s*true\s*$/m.test(source) }
+  const { types, scopes } = readCommitRules(repoRoot)
+  return { types, scopes, requireScope: true }
 }
 
 /** Every problem with a title, empty when it passes. */
@@ -92,7 +91,7 @@ function main(): void {
   }
   for (const problem of problems) console.error(`  ✗ ${problem}`)
   console.error(
-    '\nThe title becomes the squash commit subject; see .github/conventional-commits.yaml.',
+    '\nThe title becomes the squash commit subject; see .config/commits/committed.toml.',
   )
   process.exit(1)
 }

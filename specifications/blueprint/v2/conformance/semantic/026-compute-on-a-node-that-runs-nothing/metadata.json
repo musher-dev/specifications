@@ -1,0 +1,11 @@
+{
+  "id": "semantic-026-compute-on-a-node-that-runs-nothing",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#node-compute",
+  "requirements": [
+    "BP-NODE-002"
+  ],
+  "summary": "A node carrying compute for an external component is rejected at the compute it carries.",
+  "document": "acme-wiki/blueprint.yaml"
+}

@@ -65,7 +65,7 @@ test('bare exposure is shorthand for the object form with every default', () => 
   const exposures = {
     open: 'PUBLIC',
     hidden: 'PRIVATE',
-    signedIn: { visibility: 'PUBLIC', access: 'AUTHENTICATED', viewerIdentity: 'HEADER' } as const,
+    signedIn: { visibility: 'PUBLIC', access: 'RESTRICTED', viewerIdentity: 'HEADER' } as const,
   }
   expect(effectiveExposure(exposures, 'open')).toEqual(
     effectiveExposure({ open: { visibility: 'PUBLIC' } }, 'open'),
@@ -91,7 +91,7 @@ test('a viewer identity property exists under its own mode, and a claim header u
     {
       web: {
         visibility: 'PUBLIC',
-        access: 'AUTHENTICATED',
+        access: 'RESTRICTED',
         viewerIdentity: 'HEADER',
         viewerClaims: ['NAME'],
       },
@@ -134,9 +134,9 @@ test('a stored hash has the one format its algorithm produces', () => {
 })
 
 test('a resolution record carries the object form of an exposure', () => {
-  const exposure = { visibility: 'PUBLIC', access: 'AUTHENTICATED', viewerIdentity: 'HEADER' }
+  const exposure = { visibility: 'PUBLIC', access: 'RESTRICTED', viewerIdentity: 'HEADER' }
   const component = {
-    specVersion: 'v1',
+    specVersion: 'v2',
     kind: 'COMPONENT',
     metadata: { revision: 1, description: 'A synthetic service.' },
     spec: {
@@ -150,12 +150,12 @@ test('a resolution record carries the object form of an exposure', () => {
     },
   }
   const document = {
-    specVersion: 'v1',
+    specVersion: 'v2',
     kind: 'BLUEPRINT',
     metadata: { slug: 'app', revision: 1, description: 'A synthetic application.' },
     spec: {
       parameters: {},
-      components: {
+      nodes: {
         web: {
           componentRef: './web.yaml',
           compute: { profile: 'general.standard.small' },
@@ -177,7 +177,7 @@ test('a resolution record carries the object form of an exposure', () => {
     documentPath,
     snapshot: {
       formatVersion: 1,
-      identity: 'installation-snapshot',
+      identity: 'deployment-snapshot',
       version: '1',
       parameters: {},
       variables: {},
@@ -199,8 +199,8 @@ test('a resolution record carries the object form of an exposure', () => {
     },
     specificationDependencies: {
       core: {},
-      component: { core: '1.0.0' },
-      blueprint: { core: '1.0.0', component: '1.0.0' },
+      component: { core: '2.0.0' },
+      blueprint: { core: '2.0.0', component: '2.0.0' },
     },
   }
   const components = {
@@ -209,16 +209,16 @@ test('a resolution record carries the object form of an exposure', () => {
       compute: { identity: 'general.standard.small', version: '1' },
       identity: './web.yaml',
       revision: 1,
-      digest: createHash('sha256').update(JSON.stringify(component)).digest('hex'),
+      digest: 'sha256:' + createHash('sha256').update(JSON.stringify(component)).digest('hex'),
       imageDigest: 'sha256:' + 'b'.repeat(64),
       volumes: {},
       exposure: { web: exposure },
     },
   }
-  const versions = { core: '1.0.0', component: '1.0.0', blueprint: '1.0.0' }
+  const versions = { core: '2.0.0', component: '2.0.0', blueprint: '2.0.0' }
   const bytes = Buffer.from(JSON.stringify(document))
   const record = resolutionRecord(bytes, versions, components, {}, {}, context)
-  expect(record.components.web?.exposure).toEqual({ web: exposure })
+  expect(record.nodes.web?.exposure).toEqual({ web: exposure })
   expect(() =>
     resolutionRecord(
       bytes,

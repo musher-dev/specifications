@@ -1,0 +1,10 @@
+{
+  "id": "semantic-130-optional-member-without-a-default-forwarded",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#outputs",
+  "requirements": [
+    "COMP-OUT-003"
+  ],
+  "summary": "An output forwarding an optional REDIS member that has no default is rejected, because the member may be absent."
+}

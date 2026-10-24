@@ -1,0 +1,10 @@
+{
+  "id": "structural-201-git-ref-names-a-tag",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#source",
+  "requirements": [
+    "COMP-SRC-001"
+  ],
+  "summary": "A Git ref may name a tag, a request like a branch."
+}

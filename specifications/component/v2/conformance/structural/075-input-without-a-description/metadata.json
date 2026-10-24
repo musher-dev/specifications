@@ -1,0 +1,7 @@
+{
+  "id": "structural-075-input-without-a-description",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#contract",
+  "summary": "An input that does not yet declare a description is structurally valid: the obligation is COMP-DESC-004’s, at publication."
+}

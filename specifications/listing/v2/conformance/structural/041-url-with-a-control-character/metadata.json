@@ -1,0 +1,10 @@
+{
+  "id": "structural-041-url-with-a-control-character",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/listing/v2/spec.md#presentation",
+  "requirements": [
+    "LIST-URL-001"
+  ],
+  "summary": "A URL field holding a control character, such as DEL, is rejected."
+}

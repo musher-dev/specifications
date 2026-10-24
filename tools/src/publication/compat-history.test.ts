@@ -116,6 +116,11 @@ test('historical tree media and declared symlinks are reconstructed', () => {
     }),
   )
   s.fx.writeFile(s.paths.conformance + '/' + path + '/tree/app/media/original.png', '')
+  // A component item holds exactly one component document (LIST-ITEM-002).
+  s.fx.writeFile(
+    s.paths.conformance + '/' + path + '/tree/app/component.yaml',
+    JSON.stringify({ kind: 'COMPONENT' }),
+  )
   release(s)
   s.fx.remove(s.paths.conformance)
   const result = replay(s)
@@ -129,7 +134,7 @@ test('historical behavioural observations survive replacement of current fixture
     JSON.stringify([
       {
         id: 'historical-rendering',
-        profile: 'rendering',
+        suite: 'rendering',
         operation: 'render',
         requirements: [],
         input: { markdown: '**safe**' },

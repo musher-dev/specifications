@@ -104,7 +104,7 @@ inside it.
 That sentence is the whole of the admission test, and it is what separates a
 reference from an expression language.
 
-[Core](../../specifications/core/v1/spec.md) `CORE-YAML-007` withholds YAML
+[Core](../../specifications/core/v2/spec.md) `CORE-YAML-007` withholds YAML
 anchors and aliases, and states its reason: "a document whose meaning depends on
 being expanded is not readable as the thing it declares". A reference appears to
 fall under that reason and does not, because the two do opposite things. **An

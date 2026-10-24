@@ -1,0 +1,7 @@
+{
+  "id": "semantic-008-overview-html-in-code-fence",
+  "phase": "semantic",
+  "expected": "incomplete",
+  "clause": "specifications/listing/v2/spec.md#overview-markdown",
+  "summary": "HTML inside a code span or fenced code block is not raw HTML, and is accepted."
+}

@@ -1,333 +1,192 @@
-/** Offline adapter for atomic connection selections. Production acquisition is downstream. */
+/** Component §6.4: the per-protocol member table. Blueprint selections live in selections.ts. */
 import { isObject, type Json } from '../lib/layout.ts'
-import { scanReferences } from '../lib/references.ts'
-import type { Diagnostic } from './document.ts'
-import { boundedValue } from './values.ts'
 
-export type ConnectionProtocol = 'OPENAI_CHAT_COMPLETIONS' | 'ANTHROPIC_MESSAGES'
-export type ConnectionCapability = 'STREAMING' | 'TOOL_CALLS'
-export interface ConnectionSelection {
-  readonly identity: string
-  readonly version: string
-  readonly installation: string
-  readonly parameter: string
-  readonly source: {
-    readonly reference: string
-    readonly identity: string
-    readonly version: string
-  }
-  readonly kind: 'MANAGED' | 'USER'
-  readonly costOwner: string
-  readonly credential: {
-    readonly identity: string
-    readonly rotation: number
-    readonly value: string
-    readonly permittedBaseURLs: readonly string[]
-  }
-  readonly views: Partial<
-    Record<
-      ConnectionProtocol,
-      {
-        readonly baseURL: string
-        readonly model: string
-        readonly capabilities: readonly ConnectionCapability[]
-      }
-    >
-  >
+export type ConnectionProtocol =
+  | 'OPENAI_CHAT_COMPLETIONS'
+  | 'ANTHROPIC_MESSAGES'
+  | 'POSTGRES'
+  | 'REDIS'
+  | 'S3'
+/**
+ * The contract of one connection member (component §6.4): its logical type,
+ * its sensitivity, and whether every view carries it. An optional member
+ * states its `default`, or has none and may be absent. A `derived` member is
+ * never carried by a view: resolution composes it (`composeConnectionURL`).
+ */
+export interface ConnectionMemberContract {
+  readonly type: 'string' | 'integer' | 'boolean'
+  readonly sensitive: boolean
+  readonly required: boolean
+  readonly default?: Json
+  readonly derived?: true
+  /** The closed set a string member takes its value from. */
+  readonly values?: readonly string[]
 }
-export type ConnectionAcquisition =
-  | { readonly status: 'NOT_ACQUIRED' | 'NOT_FOUND' | 'DENIED' | 'INCOMPATIBLE' }
-  | {
-      readonly status: 'SELECTED'
-      readonly persisted: true
-      readonly selection: ConnectionSelection
-    }
-export interface ConnectionsContext {
-  readonly connections?: {
-    readonly installation: string
-    readonly parameters: Readonly<Record<string, ConnectionAcquisition>>
-  }
+type MemberOptions = Partial<Omit<ConnectionMemberContract, 'type'>>
+const member = (
+  type: ConnectionMemberContract['type'],
+  options: MemberOptions = {},
+): ConnectionMemberContract => ({ type, sensitive: false, required: true, ...options })
+const sensitive = { sensitive: true } as const
+/** The `POSTGRES` `sslMode` member: PostgreSQL's `sslmode` values (component §6.4). */
+export const SSL_MODES = ['disable', 'allow', 'prefer', 'require', 'verify-ca', 'verify-full']
+const LLM_MEMBERS = {
+  baseURL: member('string'),
+  apiKey: member('string', sensitive),
+  model: member('string'),
+}
+/**
+ * Component §6.4 COMP-CONNECTION-002: each protocol fixes its members, their
+ * logical types, their sensitivity and whether each is required, optional
+ * with a default, optional without one, or derived. The one table every
+ * check reads.
+ */
+export const CONNECTION_PROTOCOL_MEMBERS: Readonly<
+  Record<ConnectionProtocol, Readonly<Record<string, ConnectionMemberContract>>>
+> = {
+  OPENAI_CHAT_COMPLETIONS: LLM_MEMBERS,
+  ANTHROPIC_MESSAGES: LLM_MEMBERS,
+  POSTGRES: {
+    host: member('string'),
+    port: member('integer'),
+    database: member('string'),
+    username: member('string'),
+    password: member('string', sensitive),
+    sslMode: member('string', { values: SSL_MODES }),
+    url: member('string', { ...sensitive, derived: true }),
+  },
+  REDIS: {
+    host: member('string'),
+    port: member('integer'),
+    tls: member('boolean'),
+    database: member('integer', { required: false, default: 0 }),
+    username: member('string', { required: false }),
+    password: member('string', { ...sensitive, required: false }),
+    url: member('string', { ...sensitive, derived: true }),
+  },
+  S3: {
+    endpointURL: member('string'),
+    region: member('string'),
+    bucket: member('string'),
+    accessKeyID: member('string'),
+    secretAccessKey: member('string', sensitive),
+    pathStyle: member('boolean', { required: false, default: false }),
+  },
+}
+/**
+ * Component §6.4: a member is guaranteed when every resolved connection holds
+ * it: it is required, derived, or optional with a default. Only a guaranteed
+ * member may be forwarded by an output (COMP-OUT-003).
+ */
+export const guaranteedMember = (contract: ConnectionMemberContract): boolean =>
+  contract.required || contract.derived === true || contract.default !== undefined
+export const CONNECTION_PROTOCOLS = Object.keys(CONNECTION_PROTOCOL_MEMBERS) as ConnectionProtocol[]
+/** The language-model protocols: the only ones that take `capabilities` (component §6.4). */
+export const LLM_CONNECTION_PROTOCOLS: ReadonlySet<ConnectionProtocol> = new Set([
+  'OPENAI_CHAT_COMPLETIONS',
+  'ANTHROPIC_MESSAGES',
+])
+/**
+ * The HTTP-based protocols (ADR 0039 §5): their URL member, named in
+ * `CONNECTION_URL_MEMBER`, is held to blueprint §5.3's HTTPS and
+ * `permittedBaseURLs` rules.
+ */
+export const HTTP_CONNECTION_PROTOCOLS: ReadonlySet<ConnectionProtocol> = new Set([
+  'OPENAI_CHAT_COMPLETIONS',
+  'ANTHROPIC_MESSAGES',
+  'S3',
+])
+/** The member of an HTTP-based protocol that carries its HTTPS URL. */
+export const CONNECTION_URL_MEMBER: Readonly<Partial<Record<ConnectionProtocol, string>>> = {
+  OPENAI_CHAT_COMPLETIONS: 'baseURL',
+  ANTHROPIC_MESSAGES: 'baseURL',
+  S3: 'endpointURL',
+}
+export const isConnectionProtocol = (value: unknown): value is ConnectionProtocol =>
+  typeof value === 'string' && Object.hasOwn(CONNECTION_PROTOCOL_MEMBERS, value)
+/** The member contract `member` has under `protocol`, or undefined when the protocol defines none. */
+export function protocolMember(
+  protocol: unknown,
+  name: string,
+): ConnectionMemberContract | undefined {
+  if (!isConnectionProtocol(protocol)) return
+  const members = CONNECTION_PROTOCOL_MEMBERS[protocol]
+  return Object.hasOwn(members, name) ? members[name] : undefined
 }
 const record = (v: unknown): Record<string, Json> =>
   isObject(v as Json) ? (v as Record<string, Json>) : {}
-function at(v: unknown, ...path: string[]): Json | undefined {
-  for (const p of path) v = record(v)[p]
-  return v as Json | undefined
-}
-const token = (v: string) => v.replaceAll('~', '~0').replaceAll('/', '~1')
-const protocols = ['OPENAI_CHAT_COMPLETIONS', 'ANTHROPIC_MESSAGES']
-const capabilities = ['STREAMING', 'TOOL_CALLS']
-function diagnostic(code: string, path: string, resolution = false): Diagnostic {
-  return {
-    code,
-    path,
-    message: code,
-    phase: resolution ? 'resolution' : 'semantic',
-    ...(resolution ? { stage: 'connections' } : {}),
-  }
-}
 /** The members a connection input holds, fixed by its protocol (component §6.4). */
-export const CONNECTION_MEMBERS = ['baseURL', 'apiKey', 'model'] as const
-export type ConnectionMember = (typeof CONNECTION_MEMBERS)[number]
+export const CONNECTION_MEMBERS: readonly string[] = [
+  ...new Set(CONNECTION_PROTOCOLS.flatMap((p) => Object.keys(CONNECTION_PROTOCOL_MEMBERS[p]))),
+]
+export type ConnectionMember = string
 /** Component §6.1: the key present says an input is a connection input. */
 export const isConnectionInput = (input: Json | undefined): boolean =>
   Object.hasOwn(record(input), 'connection')
-/** The value contract of one connection member: a string, and only the credential is secret. */
-export const connectionMemberContract = (member: string): Record<string, Json> => ({
-  schema: { type: 'string' },
-  sensitive: member === 'apiKey',
-})
-const inputsOf = (component: Json | undefined) =>
-  record(at(component, 'spec', 'contract', 'inputs'))
-/** The namespaces a parameter's `from` admits (blueprint BP-REF-001). */
-export const PARAMETER_SOURCE_NAMESPACES = ['variables', 'connections', 'deployment'] as const
-/** The paths the `deployment` namespace defines (blueprint BP-PARAM-011). */
-export const DEPLOYMENT_FACT_PATHS = ['installer.identity', 'installer.email', 'installer.name']
-export type ParameterSourceNamespace = (typeof PARAMETER_SOURCE_NAMESPACES)[number]
 /**
- * BP-REF-001: a parameter's `from` is one whole reference, and its namespace
- * says what it names. Undefined when the parameter has no `from` or the
- * reference is not one whole admitted reference.
+ * The value contract of one connection member, as `{schema, sensitive}`. With a
+ * protocol, the member that protocol fixes; without one, the member under the
+ * first protocol that defines it (`database` is a string for `POSTGRES` and an
+ * integer for `REDIS`, so pass the protocol when it is known). A name no
+ * protocol defines reads as a non-sensitive string; use `protocolMember` to ask
+ * whether a protocol defines it (COMP-OUT-004).
  */
-export function parameterSource(
-  parameter: Json | undefined,
-): { namespace: ParameterSourceNamespace; key: string; reference: string } | undefined {
-  const from = at(parameter, 'from')
-  if (typeof from !== 'string') return
-  const scan = scanReferences(from, PARAMETER_SOURCE_NAMESPACES)
-  const [reference] = scan.references
-  if (scan.failures.length || scan.references.length !== 1 || reference?.raw !== from) return
-  return {
-    namespace: reference.namespace as ParameterSourceNamespace,
-    key: reference.path.join('.'),
-    reference: from,
-  }
-}
-export function parameterSourceDiagnostics(
-  name: string,
-  parameter: Json | undefined,
-): Diagnostic[] {
-  const from = at(parameter, 'from')
-  if (typeof from !== 'string') return []
-  const path = '/spec/parameters/' + token(name) + '/from'
-  const scan = scanReferences(from, PARAMETER_SOURCE_NAMESPACES)
-  // Core's codes (CORE-REF-001..003) name what is wrong with a reference itself.
-  if (scan.failures.length)
-    return scan.failures.map((failure) =>
-      diagnostic(
-        failure.kind === 'malformed'
-          ? 'ERR_MALFORMED_REFERENCE'
-          : failure.kind === 'unknown-namespace'
-            ? 'ERR_UNKNOWN_REFERENCE_NAMESPACE'
-            : 'ERR_REFERENCE_NOT_IN_SCOPE',
-        path,
-      ),
-    )
-  const source = parameterSource(parameter)
-  if (!source) return [diagnostic('ERR_INVALID_PARAMETER_SOURCE', path)]
-  // BP-PARAM-011: `deployment` defines exactly the installer's three facts.
-  if (source.namespace === 'deployment' && !DEPLOYMENT_FACT_PATHS.includes(source.key))
-    return [diagnostic('ERR_UNKNOWN_DEPLOYMENT_FACT', path)]
-  return []
-}
-/**
- * BP-CONNECTION-001: a connection input is bound only by a connection parameter,
- * and a connection parameter binds only connection inputs.
- */
-export function connectionBindingDiagnostics(
-  blueprint: Json,
-  components: ReadonlyMap<string, Json>,
-): Diagnostic[] {
-  const out: Diagnostic[] = [],
-    parameters = record(at(blueprint, 'spec', 'parameters'))
-  for (const [node, n] of Object.entries(record(at(blueprint, 'spec', 'components')))) {
-    const inputs = inputsOf(components.get(node))
-    for (const [name, binding] of Object.entries(record(at(n, 'bindings')))) {
-      if (!Object.hasOwn(inputs, name)) continue
-      const parameter = at(binding, 'parameter'),
-        path = '/spec/components/' + token(node) + '/bindings/' + token(name)
-      // An undeclared parameter is ERR_UNKNOWN_PARAMETER, and nothing more.
-      if (typeof parameter === 'string' && !Object.hasOwn(parameters, parameter)) continue
-      const connection =
-        typeof parameter === 'string' &&
-        parameterSource(parameters[parameter])?.namespace === 'connections'
-      if (isConnectionInput(inputs[name]) !== connection)
-        out.push(
-          diagnostic(
-            'ERR_INVALID_CONNECTION_BINDING',
-            typeof parameter === 'string' ? path + '/parameter' : path,
-          ),
-        )
-    }
-  }
-  return out
-}
-function validSelection(
-  value: unknown,
-  installation: string,
-  parameter: string,
-): value is ConnectionSelection {
-  if (!boundedValue(value as Json)) return false
-  const s = record(value),
-    credential = record(s.credential),
-    views = record(s.views)
-  const text = (v: unknown) => typeof v === 'string' && v.length > 0
-  if (
-    !text(s.identity) ||
-    !text(s.version) ||
-    s.installation !== installation ||
-    s.parameter !== parameter ||
-    !text(at(s.source, 'reference')) ||
-    !text(at(s.source, 'identity')) ||
-    !text(at(s.source, 'version')) ||
-    !text(s.costOwner) ||
-    !['MANAGED', 'USER'].includes(String(s.kind)) ||
-    !text(credential.identity) ||
-    !text(credential.value) ||
-    !Number.isSafeInteger(credential.rotation) ||
-    Number(credential.rotation) < 0 ||
-    !Array.isArray(credential.permittedBaseURLs) ||
-    !Object.keys(views).length
-  )
-    return false
-  return Object.entries(views).every(([protocol, view]) => {
-    const v = record(view)
-    if (
-      !protocols.includes(protocol) ||
-      !text(v.baseURL) ||
-      !text(v.model) ||
-      !Array.isArray(v.capabilities) ||
-      !v.capabilities.every((c) => capabilities.includes(String(c))) ||
-      new Set(v.capabilities).size !== v.capabilities.length ||
-      !(credential.permittedBaseURLs as Json[]).includes(v.baseURL!)
-    )
-      return false
-    try {
-      const url = new URL(String(v.baseURL))
-      return url.protocol === 'https:' && !url.username && !url.password && !url.hash && !url.search
-    } catch {
-      return false
-    }
-  })
-}
-export function resolveConnections(
-  blueprint: Json,
-  components: ReadonlyMap<string, Json>,
-  context: ConnectionsContext['connections'],
-) {
-  const diagnostics: Diagnostic[] = [],
-    deferred: { rule: string; path: string; missing: string }[] = []
-  const inputs: Record<
-    string,
-    { value: Json; sensitive: boolean; identity: string; version: string }
-  > = Object.create(null)
-  const selections = new Map<string, ConnectionSelection>()
-  const sources = Object.fromEntries(
-    Object.entries(record(at(blueprint, 'spec', 'parameters'))).flatMap(([name, p]) => {
-      const source = parameterSource(p)
-      return source?.namespace === 'connections' ? [[name, source.reference]] : []
-    }),
-  )
-  for (const parameter of Object.keys(record(context?.parameters)))
-    if (!Object.hasOwn(sources, parameter))
-      diagnostics.push(diagnostic('ERR_INVALID_RESOLUTION_CONTEXT', '/spec', true))
-  for (const parameter of Object.keys(sources)) {
-    const path = '/spec/parameters/' + token(parameter)
-    const acquired =
-      context?.parameters && Object.hasOwn(context.parameters, parameter)
-        ? context.parameters[parameter]
-        : undefined
-    if (!acquired || acquired.status === 'NOT_ACQUIRED') {
-      deferred.push({ rule: 'BP-CONNECTION-002', path, missing: 'connection:' + parameter })
-      continue
-    }
-    if (acquired.status !== 'SELECTED') {
-      const codes = {
-        NOT_FOUND: 'ERR_CONNECTION_NOT_FOUND',
-        DENIED: 'ERR_CONNECTION_DENIED',
-        INCOMPATIBLE: 'ERR_CONNECTION_INCOMPATIBLE',
-      }
-      diagnostics.push(
-        diagnostic(codes[acquired.status] ?? 'ERR_INVALID_RESOLUTION_CONTEXT', path, true),
-      )
-    } else if (
-      !context?.installation ||
-      acquired.persisted !== true ||
-      !validSelection(acquired.selection, context.installation, parameter) ||
-      acquired.selection.source.reference !== sources[parameter]
-    ) {
-      diagnostics.push(diagnostic('ERR_INVALID_RESOLUTION_CONTEXT', path, true))
-    } else {
-      const conflicting = [...selections.values()].some(
-        (previous) =>
-          previous.credential.identity === acquired.selection.credential.identity &&
-          (previous.kind === 'MANAGED' || acquired.selection.kind === 'MANAGED'),
-      )
-      if (conflicting) diagnostics.push(diagnostic('ERR_INVALID_RESOLUTION_CONTEXT', path, true))
-      else selections.set(parameter, acquired.selection)
-    }
-  }
-  for (const [node, n] of Object.entries(record(at(blueprint, 'spec', 'components')))) {
-    for (const [name, input] of Object.entries(inputsOf(components.get(node)))) {
-      if (!isConnectionInput(input)) continue
-      const path = '/spec/components/' + token(node) + '/bindings/' + token(name)
-      const selection = selections.get(String(at(n, 'bindings', name, 'parameter')))
-      if (!selection) continue
-      const view =
-        selection.views[String(at(input, 'connection', 'protocol')) as ConnectionProtocol]
-      const required = at(input, 'connection', 'capabilities') ?? []
-      if (
-        !view ||
-        !Array.isArray(required) ||
-        required.some((c) => !view.capabilities.includes(c as ConnectionCapability))
-      ) {
-        diagnostics.push(diagnostic('ERR_CONNECTION_INCOMPATIBLE', path, true))
-        continue
-      }
-      // One value, read a member at a time by the outputs that forward it (component §6.2).
-      inputs[`${node}:in:${name}`] = {
-        value: { baseURL: view.baseURL, apiKey: selection.credential.value, model: view.model },
-        sensitive: true,
-        identity: selection.identity,
-        version: selection.version,
-      }
-    }
-  }
-  return { inputs: diagnostics.length || deferred.length ? {} : inputs, diagnostics, deferred }
+export function connectionMemberContract(name: string, protocol?: unknown): Record<string, Json> {
+  const contract =
+    protocol === undefined
+      ? CONNECTION_PROTOCOLS.map((p) => protocolMember(p, name)).find(Boolean)
+      : protocolMember(protocol, name)
+  return contract
+    ? { schema: { type: contract.type }, sensitive: contract.sensitive }
+    : { schema: { type: 'string' }, sensitive: false }
 }
 
-/** The platform implements durable atomic get-or-create and idempotent acquisition. */
-export interface ConnectionStore {
-  getOrCreate(key: string, create: () => ConnectionSelection): ConnectionSelection
-}
-export function selectConnection(
-  store: ConnectionStore,
-  installation: string,
-  parameter: string,
-  generation: number,
-  acquire: (idempotencyKey: string) => ConnectionSelection,
-  authorized: (selection: ConnectionSelection) => boolean,
-): ConnectionAcquisition {
-  if (!installation || !parameter || !Number.isSafeInteger(generation) || generation < 0)
-    throw new Error('invalid connection operation identity')
-  const key = JSON.stringify([installation, parameter, generation])
-  const denied = new Error('connection denied')
-  let selection: ConnectionSelection
-  try {
-    selection = store.getOrCreate(key, () => {
-      const selected = acquire(key)
-      if (!validSelection(selected, installation, parameter))
-        throw new Error('invalid connection selection')
-      if (!authorized(selected)) throw denied
-      return selected
-    })
-  } catch (error) {
-    if (error === denied) return { status: 'DENIED' }
-    throw error
+/**
+ * Component §6.4: percent-encode every UTF-8 byte outside RFC 3986's
+ * unreserved set, with uppercase hexadecimal digits.
+ */
+export const percentEncode = (text: string): string =>
+  encodeURIComponent(text).replace(
+    /[!'()*]/g,
+    (c) => '%' + c.charCodeAt(0).toString(16).toUpperCase(),
+  )
+/** Component §6.4: the host of a composed URL, lowercased, with an IPv6 address bracketed. */
+const urlHost = (host: string): string =>
+  host.includes(':') ? `[${host.toLowerCase()}]` : host.toLowerCase()
+/**
+ * Component §6.4: the canonical composition of the derived `url` member of a
+ * `POSTGRES` or `REDIS` connection from its other members, the credential's
+ * included. Undefined for a protocol with no derived `url`, or members that do
+ * not compose (a caller validates them first).
+ */
+export function composeConnectionURL(
+  protocol: ConnectionProtocol,
+  members: Readonly<Record<string, Json>>,
+): string | undefined {
+  const { host, port } = members
+  if (typeof host !== 'string' || !Number.isInteger(port)) return
+  const server = `${urlHost(host)}:${port}`
+  if (protocol === 'POSTGRES') {
+    const { username, password, database, sslMode } = members
+    if (
+      typeof username !== 'string' ||
+      typeof password !== 'string' ||
+      typeof database !== 'string' ||
+      typeof sslMode !== 'string'
+    )
+      return
+    return (
+      `postgresql://${percentEncode(username)}:${percentEncode(password)}@${server}` +
+      `/${percentEncode(database)}?sslmode=${sslMode}`
+    )
   }
-  if (!validSelection(selection, installation, parameter))
-    throw new Error('invalid persisted connection')
-  // Reuse of immutable state is never permission to bypass current revocation.
-  if (!authorized(selection)) return { status: 'DENIED' }
-  return { status: 'SELECTED', persisted: true, selection }
+  if (protocol === 'REDIS') {
+    const { username, password, tls } = members,
+      database = members.database ?? 0
+    if (typeof tls !== 'boolean' || !Number.isInteger(database)) return
+    const user = typeof username === 'string' ? percentEncode(username) : ''
+    const userinfo = typeof password === 'string' ? `${user}:${percentEncode(password)}@` : ''
+    return `${tls ? 'rediss' : 'redis'}://${userinfo}${server}/${database}`
+  }
+  return
 }

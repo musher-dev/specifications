@@ -1,0 +1,27 @@
+specVersion: v2
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: SERVICE
+  workload:
+    source:
+      git:
+        repositoryURL: https://github.com/musher-dev/examples
+    build:
+      dockerfile: Dockerfile
+      secrets:
+        NPM_TOKEN:
+          input: npmToken
+    endpoints:
+      web:
+        targetPort: 8080
+        protocol: HTTP
+  contract:
+    inputs:
+      npmToken:
+        description: Token the build reads
+        schema:
+          type: string
+    outputs: {}

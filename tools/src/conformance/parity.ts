@@ -171,7 +171,7 @@ async function blazeRejects(schema: string, instances: string[]): Promise<Set<st
  *
  * `parser` cases are excluded — they are about YAML this schema never sees, and
  * a document Blaze cannot parse says nothing about schema agreement. `semantic`
- * and `capability` cases are included only for their structural verdict, which
+ * and `admission` cases are included only for their structural verdict, which
  * is "valid": a semantic fixture is structurally well-formed by construction,
  * which is what lets it reach the semantic phase at all.
  */

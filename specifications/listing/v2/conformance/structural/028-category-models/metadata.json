@@ -1,0 +1,7 @@
+{
+  "id": "structural-028-category-models",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/listing/v2/spec.md#vocabularies",
+  "summary": "MODELS, a token v2 adds, is accepted."
+}

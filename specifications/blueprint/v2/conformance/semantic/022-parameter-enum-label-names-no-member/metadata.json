@@ -1,0 +1,11 @@
+{
+  "id": "semantic-022-parameter-enum-label-names-no-member",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#deploy-form",
+  "requirements": [
+    "BP-UI-003"
+  ],
+  "summary": "A parameter enumLabels key naming no member of the bound input's enum is rejected.",
+  "document": "acme-wiki/blueprint.yaml"
+}

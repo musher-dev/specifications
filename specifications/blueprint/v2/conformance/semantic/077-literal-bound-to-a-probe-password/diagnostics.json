@@ -1,0 +1,6 @@
+[
+  {
+    "code": "ERR_SENSITIVE_LITERAL",
+    "path": "/spec/nodes/web/bindings/vncPassword/value"
+  }
+]

@@ -1,0 +1,10 @@
+{
+  "id": "structural-012-support-url-mailto",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/listing/v2/spec.md#presentation",
+  "requirements": [
+    "LIST-URL-001"
+  ],
+  "summary": "The permitted scheme set includes mailto, and http alongside https."
+}

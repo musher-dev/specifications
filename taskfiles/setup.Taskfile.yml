@@ -1,7 +1,8 @@
 # Setup tasks: everything needed to work in this repository.
 #
-# Included by the root Taskfile.yml under the `setup` namespace. The aggregate
-# entry point is `task setup`, defined there.
+# Included flattened by the root Taskfile.yml, so each task answers to the
+# name written here (`setup:tools`, `setup:hooks`). The aggregate entry point
+# is `task setup`, defined there.
 #
 # `dir:` is absolute via {{.ROOT_DIR}} throughout this directory. A relative
 # `dir:` in an included taskfile resolves against *that file's* directory, so
@@ -9,13 +10,13 @@
 version: '3'
 
 tasks:
-  tools:
+  setup:tools:
     desc: Install the specification tooling dependencies
     dir: '{{.ROOT_DIR}}/{{.TOOLS_DIR}}'
     cmds:
       - bun install
 
-  hooks:
+  setup:hooks:
     desc: Install repository git hooks
     dir: '{{.ROOT_DIR}}'
     status:

@@ -1,0 +1,11 @@
+{
+  "id": "semantic-019-icon-too-large",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/listing/v2/spec.md#media",
+  "requirements": [
+    "LIST-MEDIA-004"
+  ],
+  "summary": "An icon file one byte over 1 MiB is rejected by its size alone.",
+  "document": "pgvector/listing.yaml"
+}

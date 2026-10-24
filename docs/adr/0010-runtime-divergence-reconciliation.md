@@ -137,7 +137,7 @@ not yet serving — the failure §5.4 exists to prevent.
 **The specification is defective, and the behaviour is worse than the gap
 implies.**
 
-[Blueprint §4.2](../../specifications/blueprint/v1/spec.md#connections) records:
+[Blueprint §4.2](../../specifications/blueprint/v2/spec.md#connections) records:
 "Nothing stops a connection filling an input whose `suppliedBy` is `USER`. A
 wire and the install form would then both claim the value, with nothing saying
 which arrives."
@@ -149,7 +149,7 @@ and no diagnostic anywhere says so.
 
 That is not a precedence rule the specification failed to write down. It is an
 accident of iteration order, and it fails the test this contract applies
-everywhere else: [§5.2](../../specifications/blueprint/v1/spec.md#merge) rejects
+everywhere else: [§5.2](../../specifications/blueprint/v2/spec.md#merge) rejects
 silent first-wins because it "settles the ambiguity without telling anyone there
 was one".
 
@@ -161,7 +161,7 @@ rule to remember.
 
 **Both are defective, in opposite directions.**
 
-[§4.2](../../specifications/blueprint/v1/spec.md#connections) says `isSensitive`
+[§4.2](../../specifications/blueprint/v2/spec.md#connections) says `isSensitive`
 "takes no part in the decision" and calls it a gap. The implementation goes
 further: masking is read **only** from the consuming input's own declaration, so
 a producer that marked its output sensitive has that marking dropped the moment

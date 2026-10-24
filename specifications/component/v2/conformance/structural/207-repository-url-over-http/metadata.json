@@ -1,0 +1,10 @@
+{
+  "id": "structural-207-repository-url-over-http",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#source",
+  "requirements": [
+    "COMP-SRC-006"
+  ],
+  "summary": "A repository URL whose scheme is not https is rejected."
+}

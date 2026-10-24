@@ -17,10 +17,14 @@ import {
   discoverKinds,
   familyPaths,
   hasPart,
+  inRepo,
+  isRetiredMajor,
   LayoutError,
+  LEDGER_FILE,
   parseManifestKey,
   parseSpecPath,
   REPO_ROOT,
+  RETIRED_MAJORS,
   releasedPartFiles,
   releasedSpec,
   requireAtRef,
@@ -158,6 +162,41 @@ describe('hasPart', () => {
     for (const part of ['spec', 'schema', 'examples', 'conformance'] as const) {
       expect(hasPart('component', 'v1', part)).toBe(true)
     }
+  })
+})
+
+describe('retired majors', () => {
+  const ledger = JSON.parse(readFileSync(inRepo(REPO_ROOT, LEDGER_FILE), 'utf8')) as {
+    releases: { [tag: string]: unknown }
+  }
+  const recordedMajors = new Set(
+    Object.keys(ledger.releases).map((tag) => {
+      const [family, version] = tag.split('/v') as [string, string]
+      return `${family}/v${version.split('.')[0]}`
+    }),
+  )
+  const authored = new Set(discoverFamilies().map((f) => `${f.name}/${f.major}`))
+
+  test('each is released history with no working tree', () => {
+    for (const [family, majors] of Object.entries(RETIRED_MAJORS)) {
+      for (const major of majors) {
+        expect(recordedMajors.has(`${family}/${major}`)).toBe(true)
+        expect(authored.has(`${family}/${major}`)).toBe(false)
+      }
+    }
+  })
+
+  test('every recorded major is either authored or retired, never silently gone', () => {
+    for (const key of recordedMajors) {
+      const [family, major] = key.split('/') as [string, string]
+      expect(authored.has(key) || isRetiredMajor(family, major)).toBe(true)
+    }
+  })
+
+  test('a major is retired only when listed', () => {
+    expect(isRetiredMajor('component', 'v1')).toBe(true)
+    expect(isRetiredMajor('component', 'v2')).toBe(false)
+    expect(isRetiredMajor('unknown', 'v1')).toBe(false)
   })
 })
 

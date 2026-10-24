@@ -1,0 +1,19 @@
+specVersion: v2
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Worker built with Cloud Native Buildpacks from an archive uploaded to the platform.
+spec:
+  type: WORKER
+  workload:
+    source:
+      upload:
+        digest: sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
+    build:
+      buildpacks:
+        builderImage: paketobuildpacks/builder-jammy-base:0.4.0
+      arguments:
+        BP_NODE_VERSION: "22"
+    command:
+      - node
+      - worker.js

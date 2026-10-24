@@ -12,8 +12,8 @@
  * The command line is a downstream contract:
  *
  *   bun tools/src/schema/bundle.ts                               dist/ + catalog
- *   bun tools/src/schema/bundle.ts --stdout component/v1         alias bundle
- *   bun tools/src/schema/bundle.ts --stdout component/v1 --version 1.2.0
+ *   bun tools/src/schema/bundle.ts --stdout component/v2         alias bundle
+ *   bun tools/src/schema/bundle.ts --stdout component/v2 --version 2.0.0
  *
  * A consumer runs it at a pinned commit without `bun install`, so this module,
  * `sources.ts`, and everything they import use `node:` builtins and nothing
@@ -24,6 +24,7 @@
 import { createHash } from 'node:crypto'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname } from 'node:path'
+import { parseBindings } from '../lib/bindings.ts'
 import {
   bundleUrl,
   CATALOG_FILE,
@@ -137,19 +138,69 @@ export function buildBundle(family: FamilyRef, options: BuildOptions = {}): stri
   bundle.$id = options.id ?? bundleUrl(family.name, family.major)
   if (Object.keys(defs).length > 0) bundle.$defs = defs
 
+  let dnsLabel: string | undefined
   for (const { node } of walkObjects(bundle)) {
     if (node['x-musher-grammar'] === undefined) continue
-    if (node['x-musher-grammar'] !== 'label') throw new Error('unknown core grammar')
-    const core = reader.read(familyPaths(CORE_FAMILY, 'v1').spec)?.toString('utf8')
-    const section = core?.split('<a id="label-grammar"></a>')[1]?.split('### ')[0]
-    const pattern = section?.match(/\x60(\^\[a-z\][^\x60]+\$)\x60/)?.[1]
-    if (!pattern) throw new Error('core label grammar is missing')
-    node.pattern = pattern
+    if (node['x-musher-grammar'] !== DNS_LABEL_GRAMMAR) {
+      throw new Error(
+        `${label(family)}: unknown core grammar x-musher-grammar: ${JSON.stringify(node['x-musher-grammar'])}`,
+      )
+    }
+    dnsLabel ??= dnsLabelPattern(reader, family)
+    node.pattern = dnsLabel
     node.maxLength = 63
     delete node['x-musher-grammar']
   }
   assertSelfContained(bundle, family)
   return canonicalJson(bundle)
+}
+
+/** The one shared grammar a schema source may name (core §5.1). */
+const DNS_LABEL_GRAMMAR = 'dns-label'
+/** The anchors core gives the DNS-label grammar's section, newest first. */
+const DNS_LABEL_ANCHORS = ['<a id="dns-label-grammar"></a>', '<a id="label-grammar"></a>']
+
+/**
+ * The core major a family's §2 "Normative dependencies" table cites, read
+ * through `reader` so a bundle built at a ref reads that ref's prose. Null for a
+ * spec with no table, which the caller reports.
+ */
+export function citedCoreMajor(reader: ModuleReader, family: FamilyRef): string | null {
+  const spec = reader.read(familyPaths(family.name, family.major).spec)
+  if (spec === null) return null
+  const bindings = parseBindings(spec.toString('utf8'))
+  return bindings?.dependencies.find((d) => d.family === CORE_FAMILY)?.line ?? null
+}
+
+/**
+ * The core spec a family's bundle reads its shared grammars from, or null when
+ * its §2 cites none or does not parse. Only the cache key uses this lenient
+ * form; a bundle that needs the grammar reports why it cannot find it.
+ */
+function coreSpecPath(reader: ModuleReader, family: FamilyRef): string | null {
+  try {
+    const major = citedCoreMajor(reader, family)
+    return major === null ? null : familyPaths(CORE_FAMILY, major).spec
+  } catch {
+    return null
+  }
+}
+
+/** The DNS-label pattern, as the core major the family cites states it. */
+function dnsLabelPattern(reader: ModuleReader, family: FamilyRef): string {
+  const major = citedCoreMajor(reader, family)
+  const path = major === null ? null : familyPaths(CORE_FAMILY, major).spec
+  if (path === null) {
+    throw new Error(
+      `${label(family)}: names a core grammar, but its §2 cites no core major to read it from`,
+    )
+  }
+  const core = reader.read(path)?.toString('utf8')
+  const anchor = DNS_LABEL_ANCHORS.find((a) => core?.includes(a))
+  const section = anchor === undefined ? undefined : core?.split(anchor)[1]?.split('\n#')[0]
+  const pattern = section?.match(/\x60(\^\[a-z\][^\x60]+\$)\x60/)?.[1]
+  if (!pattern) throw new Error(`${label(family)}: the DNS-label grammar is missing from ${path}`)
+  return pattern
 }
 
 function conceptToDefName(concept: string): string {
@@ -203,7 +254,13 @@ export function familyBundle(family: FamilyRef): string | null {
     hash.update(bytes)
     hash.update('\0')
   }
-  const coreBytes = disk.read(familyPaths(CORE_FAMILY, 'v1').spec)
+  // The bundle inlines the core grammar its §2 cites, so the key covers both
+  // the family's own prose and that core spec.
+  const specBytes = disk.read(familyPaths(family.name, family.major).spec)
+  if (specBytes) hash.update(specBytes)
+  const corePath = coreSpecPath(disk, family)
+  const coreBytes = corePath === null ? null : disk.read(corePath)
+  hash.update('\0')
   if (coreBytes) hash.update(coreBytes)
   const key = hash.digest('hex')
   const cached = memo.get(key)
@@ -213,9 +270,11 @@ export function familyBundle(family: FamilyRef): string | null {
     read: (path) =>
       path.startsWith(`${src}/`) && !path.slice(src.length + 1).includes('/')
         ? (snapshot.get(path.slice(src.length + 1)) ?? null)
-        : path === familyPaths(CORE_FAMILY, 'v1').spec
+        : path === corePath
           ? coreBytes
-          : disk.read(path),
+          : path === familyPaths(family.name, family.major).spec
+            ? specBytes
+            : disk.read(path),
   }
   const built = buildBundle(family, { reader })
   memo.set(key, built)
@@ -272,7 +331,7 @@ function printOne(args: readonly string[]): void {
   const target = args[1]
   const match = target === undefined ? null : FAMILY_ARGUMENT.exec(target)
   if (match?.[1] === undefined || match[2] === undefined) {
-    usage(`--stdout needs <family>/<major>, e.g. component/v1; got ${target ?? 'nothing'}`)
+    usage(`--stdout needs <family>/<major>, e.g. component/v2; got ${target ?? 'nothing'}`)
   }
   const family: FamilyRef = { name: match[1], major: match[2] }
 

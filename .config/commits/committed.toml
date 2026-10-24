@@ -1,0 +1,63 @@
+# committed: the commit-message rules for every commit and pull request title
+# (COMMIT-01 in musher-dev/engineering-conventions). This file is the one list
+# of the repository's commit types and scopes.
+#
+# Read by:
+#   - .config/lefthook.yml                                (commit-msg)
+#   - .github/workflows/validate-pull-request.yml         (Title / Conventional Commit)
+#   - tools/src/policy/title.ts and commits.ts            (`task check:title`, `task check:commits`)
+# and held in step with the copies that cannot read it: the inline lists in
+# .github/workflows/repository-pull-request-title.yml, the prefixes in
+# .github/dependabot.yml and the lists .github/CONTRIBUTING.md prints
+# (`task check:commits`).
+#
+# release-please assigns a commit to a package by the paths it changes, not by
+# its scope (.github/CONTRIBUTING.md#how-a-commit-reaches-a-release).
+#
+# Keys: https://github.com/crate-ci/committed/blob/main/docs/reference.md
+
+style = "conventional"
+# No length limit: the squash commit's subject carries the pull request number,
+# and Dependabot writes long subjects it chooses itself.
+subject_length = 0
+# The body wraps as its author chooses.
+line_length = 0
+# A Conventional Commit description starts in lower case.
+subject_capitalized = false
+subject_not_punctuated = true
+# Not enforced before committed either; the title check words the subject rule.
+imperative_subject = false
+# fixup! commits are squashed by `git rebase --autosquash` before a merge.
+no_fixup = false
+no_wip = true
+
+allowed_types = [
+  "feat",
+  "fix",
+  "perf",
+  "docs",
+  "chore",
+  "refactor",
+  "test",
+  "ci",
+  "build",
+  "style",
+  "revert",
+]
+
+# The scope labels the area a change touches.
+allowed_scopes = [
+  "core", # specifications/core/**
+  "component", # specifications/component/**, conformance cases included
+  "blueprint", # specifications/blueprint/**
+  "listing", # specifications/listing/**
+  "conformance", # docs/conformance.md, the fixture format alone
+  "tools", # tools/**
+  "ci", # .github/workflows/**, .github/actions/**
+  "devcontainer", # .devcontainer/**
+  "docs", # docs/** and READMEs
+  "repo", # Taskfile, lefthook, .config/, .repo/, .claude/
+  "release", # release-please pull requests
+  "deps", # Dependabot
+  "deps-dev", # Dependabot, for dev-dependencies
+]

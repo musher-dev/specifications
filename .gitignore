@@ -15,11 +15,13 @@ node_modules/
 # Dev container local state
 .devcontainer/.env
 
-# Claude Code local state. .claude/CLAUDE.md is tracked; a worktree checked out
-# under .claude/worktrees/ is a nested repository and must never be staged.
+# Claude Code local state. The brief is AGENTS.md, and a CLAUDE.md of any kind
+# would make Claude Code ignore it (docs/adr/0041). A worktree checked out under
+# .claude/worktrees/ is a nested repository and must never be staged.
 .claude/worktrees/
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
+CLAUDE.local.md
 
 # Editor / OS
 .DS_Store
@@ -29,6 +31,11 @@ Thumbs.db
 
 # Personal lefthook overrides, auto-merged beside .config/lefthook.yml.
 /.config/lefthook-local.yml
+
+# The Vale packages `vale sync` downloads into StylesPath
+# (.config/markdown/vale.ini). Only this repository's own style is tracked.
+/.config/markdown/styles/*
+!/.config/markdown/styles/MusherSpecifications/
 
 # Task runner cache
 .task/

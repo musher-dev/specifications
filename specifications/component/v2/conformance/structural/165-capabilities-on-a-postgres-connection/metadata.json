@@ -1,0 +1,10 @@
+{
+  "id": "structural-165-capabilities-on-a-postgres-connection",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#connection-requirements",
+  "requirements": [
+    "COMP-CONNECTION-003"
+  ],
+  "summary": "Connection capabilities on a POSTGRES input are rejected; only the language-model protocols take them."
+}

@@ -1,8 +1,0 @@
-{
-  "id": "parser-016-reject-unsafe-integer",
-  "phase": "parser",
-  "expected": "fail",
-  "clause": "specifications/core/v1/spec.md#yaml-profile",
-  "requirements": [],
-  "summary": "reject unsafe integer"
-}

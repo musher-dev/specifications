@@ -31,4 +31,35 @@ describe('buildCatalog', () => {
       expect(schema.url).toMatch(/^https:\/\/specifications\.musher\.dev\/[a-z-]+\/v\d+\//)
     }
   })
+
+  test('names released and authored majors, and points at the newest released one', () => {
+    const fx = new FixtureRepo()
+    repo = fx
+    fx.writeFamilySkeleton('component', 'v2')
+    const alias = (major: string) =>
+      `https://specifications.musher.dev/component/${major}/component.schema.json`
+    const entry = { bundleSha256: 'x', path: 'p', requires: { core: '1.0.0' }, tree: 't' }
+    const component = () =>
+      (buildCatalog(fx.root) as { schemas: { url: string; versions: object }[] }).schemas[0]
+
+    fx.setLedger({ version: 2, releases: { 'component/v1.0.0': entry, 'core/v1.0.0': entry } })
+    expect(component()).toMatchObject({
+      url: alias('v1'),
+      versions: { v1: alias('v1'), v2: alias('v2') },
+    })
+
+    fx.setLedger({
+      version: 2,
+      releases: { 'component/v1.0.0': entry, 'component/v2.0.0': entry },
+    })
+    expect(component()?.url).toBe(alias('v2'))
+  })
+
+  test('a family authored but never released points at its newest major', () => {
+    const fx = new FixtureRepo()
+    repo = fx
+    fx.writeFamilySkeleton('component', 'v2')
+    const catalog = buildCatalog(fx.root) as { schemas: { url: string }[] }
+    expect(catalog.schemas[0]?.url).toContain('/component/v2/')
+  })
 })

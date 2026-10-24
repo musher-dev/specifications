@@ -1,0 +1,28 @@
+specVersion: v2
+kind: BLUEPRINT
+metadata:
+  slug: postgres-connection
+  revision: 1
+  description: A web application whose PostgreSQL database is a connection, which Musher provisions or the organization supplies at deployment.
+spec:
+  parameters:
+    db:
+      from: "${{ connections.postgres.default }}"
+      ui:
+        label: Database
+  nodes:
+    db:
+      componentRef: ./components/postgres.yaml
+      bindings:
+        postgres:
+          parameter: db
+    app:
+      componentRef: ./components/app.yaml
+      compute:
+        profile: general.standard.small
+      exposure:
+        web: PUBLIC
+      bindings:
+        databaseURL:
+          node: db
+          output: url

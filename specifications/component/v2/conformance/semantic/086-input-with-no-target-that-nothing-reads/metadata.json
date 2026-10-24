@@ -1,0 +1,10 @@
+{
+  "id": "semantic-086-input-with-no-target-that-nothing-reads",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#inputs",
+  "requirements": [
+    "COMP-INPUT-001"
+  ],
+  "summary": "A workload input with no target that no build secret, probe, trust bundle or output reads is rejected."
+}

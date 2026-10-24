@@ -1,0 +1,10 @@
+[
+  {
+    "code": "ERR_INPUT_NOT_GUARANTEED",
+    "path": "/spec/contract/outputs/username/from/member"
+  },
+  {
+    "code": "ERR_INPUT_NOT_GUARANTEED",
+    "path": "/spec/contract/outputs/password/from/member"
+  }
+]

@@ -1,0 +1,51 @@
+specVersion: v2
+kind: BLUEPRINT
+metadata:
+  slug: with-external-node
+  revision: 1
+  description: A web application using a PostgreSQL database the organization runs outside the platform.
+spec:
+  parameters:
+    databaseHost:
+      from: "${{ variables.databases.primary.host }}"
+    databasePassword:
+      from: "${{ variables.databases.primary.password }}"
+    databaseName:
+      ui:
+        label: Database name
+        prominence: SECONDARY
+      default: app
+  nodes:
+    database:
+      componentRef: ./components/external-postgres.yaml
+      bindings:
+        host:
+          parameter: databaseHost
+        database:
+          parameter: databaseName
+        username:
+          value: app
+        password:
+          parameter: databasePassword
+    web:
+      componentRef: ./components/web.yaml
+      compute:
+        profile: general.standard.small
+      exposure:
+        web: PUBLIC
+      bindings:
+        databaseHost:
+          node: database
+          output: host
+        databasePort:
+          node: database
+          output: port
+        databaseName:
+          node: database
+          output: database
+        databaseUser:
+          node: database
+          output: username
+        databasePassword:
+          node: database
+          output: password

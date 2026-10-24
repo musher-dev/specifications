@@ -1,0 +1,10 @@
+{
+  "id": "structural-045-connection-parameter",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/blueprint/v2/spec.md#connections",
+  "requirements": [
+    "BP-CONNECTION-001"
+  ],
+  "summary": "A parameter reading a connection, bound to a connection input through ordinary bindings, validates."
+}

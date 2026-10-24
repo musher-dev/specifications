@@ -1,7 +1,7 @@
 /**
  * Read the parameters a kind family binds to core, out of its own §2.
  *
- * Core v1 §1.1 leaves a family four things to decide — its `kind` constant, the
+ * Core v2 §1.1 leaves a family four things to decide — its `kind` constant, the
  * section that defines its `metadata`, the fields that accept `null`, and the
  * name of its item document — and a family names the specifications it depends
  * on. Each family's §2 states them in two tables of a fixed shape
@@ -59,8 +59,13 @@ const ENVELOPE_HEADING = /^##\s+<a id="envelope"><\/a>/
 const SECTION_HEADING = /^##\s/
 const DELIMITER_ROW = /^\|(\s*:?-{3,}:?\s*\|)+\s*$/
 
-const PARAMETER_HEADER = ['Core parameter', 'This family']
-const DEPENDENCY_HEADER = ['Specification', 'Line']
+/**
+ * The header of the table binding what core leaves to a family: core v2 §1.1,
+ * "What a family fixes".
+ */
+const PARAMETER_HEADERS: readonly (readonly string[])[] = [['Left to the family', 'This family']]
+/** The header of the "Normative dependencies" table. */
+const DEPENDENCY_HEADERS: readonly (readonly string[])[] = [['Specification', 'Major version']]
 
 const KIND_VALUE = /^`([A-Z][A-Z0-9_]*)`$/
 const SECTION_VALUE = /^\[§(\d+(?:\.\d+)*)\]\(#([^)\s]+)\)$/
@@ -235,8 +240,12 @@ export function parseBindings(markdown: string): FamilyBindings | null {
   const section = envelopeSection(markdown)
   if (section === null) return null
 
-  const parameters = tableRows(section, PARAMETER_HEADER)
-  const dependencies = tableRows(section, DEPENDENCY_HEADER)
+  const parameters =
+    PARAMETER_HEADERS.map((header) => tableRows(section, header)).find((rows) => rows !== null) ??
+    null
+  const dependencies =
+    DEPENDENCY_HEADERS.map((header) => tableRows(section, header)).find((rows) => rows !== null) ??
+    null
   if (parameters === null && dependencies === null) return null
   if (parameters === null) {
     throw new BindingsError('§2 lists normative dependencies but binds no core parameters')

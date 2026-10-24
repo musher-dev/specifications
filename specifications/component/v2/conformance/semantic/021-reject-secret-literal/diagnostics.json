@@ -1,0 +1,6 @@
+[
+  {
+    "code": "ERR_SENSITIVE_LITERAL",
+    "path": "/spec/contract/inputs/value/default"
+  }
+]

@@ -1,0 +1,34 @@
+specVersion: v2
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: EXTERNAL
+  contract:
+    inputs:
+      host:
+        description: Hostname of the managed database server.
+        schema:
+          type: string
+        presentationHint: HOSTNAME
+      password:
+        description: Password of the application role.
+        schema:
+          type: string
+        sensitive: true
+    outputs:
+      host:
+        description: Hostname of the managed database server, for a client to connect to.
+        schema:
+          type: string
+        presentationHint: HOSTNAME
+        from:
+          input: host
+      password:
+        description: Password of the application role.
+        schema:
+          type: string
+        sensitive: true
+        from:
+          input: password

@@ -1,0 +1,10 @@
+{
+  "id": "structural-204-sha256-commit",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#source",
+  "requirements": [
+    "COMP-SRC-006"
+  ],
+  "summary": "A 64-digit SHA-256 commit object ID is a full commit."
+}

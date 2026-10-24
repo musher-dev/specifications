@@ -27,6 +27,10 @@ missing from this table fails CFG-03; a file no caller names fails CFG-04.
 | `mise/locks/` | mise | Per-tool lock files `mise lock` writes for npm tools; read by `mise install --locked` |
 | `actions/actionlint.yaml` | actionlint | `-config-file .config/actions/actionlint.yaml` |
 | `markdown/markdownlint.jsonc` | markdownlint-cli2 | `--config .config/markdown/markdownlint.jsonc` |
+| `markdown/vale.ini` | Vale | `--config .config/markdown/vale.ini` in `task check:prose`; `conventions prose` finds it under `.config/` |
+| `markdown/styles/MusherSpecifications/Terms.yml` | Vale | Applied by `BasedOnStyles = MusherSpecifications` in `markdown/vale.ini`, whose `StylesPath` is `markdown/styles/`. The other styles there are packages `vale sync` downloads, gitignored |
+| `markdown/styles/MusherSpecifications/Discouraged.yml` | Vale | Generated with `Terms.yml` from `docs/terminology.yaml` by `task docs`; applied the same way |
+| `commits/committed.toml` | committed | `--config .config/commits/committed.toml` in the commit-msg hook and the Validate Pull Request workflow; read by `task check:title` and `task check:commits` |
 | `spelling/cspell.json` | cspell | `--config .config/spelling/cspell.json` |
 | `spelling/musher.txt` | cspell | Resolved via `dictionaryDefinitions[].path` in `spelling/cspell.json` |
 
@@ -69,7 +73,7 @@ whole directory exists to prevent, and it is one command to rule out.
 | --- | --- | --- |
 | `Taskfile.yml` | Repo root | Task only discovers `Taskfile.*` at the root; `--taskfile` would break bare `task <name>` |
 | `.gitignore`, `.gitattributes` | Repo root | Git reads these from the root only |
-| `.claude/CLAUDE.md` | `.claude/` | Claude Code reads project instructions there. An agent brief, not tool configuration; editor whitespace lives in `devcontainer.json` (docs/adr/0024) |
+| `AGENTS.md` | Repo root | The brief every coding agent reads, Claude Code included, not tool configuration. No `CLAUDE.md` is committed (docs/adr/0041); editor whitespace lives in `devcontainer.json` (docs/adr/0024) |
 | `LICENSE`, `NOTICE` | Repo root | GitHub detects a licence at the root only, and Apache-2.0 expects NOTICE to travel with the work |
 | `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md` | `.github/` | Community health files, which GitHub resolves from there |
 | `biome.json`, `tsconfig.json` | `tools/` | They belong to the `tools/` package and are resolved by it — a package's own config, not a repo-level one |

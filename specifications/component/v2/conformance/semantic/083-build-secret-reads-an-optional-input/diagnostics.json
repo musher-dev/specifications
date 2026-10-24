@@ -1,0 +1,6 @@
+[
+  {
+    "code": "ERR_INPUT_NOT_GUARANTEED",
+    "path": "/spec/workload/build/secrets/NPM_TOKEN/input"
+  }
+]

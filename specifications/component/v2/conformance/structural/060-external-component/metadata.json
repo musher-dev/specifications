@@ -1,0 +1,12 @@
+{
+  "id": "structural-060-external-component",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#workload",
+  "requirements": [
+    "COMP-EXT-001",
+    "COMP-EXT-002",
+    "COMP-EXT-003"
+  ],
+  "summary": "An EXTERNAL component with no workload, forwarding its own inputs as outputs, validates."
+}

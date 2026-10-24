@@ -1,0 +1,11 @@
+{
+  "id": "semantic-073-postgres-members-forwarded",
+  "phase": "semantic",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#contract",
+  "requirements": [
+    "COMP-CONNECTION-002",
+    "COMP-OUT-004"
+  ],
+  "summary": "Every POSTGRES member is forwarded with its protocol's type and sensitivity."
+}

@@ -1,0 +1,11 @@
+{
+  "id": "semantic-083-restricted-access-to-a-tcp-endpoint",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#access",
+  "requirements": [
+    "BP-NODE-007"
+  ],
+  "summary": "A TCP endpoint has no sign-in, so RESTRICTED access to it is rejected at access.",
+  "document": "app/blueprint.yaml"
+}

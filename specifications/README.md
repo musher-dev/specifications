@@ -12,15 +12,22 @@ family, as [How the families relate](#how-the-families-relate) explains.
 
 | Family | `kind` | Requirement IDs | Describes | Front page |
 |---|---|---|---|---|
-| [core](core/v1/spec.md) | none: the base every family applies | [`CORE-*`](core/README.md#requirement-ids) | The rules every Musher document shares: the envelope, version compatibility, the [catalog item](core/v1/spec.md#item-directory), the YAML profile, validation layers, and shared diagnostics. | [README](core/README.md) |
-| [component](component/v1/spec.md) | `COMPONENT` | [`COMP-*`](component/README.md#requirement-ids) | A workload Musher runs, or an external service, plus the configuration contract it exposes. | [README](component/README.md) |
-| [blueprint](blueprint/v1/spec.md) | `BLUEPRINT` | [`BP-*`](blueprint/README.md#requirement-ids) | A composition of components into one deployable application. | [README](blueprint/README.md) |
-| [listing](listing/v1/spec.md) | `LISTING` | [`LIST-*`](listing/README.md#requirement-ids) | The catalog storefront entry for a blueprint or component item. | [README](listing/README.md) |
+| [core](core/v2/spec.md) | none: the base every family applies | [`CORE-*`](core/README.md#requirement-ids) | The rules every Musher document shares: the envelope, version compatibility, the [catalog item](core/v2/spec.md#item-directory), the identifier and placeholder grammars, the YAML profile, validation phases, and shared diagnostics. | [README](core/README.md) |
+| [component](component/v2/spec.md) | `COMPONENT` | [`COMP-*`](component/README.md#requirement-ids) | A reusable, versioned definition that a blueprint node deploys: a workload Musher runs, or an external node, plus the component contract it exposes. | [README](component/README.md) |
+| [blueprint](blueprint/v2/spec.md) | `BLUEPRINT` | [`BP-*`](blueprint/README.md#requirement-ids) | A graph of nodes, each deploying a component, that deploys as one unit, and the deployment parameters it asks for. | [README](blueprint/README.md) |
+| [listing](listing/v2/spec.md) | `LISTING` | [`LIST-*`](listing/README.md#requirement-ids) | The catalog entry for a blueprint or component item. | [README](listing/README.md) |
 
 Families version independently. Each major version is a directory, `v<MAJOR>`,
 and the exact releases within it are git tags of the form
 `<family>/v<MAJOR>.<MINOR>.<PATCH>`. Each requirement ID prefix above links to
 the family's table of its full prefixes.
+
+v2 is the current major of every family. v1 is a
+[retired major](../docs/publication.md#retired-majors): its directories are gone
+from `main`, and its releases keep serving at their pinned URLs
+([ADR 0038](../docs/adr/0038-v2-one-vocabulary-and-v1-retires.md)). Each v2
+`spec.md` maps every renamed v1 field, value, code and requirement ID in its
+"Migration from v1" section.
 
 ## <a id="how-the-families-relate"></a>How the families relate
 
@@ -31,15 +38,23 @@ core ◄── component ◄── blueprint
 ```
 
 - **Core defines no kind.** No document declares it and none is validated
-  against it alone. Every other family applies it and binds the parameters it
-  leaves open ([core v1 §1.1](core/v1/spec.md#bindings)).
-- **Blueprint applies component** as well as core: a blueprint composes
-  component documents, and reaches component's value shapes through that
-  declared dependency.
-- **Listing applies core only.** It presents an item without influencing how
-  anything in it runs.
+  against it alone. Every other family applies it and fixes what it leaves to a
+  family ([core v2 §1.1](core/v2/spec.md#family-fixes)). Core also owns the
+  `${{ }}` placeholder grammar and the namespaces a family may permit
+  ([core v2 §5.2](core/v2/spec.md#placeholder-grammar)), and the five
+  validation phases, `parser`, `structural`, `semantic`, `admission` and
+  `resolution` ([core v2 §6](core/v2/spec.md#validation-phases)).
+- **Blueprint applies component** as well as core: each node of a blueprint
+  deploys a component document, a binding supplies each of its inputs from an
+  origin, and blueprint reaches component's value schemas through that
+  declared dependency. A **deployment** is a blueprint revision deployed with
+  the deployment parameters its deployer chose. `admission` checks the
+  obligations that need authorized platform context, and `resolution` turns an
+  admitted revision into one deployment's values.
+- **Listing applies core only.** It presents an item in the catalog without
+  influencing how anything in it runs.
 - **All of them share core's item directory**
-  ([core v1 §4.1](core/v1/spec.md#item-directory)): a catalog item is one
+  ([core v2 §4.1](core/v2/spec.md#item-directory)): a catalog item is one
   directory, whose `blueprint.yaml` and `listing.yaml` are its item documents
   and whose component documents sit inside it.
 
@@ -79,7 +94,7 @@ family's complete behaviour. Each has executable forms:
   family release is covered by its own corpus together with the core corpus.
 - **The fixture format**, [docs/conformance.md](../docs/conformance.md),
   defines how every corpus is read: the case layout, what `metadata.json` and
-  `diagnostics.json` declare, and the profiles an implementation claims. This
+  `diagnostics.json` declare, and the validation scopes an implementation claims. This
   page does not restate it; a corpus means what that page says it means.
 
 The prose, the bundle, the corpora and the fixture format are normative, and none is permitted to
@@ -99,23 +114,23 @@ What within a single conformance case is normative is set out in
 ## <a id="implementing"></a>Implementing a family
 
 1. **Read core first**, then the family. Core's
-   [§6 Validation layers](core/v1/spec.md#validation-layers),
-   [§7 Diagnostics](core/v1/spec.md#diagnostics) and
-   [§8 Conformance](core/v1/spec.md#conformance) apply to every family. A
-   family's diagnostic registry is its own table plus core's plus those of the
+   [§6 Validation phases](core/v2/spec.md#validation-phases),
+   [§7 Diagnostics](core/v2/spec.md#diagnostics) and
+   [§8 Conformance](core/v2/spec.md#conformance) apply to every family. A
+   family's set of diagnostic codes is its own table plus core's plus those of the
    families it declares as dependencies, so a blueprint implementation reads
    component too.
 2. **Run two corpora**: the family version's `conformance/`, and core's at the
-   edition the family release records
-   ([core v1 §9](core/v1/spec.md#editions)). That edition is `requires.core` in
+   core release the family release records
+   ([core v2 §9](core/v2/spec.md#core-releases)). That core release is `requires.core` in
    the release's [ledger](../docs/publication.md#the-ledger) entry in
    `published.json`, repeated in `specification.json` inside its release archive
    (`release.json` in an archive cut before
    [ADR 0037](../docs/adr/0037-the-repository-adopts-engineering-conventions-0-7-0.md)).
-   Before a family's first release there is no recorded edition: use core as it
-   stands on `main`. Core cases run through the parser
-   alone. Declare the profile you claim, as
-   [docs/conformance.md](../docs/conformance.md#profiles) describes.
+   Before a family's first release there is no recorded core release: use core
+   as it stands on `main`. Core cases run through the parser
+   alone. Declare the validation scope you claim, as
+   [docs/conformance.md](../docs/conformance.md#validation-scopes) describes.
 3. **Trace what you cover.** [docs/traceability.md](../docs/traceability.md)
    maps every requirement ID to the clause stating it and the cases pinning it.
 

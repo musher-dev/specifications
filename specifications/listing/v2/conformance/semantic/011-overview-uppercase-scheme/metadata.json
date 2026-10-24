@@ -1,0 +1,10 @@
+{
+  "id": "semantic-011-overview-uppercase-scheme",
+  "phase": "semantic",
+  "expected": "incomplete",
+  "clause": "specifications/listing/v2/spec.md#overview-markdown",
+  "requirements": [
+    "LIST-MD-002"
+  ],
+  "summary": "An overview link destination carrying a permitted scheme in upper case is accepted."
+}

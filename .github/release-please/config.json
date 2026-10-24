@@ -10,21 +10,29 @@
   "pull-request-title-pattern": "chore(release): release${component} ${version}",
   "signoff": "musher-release[bot] <330958847+musher-release[bot]@users.noreply.github.com>",
   "packages": {
-    "specifications/core/v1": {
+    "specifications/core/v2": {
       "component": "core",
-      "initial-version": "1.0.0"
+      "initial-version": "2.0.0",
+      "bump-minor-pre-major": true,
+      "bump-patch-for-minor-pre-major": true
     },
-    "specifications/component/v1": {
+    "specifications/component/v2": {
       "component": "component",
-      "initial-version": "1.0.0"
+      "initial-version": "2.0.0",
+      "bump-minor-pre-major": true,
+      "bump-patch-for-minor-pre-major": true
     },
-    "specifications/blueprint/v1": {
+    "specifications/blueprint/v2": {
       "component": "blueprint",
-      "initial-version": "1.0.0"
+      "initial-version": "2.0.0",
+      "bump-minor-pre-major": true,
+      "bump-patch-for-minor-pre-major": true
     },
-    "specifications/listing/v1": {
+    "specifications/listing/v2": {
       "component": "listing",
-      "initial-version": "1.0.0"
+      "initial-version": "2.0.0",
+      "bump-minor-pre-major": true,
+      "bump-patch-for-minor-pre-major": true
     }
   },
   "changelog-sections": [

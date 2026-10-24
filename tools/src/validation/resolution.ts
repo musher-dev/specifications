@@ -15,15 +15,14 @@ import {
 import { scanReferences } from '../lib/references.ts'
 import { familyBundle } from '../schema/bundle.ts'
 import { strictAjv } from '../schema/lint.ts'
+import { connectionMemberContract, isConnectionInput } from './connections.ts'
+import { type Diagnostic, type Phase, parseDocumentBytes } from './document.ts'
 import {
   type ConnectionsContext,
-  connectionMemberContract,
   DEPLOYMENT_FACT_PATHS,
-  isConnectionInput,
-  parameterSource,
+  parameterOrigin,
   resolveConnections,
-} from './connections.ts'
-import { type Diagnostic, type Phase, parseDocumentBytes } from './document.ts'
+} from './selections.ts'
 import {
   addressProperty,
   at,
@@ -230,27 +229,31 @@ export interface EndpointAllocation {
   readonly oidcClient?: OidcClient
 }
 /**
- * Blueprint BP-PARAM-011: facts about the person who created the installation.
+ * Blueprint BP-PARAM-011: facts about the person who created the deployment.
  * An absent fact is not yet acquired; `null` is one the platform knows it lacks.
  */
-export interface DeploymentContext {
-  readonly installer?: Readonly<Record<string, string | null>>
+export interface DeploymentFacts {
+  readonly creator?: Readonly<Record<string, string | null>>
 }
-export interface InstallationContext extends SemanticContext {
+export interface ResolutionContext extends SemanticContext {
   readonly connections?: ConnectionsContext['connections']
   readonly parameters?: Readonly<Record<string, ResolvedValue>>
   /**
    * Organization variables keyed by exact dotted path, as the acquisition
-   * boundary read them for the environment the installation deploys into.
+   * boundary read them for the environment the deployment reads variable values from.
    */
   readonly variables?: Readonly<
     Record<string, ResolvedValue & { identity: string; version: string; authorized: boolean }>
   >
   readonly allocations?: Readonly<Record<string, Readonly<Record<string, EndpointAllocation>>>>
   readonly credentials?: Readonly<Record<string, ResolvedValue>>
-  readonly deployment?: DeploymentContext
+  readonly deployment?: DeploymentFacts
+  /** What the sources stage acquired for each running node (BP-RESOLVE-001). */
+  readonly sources?: Readonly<Record<string, SourceEvidence>>
+  /** What the build stage produced for each Git or upload node (BP-RESOLVE-001). */
+  readonly builds?: Readonly<Record<string, BuildEvidence>>
 }
-export interface InstallationResult {
+export interface ResolutionResult {
   /** Describes pre-start value resolution, never current deployment admission. */
   readonly status: 'VALID' | 'INVALID' | 'INCOMPLETE'
   readonly phase: Phase
@@ -261,11 +264,11 @@ export interface InstallationResult {
   readonly outputs: Readonly<Record<string, ResolvedValue>>
   readonly environment: Readonly<Record<string, Readonly<Record<string, ResolvedValue>>>>
 }
-export function resolveInstallation(
+export function resolveDeployment(
   document: Json,
-  context: InstallationContext,
+  context: ResolutionContext,
   families: readonly Family[] = discoverKinds(),
-): InstallationResult {
+): ResolutionResult {
   const blueprint = families.find((f) => f.name === 'blueprint'),
     component = families.find((f) => f.name === 'component')
   if (!boundedValue(document) || !blueprint || !component || !compileFamily(blueprint)(document))
@@ -298,7 +301,7 @@ export function resolveInstallation(
     outputs: Record<string, ResolvedValue> = Object.create(null),
     environment: Record<string, Record<string, ResolvedValue>> = Object.create(null)
   let reached: Phase = 'semantic'
-  const result = (): InstallationResult => ({
+  const result = (): ResolutionResult => ({
     status: diagnostics.length ? 'INVALID' : deferred.length ? 'INCOMPLETE' : 'VALID',
     phase: reached,
     diagnostics,
@@ -309,8 +312,13 @@ export function resolveInstallation(
   })
   if (diagnostics.length || deferred.length) return result()
   reached = 'resolution'
-  const nodes = record(at(document, 'spec', 'components')),
+  const nodes = record(at(document, 'spec', 'nodes')),
     parameters = record(at(document, 'spec', 'parameters'))
+  // BP-RESOLVE-001: the sources stage comes first, and pins the content each node is made from.
+  const sourceResult = resolveSources(nodes, report.components, context.sources)
+  diagnostics.push(...sourceResult.diagnostics)
+  deferred.push(...sourceResult.deferred)
+  if (diagnostics.length) return result()
   const parameterSensitivity = new Set<string>()
   for (const [node, n] of Object.entries(nodes))
     for (const [name, b] of Object.entries(record(at(n, 'bindings'))))
@@ -340,14 +348,35 @@ export function resolveInstallation(
       // hashes, variables, deployment facts and connections are never submitted. A
       // connection is replaced whole through acquisition instead.
       fail('ERR_PARAMETER_NOT_SUBMITTABLE', '/spec/parameters/' + token(name), 'parameters')
+  // BP-PARAM-005: a submitted parameter a binding reads has a submitted value or a
+  // default, unless it is an optional parameter (blueprint §1.1): every input it
+  // binds is optional, and is then absent.
+  const bound = new Set<string>()
+  for (const [node, n] of Object.entries(nodes))
+    for (const [input, b] of Object.entries(record(at(n, 'bindings'))))
+      if (
+        typeof at(b, 'parameter') === 'string' &&
+        at(report.components.get(node), 'spec', 'contract', 'inputs', input, 'required') !== false
+      )
+        bound.add(String(at(b, 'parameter')))
+  for (const [name, p] of Object.entries(parameters))
+    if (
+      bound.has(name) &&
+      at(p, 'generator') === undefined &&
+      at(p, 'from') === undefined &&
+      at(p, 'hash') === undefined &&
+      !Object.hasOwn(record(p), 'default') &&
+      !Object.hasOwn(context.parameters ?? {}, name)
+    )
+      fail('ERR_MISSING_PARAMETER_VALUE', '/spec/parameters/' + token(name), 'parameters')
   if (context.allocations !== undefined && !isObject(context.allocations as unknown as Json)) {
-    fail('ERR_INVALID_RESOLUTION_CONTEXT', '/spec/components', 'allocation')
+    fail('ERR_INVALID_RESOLUTION_CONTEXT', '/spec/nodes', 'allocation')
     return result()
   }
   // Reject redundant derived fields: allocation has one authority for each fact.
   for (const [node, endpoints] of Object.entries(context.allocations ?? {})) {
     if (!Object.hasOwn(nodes, node) || !isObject(endpoints as unknown as Json)) {
-      fail('ERR_INVALID_RESOLUTION_CONTEXT', '/spec/components', 'allocation')
+      fail('ERR_INVALID_RESOLUTION_CONTEXT', '/spec/nodes', 'allocation')
       continue
     }
     for (const [name, allocation] of Object.entries(endpoints)) {
@@ -357,7 +386,7 @@ export function resolveInstallation(
       ) {
         fail(
           'ERR_INVALID_RESOLUTION_CONTEXT',
-          `/spec/components/${token(node)}/componentRef`,
+          `/spec/nodes/${token(node)}/componentRef`,
           'allocation',
         )
         continue
@@ -397,9 +426,7 @@ export function resolveInstallation(
       )
         fail(
           'ERR_INVALID_RESOLUTION_CONTEXT',
-          Object.hasOwn(nodes, node)
-            ? `/spec/components/${token(node)}/componentRef`
-            : '/spec/components',
+          Object.hasOwn(nodes, node) ? `/spec/nodes/${token(node)}/componentRef` : '/spec/nodes',
           'allocation',
         )
     }
@@ -409,7 +436,7 @@ export function resolveInstallation(
   // bindings name it, and its failures anchor at that parameter's `from`.
   const variables = new Map<string, ResolvedValue>()
   for (const [name, p] of Object.entries(parameters)) {
-    const source = parameterSource(p)
+    const source = parameterOrigin(p)
     // A submitted value was already rejected with ERR_PARAMETER_NOT_SUBMITTABLE.
     if (source?.namespace !== 'variables' || Object.hasOwn(context.parameters ?? {}, name)) continue
     const path = '/spec/parameters/' + token(name) + '/from',
@@ -432,23 +459,23 @@ export function resolveInstallation(
   // BP-PARAM-011: a deployment fact is acquired once per parameter, and its
   // failures anchor at that parameter's `from`.
   const facts = new Map<string, ResolvedValue>()
-  const installer = record(at(context.deployment as Json | undefined, 'installer'))
+  const creator = record(at(context.deployment as Json | undefined, 'creator'))
   if (
     (context.deployment !== undefined &&
       (!isObject(context.deployment as unknown as Json) ||
-        Object.keys(context.deployment).some((key) => key !== 'installer'))) ||
-    Object.keys(installer).some((key) => !DEPLOYMENT_FACT_PATHS.includes('installer.' + key))
+        Object.keys(context.deployment).some((key) => key !== 'creator'))) ||
+    Object.keys(creator).some((key) => !DEPLOYMENT_FACT_PATHS.includes('creator.' + key))
   ) {
     fail('ERR_INVALID_RESOLUTION_CONTEXT', '/spec/parameters', 'parameters')
     return result()
   }
   for (const [name, p] of Object.entries(parameters)) {
-    const source = parameterSource(p)
+    const source = parameterOrigin(p)
     if (source?.namespace !== 'deployment' || Object.hasOwn(context.parameters ?? {}, name))
       continue
     const path = '/spec/parameters/' + token(name) + '/from',
-      field = source.key.slice('installer.'.length),
-      fact = Object.hasOwn(installer, field) ? installer[field] : undefined
+      field = source.key.slice('creator.'.length),
+      fact = Object.hasOwn(creator, field) ? creator[field] : undefined
     if (fact === undefined)
       deferred.push({ rule: 'BP-PARAM-011', path, missing: `deployment:${source.key}` })
     else if (fact === null) fail('ERR_DEPLOYMENT_FACT_UNAVAILABLE', path, 'parameters')
@@ -498,7 +525,7 @@ export function resolveInstallation(
   }
   function output(node: string, name: string): ResolvedValue | undefined {
     const id = `${node}:out:${name}`,
-      path = `/spec/components/${token(node)}/componentRef`
+      path = `/spec/nodes/${token(node)}/componentRef`
     const diagnosticStart = diagnostics.length
     if (done.has(id)) return outputs[id]
     if (active.has(id)) {
@@ -512,15 +539,25 @@ export function resolveInstallation(
     if (Object.hasOwn(s, 'value')) value = { value: s.value!, sensitive: false }
     if (typeof s.input === 'string') {
       value = input(node, String(s.input))
-      if (!value && !diagnostics.length && !deferred.length)
-        fail('ERR_UNSATISFIED_REQUIRED_INPUT', path)
+      // BP-RESOLVE-001: an output forwarding an absent optional input.
+      if (!value && !diagnostics.length && !deferred.length) fail('ERR_INPUT_NOT_GUARANTEED', path)
       // Component §6.2: a connection input is forwarded one member at a time.
-      if (value && typeof s.member === 'string')
+      if (value && typeof s.member === 'string') {
+        const protocol = at(
+          report.components.get(node),
+          'spec',
+          'contract',
+          'inputs',
+          String(s.input),
+          'connection',
+          'protocol',
+        )
         value = {
           ...value,
           value: record(value.value)[s.member]!,
-          sensitive: connectionMemberContract(s.member).sensitive === true,
+          sensitive: connectionMemberContract(s.member, protocol).sensitive === true,
         }
+      }
     }
     if (typeof s.endpoint === 'string') value = endpoint(node, s.endpoint, String(s.property), path)
     if (typeof s.template === 'string') {
@@ -578,8 +615,8 @@ export function resolveInstallation(
   function input(node: string, name: string): ResolvedValue | undefined {
     const id = `${node}:in:${name}`,
       path = Object.hasOwn(record(at(nodes[node], 'bindings')), name)
-        ? `/spec/components/${token(node)}/bindings/${token(name)}`
-        : `/spec/components/${token(node)}/componentRef`
+        ? `/spec/nodes/${token(node)}/bindings/${token(name)}`
+        : `/spec/nodes/${token(node)}/componentRef`
     if (done.has(id)) return inputs[id]
     if (active.has(id)) {
       fail('ERR_VALUE_CYCLE', path)
@@ -600,7 +637,7 @@ export function resolveInstallation(
     else if (typeof s.parameter === 'string') {
       const key = s.parameter,
         p = record(parameters[key]),
-        source = parameterSource(p),
+        source = parameterOrigin(p),
         submitted =
           context.parameters && Object.hasOwn(context.parameters, key)
             ? context.parameters[key]
@@ -628,9 +665,9 @@ export function resolveInstallation(
       } else if (source?.namespace === 'deployment') {
         value = facts.get(key)
       } else {
+        // A missing value was reported once for the parameter, in the parameters stage.
         value = submitted
         if (!value && Object.hasOwn(p, 'default')) value = { value: p.default!, sensitive: false }
-        if (!value) fail('ERR_MISSING_PARAMETER_VALUE', path)
       }
     }
     if (value && (typeof value.sensitive !== 'boolean' || !boundedValue(value.value))) {
@@ -660,6 +697,13 @@ export function resolveInstallation(
     if (direction === 'in') input(node, name)
     else output(node, name)
   }
+  // BP-RESOLVE-001: the build stage follows values, whose results its build secrets read.
+  if (!diagnostics.length && !deferred.length) {
+    const buildResult = resolveBuilds(nodes, report.components, context.builds)
+    diagnostics.push(...buildResult.diagnostics)
+    deferred.push(...buildResult.deferred)
+    if (diagnostics.length) return result()
+  }
   for (const node of Object.keys(nodes).sort()) {
     environment[node] = Object.create(null)
     for (const name of Object.keys(
@@ -673,7 +717,7 @@ export function resolveInstallation(
           'inputs',
           name,
           'target',
-          'envVarKey',
+          'envVar',
         )
       if (value && typeof target === 'string') {
         try {
@@ -682,8 +726,8 @@ export function resolveInstallation(
           fail(
             'ERR_ENV_ENCODING',
             Object.hasOwn(record(at(nodes[node], 'bindings')), name)
-              ? `/spec/components/${token(node)}/bindings/${token(name)}`
-              : `/spec/components/${token(node)}/componentRef`,
+              ? `/spec/nodes/${token(node)}/bindings/${token(name)}`
+              : `/spec/nodes/${token(node)}/componentRef`,
             'environment',
           )
         }
@@ -695,6 +739,232 @@ export function resolveInstallation(
       output(node, name)
   }
   return result()
+}
+
+/** Evidence the sources stage acquired for one node (blueprint §5.2, BP-RESOLVE-001). */
+export interface SourceEvidence {
+  readonly gitCommit?: string
+  /** The digest a tag-only image source resolved to. Only an image source carries it. */
+  readonly imageDigest?: string
+  readonly uploadDigest?: string
+  /** The digest a buildpacks recipe's builderImage resolved to. */
+  readonly builderDigest?: string
+}
+/** Evidence the build stage produced for one built node (blueprint §5.2, BP-RESOLVE-001). */
+export interface BuildEvidence {
+  readonly imageDigest?: string
+  /** The recipe the platform reports building with; it must be the component's. */
+  readonly recipeDigest?: string
+}
+type Deferred = { rule: string; path: string; missing: string }
+const DIGEST = /^sha256:[0-9a-f]{64}$/
+const COMMIT = /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/
+/** RFC 8785 canonical JSON for the values a build recipe holds: strings, integers, objects. */
+function jcs(value: Json): string {
+  if (Array.isArray(value)) return `[${value.map(jcs).join(',')}]`
+  if (isObject(value))
+    return `{${Object.keys(value)
+      .sort()
+      .map((k) => `${JSON.stringify(k)}:${jcs(value[k]!)}`)
+      .join(',')}}`
+  return JSON.stringify(value)
+}
+/** A recipe with every member whose value is an empty object or array removed, recursively. */
+function withoutEmpty(value: Json): Json {
+  if (Array.isArray(value)) return value.map(withoutEmpty)
+  if (!isObject(value)) return value
+  const kept: Record<string, Json> = {}
+  for (const [key, member] of Object.entries(value)) {
+    const pruned = withoutEmpty(member)
+    if ((Array.isArray(pruned) || isObject(pruned)) && !Object.keys(pruned).length) continue
+    kept[key] = pruned
+  }
+  return kept
+}
+/**
+ * Blueprint §5.2: the digest of a build recipe in canonical form. The recipe is
+ * `workload.build` with `context` made explicit, each secret as its ID and
+ * input name only, never its value, and every empty object or array removed.
+ */
+export function recipeDigest(build: Json | undefined): string {
+  const recipe = { ...record(build) }
+  if (recipe.context === undefined) recipe.context = '.'
+  if (recipe.secrets !== undefined)
+    recipe.secrets = Object.fromEntries(
+      Object.entries(record(recipe.secrets)).map(([id, s]) => [id, { input: at(s, 'input')! }]),
+    )
+  return (
+    'sha256:' +
+    createHash('sha256')
+      .update(jcs(withoutEmpty(recipe as Json)))
+      .digest('hex')
+  )
+}
+/** The kind of workload source a component names, as the record spells it. */
+export function sourceKind(component: Json | undefined): 'EXTERNAL' | 'IMAGE' | 'GIT' | 'UPLOAD' {
+  if (at(component, 'spec', 'type') === 'EXTERNAL') return 'EXTERNAL'
+  const source = record(at(component, 'spec', 'workload', 'source'))
+  return typeof source.image === 'string' ? 'IMAGE' : isObject(source.upload) ? 'UPLOAD' : 'GIT'
+}
+/** The digest an OCI image reference pins, when it carries one. */
+function pinnedDigest(reference: unknown): string | undefined {
+  if (typeof reference !== 'string' || !reference.includes('@sha256:')) return
+  return reference.slice(reference.indexOf('@') + 1)
+}
+/** The builder image of a buildpacks recipe, or undefined for a Dockerfile recipe. */
+function builderImage(component: Json | undefined): string | undefined {
+  const image = at(component, 'spec', 'workload', 'build', 'buildpacks', 'builderImage')
+  return typeof image === 'string' ? image : undefined
+}
+/** A diagnostic of one resolution stage, at a node's componentRef, related to a component field. */
+function stageFailure(
+  stage: 'sources' | 'build',
+  nodes: Record<string, Json>,
+  node: string | undefined,
+  related: '/spec/workload/source' | '/spec/workload/build',
+): Diagnostic {
+  return {
+    code: 'ERR_INVALID_RESOLUTION_CONTEXT',
+    path: node === undefined ? '/spec/nodes' : `/spec/nodes/${token(node)}/componentRef`,
+    message: 'ERR_INVALID_RESOLUTION_CONTEXT',
+    phase: 'resolution',
+    stage,
+    ...(node === undefined
+      ? {}
+      : { related: [{ artifact: String(at(nodes[node], 'componentRef')), path: related }] }),
+  }
+}
+/**
+ * BP-RESOLVE-001, the `sources` stage: it pins content and builds nothing. A
+ * tag-only image reference resolves to a digest, a Git ref to a full commit, an
+ * upload to an archive whose digest matches, and a buildpacks builder image to
+ * a digest. Diagnostics anchor at the node's componentRef with the component's
+ * source, or its build for a builder, as the related location.
+ */
+export function resolveSources(
+  nodes: Record<string, Json>,
+  components: ReadonlyMap<string, Json>,
+  evidence: unknown,
+): { diagnostics: Diagnostic[]; deferred: Deferred[] } {
+  const diagnostics: Diagnostic[] = [],
+    deferred: Deferred[] = []
+  const fail = (
+    node?: string,
+    related: '/spec/workload/source' | '/spec/workload/build' = '/spec/workload/source',
+  ) => diagnostics.push(stageFailure('sources', nodes, node, related))
+  if (evidence !== undefined && !isObject(evidence as Json)) {
+    fail()
+    return { diagnostics, deferred }
+  }
+  const supplied = record(evidence as Json)
+  for (const node of Object.keys(supplied)) if (!Object.hasOwn(nodes, node)) fail()
+  for (const node of Object.keys(nodes)) {
+    const component = components.get(node)
+    if (!component) continue
+    const kind = sourceKind(component),
+      builder = builderImage(component),
+      has = Object.hasOwn(supplied, node),
+      e = record(supplied[node]),
+      path = `/spec/nodes/${token(node)}/componentRef`
+    const source = record(at(component, 'spec', 'workload', 'source'))
+    const allowed: readonly string[] = {
+      EXTERNAL: [] as string[],
+      IMAGE: ['imageDigest'],
+      GIT: builder ? ['gitCommit', 'builderDigest'] : ['gitCommit'],
+      UPLOAD: builder ? ['uploadDigest', 'builderDigest'] : ['uploadDigest'],
+    }[kind]
+    if (
+      (has && !isObject(supplied[node]!)) ||
+      Object.keys(e).some((key) => !allowed.includes(key)) ||
+      (e.gitCommit !== undefined && !COMMIT.test(String(e.gitCommit))) ||
+      ['imageDigest', 'uploadDigest', 'builderDigest'].some(
+        (key) => e[key] !== undefined && !DIGEST.test(String(e[key])),
+      )
+    ) {
+      fail(node)
+      continue
+    }
+    if (kind === 'EXTERNAL') continue
+    const missing = (what: string) =>
+      deferred.push({ rule: 'BP-RESOLVE-001', path, missing: `source:${node}:${what}` })
+    if (kind === 'IMAGE') {
+      const pinned = pinnedDigest(source.image)
+      if (e.imageDigest === undefined) {
+        if (!pinned) missing('imageDigest')
+      } else if (pinned && e.imageDigest !== pinned) fail(node)
+      continue
+    }
+    if (kind === 'GIT') {
+      const commit = at(source, 'git', 'ref', 'commit')
+      if (e.gitCommit === undefined) missing('gitCommit')
+      else if (typeof commit === 'string' && e.gitCommit !== commit) {
+        fail(node)
+        continue
+      }
+    } else if (e.uploadDigest === undefined) missing('uploadDigest')
+    // The bytes the platform holds have another digest than the document names.
+    else if (e.uploadDigest !== at(source, 'upload', 'digest')) {
+      fail(node)
+      continue
+    }
+    if (builder !== undefined) {
+      const pinned = pinnedDigest(builder)
+      if (e.builderDigest === undefined) {
+        if (!pinned) missing('builderDigest')
+      } else if (pinned && e.builderDigest !== pinned) fail(node, '/spec/workload/build')
+    }
+  }
+  return { diagnostics, deferred }
+}
+/**
+ * BP-RESOLVE-001, the `build` stage: after `values`, each Git or upload source
+ * is built from the content the sources stage pinned into one image digest. A
+ * build reported against another recipe than the component's is rejected.
+ */
+export function resolveBuilds(
+  nodes: Record<string, Json>,
+  components: ReadonlyMap<string, Json>,
+  evidence: unknown,
+): { diagnostics: Diagnostic[]; deferred: Deferred[] } {
+  const diagnostics: Diagnostic[] = [],
+    deferred: Deferred[] = []
+  const fail = (node?: string) =>
+    diagnostics.push(stageFailure('build', nodes, node, '/spec/workload/build'))
+  if (evidence !== undefined && !isObject(evidence as Json)) {
+    fail()
+    return { diagnostics, deferred }
+  }
+  const supplied = record(evidence as Json)
+  for (const node of Object.keys(supplied)) {
+    const kind = Object.hasOwn(nodes, node) ? sourceKind(components.get(node)) : undefined
+    if (kind !== 'GIT' && kind !== 'UPLOAD') fail(kind === undefined ? undefined : node)
+  }
+  if (diagnostics.length) return { diagnostics, deferred }
+  for (const node of Object.keys(nodes)) {
+    const component = components.get(node),
+      kind = sourceKind(component)
+    if (!component || (kind !== 'GIT' && kind !== 'UPLOAD')) continue
+    const e = record(supplied[node])
+    if (
+      (Object.hasOwn(supplied, node) && !isObject(supplied[node]!)) ||
+      Object.keys(e).some((key) => key !== 'imageDigest' && key !== 'recipeDigest') ||
+      ['imageDigest', 'recipeDigest'].some(
+        (key) => e[key] !== undefined && !DIGEST.test(String(e[key])),
+      ) ||
+      (e.recipeDigest !== undefined &&
+        e.recipeDigest !== recipeDigest(at(component, 'spec', 'workload', 'build')))
+    ) {
+      fail(node)
+      continue
+    }
+    if (e.imageDigest === undefined)
+      deferred.push({
+        rule: 'BP-RESOLVE-001',
+        path: `/spec/nodes/${token(node)}/componentRef`,
+        missing: `build:${node}:imageDigest`,
+      })
+  }
+  return { diagnostics, deferred }
 }
 
 /** BP-PARAM-012: the one format each hash algorithm produces. */
@@ -715,33 +985,36 @@ export interface CredentialStore {
 }
 export function credential(
   store: CredentialStore,
-  installation: string,
+  deployment: string,
   parameter: string,
   rotation: number,
   create: () => ResolvedValue,
 ): ResolvedValue {
   if (!Number.isSafeInteger(rotation) || rotation < 0)
     throw new Error('invalid rotation generation')
-  const key = JSON.stringify([installation, parameter, rotation])
+  const key = JSON.stringify([deployment, parameter, rotation])
   const result = store.getOrCreate(key, () => ({ ...create(), sensitive: true }))
   return { ...result, sensitive: true }
 }
 export interface ResolutionRecord {
   readonly version: 1
   readonly blueprintDigest: string
-  readonly installationSnapshot: { readonly identity: string; readonly version: string }
+  readonly deploymentSnapshot: { readonly identity: string; readonly version: string }
   readonly specifications: Readonly<Record<string, string>>
   readonly credentials: Readonly<Record<string, { identity: string; rotation: number }>>
-  readonly components: Readonly<
+  readonly nodes: Readonly<
     Record<
       string,
       {
         identity: string
         revision: number
         digest: string
-        source: 'EXTERNAL' | 'IMAGE' | 'GIT'
+        source: 'EXTERNAL' | 'IMAGE' | 'GIT' | 'UPLOAD'
         imageDigest?: string
         gitCommit?: string
+        uploadDigest?: string
+        recipeDigest?: string
+        builderDigest?: string
         compute?: { identity: string; version: string }
         volumes: Json
         exposure: Json
@@ -751,22 +1024,22 @@ export interface ResolutionRecord {
   readonly variables: Readonly<Record<string, { identity: string; version: string }>>
 }
 /** Private, immutable platform state. Version changes whenever any selected fact changes. */
-export interface InstallationSnapshot {
+export interface DeploymentSnapshot {
   readonly formatVersion: 1
   readonly identity: string
   readonly version: string
-  readonly parameters: NonNullable<InstallationContext['parameters']>
-  readonly variables: NonNullable<InstallationContext['variables']>
+  readonly parameters: NonNullable<ResolutionContext['parameters']>
+  readonly variables: NonNullable<ResolutionContext['variables']>
   readonly credentials: Readonly<
     Record<string, ResolvedValue & { identity: string; rotation: number }>
   >
-  readonly allocations: NonNullable<InstallationContext['allocations']>
+  readonly allocations: NonNullable<ResolutionContext['allocations']>
   readonly connections?: ConnectionsContext['connections']
-  /** Deployment facts captured when the installation was created (BP-PARAM-011). */
-  readonly deployment?: DeploymentContext
+  /** Deployment facts captured when the deployment was created (BP-PARAM-011). */
+  readonly deployment?: DeploymentFacts
 }
 export interface RecordContext extends SemanticContext {
-  readonly snapshot: InstallationSnapshot
+  readonly snapshot: DeploymentSnapshot
   /** Exact release dependency manifests acquired with the pinned specifications. */
   readonly specificationDependencies: Readonly<Record<string, Readonly<Record<string, string>>>>
 }
@@ -774,7 +1047,7 @@ export interface RecordContext extends SemanticContext {
 export function resolutionRecord(
   blueprint: Uint8Array,
   specifications: Record<string, string>,
-  components: ResolutionRecord['components'],
+  components: ResolutionRecord['nodes'],
   variables: ResolutionRecord['variables'],
   credentials: ResolutionRecord['credentials'],
   context: RecordContext,
@@ -794,41 +1067,32 @@ export function resolutionRecord(
     !snapshot.credentials ||
     !snapshot.allocations
   )
-    throw new Error('missing immutable installation snapshot')
+    throw new Error('missing immutable deployment snapshot')
   const report = semanticReport({ name: 'blueprint' }, parsed.value, context)
   if (report.diagnostics.length || report.deferred.length) throw new Error('unresolved blueprint')
-  const nodes = record(at(parsed.value, 'spec', 'components'))
+  const nodes = record(at(parsed.value, 'spec', 'nodes'))
   const equal = (a: unknown, b: unknown) => canonicalJson(a as Json) === canonicalJson(b as Json)
   const sameKeys = (a: object, b: object) => equal(Object.keys(a).sort(), Object.keys(b).sort())
-  if (!sameKeys(nodes, components)) throw new Error('component node set mismatch')
+  if (!sameKeys(nodes, components)) throw new Error('record node set mismatch')
   const expectedVariables = new Set<string>(),
     expectedCredentials = new Set<string>()
   for (const [node, authored] of Object.entries(nodes)) {
     const c = components[node]!,
       contract = report.components.get(node)!
     const source = record(at(contract, 'spec', 'workload', 'source'))
-    const kind =
-      at(contract, 'spec', 'type') === 'EXTERNAL'
-        ? 'EXTERNAL'
-        : typeof source.image === 'string'
-          ? 'IMAGE'
-          : 'GIT'
+    const kind = sourceKind(contract)
     if (
       c.identity !== at(authored, 'componentRef') ||
       c.revision !== at(contract, 'metadata', 'revision') ||
-      c.digest !== report.componentDigests.get(node) ||
+      c.digest !== 'sha256:' + report.componentDigests.get(node) ||
       c.source !== kind ||
       !equal(c.volumes, at(authored, 'volumes') ?? {}) ||
       !equal(c.exposure, at(authored, 'exposure') ?? {}) ||
       (kind !== 'EXTERNAL' && c.compute?.identity !== at(authored, 'compute', 'profile'))
     )
-      throw new Error('component record disagrees with blueprint')
-    if (
-      kind === 'IMAGE' &&
-      typeof source.image === 'string' &&
-      source.image.includes('@sha256:') &&
-      c.imageDigest !== source.image.slice(source.image.indexOf('@') + 1)
-    )
+      throw new Error('node record disagrees with blueprint')
+    const pinnedImage = kind === 'IMAGE' ? pinnedDigest(source.image) : undefined
+    if (pinnedImage !== undefined && c.imageDigest !== pinnedImage)
       throw new Error('image digest mismatch')
     if (
       kind === 'GIT' &&
@@ -836,6 +1100,21 @@ export function resolutionRecord(
       c.gitCommit !== at(source, 'git', 'ref', 'commit')
     )
       throw new Error('git commit mismatch')
+    // BP-RESOLVE-001: the upload and the recipe are the ones the pinned component names.
+    if (kind === 'UPLOAD' && c.uploadDigest !== at(source, 'upload', 'digest'))
+      throw new Error('upload digest mismatch')
+    if (
+      (kind === 'GIT' || kind === 'UPLOAD') &&
+      c.recipeDigest !== recipeDigest(at(contract, 'spec', 'workload', 'build'))
+    )
+      throw new Error('recipe digest mismatch')
+    // BP-RESOLVE-001: a buildpacks recipe pins its builder, and no other recipe names one.
+    const builder = kind === 'GIT' || kind === 'UPLOAD' ? builderImage(contract) : undefined
+    if (
+      (builder === undefined) !== (c.builderDigest === undefined) ||
+      (pinnedDigest(builder) !== undefined && c.builderDigest !== pinnedDigest(builder))
+    )
+      throw new Error('builder digest mismatch')
     for (const endpoint of Object.keys(record(at(contract, 'spec', 'workload', 'endpoints'))))
       if (
         !snapshot.allocations[node]?.[endpoint]?.identity ||
@@ -846,7 +1125,7 @@ export function resolutionRecord(
       const name = at(binding, 'parameter')
       if (typeof name !== 'string') continue
       const parameter = at(parsed.value, 'spec', 'parameters', name),
-        source = parameterSource(parameter)
+        source = parameterOrigin(parameter)
       if (source?.namespace === 'variables') expectedVariables.add(source.key)
       if (at(parameter, 'generator') !== undefined) expectedCredentials.add(name)
       // BP-PARAM-012: a hash is a credential, and so is the generated value it hashes.
@@ -917,24 +1196,59 @@ export function resolutionRecord(
   if (!equal([...needed].sort(), Object.keys(specifications).sort()))
     throw new Error('unexpected specification edition')
   if (
-    resolveInstallation(parsed.value, {
+    resolveDeployment(parsed.value, {
       ...context,
       ...snapshot,
       connections: snapshot.connections,
+      // The record pins what the sources and build stages resolved, so a replay reads it back.
+      sources: Object.fromEntries(
+        Object.entries(components)
+          .filter(([, c]) => c.source !== 'EXTERNAL')
+          .map(([name, c]) => [
+            name,
+            Object.fromEntries(
+              (
+                [
+                  'gitCommit',
+                  'uploadDigest',
+                  'builderDigest',
+                  ...(c.source === 'IMAGE' ? (['imageDigest'] as const) : []),
+                ] as const
+              ).flatMap((key) => (c[key] === undefined ? [] : [[key, c[key]]])),
+            ),
+          ]),
+      ),
+      builds: Object.fromEntries(
+        Object.entries(components)
+          .filter(([, c]) => c.source === 'GIT' || c.source === 'UPLOAD')
+          .map(([name, c]) => [
+            name,
+            Object.fromEntries(
+              (['imageDigest', 'recipeDigest'] as const).flatMap((key) =>
+                c[key] === undefined ? [] : [[key, c[key]]],
+              ),
+            ),
+          ]),
+      ),
     }).status !== 'VALID'
   )
     throw new Error('snapshot cannot reproduce the resolution')
-  const digest = /^[0-9a-f]{64}$/
   for (const c of Object.values(components)) {
     if (
-      !digest.test(c.digest) ||
+      !DIGEST.test(c.digest) ||
       !Number.isSafeInteger(c.revision) ||
       c.revision < 1 ||
       !c.identity
     )
       throw new Error('unresolved component')
-    if (c.imageDigest !== undefined && !/^sha256:[0-9a-f]{64}$/.test(c.imageDigest))
+    if (c.imageDigest !== undefined && !DIGEST.test(c.imageDigest))
       throw new Error('unresolved image')
+    if (
+      (c.uploadDigest !== undefined && !DIGEST.test(c.uploadDigest)) ||
+      (c.recipeDigest !== undefined && !DIGEST.test(c.recipeDigest)) ||
+      (c.builderDigest !== undefined && !DIGEST.test(c.builderDigest))
+    )
+      throw new Error('unresolved source')
     if (c.compute && (!c.compute.identity || !c.compute.version))
       throw new Error('unresolved compute')
   }
@@ -956,6 +1270,9 @@ export function resolutionRecord(
         source: c.source,
         ...(c.imageDigest ? { imageDigest: c.imageDigest } : {}),
         ...(c.gitCommit ? { gitCommit: c.gitCommit } : {}),
+        ...(c.uploadDigest ? { uploadDigest: c.uploadDigest } : {}),
+        ...(c.recipeDigest ? { recipeDigest: c.recipeDigest } : {}),
+        ...(c.builderDigest ? { builderDigest: c.builderDigest } : {}),
         ...(c.compute
           ? { compute: { identity: c.compute.identity, version: c.compute.version } }
           : {}),
@@ -966,10 +1283,10 @@ export function resolutionRecord(
   )
   const generated: ResolutionRecord = {
     version: 1,
-    installationSnapshot: { identity: snapshot.identity, version: snapshot.version },
-    blueprintDigest: createHash('sha256').update(blueprint).digest('hex'),
+    deploymentSnapshot: { identity: snapshot.identity, version: snapshot.version },
+    blueprintDigest: 'sha256:' + createHash('sha256').update(blueprint).digest('hex'),
     specifications: { ...specifications },
-    components: projected,
+    nodes: projected,
     variables: Object.fromEntries(
       Object.entries(variables).map(([name, c]) => [
         name,

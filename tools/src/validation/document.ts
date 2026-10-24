@@ -1,23 +1,38 @@
 /**
- * Strict, byte-oriented YAML/JSON boundary. NON-NORMATIVE adapter for core §6.1.
+ * Strict, byte-oriented YAML/JSON boundary. NON-NORMATIVE adapter for core §6.2.
  */
 import { Composer, type CST, type Document, isAlias, isMap, isScalar, isSeq, Parser } from 'yaml'
 import type { Json } from '../lib/layout.ts'
 
-export type Phase = 'parser' | 'structural' | 'semantic' | 'capability' | 'resolution'
+/** The five validation phases, in order (core v2 §6). */
+export type Phase = 'parser' | 'structural' | 'semantic' | 'admission' | 'resolution'
+/** The validation scope lattice, smallest first (core v2 §6.1). */
+export const VALIDATION_SCOPES = [
+  'parser',
+  'structural',
+  'document',
+  'publication',
+  'deployment',
+] as const
+export type ValidationScope = (typeof VALIDATION_SCOPES)[number]
+/** The resolution stages, in order (core v2 §6.4). */
+export const RESOLUTION_STAGES = [
+  'sources',
+  'parameters',
+  'allocation',
+  'connections',
+  'values',
+  'build',
+  'environment',
+  'record',
+] as const
+export type ResolutionStage = (typeof RESOLUTION_STAGES)[number]
 export interface Diagnostic {
   readonly code: string
   readonly path: string
   readonly message: string
   readonly phase?: Phase
-  readonly stage?:
-    | 'contracts'
-    | 'parameters'
-    | 'allocation'
-    | 'values'
-    | 'environment'
-    | 'record'
-    | 'connections'
+  readonly stage?: ResolutionStage
   readonly related?: readonly { readonly artifact: string; readonly path: string }[]
 }
 export const MAX_DOCUMENT_BYTES = 1024 * 1024

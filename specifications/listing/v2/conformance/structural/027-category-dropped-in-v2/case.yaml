@@ -1,0 +1,12 @@
+# v2 dropped `AI_ML` (§1.2 maps it to `AGENTS` or `MODELS`). A v1 token is
+# rejected like any token the schema does not carry.
+specVersion: v2
+kind: LISTING
+metadata:
+  slug: pgvector
+spec:
+  itemType: COMPONENT
+  displayName: pgvector
+  summary: Vector similarity search for PostgreSQL
+  category: AI_ML
+  lifecycleStage: STABLE

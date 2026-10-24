@@ -1,0 +1,6 @@
+[
+  {
+    "code": "ERR_INVALID_CONNECTION_BINDING",
+    "path": "/spec/nodes/app-llm/bindings/llm"
+  }
+]

@@ -1,0 +1,10 @@
+{
+  "id": "semantic-085-build-secret-id-is-also-an-argument",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#source",
+  "requirements": [
+    "COMP-BUILD-004"
+  ],
+  "summary": "A build secret ID that is also a build argument is rejected; a buildpacks build receives both through one environment."
+}

@@ -686,6 +686,22 @@ describe('assembleSite', () => {
     expect(index).toContain(`/blob/main/${familyPaths('listing', 'v1').spec}`)
   })
 
+  test('the root index links the newest major, while the older one keeps serving', async () => {
+    const fx = fixture()
+    await release(fx, 'component', 'v1', '1.0.0', fx.bundleDoc('component', 'v1'))
+    fx.writeFamilySkeleton('component', 'v2')
+    fx.writeFile(familyPaths('component', 'v2').spec, fx.kindSpec('component'))
+    fx.writeSources('component', 'v2', fx.bundleDoc('component', 'v2'))
+    fx.commit('feat(component)!: a new major')
+
+    assembleSite({ repoRoot: fx.root, siteDir: join(fx.root, 'site') })
+    const index = readSite(fx, 'index.html')
+
+    expect(index).toContain('href="/component/v2/component.schema.json"')
+    expect(index).not.toContain('href="/component/v1/component.schema.json"')
+    expect(readSite(fx, 'component', 'v1', 'component.schema.json')).toContain('/component/v1/')
+  })
+
   test('a family index lists every published version with its checksum', async () => {
     const fx = fixture()
     await release(fx, 'component', 'v1', '1.0.0', fx.bundleDoc('component', 'v1'))

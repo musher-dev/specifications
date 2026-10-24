@@ -1,0 +1,11 @@
+{
+  "id": "admission-004-screenshot-too-wide",
+  "phase": "admission",
+  "expected": "fail",
+  "clause": "specifications/listing/v2/spec.md#media",
+  "requirements": [
+    "LIST-MEDIA-005"
+  ],
+  "summary": "A screenshot over 4096 px on one side is rejected at admission.",
+  "document": "pgvector/listing.yaml"
+}

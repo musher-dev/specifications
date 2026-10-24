@@ -1,9 +1,13 @@
 # Downstream v1 adoption
 
+> **v1 is retired.** This page is kept as the history of the v1 migration. Its
+> links read v1 at its last release tags. For v2, read
+> [Downstream v2 adoption](downstream-v2-adoption.md).
+
 This is an informative adoption guide for the platform and catalog repositories. The
-[component](../specifications/component/v1/spec.md) and
-[blueprint](../specifications/blueprint/v1/spec.md) specifications govern the
-contract; this checklist does not define another document dialect.
+[component](https://github.com/musher-dev/specifications/blob/component/v1.6.1/specifications/component/v1/spec.md) and
+[blueprint](https://github.com/musher-dev/specifications/blob/blueprint/v1.7.2/specifications/blueprint/v1/spec.md)
+specifications govern the contract; this checklist does not define another document dialect.
 
 ## Pin the released contract
 
@@ -125,10 +129,10 @@ one in a click and store every intermediate state. What a component needs before
 it runs (a workload, a source, an endpoint for a `SERVICE`, a command for a
 `JOB`, an output for an `EXTERNAL` component, and a description on every input
 and output) is checked at publication instead, each with its own `capability`
-code ([component §5](../specifications/component/v1/spec.md#publication-obligations)).
+code ([component §5](https://github.com/musher-dev/specifications/blob/component/v1.6.1/specifications/component/v1/spec.md#publication-obligations)).
 Validate drafts with the `document` profile and publish with `publication`.
 A blueprint node still deploys only a finished component
-([`BP-REF-003`](../specifications/blueprint/v1/spec.md#BP-REF-003)).
+([`BP-REF-003`](https://github.com/musher-dev/specifications/blob/blueprint/v1.7.2/specifications/blueprint/v1/spec.md#BP-REF-003)).
 
 ## HTTPS workload endpoints (component v1.4.0 and blueprint v1.5.0)
 
@@ -137,18 +141,18 @@ An `HTTPS` endpoint can now say how the platform trusts its certificate
 `trustBundle`), and an HTTP probe can name the statuses it expects
 (`expectedStatuses`) and the credentials it sends (`auth.basic` or
 `auth.bearer`, each credential from an input)
-([component §5.2](../specifications/component/v1/spec.md#tls) and
-[§5.4](../specifications/component/v1/spec.md#health)).
+([component §5.2](https://github.com/musher-dev/specifications/blob/component/v1.6.1/specifications/component/v1/spec.md#tls)
+and [§5.4](https://github.com/musher-dev/specifications/blob/component/v1.6.1/specifications/component/v1/spec.md#health)).
 
 - Derive the proxy's upstream transport and every probe client from one
   resolution of the endpoint's protocol and `tls`, so they cannot disagree
-  ([`COMP-EP-007`](../specifications/component/v1/spec.md#COMP-EP-007)).
+  ([`COMP-EP-007`](https://github.com/musher-dev/specifications/blob/component/v1.6.1/specifications/component/v1/spec.md#COMP-EP-007)).
 - Never fall back from a verifying mode to `NONE`, or from `HTTPS` to `HTTP`.
   A host that cannot honour an endpoint's policy is a placement or
   configuration error, not a failed probe.
 - Resolve probe credentials from their inputs, send them on probe requests
   only, and never add them to forwarded traffic or write them to logs
-  ([`COMP-EP-011`](../specifications/component/v1/spec.md#COMP-EP-011)).
+  ([`COMP-EP-011`](https://github.com/musher-dev/specifications/blob/component/v1.6.1/specifications/component/v1/spec.md#COMP-EP-011)).
 - Follow no redirect on a probe. An absent `expectedStatuses` still means
   200–399.
 
@@ -164,8 +168,8 @@ workload receives each viewer's identity in a header
 (`viewerIdentity: NONE | HEADER`). Bare `PUBLIC` and `PRIVATE` keep their
 meaning. A component reads the header name and the proxy addresses to trust it
 from as two endpoint properties, `viewerIdentityHeader` and `trustedProxyCIDRs`
-([blueprint §4.5](../specifications/blueprint/v1/spec.md#access),
-[component §5.2](../specifications/component/v1/spec.md#viewer-identity),
+([blueprint §4.5](https://github.com/musher-dev/specifications/blob/blueprint/v1.7.2/specifications/blueprint/v1/spec.md#access),
+[component §5.2](https://github.com/musher-dev/specifications/blob/component/v1.6.1/specifications/component/v1/spec.md#viewer-identity),
 [ADR 0034](adr/0034-access-and-viewer-identity-are-part-of-exposure.md)).
 
 - Parse both forms of `exposure.<endpoint>` everywhere it is read, including
@@ -175,13 +179,13 @@ from as two endpoint properties, `viewerIdentityHeader` and `trustedProxyCIDRs`
   `AUTHENTICATED` endpoint before forwarding it, against the installation's
   access policy. Refuse, never forward, when that state is missing or
   unavailable, and never read an exposure you do not understand as `OPEN`
-  ([`BP-ACCESS-002`](../specifications/blueprint/v1/spec.md#BP-ACCESS-002)).
+  ([`BP-ACCESS-002`](https://github.com/musher-dev/specifications/blob/blueprint/v1.7.2/specifications/blueprint/v1/spec.md#BP-ACCESS-002)).
 - Under `HEADER`, strip inbound copies of the identity header and of
   `Forwarded`, `X-Forwarded-*` and `X-Real-IP`, then set the identity header to
   a stable, opaque user identifier, not an email address. Keep `Host`, `Origin`,
   the request's `Authorization` header and application cookies, and never
   forward the platform's session cookie
-  ([`BP-ACCESS-003`](../specifications/blueprint/v1/spec.md#BP-ACCESS-003)).
+  ([`BP-ACCESS-003`](https://github.com/musher-dev/specifications/blob/blueprint/v1.7.2/specifications/blueprint/v1/spec.md#BP-ACCESS-003)).
   The specification leaves the header names to the platform. Put every header
   forwarded to a workload under one prefix the platform owns, without `X-`
   (RFC 6648), such as `<platform>-viewer-id`, and strip inbound copies by that
@@ -191,11 +195,11 @@ from as two endpoint properties, `viewerIdentityHeader` and `trustedProxyCIDRs`
   addresses the container itself observes as its TCP peer, which on the current
   hosts is the compute host's proxy through the port publish, not the edge and
   not loopback. No other workload or tenant may originate traffic from them
-  ([`BP-ACCESS-004`](../specifications/blueprint/v1/spec.md#BP-ACCESS-004)). A
-  missing fact leaves resolution incomplete.
+  ([`BP-ACCESS-004`](https://github.com/musher-dev/specifications/blob/blueprint/v1.7.2/specifications/blueprint/v1/spec.md#BP-ACCESS-004)).
+  A missing fact leaves resolution incomplete.
 - Bound, and document, how long an admitted WebSocket outlives a sign-out,
   expiry or removed permission
-  ([`BP-ACCESS-005`](../specifications/blueprint/v1/spec.md#BP-ACCESS-005)).
+  ([`BP-ACCESS-005`](https://github.com/musher-dev/specifications/blob/blueprint/v1.7.2/specifications/blueprint/v1/spec.md#BP-ACCESS-005)).
 
 For a catalog item such as OpenClaw in trusted-proxy mode, declare outputs
 reading `viewerIdentityHeader` and `trustedProxyCIDRs` from the gateway
@@ -218,18 +222,18 @@ things, all of them additive:
   `OIDC`, an OpenID Connect client the platform registers for the endpoint.
   `viewerClaims: [EMAIL, NAME]` releases those facts beside the subject, in
   headers of their own under `HEADER` and inside the token otherwise
-  ([blueprint §4.5](../specifications/blueprint/v1/spec.md#access),
-  [component §5.2](../specifications/component/v1/spec.md#viewer-identity)).
+  ([blueprint §4.5](https://github.com/musher-dev/specifications/blob/blueprint/v1.7.2/specifications/blueprint/v1/spec.md#access),
+  [component §5.2](https://github.com/musher-dev/specifications/blob/component/v1.6.1/specifications/component/v1/spec.md#viewer-identity)).
 - A component declares `accessExemptions` on an endpoint, `paths` and
   `bearer: true`, and a node selects `accessExemptions: [PATHS, BEARER]` from
   them, so webhooks and API clients reach an `AUTHENTICATED` endpoint
-  ([component §5.2](../specifications/component/v1/spec.md#access-exemptions)).
+  ([component §5.2](https://github.com/musher-dev/specifications/blob/component/v1.6.1/specifications/component/v1/spec.md#access-exemptions)).
 - A parameter can read `${{ deployment.installer.identity }}`, `.email` or
   `.name`, facts about the person who created the installation
-  ([`BP-PARAM-011`](../specifications/blueprint/v1/spec.md#BP-PARAM-011)).
+  ([`BP-PARAM-011`](https://github.com/musher-dev/specifications/blob/blueprint/v1.7.2/specifications/blueprint/v1/spec.md#BP-PARAM-011)).
 - A parameter can be `hash: { parameter, algorithm }`, a `BCRYPT` or
   `ARGON2ID` hash of a generated parameter
-  ([`BP-PARAM-012`](../specifications/blueprint/v1/spec.md#BP-PARAM-012)).
+  ([`BP-PARAM-012`](https://github.com/musher-dev/specifications/blob/blueprint/v1.7.2/specifications/blueprint/v1/spec.md#BP-PARAM-012)).
 
 For the platform:
 
@@ -238,17 +242,17 @@ For the platform:
 - **Subject.** Give one person one opaque subject per installation, the same in
   the identity header, the assertion `sub`, the OIDC `sub` and
   `deployment.installer.identity`
-  ([`BP-ACCESS-006`](../specifications/blueprint/v1/spec.md#BP-ACCESS-006)).
+  ([`BP-ACCESS-006`](https://github.com/musher-dev/specifications/blob/blueprint/v1.7.2/specifications/blueprint/v1/spec.md#BP-ACCESS-006)).
   Release an email only when it is verified.
 - **Claim headers.** Allocate a distinct header name per released claim, strip
   inbound copies, and percent-encode every octet outside visible ASCII and every
   `%` in the value
-  ([`BP-ACCESS-003`](../specifications/blueprint/v1/spec.md#BP-ACCESS-003)).
+  ([`BP-ACCESS-003`](https://github.com/musher-dev/specifications/blob/blueprint/v1.7.2/specifications/blueprint/v1/spec.md#BP-ACCESS-003)).
 - **Assertions.** Sign an RS256 JWT per forwarded request with `kid`, `iss`,
   an `aud` unique to the installation's endpoint, `sub`, `iat` and an `exp` at
   most ten minutes later, plus released claims. Publish the key set at an HTTPS
   URL, and keep a retired key there until its last token expires
-  ([`BP-ACCESS-007`](../specifications/blueprint/v1/spec.md#BP-ACCESS-007)).
+  ([`BP-ACCESS-007`](https://github.com/musher-dev/specifications/blob/blueprint/v1.7.2/specifications/blueprint/v1/spec.md#BP-ACCESS-007)).
   Supply the header name, issuer, audience and key set URL as public routing
   facts.
 - **OpenID Connect.** Run an issuer, register one confidential client per
@@ -258,15 +262,15 @@ For the platform:
   with the installation. The client registration, `{identity, version, issuerURL,
   clientID, secret}`, sits beside the endpoint's routing facts in the private
   snapshot, never among them
-  ([`BP-ACCESS-008`](../specifications/blueprint/v1/spec.md#BP-ACCESS-008)).
+  ([`BP-ACCESS-008`](https://github.com/musher-dev/specifications/blob/blueprint/v1.7.2/specifications/blueprint/v1/spec.md#BP-ACCESS-008)).
 - **Exemptions.** Under `PATHS`, forward a request under a declared path as
   `OPEN` does, matching segment by segment on the normalized path, ignoring the
   query, and never exempting a path holding `;`, an encoded slash or backslash,
   a backslash, NUL or an empty segment. Under `BEARER`, forward a request with
   no session and a bearer token without identity, and identify one with a
   session as usual. Keep `/.musher` out of every exemption
-  ([`BP-ACCESS-009`](../specifications/blueprint/v1/spec.md#BP-ACCESS-009),
-  [`BP-ACCESS-010`](../specifications/blueprint/v1/spec.md#BP-ACCESS-010),
+  ([`BP-ACCESS-009`](https://github.com/musher-dev/specifications/blob/blueprint/v1.7.2/specifications/blueprint/v1/spec.md#BP-ACCESS-009),
+  [`BP-ACCESS-010`](https://github.com/musher-dev/specifications/blob/blueprint/v1.7.2/specifications/blueprint/v1/spec.md#BP-ACCESS-010),
   [musher-dev/platform#3184](https://github.com/musher-dev/platform/issues/3184)).
 - **Installer facts.** Capture the creator's identity, verified email and
   display name once, when the installation is created, and keep them in the

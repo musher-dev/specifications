@@ -1,0 +1,12 @@
+{
+  "id": "semantic-072-parameter-source-unclosed-reference",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#value-sources",
+  "requirements": [
+    "BP-PLACEHOLDER-001",
+    "CORE-PLACEHOLDER-001"
+  ],
+  "summary": "A parameter whose from opens a reference and never closes it is a malformed reference.",
+  "document": "app/blueprint.yaml"
+}

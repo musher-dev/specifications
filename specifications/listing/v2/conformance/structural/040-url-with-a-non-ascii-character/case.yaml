@@ -1,0 +1,11 @@
+specVersion: v2
+kind: LISTING
+metadata:
+  slug: postgres
+spec:
+  itemType: COMPONENT
+  displayName: PostgreSQL
+  summary: The open-source relational database
+  category: DATABASES
+  lifecycleStage: STABLE
+  homepageURL: https://exämple.com

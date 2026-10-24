@@ -1,0 +1,27 @@
+specVersion: v2
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: SERVICE
+  workload:
+    source:
+      image: example/web:1
+    endpoints:
+      web:
+        targetPort: 8080
+        protocol: HTTP
+  contract:
+    inputs:
+      region:
+        description: Region the deployment runs in
+        schema:
+          type: string
+    outputs:
+      region:
+        description: Region the deployment runs in
+        schema:
+          type: string
+        from:
+          input: region

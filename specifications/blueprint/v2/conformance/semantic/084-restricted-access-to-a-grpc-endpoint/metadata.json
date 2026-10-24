@@ -1,0 +1,11 @@
+{
+  "id": "semantic-084-restricted-access-to-a-grpc-endpoint",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#access",
+  "requirements": [
+    "BP-NODE-007"
+  ],
+  "summary": "RESTRICTED access to a GRPC endpoint is unsupported in v1 and rejected at access.",
+  "document": "app/blueprint.yaml"
+}

@@ -1,0 +1,7 @@
+{
+  "id": "structural-019-advanced-compute-constraints",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/blueprint/v2/spec.md#placement-constraints",
+  "summary": "A node carrying every placement constraint validates."
+}

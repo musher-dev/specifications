@@ -1,0 +1,65 @@
+# yaml-language-server: $schema=https://specifications.musher.dev/listing/v2/listing.schema.json
+#
+# A component item's listing using the full descriptive surface. Media paths
+# begin at `media/` and resolve inside the item root (§5). The overview and the
+# getting-started text stay inside §4.1's profile: no raw HTML, links on
+# permitted schemes, and an image that is an item media path rather than a
+# remote one. §5.1 is what makes that image resolve for a consumer that does
+# not serve this directory itself.
+specVersion: v2
+kind: LISTING
+metadata:
+  slug: postgres
+spec:
+  itemType: COMPONENT
+  displayName: PostgreSQL
+  summary: The open-source relational database, with SQL, ACID transactions and JSONB in one engine
+  overview: |
+    ## What it is
+
+    PostgreSQL is an open-source object-relational database combining full SQL
+    with ACID transactions, rich indexing, and JSONB document storage in a
+    single engine.
+
+    ## When to use
+
+    - Your application needs a general-purpose relational database.
+    - Another workload expects a Postgres connection string.
+    - You want relational and document data in one engine rather than two.
+
+    ## Defaults
+
+    A single container of `postgres:17.10-alpine` on port 5432 as a private TCP
+    endpoint. You supply the password at deploy time; a 10 GiB volume keeps the
+    data directory across restarts.
+
+    ![The connection details panel](media/overview.png)
+
+    Read the [upstream documentation](https://www.postgresql.org/docs/), or
+    write to <support@example.com> if something here is wrong.
+  gettingStarted: |
+    The database is ready once the deployment is running. Connect as the
+    `postgres` user with the password you entered as **Database password**,
+    then create a role and a database for each application:
+
+    ```sql
+    CREATE ROLE app LOGIN PASSWORD '…';
+    CREATE DATABASE app OWNER app;
+    ```
+
+    The [psql reference](https://www.postgresql.org/docs/current/app-psql.html)
+    covers the client.
+  category: DATABASES
+  lifecycleStage: STABLE
+  tags:
+    - database
+    - sql
+    - postgres
+    - relational
+  homepageURL: https://www.postgresql.org
+  sourceRepositoryURL: https://github.com/postgres/postgres
+  license: PostgreSQL
+  icon: media/icon.png
+  screenshots:
+    - file: media/overview.png
+      caption: Connection details after deployment

@@ -42,6 +42,10 @@ asset has a SLSA provenance attestation, and every release since
 [ADR 0037](../docs/adr/0037-the-repository-adopts-engineering-conventions-0-7-0.md)
 also carries `SHA256SUMS` over its other assets.
 
+The examples verify `component/v1.0.0`, a release of the retired v1 major,
+which stays published and verifiable for good. A v2 release, such as
+`component/v2.0.0`, is verified the same way under its own tag.
+
 ```sh
 # The release is published and immutable
 gh release verify component/v1.0.0 --repo musher-dev/specifications
@@ -74,3 +78,7 @@ that `published.json` records, is a supply-chain report, not a bug — see below
 
 Security fixes are issued for the latest patch of every non-retired major
 version of each family. Retired majors receive no fixes; migrate.
+
+v2 is the current major of every family. v1 is retired
+([ADR 0038](../docs/adr/0038-v2-one-vocabulary-and-v1-retires.md)): its
+releases keep serving at their pinned URLs, and it receives no fixes.

@@ -1,0 +1,58 @@
+specVersion: v2
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: S3-compatible bucket reached through a connection, handing its endpoint, bucket and access key to the nodes that use it.
+spec:
+  type: EXTERNAL
+  contract:
+    inputs:
+      storage:
+        description: S3-compatible bucket this node stands for.
+        connection:
+          protocol: S3
+    outputs:
+      endpointURL:
+        description: Service URL a client sends requests to, without the bucket.
+        schema:
+          type: string
+        presentationHint: ENDPOINT_URL
+        from:
+          input: storage
+          member: endpointURL
+      region:
+        description: Region the bucket is in.
+        schema:
+          type: string
+        from:
+          input: storage
+          member: region
+      bucket:
+        description: Name of the bucket.
+        schema:
+          type: string
+        from:
+          input: storage
+          member: bucket
+      accessKeyID:
+        description: Identifier of the access key.
+        schema:
+          type: string
+        from:
+          input: storage
+          member: accessKeyID
+      secretAccessKey:
+        description: Secret of the access key.
+        schema:
+          type: string
+        sensitive: true
+        from:
+          input: storage
+          member: secretAccessKey
+      pathStyle:
+        description: Whether the client puts the bucket in the path rather than the hostname.
+        schema:
+          type: boolean
+        from:
+          input: storage
+          member: pathStyle

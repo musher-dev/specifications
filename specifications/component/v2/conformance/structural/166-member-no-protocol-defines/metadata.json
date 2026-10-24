@@ -1,0 +1,10 @@
+{
+  "id": "structural-166-member-no-protocol-defines",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#outputs",
+  "requirements": [
+    "COMP-OUT-004"
+  ],
+  "summary": "An output reading a member no protocol defines is rejected structurally."
+}

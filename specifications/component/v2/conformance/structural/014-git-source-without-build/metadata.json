@@ -1,0 +1,11 @@
+{
+  "id": "structural-014-git-source-without-build",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#source",
+  "requirements": [
+    "COMP-BUILD-001",
+    "COMP-BUILD-007"
+  ],
+  "summary": "A Git source without a build recipe is rejected; the recipe is named, never detected."
+}

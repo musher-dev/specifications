@@ -18,7 +18,7 @@ answer a question it was never given the words for.
 
 **A rule with no enforcement.** [Issue #106](https://github.com/musher-dev/specifications/issues/106)
 reported that the last sentence of
-[`COMP-OUT-002`](../../specifications/component/v1/spec.md#COMP-OUT-002),
+[`COMP-OUT-002`](../../specifications/component/v2/spec.md#COMP-OUT-002),
 "Every declared output must be produced, so an absent optional input cannot
 supply an `input` origin", had no diagnostic code, no check in the reference
 validator, and no conformance case. A catalog item was authored against it,
@@ -60,7 +60,7 @@ released prose was never valid. It was undetected, which is a different thing.
 Giving that sentence a code and a case changes what is *found*, not what is
 *true*.
 
-This is not new law. [Core v1 §9](../../specifications/core/v1/spec.md#editions)
+This is not new law. [Core v1 §9](../../specifications/core/v2/spec.md#editions)
 already says a minor release of core "adds a code only for a condition an earlier
 v1 edition already rejects". §1 says the same of a family, in the same words, and
 for the same reason.
@@ -110,7 +110,7 @@ meaning as much as an acceptance does, and a gate that only replayed acceptances
 would let a code, a path or a phase change under a document that still fails.
 
 But it makes the gate stricter than the guarantee it enforces.
-[Core v1 §3](../../specifications/core/v1/spec.md#compatibility) forbids
+[Core v1 §3](../../specifications/core/v2/spec.md#compatibility) forbids
 validation becoming *stricter* within a major and says nothing against a
 relaxation, which is the direction §1 of this record and issue #110 both travel
 in. What was missing was not permission but a place to write the reason down.

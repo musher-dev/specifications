@@ -7,7 +7,10 @@ conformance corpora. The platform API and Musher's internal data models are
 specified elsewhere. An implementation that disagrees with what is published
 here is defective.
 
-**Status:** stable. Every family has released `1.0.0`, and
+**Status:** v2 is the current major of every family, and it releases as
+`2.0.0`. v1 is retired: its directories are gone from `main`, and every v1
+release keeps serving at its pinned URL
+([ADR 0038](docs/adr/0038-v2-one-vocabulary-and-v1-retires.md)).
 [`published.json`](published.json) lists every release. What makes a version
 released: [Draft or released](docs/publication.md#draft-or-released).
 
@@ -15,10 +18,10 @@ released: [Draft or released](docs/publication.md#draft-or-released).
 
 | Family | Specification | Front page | Rendered prose |
 |---|---|---|---|
-| core | [`core/v1/spec.md`](specifications/core/v1/spec.md) | [README](specifications/core/README.md) | [core v1](https://specifications.musher.dev/reference/core/v1/spec/) |
-| component | [`component/v1/spec.md`](specifications/component/v1/spec.md) | [README](specifications/component/README.md) | [component v1](https://specifications.musher.dev/reference/component/v1/spec/) |
-| blueprint | [`blueprint/v1/spec.md`](specifications/blueprint/v1/spec.md) | [README](specifications/blueprint/README.md) | [blueprint v1](https://specifications.musher.dev/reference/blueprint/v1/spec/) |
-| listing | [`listing/v1/spec.md`](specifications/listing/v1/spec.md) | [README](specifications/listing/README.md) | [listing v1](https://specifications.musher.dev/reference/listing/v1/spec/) |
+| core | [`core/v2/spec.md`](specifications/core/v2/spec.md) | [README](specifications/core/README.md) | [core v2](https://specifications.musher.dev/reference/core/v2/spec/) |
+| component | [`component/v2/spec.md`](specifications/component/v2/spec.md) | [README](specifications/component/README.md) | [component v2](https://specifications.musher.dev/reference/component/v2/spec/) |
+| blueprint | [`blueprint/v2/spec.md`](specifications/blueprint/v2/spec.md) | [README](specifications/blueprint/README.md) | [blueprint v2](https://specifications.musher.dev/reference/blueprint/v2/spec/) |
+| listing | [`listing/v2/spec.md`](specifications/listing/v2/spec.md) | [README](specifications/listing/README.md) | [listing v2](https://specifications.musher.dev/reference/listing/v2/spec/) |
 
 The rendered prose is generated and informative. What each family describes and how they depend on one
 another is set out in [specifications/README.md](specifications/README.md), and
@@ -42,15 +45,15 @@ which of its parts are normative in
 ## Repository map
 
 ```
-specifications/   one directory per family; each major version, v<N>/, releases on its own tag line
+specifications/   one directory per family; each major version, v<N>/, releases under its own tag prefix
 docs/             guides, governance, the fixture format, traceability, and decisions
 tools/            non-normative build and check scripts (Bun and TypeScript)
 taskfiles/        the tasks behind `task check`
-.claude/          the agent brief, CLAUDE.md, for Claude Code
+.claude/          Claude Code's settings and rules; no brief (AGENTS.md is the brief)
 .config/          every linter, formatter, and hook configuration, and the tool pins
 .github/          contributing, security, rulesets, and workflows
 .repo/            what the repository is and publishes, for the engineering conventions
-AGENTS.md         points coding agents other than Claude Code at .claude/CLAUDE.md
+AGENTS.md         the brief for every coding agent, Claude Code included
 published.json    append-only ledger of every release (docs/publication.md#the-ledger)
 ```
 

@@ -1,0 +1,26 @@
+specVersion: v2
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: SERVICE
+  workload:
+    source:
+      image: postgres:17.10-alpine
+    endpoints:
+      primary:
+        targetPort: 5432
+        protocol: TCP
+  contract:
+    inputs:
+      backend:
+        schema:
+          type: string
+          enum:
+            - S3
+            - AZURE
+        description: Object store the database ships its write-ahead log to.
+        target:
+          envVar: BACKEND
+    outputs: {}

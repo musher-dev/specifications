@@ -1,0 +1,10 @@
+{
+  "id": "structural-230-bearer-token-false-offers-nothing",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#endpoints",
+  "requirements": [
+    "COMP-EP-015"
+  ],
+  "summary": "exemptibleRequests carrying only bearerToken false offers nothing, and is rejected."
+}

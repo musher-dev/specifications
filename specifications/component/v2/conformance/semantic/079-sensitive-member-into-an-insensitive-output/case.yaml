@@ -1,0 +1,21 @@
+specVersion: v2
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: EXTERNAL
+  contract:
+    inputs:
+      db:
+        description: Connection this node stands for
+        connection:
+          protocol: POSTGRES
+    outputs:
+      password:
+        description: Forwarded password
+        schema:
+          type: string
+        from:
+          input: db
+          member: password

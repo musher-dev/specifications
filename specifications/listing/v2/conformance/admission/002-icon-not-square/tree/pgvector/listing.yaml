@@ -1,0 +1,14 @@
+# The media here are real images, because LIST-MEDIA-005 reads their headers.
+# The icon is 300x200. It is large enough and small enough in bytes; only its
+# shape is wrong, and the storefront cannot scale it to a square slot.
+specVersion: v2
+kind: LISTING
+metadata:
+  slug: pgvector
+spec:
+  itemType: COMPONENT
+  displayName: pgvector
+  summary: Vector similarity search for PostgreSQL
+  category: DATABASES
+  lifecycleStage: STABLE
+  icon: media/icon.png

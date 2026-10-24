@@ -1,0 +1,11 @@
+{
+  "id": "semantic-062-variable-parameter-in-a-connection-binding",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#connections",
+  "requirements": [
+    "BP-CONNECTION-001"
+  ],
+  "summary": "A binding to a connection input naming a parameter that reads a variable is rejected.",
+  "document": "app/blueprint.yaml"
+}

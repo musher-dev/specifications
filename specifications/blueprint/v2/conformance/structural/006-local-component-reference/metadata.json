@@ -1,0 +1,7 @@
+{
+  "id": "structural-006-local-component-reference",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/blueprint/v2/spec.md#component-reference",
+  "summary": "An item-local component reference validates from any directory layout, nested or flat."
+}

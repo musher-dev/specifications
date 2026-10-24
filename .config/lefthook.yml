@@ -20,9 +20,14 @@ glob_matcher: doublestar
 pre-commit:
   parallel: true
   jobs:
+    # check:format runs `biome ci`, which only reports, so stage_fixed restages
+    # nothing. HOOKS-12 reads a task with a `format` segment as a fixer, and
+    # setting it costs nothing and keeps the hook correct if the task ever
+    # starts writing.
     - name: format
       glob: 'tools/**/*.{ts,json}'
       run: task check:format
+      stage_fixed: true
       fail_text: "Formatting or lint of tools/ failed. Run 'task fmt', then 'task check:format' for what is left."
 
     - name: schema
@@ -42,16 +47,16 @@ pre-commit:
       run: task check:rulesets
       fail_text: "The ruleset, CODEOWNERS and required checks disagree. Run 'task check:rulesets' (docs/adr/0015)."
 
-    # Every copy of the Conventional Commits vocabulary, this file included --
-    # the commit-msg hook below inlines the types a fifth time. CI checks them
-    # too; catching a mismatch here saves a round trip, and the prefixes in
-    # dependabot.yml are only ever exercised by a bot nobody watches.
+    # Every copy of the Conventional Commits vocabulary that cannot read
+    # .config/commits/committed.toml itself. CI checks them too; catching a
+    # mismatch here saves a round trip, and the prefixes in dependabot.yml are
+    # only ever exercised by a bot nobody watches.
     - name: commits
       glob:
-        - '.github/{conventional-commits.yaml,dependabot.yml,CONTRIBUTING.md,workflows/repository-pull-request-title.yml}'
-        - '.config/lefthook.yml'
+        - '.github/{dependabot.yml,CONTRIBUTING.md,workflows/repository-pull-request-title.yml}'
+        - '.config/commits/committed.toml'
       run: task check:commits
-      fail_text: "A copy of the commit vocabulary drifted. Run 'task check:commits'; .github/conventional-commits.yaml is the source."
+      fail_text: "A copy of the commit vocabulary drifted. Run 'task check:commits'; .config/commits/committed.toml is the source."
 
     - name: markdown
       glob: '**/*.md'
@@ -68,32 +73,18 @@ pre-commit:
       run: task check:workflow:files -- {staged_files}
       fail_text: "actionlint failed on a staged workflow. Run 'task check:workflow' for the report."
 
+# committed reads the message lefthook passes as {1}; without --commit-file it
+# would check HEAD, the previous commit (COMMIT-03). Merges and rebases are
+# skipped: a merge's generated message is not a Conventional Commit, and a
+# rebase replays messages checked when they were written.
 commit-msg:
+  skip:
+    - merge
+    - rebase
   jobs:
-    - name: conventional-commits
-      run: |
-        sh -ceu '
-        first_line=$(head -n 1 "$1")
-        case "$first_line" in
-          Merge*) exit 0 ;;
-        esac
-        pattern="^(feat|fix|chore|docs|style|refactor|perf|test|ci|build|revert)(\\(.+\\))?(!)?: .+"
-        if ! printf "%s\n" "$first_line" | grep -Eq "$pattern"; then
-          printf "%s\n" "ERROR: Commit message does not follow Conventional Commits format." >&2
-          printf "%s\n" "" >&2
-          printf "%s\n" "  Expected: <type>(<scope>): <description>" >&2
-          printf "  Got:      %s\n" "$first_line" >&2
-          printf "%s\n" "" >&2
-          printf "%s\n" "  Types:  feat, fix, chore, docs, style, refactor, perf, test, ci, build, revert" >&2
-          printf "%s\n" "  Scopes: core, component, blueprint, listing, conformance, tools, ci," >&2
-          printf "%s\n" "          devcontainer, docs, repo, release, deps, deps-dev" >&2
-          printf "%s\n" "" >&2
-          printf "%s\n" "  release-please picks the release from the paths a commit changes, not" >&2
-          printf "%s\n" "  its scope: feat/fix/docs under specifications/<family>/ releases it." >&2
-          exit 1
-        fi
-        ' -- {1}
-      fail_text: "The subject must be a Conventional Commit; .github/CONTRIBUTING.md lists the types and scopes."
+    - name: committed
+      run: committed --config .config/commits/committed.toml --commit-file {1}
+      fail_text: "The message must be a Conventional Commit, <type>(<scope>): <subject>, with a type and scope from .config/commits/committed.toml."
 
 pre-push:
   jobs:

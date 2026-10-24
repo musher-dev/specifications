@@ -1,0 +1,13 @@
+# LIST-ITEM-002: a component item is one component published on its own. This
+# item holds two, and no blueprint says how they fit, so it is a blueprint item
+# without its blueprint. The count is reported at the field that made the claim.
+specVersion: v2
+kind: LISTING
+metadata:
+  slug: pgvector
+spec:
+  itemType: COMPONENT
+  displayName: pgvector
+  summary: Vector similarity search for PostgreSQL
+  category: DATABASES
+  lifecycleStage: STABLE

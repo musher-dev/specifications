@@ -1,0 +1,11 @@
+{
+  "id": "semantic-017-component-item-holds-two-components",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/listing/v2/spec.md#identity",
+  "requirements": [
+    "LIST-ITEM-002"
+  ],
+  "summary": "A component item holding two component documents is rejected.",
+  "document": "pgvector/listing.yaml"
+}

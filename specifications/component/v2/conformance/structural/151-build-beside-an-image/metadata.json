@@ -1,0 +1,10 @@
+{
+  "id": "structural-151-build-beside-an-image",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#source",
+  "requirements": [
+    "COMP-BUILD-001"
+  ],
+  "summary": "A build recipe beside an image source is rejected; an image is already built."
+}

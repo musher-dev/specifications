@@ -1,0 +1,7 @@
+{
+  "id": "structural-024-getting-started-too-long",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/listing/v2/spec.md#presentation",
+  "summary": "A gettingStarted longer than 5 000 characters is rejected."
+}

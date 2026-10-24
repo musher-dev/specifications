@@ -1,0 +1,11 @@
+specVersion: v2
+kind: BLUEPRINT
+metadata:
+  slug: app
+  revision: 1
+spec:
+  parameters: {}
+  nodes:
+    web:
+      componentRef: 12345678-ABCD-1234-1234-123456789ABC
+      revision: 1

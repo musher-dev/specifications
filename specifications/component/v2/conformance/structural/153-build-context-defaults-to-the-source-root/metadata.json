@@ -1,0 +1,13 @@
+{
+  "id": "structural-153-build-context-defaults-to-the-source-root",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#source",
+  "requirements": [
+    "COMP-BUILD-002"
+  ],
+  "summary": "A build recipe that names no context builds from the source root.",
+  "effective": {
+    "/spec/workload/build/context": "."
+  }
+}

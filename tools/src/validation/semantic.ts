@@ -7,20 +7,25 @@ import {
   readFileSync,
   readlinkSync,
   realpathSync,
+  statSync,
 } from 'node:fs'
 import { basename, dirname, isAbsolute, join, posix, relative, resolve } from 'node:path'
-import { type Node, Parser } from 'commonmark'
 import { canonicalJson, type Family, isObject, type Json } from '../lib/layout.ts'
 import { scanReferences } from '../lib/references.ts'
 import {
-  connectionBindingDiagnostics,
-  connectionMemberContract,
+  CONNECTION_MEMBERS,
+  guaranteedMember,
   isConnectionInput,
-  parameterSource,
-  parameterSourceDiagnostics,
+  protocolMember,
 } from './connections.ts'
 import { type Diagnostic, parseDocument, parseDocumentBytes } from './document.ts'
+import { type LicenseList, MEDIA_BYTES, markdownFields, mediaReferences, walk } from './listing.ts'
 import { MEDIA_PATH, schemeIsPermitted } from './listing-policy.ts'
+import {
+  connectionBindingDiagnostics,
+  parameterOrigin,
+  parameterOriginDiagnostics,
+} from './selections.ts'
 import { compatible, schemaProblem, valueFits } from './values.ts'
 
 export type { Diagnostic }
@@ -36,9 +41,11 @@ export interface PinnedContract {
 export interface SemanticContext {
   readonly itemRoot?: string
   readonly documentPath?: string
-  readonly contracts?: Readonly<Record<string, PinnedContract>>
-  readonly validationProfile?: 'structural' | 'document' | 'publication' | 'deployment'
+  readonly componentDocuments?: Readonly<Record<string, PinnedContract>>
+  readonly validationScope?: 'structural' | 'document' | 'publication' | 'deployment'
   readonly checkComponent?: (source: Uint8Array) => boolean
+  /** Listing `LIST-LICENSE-002`: the SPDX License List release the platform pins. */
+  readonly licenseList?: LicenseList
 }
 export const record = (value: Json | undefined): Record<string, Json> =>
   isObject(value) ? Object.assign(Object.create(null), value) : Object.create(null)
@@ -69,15 +76,22 @@ export interface AddressProperty {
   readonly sensitive?: boolean
   readonly type: 'string' | 'integer' | 'array'
 }
-const HTTP_FAMILY = ['HTTP', 'HTTPS', 'WS', 'GRPC']
-const L4 = ['TCP', 'UDP']
-const VIEWER = ['HTTP', 'HTTPS', 'WS']
+/** Component §5.2's protocol sets, each defined once there. */
+export const URL_ADDRESSED = ['HTTP', 'HTTPS', 'WS', 'GRPC']
+export const PORT_ADDRESSED = ['TCP', 'UDP']
+export const HTTP_ROUTED = ['HTTP', 'HTTPS', 'WS']
+export const HTTP_PROBE = ['HTTP', 'HTTPS']
+const VIEWER = HTTP_ROUTED
 const publicHTTP = {
-  protocols: HTTP_FAMILY,
-  mismatch: 'ERR_ENDPOINT_NOT_HTTP',
+  protocols: URL_ADDRESSED,
+  mismatch: 'ERR_ENDPOINT_NOT_URL_ADDRESSED',
   requires: 'PUBLIC',
 } as const
-const publicL4 = { protocols: L4, mismatch: 'ERR_ENDPOINT_NOT_L4', requires: 'PUBLIC' } as const
+const publicL4 = {
+  protocols: PORT_ADDRESSED,
+  mismatch: 'ERR_ENDPOINT_NOT_PORT_ADDRESSED',
+  requires: 'PUBLIC',
+} as const
 const viewer = (mode: ViewerMode, claim?: ViewerClaim) =>
   ({
     protocols: VIEWER,
@@ -113,7 +127,7 @@ export const ADDRESS_PROPERTIES: Readonly<Record<string, AddressProperty>> = {
  */
 export interface Exposure {
   readonly visibility: 'PUBLIC' | 'PRIVATE'
-  readonly access: 'OPEN' | 'AUTHENTICATED'
+  readonly access: 'OPEN' | 'RESTRICTED'
   readonly viewerIdentity: 'NONE' | ViewerMode
   readonly viewerClaims: readonly ViewerClaim[]
   readonly accessExemptions: readonly ('PATHS' | 'BEARER')[]
@@ -132,7 +146,7 @@ export function effectiveExposure(exposures: Json | undefined, endpoint: string)
   const mode = at(authored, 'viewerIdentity')
   return {
     visibility,
-    access: at(authored, 'access') === 'AUTHENTICATED' ? 'AUTHENTICATED' : 'OPEN',
+    access: at(authored, 'access') === 'RESTRICTED' ? 'RESTRICTED' : 'OPEN',
     viewerIdentity:
       typeof mode === 'string' && MODES.includes(mode) ? (mode as ViewerMode) : 'NONE',
     viewerClaims: list(at(authored, 'viewerClaims'), ['EMAIL', 'NAME'] as const),
@@ -152,9 +166,9 @@ export function endpointProblem(
 ): string | undefined {
   const declared = at(component, 'spec', 'workload', 'endpoints', endpoint)
   if (!declared) return 'ERR_UNKNOWN_ENDPOINT'
-  // COMP-REF-001: a declared endpoint, then a property §5.2 does not define.
+  // COMP-PLACEHOLDER-001: a declared endpoint, then a property §5.2 does not define.
   const known = addressProperty(property)
-  if (!known) return 'ERR_UNKNOWN_ADDRESS_PROPERTY'
+  if (!known) return 'ERR_UNKNOWN_ENDPOINT_PROPERTY'
   // COMP-EP-004, COMP-EP-012: a property exists only on the protocols that carry it.
   if (known.protocols && !known.protocols.includes(String(at(declared, 'protocol'))))
     return known.mismatch
@@ -215,7 +229,7 @@ export function constantTemplate(from: Json | undefined): string | undefined {
 /**
  * Component §4 and §5: what a component must carry before it is published.
  *
- * Each is a `capability` rule, because absent and not written yet are the same
+ * Each is an `admission` rule, because absent and not written yet are the same
  * bytes and only a publisher can tell them apart. `metadata: false` leaves out
  * COMP-DESC-003, which the blueprint dependency check does not apply
  * (blueprint §4.1).
@@ -223,7 +237,7 @@ export function constantTemplate(from: Json | undefined): string | undefined {
 export function componentObligations(document: Json, { metadata = true } = {}): Diagnostic[] {
   const out: Diagnostic[] = []
   const obligation = (code: string, path: string) =>
-    out.push({ code, path, message: code, phase: 'capability' })
+    out.push({ code, path, message: code, phase: 'admission' })
   if (metadata && at(document, 'metadata', 'description') === undefined)
     obligation('ERR_DESCRIPTION_REQUIRED', '/metadata')
   const spec = record(at(document, 'spec')),
@@ -269,7 +283,7 @@ function inputReferenceDiagnostics(
   secret: boolean,
 ): void {
   const input = at(contract, 'inputs', name)
-  if (!isObject(input)) issue(out, 'ERR_UNKNOWN_INPUT_REFERENCE', path)
+  if (!isObject(input)) issue(out, 'ERR_UNKNOWN_INPUT', path)
   else if (at(input, 'schema', 'type') !== 'string' || (secret && input.sensitive !== true))
     issue(out, 'ERR_VALUE_CONSTRAINT', path)
   else if (input.required === false && input.default === undefined)
@@ -277,6 +291,8 @@ function inputReferenceDiagnostics(
 }
 export function componentDiagnostics(document: Json): Diagnostic[] {
   const out: Diagnostic[] = []
+  // Every input something other than the environment reads (COMP-INPUT-001).
+  const read = new Set<string>()
   const workload = record(at(document, 'spec', 'workload'))
   const contract = record(at(document, 'spec', 'contract'))
   const cron = at(workload, 'schedule', 'cron')
@@ -288,7 +304,7 @@ export function componentDiagnostics(document: Json): Diagnostic[] {
     const endpoint = at(workload, 'endpoints', String(at(http, 'endpoint'))),
       path = `/spec/workload/health/${token(name)}/http/endpoint`
     if (!endpoint) issue(out, 'ERR_UNKNOWN_ENDPOINT', path)
-    else if (!['HTTP', 'HTTPS'].includes(String(at(endpoint, 'protocol'))))
+    else if (!HTTP_PROBE.includes(String(at(endpoint, 'protocol'))))
       issue(out, 'ERR_ENDPOINT_NOT_HTTP', path)
     // COMP-EP-010: a credential comes from an input the probe can always read,
     // and a password or token is never a literal.
@@ -301,15 +317,18 @@ export function componentDiagnostics(document: Json): Diagnostic[] {
     for (const [key, credential, secret] of credentials) {
       if (!isObject(credential)) continue
       if (secret && Object.hasOwn(credential, 'value'))
-        issue(out, 'ERR_SECRET_LITERAL', `${base}/${key}/value`)
-      if (typeof credential.input === 'string')
+        issue(out, 'ERR_SENSITIVE_LITERAL', `${base}/${key}/value`)
+      if (typeof credential.input === 'string') {
+        read.add(credential.input)
         inputReferenceDiagnostics(out, contract, credential.input, `${base}/${key}/input`, secret)
+      }
     }
   }
   // COMP-EP-006: a trust bundle's roots come from an input that is always there.
   for (const [name, endpoint] of Object.entries(record(workload.endpoints))) {
     const input = at(endpoint, 'tls', 'trustBundle', 'input')
-    if (typeof input === 'string')
+    if (typeof input === 'string') {
+      read.add(input)
       inputReferenceDiagnostics(
         out,
         contract,
@@ -317,6 +336,19 @@ export function componentDiagnostics(document: Json): Diagnostic[] {
         `/spec/workload/endpoints/${token(name)}/tls/trustBundle/input`,
         false,
       )
+    }
+  }
+  // COMP-BUILD-004: a build secret reads a sensitive string input that is always
+  // supplied, and its ID is not also a build argument.
+  const build = record(workload.build)
+  for (const [id, secret] of Object.entries(record(build.secrets))) {
+    const input = at(secret, 'input'),
+      path = `/spec/workload/build/secrets/${token(id)}`
+    if (typeof input === 'string') {
+      read.add(input)
+      inputReferenceDiagnostics(out, contract, input, path + '/input', true)
+    }
+    if (Object.hasOwn(record(build.arguments), id)) issue(out, 'ERR_CONFLICTING_ENV_VAR', path)
   }
   const mounts: string[] = []
   for (const [name, volume] of Object.entries(record(workload.volumes))) {
@@ -363,35 +395,47 @@ export function componentDiagnostics(document: Json): Diagnostic[] {
       if (literal !== undefined && v.schema !== undefined && !valueFits(v.schema, literal))
         issue(out, 'ERR_VALUE_CONSTRAINT', literalPath)
       if (literal !== undefined && v.sensitive === true)
-        issue(out, 'ERR_SECRET_LITERAL', literalPath)
-      const target = at(v.target, 'envVarKey')
+        issue(out, 'ERR_SENSITIVE_LITERAL', literalPath)
+      const target = at(v.target, 'envVar')
       if (typeof target === 'string') {
-        if (env.has(target)) issue(out, 'ERR_CONFLICTING_ENV_KEY', path + '/target/envVarKey')
+        if (env.has(target)) issue(out, 'ERR_CONFLICTING_ENV_VAR', path + '/target/envVar')
         env.add(target)
       }
       if (direction !== 'outputs') continue
       if (typeof from.input === 'string') {
+        read.add(from.input)
         const input = at(contract, 'inputs', from.input)
         const member = asString(from.member)
-        if (!input) issue(out, 'ERR_UNKNOWN_INPUT_REFERENCE', path + '/from/input')
+        if (!input) issue(out, 'ERR_UNKNOWN_INPUT', path + '/from/input')
         // COMP-OUT-004: a connection input is read one member at a time, and a
         // value input has no members.
         else if (isConnectionInput(record(input)) !== (member !== undefined))
           issue(
             out,
-            'ERR_UNKNOWN_INPUT_REFERENCE',
+            'ERR_UNKNOWN_INPUT',
             path + (member === undefined ? '/from/input' : '/from/member'),
           )
         else if (member !== undefined) {
-          if (!compatible(connectionMemberContract(member), v))
+          // COMP-OUT-004: the member is one the input's protocol defines, of the
+          // type it fixes, and a sensitive member is forwarded only as sensitive.
+          const contract = protocolMember(at(input, 'connection', 'protocol'), member)
+          if (!contract) {
+            if (CONNECTION_MEMBERS.includes(member))
+              issue(out, 'ERR_UNKNOWN_CONNECTION_MEMBER', path + '/from/member')
+          } else if (!compatible({ schema: { type: contract.type } }, v))
             issue(out, 'ERR_VALUE_CONSTRAINT', path + '/from/input')
+          else if (contract.sensitive && v.sensitive !== true)
+            issue(out, 'ERR_VALUE_CONSTRAINT', path + '/from/member')
+          // COMP-OUT-003: an optional member without a default may be absent.
+          else if (!guaranteedMember(contract))
+            issue(out, 'ERR_INPUT_NOT_GUARANTEED', path + '/from/member')
         } else if (!compatible(record(input), v))
           issue(out, 'ERR_VALUE_CONSTRAINT', path + '/from/input')
         // COMP-OUT-003: an origin that can be absent cannot produce the output.
         // It is checked after the type rule so that a document breaking both
         // keeps the code v1.0.0 gave it.
         else if (at(input, 'required') === false && at(input, 'default') === undefined)
-          issue(out, 'ERR_OUTPUT_NOT_PRODUCIBLE', path + '/from/input')
+          issue(out, 'ERR_INPUT_NOT_GUARANTEED', path + '/from/input')
       }
       const template = typeof from.template === 'string' ? from.template : undefined
       if (template !== undefined) {
@@ -400,14 +444,14 @@ export function componentDiagnostics(document: Json): Diagnostic[] {
           issue(
             out,
             failure.kind === 'malformed'
-              ? 'ERR_MALFORMED_REFERENCE'
+              ? 'ERR_MALFORMED_PLACEHOLDER'
               : failure.kind === 'unknown-namespace'
-                ? 'ERR_UNKNOWN_REFERENCE_NAMESPACE'
-                : 'ERR_REFERENCE_NOT_IN_SCOPE',
+                ? 'ERR_UNKNOWN_PLACEHOLDER_NAMESPACE'
+                : 'ERR_NAMESPACE_NOT_PERMITTED',
             path + '/from/template',
           )
       }
-      // COMP-REF-001: a `self` path of any shape but `endpoints.<endpoint>.<property>`
+      // COMP-PLACEHOLDER-001: a `self` path of any shape but `endpoints.<endpoint>.<property>`
       // names no endpoint explicitly, so `sourceEndpoints` gives it none and it is
       // ERR_UNKNOWN_ENDPOINT, as the withdrawn `self.<property>.<endpoint>` is.
       for (const ref of sourceEndpoints(from)) {
@@ -432,6 +476,18 @@ export function componentDiagnostics(document: Json): Diagnostic[] {
       }
     }
   }
+  // COMP-INPUT-001: a workload input with no target never reaches the
+  // environment, so something else reads it or it is declared for nothing.
+  const type = at(document, 'spec', 'type')
+  if (type === 'SERVICE' || type === 'WORKER' || type === 'JOB')
+    for (const [name, input] of Object.entries(record(contract.inputs)))
+      if (
+        isObject(input) &&
+        !isConnectionInput(input) &&
+        input.target === undefined &&
+        !read.has(name)
+      )
+        issue(out, 'ERR_UNUSED_INPUT', `/spec/contract/inputs/${token(name)}`)
   return out
 }
 
@@ -460,76 +516,41 @@ function checkScreenshotPaths(document: Json, out: Diagnostic[]): void {
 }
 
 /**
- * Listing §5's media path grammar, as the schema carries it. Restated here
- * because §4.1 holds a description image to the same shape, and a description
- * is a Markdown blob no `pattern` can reach into.
+ * Listing §4.1: the three rules the overview Markdown profile carries, over
+ * `overview` and `gettingStarted` alike. Every diagnostic anchors at the field:
+ * it is one scalar, so there is no finer pointer to give, and the offending
+ * destination rides in the message instead. Message text is not normative
+ * (docs/conformance.md). A destination CommonMark could not resolve to a URL at
+ * all is not a scheme the permitted set contains, so it fails with the rest.
  */
-/**
- * `spec.description` parsed as CommonMark 0.31.2, or `undefined` when the
- * listing declares none. Parsed once and walked by every §4.1 rule: three
- * separate walks over the same blob would be three chances to disagree about
- * what the document says.
- */
-function descriptionAst(document: Json): Node | undefined {
-  const description = asString(child(child(document, 'spec'), 'description'))
-  if (description === undefined) return undefined
-  return new Parser().parse(description)
-}
-
-/** Every node in an AST, in document order. */
-function* walk(ast: Node): Generator<Node> {
-  const walker = ast.walker()
-  let step = walker.next()
-  while (step !== null) {
-    if (step.entering) yield step.node
-    step = walker.next()
-  }
-}
-
-/**
- * Listing §4.1 — a link destination must carry a permitted scheme or be a
- * fragment. A destination CommonMark could not resolve to a URL at all is not
- * a scheme this set contains, so it fails with the rest.
- */
-
-/**
- * Listing §4.1 — the three rules the description profile carries. Every
- * diagnostic anchors at `/spec/description`: the field is one scalar, so there
- * is no finer pointer to give, and the offending destination rides in the
- * message instead. Message text is not normative (docs/conformance.md).
- */
-function checkDescriptionMarkdown(document: Json, out: Diagnostic[]): void {
-  const ast = descriptionAst(document)
-  if (ast === undefined) return
-
-  for (const node of walk(ast)) {
-    // A code span and a fenced code block are their own constructs in
-    // CommonMark's grammar, never `html_block` or `html_inline` — which is why
-    // a listing may document `<script>` inside a fence and stay conforming.
-    if (node.type === 'html_block' || node.type === 'html_inline') {
-      out.push({
-        code: 'ERR_RAW_HTML',
-        path: '/spec/description',
-        message: `description contains raw HTML: ${summarise(node.literal ?? '')}`,
-      })
-      continue
+function checkListingMarkdown(document: Json, out: Diagnostic[]): void {
+  for (const { pointer, ast } of markdownFields(document))
+    for (const node of walk(ast)) {
+      // A code span and a fenced code block are their own constructs in
+      // CommonMark's grammar, never `html_block` or `html_inline`, which is why
+      // a listing may document `<script>` inside a fence and stay conforming.
+      if (node.type === 'html_block' || node.type === 'html_inline') {
+        out.push({
+          code: 'ERR_RAW_HTML',
+          path: pointer,
+          message: `contains raw HTML: ${summarise(node.literal ?? '')}`,
+        })
+        continue
+      }
+      const destination = node.destination ?? ''
+      if (node.type === 'link' && !schemeIsPermitted(destination))
+        out.push({
+          code: 'ERR_DISALLOWED_SCHEME',
+          path: pointer,
+          message: `link destination "${summarise(destination)}" is not https, http, mailto, or a fragment`,
+        })
+      if (node.type === 'image' && !MEDIA_PATH.test(destination))
+        out.push({
+          code: 'ERR_IMAGE_NOT_LOCAL',
+          path: pointer,
+          message: `image destination "${summarise(destination)}" is not a media path under media/`,
+        })
     }
-    const destination = node.destination ?? ''
-    if (node.type === 'link' && !schemeIsPermitted(destination)) {
-      out.push({
-        code: 'ERR_DISALLOWED_SCHEME',
-        path: '/spec/description',
-        message: `link destination "${summarise(destination)}" is not https, http, mailto, or a fragment`,
-      })
-    }
-    if (node.type === 'image' && !MEDIA_PATH.test(destination)) {
-      out.push({
-        code: 'ERR_IMAGE_NOT_LOCAL',
-        path: '/spec/description',
-        message: `image destination "${summarise(destination)}" is not a media path under media/`,
-      })
-    }
-  }
 }
 
 /** A diagnostic message quotes the offender; it does not reproduce it. */
@@ -541,40 +562,6 @@ function summarise(value: string): string {
 // ===========================================================================
 // item-scoped rules
 // ===========================================================================
-
-/** Every media path a listing declares, paired with its JSON Pointer. */
-function mediaPaths(document: Json): { path: string; pointer: string }[] {
-  const spec = child(document, 'spec')
-  const found: { path: string; pointer: string }[] = []
-
-  const icon = asString(child(spec, 'icon'))
-  if (icon !== undefined) found.push({ path: icon, pointer: '/spec/icon' })
-
-  const screenshots = child(spec, 'screenshots')
-  if (Array.isArray(screenshots)) {
-    for (const [position, screenshot] of screenshots.entries()) {
-      const file = asString(child(screenshot, 'file'))
-      if (file !== undefined) {
-        found.push({ path: file, pointer: `/spec/screenshots/${position}/file` })
-      }
-    }
-  }
-
-  // §4.1 — a description image is a media path, so §5's existence and
-  // containment rules reach it. Only well-formed ones: a destination that is
-  // not a media path at all is already ERR_IMAGE_NOT_LOCAL, and piling
-  // ERR_MEDIA_NOT_FOUND on top would report one mistake twice.
-  const ast = descriptionAst(document)
-  if (ast !== undefined) {
-    for (const node of walk(ast)) {
-      const destination = node.destination ?? ''
-      if (node.type === 'image' && MEDIA_PATH.test(destination)) {
-        found.push({ path: destination, pointer: '/spec/description' })
-      }
-    }
-  }
-  return found
-}
 
 /**
  * True when `target` lies strictly inside `root`. Both are expected to be
@@ -607,9 +594,13 @@ function resolveReal(path: string): string {
   }
 }
 
-/** Listing §5 — existence and containment, both of which need the filesystem. */
+/**
+ * Listing §5: existence, containment and size, each of which needs the
+ * filesystem. Size is read by stat, never by decoding (`LIST-MEDIA-004`), and
+ * only for a file that exists inside the item root.
+ */
 function checkMediaOnDisk(document: Json, itemRoot: string, out: Diagnostic[]): void {
-  for (const { path, pointer } of mediaPaths(document)) {
+  for (const { path, pointer, role } of mediaReferences(document)) {
     const target = join(itemRoot, path)
     if (!existsSync(target) && !isSymlink(target)) {
       out.push({
@@ -619,13 +610,27 @@ function checkMediaOnDisk(document: Json, itemRoot: string, out: Diagnostic[]): 
       })
       continue
     }
-    if (!contains(itemRoot, resolveReal(target))) {
+    const real = resolveReal(target)
+    if (!contains(itemRoot, real)) {
       out.push({
         code: 'ERR_PATH_ESCAPE',
         path: pointer,
         message: `${path} resolves outside the item root`,
       })
+      continue
     }
+    let size: number | undefined
+    try {
+      size = statSync(real).size
+    } catch {
+      size = undefined
+    }
+    if (size !== undefined && size > MEDIA_BYTES[role])
+      out.push({
+        code: 'ERR_MEDIA_TOO_LARGE',
+        path: pointer,
+        message: `${path} is ${size} bytes, over the ${MEDIA_BYTES[role]} byte bound for ${role === 'icon' ? 'an icon' : 'an image'}`,
+      })
   }
 }
 
@@ -637,18 +642,50 @@ function isSymlink(path: string): boolean {
   }
 }
 
-/** Every `*.yaml`/`*.yml` under `root`, recursively, as absolute paths. */
+/**
+ * Every `*.yaml`/`*.yml` under `root`, recursively, as absolute paths, outside
+ * the item's `media/` directory: the files core v2 §4.1 reads to decide which
+ * are the item's component documents.
+ */
 function yamlFiles(root: string): string[] {
   const found: string[] = []
+  const media = join(root, 'media')
   const walk = (dir: string): void => {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
       const path = join(dir, entry.name)
-      if (entry.isDirectory()) walk(path)
-      else if (/\.ya?ml$/i.test(entry.name)) found.push(path)
+      if (entry.isDirectory()) {
+        if (path !== media) walk(path)
+      } else if (/\.ya?ml$/.test(entry.name)) found.push(path)
     }
   }
   walk(root)
   return found.sort()
+}
+
+/**
+ * `CORE-ITEM-002`, core v2 §4.1: every YAML file of the item outside `media/`
+ * parses under the YAML profile, because deciding whether it is a component
+ * document reads it. The file is another file of the item, so the diagnostic
+ * anchors at the document's root and names the file in `related`.
+ */
+function checkItemFiles(itemRoot: string, out: Diagnostic[]): void {
+  for (const path of yamlFiles(itemRoot)) {
+    let ok = false
+    try {
+      ok = 'value' in parseDocumentBytes(readFileSync(path))
+    } catch {
+      ok = false
+    }
+    if (ok) continue
+    const artifact = relative(itemRoot, path).split('\\').join('/')
+    out.push({
+      code: 'ERR_INVALID_YAML',
+      path: '',
+      message: `${artifact} does not parse under the YAML profile`,
+      phase: 'semantic',
+      related: [{ artifact, path: '' }],
+    })
+  }
 }
 
 /** Parse a document off disk, or `undefined` when it is unreadable. */
@@ -704,6 +741,24 @@ function checkItemType(document: Json, itemRoot: string, out: Diagnostic[]): voi
   })
 }
 
+/**
+ * `LIST-ITEM-002`, listing §3: a component item holds exactly one component
+ * document, any YAML file under the item root that parses with
+ * `kind: COMPONENT`.
+ */
+function checkComponentCount(document: Json, itemRoot: string, out: Diagnostic[]): void {
+  if (asString(child(child(document, 'spec'), 'itemType')) !== 'COMPONENT') return
+  const count = yamlFiles(itemRoot).filter(
+    (path) => at(readDocument(path), 'kind') === 'COMPONENT',
+  ).length
+  if (count === 1) return
+  out.push({
+    code: 'ERR_COMPONENT_COUNT',
+    path: '/spec/itemType',
+    message: `a component item holds exactly one component document, and this one holds ${count}`,
+  })
+}
+
 export interface SemanticReport {
   diagnostics: Diagnostic[]
   deferred: DeferredObligation[]
@@ -735,25 +790,33 @@ export function semanticReport(
   if (family.name === 'component') out.push(...componentDiagnostics(document))
   if (family.name === 'listing') {
     checkScreenshotPaths(document, out)
-    checkDescriptionMarkdown(document, out)
+    checkListingMarkdown(document, out)
     if (context.itemRoot) {
       checkSlug(document, context.itemRoot, out)
+      checkItemFiles(context.itemRoot, out)
       checkItemType(document, context.itemRoot, out)
+      checkComponentCount(document, context.itemRoot, out)
       checkMediaOnDisk(document, context.itemRoot, out)
-    } else defer('LIST-ITEM-001', '/spec/itemType', 'itemRoot')
+    } else {
+      defer('LIST-ITEM-001', '/spec/itemType', 'itemRoot')
+      if (at(document, 'spec', 'itemType') === 'COMPONENT')
+        defer('LIST-ITEM-002', '/spec/itemType', 'itemRoot')
+    }
   }
   if (family.name !== 'blueprint')
     return { diagnostics: out, deferred, components: resolved, componentDigests }
   const spec = record(at(document, 'spec')),
-    nodes = record(spec.components),
+    nodes = record(spec.nodes),
     parameters = record(spec.parameters)
   const referenced = new Set<string>()
-  if (context.itemRoot) checkSlug(document, context.itemRoot, out)
-  else defer('CORE-ITEM-001', '/metadata/slug', 'itemRoot')
+  if (context.itemRoot) {
+    checkSlug(document, context.itemRoot, out)
+    checkItemFiles(context.itemRoot, out)
+  } else defer('CORE-ITEM-001', '/metadata/slug', 'itemRoot')
   for (const [name, node] of Object.entries(nodes)) {
     const n = record(node),
       ref = String(n.componentRef),
-      path = `/spec/components/${token(name)}/componentRef`
+      path = `/spec/nodes/${token(name)}/componentRef`
     let bytes: Uint8Array | undefined
     if (/^\.\.?\//.test(ref)) {
       if (!context.itemRoot) {
@@ -782,8 +845,8 @@ export function semanticReport(
     } else {
       const key = `${ref}@${n.revision}`
       const pinned =
-        context.contracts && Object.hasOwn(context.contracts, key)
-          ? context.contracts[key]
+        context.componentDocuments && Object.hasOwn(context.componentDocuments, key)
+          ? context.componentDocuments[key]
           : undefined
       if (!pinned) {
         defer('BP-REF-002', path, `contract:${ref}@${n.revision}`)
@@ -824,13 +887,13 @@ export function semanticReport(
       const target = resolveReal(path)
       if (!contains(context.itemRoot, target) || referenced.has(target)) continue
       if (at(readDocument(path), 'kind') === 'COMPONENT')
-        issue(out, 'ERR_UNREFERENCED_COMPONENT', '/spec/components')
+        issue(out, 'ERR_UNREFERENCED_COMPONENT', '/spec/nodes')
     }
   const consumers = new Map<string, Record<string, Json>[]>()
   const dependencies = new Map<string, string[]>()
   for (const [name, node] of Object.entries(nodes)) {
     const n = record(node),
-      base = `/spec/components/${token(name)}`,
+      base = `/spec/nodes/${token(name)}`,
       component = resolved.get(name)
     const inputs = record(at(component, 'spec', 'contract', 'inputs')),
       outputs = record(at(component, 'spec', 'contract', 'outputs'))
@@ -838,9 +901,9 @@ export function semanticReport(
       category = at(component, 'spec', 'type')
     // BP-NODE-001..002: compute agrees with whether the component runs.
     if (component && category === 'EXTERNAL' && n.compute !== undefined)
-      issue(out, 'ERR_CONFLICTING_NODE_COMPUTE', base + '/compute')
+      issue(out, 'ERR_COMPUTE_FORBIDDEN', base + '/compute')
     if (component && category !== 'EXTERNAL' && n.compute === undefined)
-      issue(out, 'ERR_CONFLICTING_NODE_COMPUTE', base)
+      issue(out, 'ERR_COMPUTE_REQUIRED', base)
     if (component) {
       const declared = record(at(workload, 'volumes')),
         allocated = record(n.volumes)
@@ -862,12 +925,12 @@ export function semanticReport(
         else {
           if (
             exposure.visibility === 'PUBLIC' &&
-            HTTP_FAMILY.includes(String(at(e, 'protocol'))) &&
+            URL_ADDRESSED.includes(String(at(e, 'protocol'))) &&
             !at(workload, 'health', 'readiness', 'http')
           )
             issue(out, 'ERR_READINESS_REQUIRED', where)
           // BP-NODE-007: sign-in and a request header exist only on HTTP, HTTPS and WS.
-          if (exposure.access === 'AUTHENTICATED' && !VIEWER.includes(String(at(e, 'protocol'))))
+          if (exposure.access === 'RESTRICTED' && !VIEWER.includes(String(at(e, 'protocol'))))
             issue(out, 'ERR_ENDPOINT_NOT_HTTP', where + '/access')
           // BP-NODE-008: an OpenID Connect client, and each request taken without a
           // viewer, is one the component declares.
@@ -878,8 +941,8 @@ export function semanticReport(
             exemptions.forEach((value, i) => {
               const declared =
                 value === 'PATHS'
-                  ? at(e, 'accessExemptions', 'paths') !== undefined
-                  : at(e, 'accessExemptions', 'bearer') === true
+                  ? at(e, 'exemptibleRequests', 'paths') !== undefined
+                  : at(e, 'exemptibleRequests', 'bearerToken') === true
               if (!declared)
                 issue(out, 'ERR_EXEMPTION_NOT_DECLARED', `${where}/accessExemptions/${i}`)
             })
@@ -954,7 +1017,7 @@ export function semanticReport(
         }
         // BP-CONNECTION-001 decides whether a connection and an input agree in kind,
         // and a connection input declares no schema, default or sensitivity to check.
-        if (parameterSource(p)?.namespace === 'connections' || isConnectionInput(consumer)) continue
+        if (parameterOrigin(p)?.namespace === 'connections' || isConnectionInput(consumer)) continue
         if (inputs[input]) {
           const receivers = consumers.get(String(s.parameter)) ?? []
           receivers.push(consumer)
@@ -973,7 +1036,7 @@ export function semanticReport(
           if (value !== undefined && consumer.sensitive === true)
             issue(
               out,
-              'ERR_SECRET_LITERAL',
+              'ERR_SENSITIVE_LITERAL',
               '/spec/parameters/' + token(String(s.parameter)) + '/default',
             )
         }
@@ -1006,7 +1069,7 @@ export function semanticReport(
           !valueFits(consumer.schema, s.value)
         )
           issue(out, 'ERR_VALUE_CONSTRAINT', path + '/value')
-        if (consumer.sensitive === true) issue(out, 'ERR_SECRET_LITERAL', path + '/value')
+        if (consumer.sensitive === true) issue(out, 'ERR_SENSITIVE_LITERAL', path + '/value')
       }
     }
   }
@@ -1014,7 +1077,7 @@ export function semanticReport(
     const receivers = consumers.get(name) ?? [],
       path = '/spec/parameters/' + token(name)
     // BP-PARAM-001: a generated value a hash names, and that carries `ui`, reaches
-    // the installer through disclosure without a binding of its own.
+    // the deployer through disclosure without a binding of its own.
     const used =
       Object.values(nodes).some((n) =>
         Object.values(record(at(n, 'bindings'))).some((b) => at(b, 'parameter') === name),
@@ -1023,19 +1086,26 @@ export function semanticReport(
         at(p, 'ui') !== undefined &&
         Object.values(parameters).some((other) => at(other, 'hash', 'parameter') === name))
     if (!used) issue(out, 'ERR_UNBOUND_PARAMETER', path)
-    out.push(...parameterSourceDiagnostics(name, p))
+    // BP-UI-005: a submitted parameter the form never offers, and that has no
+    // default, cannot reach a required input through a form deployment.
+    if (
+      ['generator', 'hash', 'from', 'ui', 'default'].every((key) => at(p, key) === undefined) &&
+      receivers.some((v) => v.required !== false)
+    )
+      issue(out, 'ERR_PARAMETER_NOT_OFFERED', path)
+    out.push(...parameterOriginDiagnostics(name, p))
     // BP-PARAM-012: a hash names a generated parameter that bcrypt can read whole.
     const hashed = at(p, 'hash', 'parameter')
     if (typeof hashed === 'string') {
       const source = Object.hasOwn(parameters, hashed) ? parameters[hashed] : undefined
       if (source === undefined) issue(out, 'ERR_UNKNOWN_PARAMETER', path + '/hash/parameter')
       else if (at(source, 'generator') === undefined)
-        issue(out, 'ERR_INVALID_HASH_SOURCE', path + '/hash/parameter')
+        issue(out, 'ERR_INVALID_HASHED_PARAMETER', path + '/hash/parameter')
       else if (
         at(p, 'hash', 'algorithm') === 'BCRYPT' &&
         encodedLength(at(source, 'generator')) > BCRYPT_INPUT_BYTES
       )
-        issue(out, 'ERR_INVALID_HASH_SOURCE', path + '/hash/algorithm')
+        issue(out, 'ERR_INVALID_HASHED_PARAMETER', path + '/hash/algorithm')
     }
     if (
       receivers.length > 1 &&
@@ -1086,7 +1156,7 @@ export function semanticReport(
       if (n === 0) ready.push(dependent)
     }
   }
-  if (ordered.length !== pending.size) issue(out, 'ERR_VALUE_CYCLE', '/spec/components')
+  if (ordered.length !== pending.size) issue(out, 'ERR_VALUE_CYCLE', '/spec/nodes')
   // Propagate statically known values through arbitrarily many forwarding nodes.
   const known = new Map<string, Json>()
   for (const key of ordered) {
@@ -1110,8 +1180,8 @@ export function semanticReport(
     known.set(key, value)
     const path =
       direction === 'in'
-        ? '/spec/components/' + token(node) + '/bindings/' + token(name)
-        : '/spec/components/' + token(node) + '/componentRef'
+        ? '/spec/nodes/' + token(node) + '/bindings/' + token(name)
+        : '/spec/nodes/' + token(node) + '/componentRef'
     if (
       definition.schema &&
       !valueFits(definition.schema, value) &&
@@ -1138,9 +1208,9 @@ export function semanticReport(
       (typeof binding.node === 'string' || typeof binding.input === 'string')
     )
       out.push({
-        code: 'ERR_SECRET_LITERAL',
+        code: 'ERR_SENSITIVE_LITERAL',
         path,
-        message: 'ERR_SECRET_LITERAL',
+        message: 'ERR_SENSITIVE_LITERAL',
         phase: 'semantic',
         ...(direction === 'out'
           ? {

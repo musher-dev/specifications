@@ -1,0 +1,49 @@
+{
+  "specVersion": "v2",
+  "kind": "COMPONENT",
+  "metadata": {
+    "revision": 1,
+    "description": "Synthetic conformance fixture component."
+  },
+  "spec": {
+    "type": "WORKER",
+    "workload": {
+      "source": {
+        "image": "example/worker@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    "contract": {
+      "inputs": {
+        "databaseURL": {
+          "description": "Database URL",
+          "schema": {
+            "type": "string"
+          },
+          "sensitive": true,
+          "target": {
+            "envVar": "DATABASE_URL"
+          }
+        },
+        "databaseHost": {
+          "description": "Database host",
+          "schema": {
+            "type": "string"
+          },
+          "target": {
+            "envVar": "DATABASE_HOST"
+          }
+        },
+        "databasePort": {
+          "description": "Database port",
+          "schema": {
+            "type": "integer"
+          },
+          "target": {
+            "envVar": "DATABASE_PORT"
+          }
+        }
+      },
+      "outputs": {}
+    }
+  }
+}

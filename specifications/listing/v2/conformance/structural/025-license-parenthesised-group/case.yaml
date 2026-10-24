@@ -1,0 +1,13 @@
+# LIST-LICENSE-001 admits one level of parentheses, which is what SPDX needs to
+# say "either of two licences, and also a third".
+specVersion: v2
+kind: LISTING
+metadata:
+  slug: pgvector
+spec:
+  itemType: COMPONENT
+  displayName: pgvector
+  summary: Vector similarity search for PostgreSQL
+  category: DATABASES
+  lifecycleStage: STABLE
+  license: (MIT OR Apache-2.0) AND Unicode-3.0

@@ -1,0 +1,11 @@
+{
+  "id": "semantic-019-output-value-names-a-foreign-namespace",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#outputs",
+  "requirements": [
+    "COMP-PLACEHOLDER-001",
+    "CORE-PLACEHOLDER-003"
+  ],
+  "summary": "A placeholder in an output template naming a namespace other than self is rejected."
+}

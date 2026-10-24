@@ -67,10 +67,11 @@ jobs:
           echo "→ ${fixed}"
           gh pr edit "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --title "$fixed"
 
-      # The vocabulary here must stay in step with
-      # .github/conventional-commits.yaml and the lefthook commit-msg hook.
-      # The scope labels the area a change touches; release-please assigns a
-      # commit to a package by the paths it changes, not by its scope.
+      # There is no checkout, so the action cannot read
+      # .config/commits/committed.toml: its lists are copies, which
+      # `task check:commits` holds in step with that file. A scope is required
+      # (COMMIT-04). The scope labels the area a change touches; release-please
+      # assigns a commit to a package by the paths it changes, not by its scope.
       - uses: amannn/action-semantic-pull-request@48f256284bd46cdaab1048c3721360e808335d50 # v6.1.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -101,7 +102,7 @@ jobs:
             release
             deps
             deps-dev
-          requireScope: false
+          requireScope: true
           subjectPattern: ^(?![A-Z])(?!.*\.$).+$
           subjectPatternError: |
             The subject "{subject}" is invalid for the "{type}" type.

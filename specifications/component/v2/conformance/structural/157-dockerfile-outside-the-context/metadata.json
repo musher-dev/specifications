@@ -1,0 +1,10 @@
+{
+  "id": "structural-157-dockerfile-outside-the-context",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#source",
+  "requirements": [
+    "COMP-BUILD-002"
+  ],
+  "summary": "A Dockerfile path that leaves the build context is rejected."
+}

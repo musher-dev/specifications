@@ -1,0 +1,11 @@
+{
+  "id": "semantic-125-placeholder-segment-with-a-hyphen",
+  "phase": "semantic",
+  "expected": "pass",
+  "clause": "specifications/core/v2/spec.md#reference-grammar",
+  "requirements": [
+    "CORE-PLACEHOLDER-001"
+  ],
+  "summary": "A placeholder segment in the DNS-label grammar, such as cloud-region, is well formed.",
+  "document": "app/blueprint.yaml"
+}

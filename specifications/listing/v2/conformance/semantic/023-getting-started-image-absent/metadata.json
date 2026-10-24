@@ -1,0 +1,11 @@
+{
+  "id": "semantic-023-getting-started-image-absent",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/listing/v2/spec.md#media",
+  "requirements": [
+    "LIST-MEDIA-001"
+  ],
+  "summary": "An image in gettingStarted naming a file the item does not ship is rejected.",
+  "document": "pgvector/listing.yaml"
+}

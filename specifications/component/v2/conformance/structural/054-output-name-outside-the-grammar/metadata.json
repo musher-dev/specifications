@@ -1,0 +1,10 @@
+{
+  "id": "structural-054-output-name-outside-the-grammar",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#contract",
+  "summary": "An output name carrying a hyphen is rejected; an input or output name is lowerCamelCase.",
+  "requirements": [
+    "COMP-CONTRACT-001"
+  ]
+}

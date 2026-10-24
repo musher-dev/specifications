@@ -80,7 +80,7 @@ to migrate.
 
 Blueprint §4.2 required acyclicity while conceding, in the same clause, that
 "acyclicity is not a resolution hazard". That concession is load-bearing and it is
-correct. [Component §6.2](../../specifications/component/v1/spec.md#outputs) makes an
+correct. [Component §6.2](../../specifications/component/v2/spec.md#outputs) makes an
 output a function of its own node and nothing else — an invariant this contract
 states normatively, carries a diagnostic for, and is not going to withdraw. Every
 output in a graph is therefore resolvable before any edge is bound, so a resolver

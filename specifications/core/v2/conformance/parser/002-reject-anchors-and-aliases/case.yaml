@@ -1,0 +1,26 @@
+# Expanded, this document is entirely valid: two probes, both polling
+# `/healthz`. It is rejected anyway, and that is the point — the rule is about
+# the spelling, not about what the spelling produces.
+#
+# A reader who has not expanded the alias cannot see that changing `readiness`
+# also changes `liveness`.
+specVersion: v2
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Static web server.
+spec:
+  type: SERVICE
+  workload:
+    source:
+      image: nginx:1.29.4-alpine
+    endpoints:
+      web:
+        targetPort: 8080
+        protocol: HTTP
+    health:
+      readiness: &probe
+        http:
+          endpoint: web
+          path: /healthz
+      liveness: *probe

@@ -1,0 +1,15 @@
+# The media here are real images, because LIST-MEDIA-005 reads their headers.
+# An overview image is not in the gallery, but it is held to the screenshot
+# bounds all the same, and reported at the field that holds it.
+specVersion: v2
+kind: LISTING
+metadata:
+  slug: pgvector
+spec:
+  itemType: COMPONENT
+  displayName: pgvector
+  summary: Vector similarity search for PostgreSQL
+  category: DATABASES
+  lifecycleStage: STABLE
+  overview: |
+    ![Topology](media/topology.png)

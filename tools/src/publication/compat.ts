@@ -19,6 +19,7 @@ import {
   failCli,
   hasPart,
   isObject,
+  isRetiredMajor,
   type Json,
   LayoutError,
   REPO_ROOT,
@@ -53,7 +54,7 @@ function partFiles(
  *
  * This gate replays a release's rejections as well as its acceptances, because
  * a rejection pins observable meaning too. That is the right default and it is
- * stricter than the guarantee it enforces: core v1 §3 forbids validation
+ * stricter than the guarantee it enforces: core v2 §3 forbids validation
  * becoming *stricter* within a major, and says nothing against a relaxation. So
  * a release that deliberately stops rejecting a document has to say so here,
  * keyed `<tag>:<case id>`, in a diff a reviewer sees. It takes the same shape,
@@ -269,7 +270,7 @@ export function replayRelease(
 /** A release to replay, or the reason it is not replayed. */
 type Planned =
   | { readonly replay: true; readonly recorded: RecordedRelease; readonly family: Family }
-  | { readonly replay: false; readonly note: string }
+  | { readonly replay: false; readonly note: string; readonly failure?: true }
 
 /** Decide, for every tagged release, whether it is replayed and against which family. */
 function plan(repoRoot: string): Planned[] {
@@ -279,13 +280,24 @@ function plan(repoRoot: string): Planned[] {
     if (WITHDRAWN.get(release.tag) === recorded.entry.tree)
       return { replay: false, note: `${release.tag}: withdrawn by ADR 0033 §5, not replayed` }
     const family = families.get(`${release.family}/${release.major}`)
-    // A retired family still has published versions, but no current schema to
-    // replay them against. Say so rather than counting it as clean.
+    // A retired major still has published versions, but no working tree to
+    // replay them against; its releases are verified from their tags instead.
+    // Any other major missing from the tree is a layout fault, never clean.
     if (family === undefined)
-      return {
-        replay: false,
-        note: `${release.tag}: no ${release.family}/${release.major} in the working tree`,
-      }
+      return isRetiredMajor(release.family, release.major)
+        ? {
+            replay: false,
+            note:
+              `${release.tag}: retired major: verified from tags by check:published and ` +
+              'site:fetch, not replayed',
+          }
+        : {
+            replay: false,
+            failure: true,
+            note:
+              `${release.tag}: no ${release.family}/${release.major} in the working tree, and ` +
+              `${release.major} is not a retired major in tools/src/lib/layout.ts`,
+          }
     return { replay: true, recorded, family }
   })
 }
@@ -304,7 +316,8 @@ export function replayAll(
   let checked = 0
   for (const planned of plan(repoRoot)) {
     if (!planned.replay) {
-      console.log(`  · ${planned.note}`)
+      if (planned.failure) failures.add(planned.note)
+      else console.log(`  · ${planned.note}`)
       continue
     }
     const count = replayRelease(repoRoot, planned.family, planned.recorded, failures)
@@ -395,7 +408,8 @@ export async function replayConcurrently(
   let checked = 0
   for (const p of planned) {
     if (!p.replay) {
-      console.log(`  · ${p.note}`)
+      if (p.failure) failures.add(p.note)
+      else console.log(`  · ${p.note}`)
       continue
     }
     const tag = p.recorded.release.tag
@@ -432,7 +446,8 @@ async function main(): Promise<void> {
 
   failures.report(
     checked === 0
-      ? 'No releases to replay yet — the compatibility guarantee starts at the first tag.'
+      ? 'No release of an authored major to replay yet: the compatibility guarantee of each ' +
+          'major starts at its first tag.'
       : `Replayed ${replayed} document(s) from ${checked} release(s); none regressed.`,
   )
 }

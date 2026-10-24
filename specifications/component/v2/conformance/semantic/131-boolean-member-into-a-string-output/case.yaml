@@ -1,0 +1,21 @@
+specVersion: v2
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: EXTERNAL
+  contract:
+    inputs:
+      storage:
+        description: Connection this node stands for
+        connection:
+          protocol: S3
+    outputs:
+      pathStyle:
+        description: Forwarded pathStyle
+        schema:
+          type: string
+        from:
+          input: storage
+          member: pathStyle

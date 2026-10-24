@@ -1,0 +1,10 @@
+{
+  "id": "structural-206-repository-url-with-credentials",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#source",
+  "requirements": [
+    "COMP-SRC-006"
+  ],
+  "summary": "A repository URL carrying userinfo is rejected; a document never names a Git credential."
+}

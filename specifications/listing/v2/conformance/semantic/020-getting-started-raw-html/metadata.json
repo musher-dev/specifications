@@ -1,0 +1,10 @@
+{
+  "id": "semantic-020-getting-started-raw-html",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/listing/v2/spec.md#overview-markdown",
+  "requirements": [
+    "LIST-MD-001"
+  ],
+  "summary": "Raw HTML in gettingStarted is rejected, reported at that field."
+}

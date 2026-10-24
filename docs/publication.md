@@ -13,9 +13,29 @@ reasoning behind it lives in
 ## From commit to release
 
 Every family version is a release-please package, and core is one too:
-`specifications/core/v1`, `specifications/component/v1`,
-`specifications/blueprint/v1` and `specifications/listing/v1`. Each has its own
-release line, tagged `<family>/v<MAJOR>.<MINOR>.<PATCH>`.
+`specifications/core/v2`, `specifications/component/v2`,
+`specifications/blueprint/v2` and `specifications/listing/v2`. Each releases on
+its own, tagged `<family>/v<MAJOR>.<MINOR>.<PATCH>`. v1 is a
+[retired major](#retired-majors) and has no package.
+
+<a id="a-new-major"></a>**A new major starts at `0.0.0`.** A new major's
+package carries `initial-version` in `.github/release-please/config.json`, and
+its manifest key reads `0.0.0`, the value every tool reads as "never released".
+release-please finds no release tagged `0.0.0`, so it proposes exactly
+`initial-version` for the package's first release, whatever bump the commit
+types imply (only a `Release-As:` footer overrides it), and never a version that
+could collide with a tag of the previous major. It still needs one releasable
+commit under the package's directory to open the release pull request.
+That is how v2 releases as `2.0.0`: each v2 package sets
+`"initial-version": "2.0.0"`, and the v1 packages and manifest keys are gone.
+After the first release, the manifest carries the released version and
+release-please bumps from it as usual. Nothing pins the version: the config
+carries no `release-as`, so the `2.0.0` is one-shot. Each package also sets
+`bump-minor-pre-major` and `bump-patch-for-minor-pre-major`, which the
+engineering conventions require of a package whose manifest reads below `1.0.0`
+(REL-08); they act only below `1.0.0`, so they never change a v2 bump. The change is still declared breaking,
+by `BREAKING CHANGE:` footers, because the declaration is a review obligation
+whatever version is proposed.
 
 1. **Release pull request.** Every push to `main` runs `release.yml`.
    release-please authenticates as the release GitHub App and opens or updates
@@ -89,7 +109,7 @@ every file it lists. Releases published before
 carry no `SHA256SUMS`, and each of their assets has its own attestation.
 
 Every archive unpacks into one top-level directory, `<family>-v<MAJOR>/`, such
-as `component-v1/`. A kind family archive's directory holds:
+as `component-v2/`. A kind family archive's directory holds:
 
 - the bundle, `spec.md`, `examples/` and `conformance/`;
 - each transitive dependency under its family name (`core/`, `component/`),
@@ -138,7 +158,7 @@ A family version is **released** when all three of these hold:
 - a published, immutable GitHub Release for that tag carries assets that match
   the entry.
 
-Anything else is a draft. `spec.md` on `main` is the draft of its line's next
+Anything else is a draft. `spec.md` on `main` is the draft of its major's next
 version, and it may change until that version is tagged.
 
 To see what is released, read `published.json` or run
@@ -150,11 +170,39 @@ To read the prose of a released version rather than the draft, use any of:
   built from the tag;
 - `spec.md` inside the release archive;
 - git: `git show <family>/v<X.Y.Z>:<path>/spec.md`, where `<path>` is the
-  ledger entry's `path`, today `specifications/<family>/v<MAJOR>`.
+  ledger entry's `path`, `specifications/<family>/v<MAJOR>`. That holds for a
+  retired major too: its directory exists at its tags.
 
 The alias `/<family>/v<N>/<family>.schema.json` serves the newest release of
 that major, with its `$id` restamped to the alias URL. Before a major's first
 tag, the alias is built from `main`, so it moves with every push.
+
+## <a id="retired-majors"></a>Retired majors
+
+A **retired major** is a major that is recorded and tagged but has no directory
+on `main`. v1 of every family is one: its directories moved to v2
+([ADR 0038](adr/0038-v2-one-vocabulary-and-v1-retires.md)), and
+`RETIRED_MAJORS` in `tools/src/lib/layout.ts` lists it.
+
+- **Its released bytes keep serving.** Its tags, immutable GitHub Releases and
+  ledger entries never change. The site lists releases from the ledger, so every
+  pinned v1 URL, such as `/component/v1.6.1/component.schema.json`, keeps
+  serving its verified release asset, and the v1 alias keeps serving the newest
+  v1 release. Its reference pages are built from its tags. Nothing builds a
+  retired major from `main`.
+- **It is history, not a candidate.** `task check:compat` does not replay it
+  against the working tree. `task check:published`, `task check:editions` and
+  `task site:fetch` verify each of its releases from its tag, under the ledger's
+  `path`, exactly as they verify any tagged entry. A tagged major that is missing
+  from the working tree and not listed as retired fails `task check:compat`,
+  rather than being skipped.
+- **It takes no further release.** Its release-please package and manifest key
+  are removed with its directory. Correcting it would need the directory back,
+  which is a decision for a new ADR.
+
+`catalog.json` names every major an editor may bind, retired ones included,
+and points its `url` at the newest released major, so editors move to v2 when
+`2.0.0` is tagged.
 
 ## What the site serves
 
@@ -288,12 +336,16 @@ and its bytes are checked on GitHub.
 
 ## The dependency gate
 
-The normative dependencies table in each family's §2 is the only dependency
-registry. Recording selects exact versions from those declared major lines.
-Each dependency must already have a tag and an immutable ledger entry matching
-its own tagged tree. Missing dependencies, undeclared pins, wrong major lines,
-cycles, and conflicting transitive editions fail. In particular, blueprint's
-core pin must agree with its selected component release's core pin.
+The normative dependencies table in each family's §2 is the only place
+dependencies are declared. Recording selects exact versions from those declared
+major versions. Each dependency must already have a tag and an immutable ledger
+entry matching its own tagged tree. Missing dependencies, undeclared pins, wrong
+major versions, cycles, and conflicting transitive releases fail. In particular,
+blueprint's core pin must agree with its selected component release's core pin.
+
+A dependency's major has released only when its manifest key reads a version
+of that major. A key that reads `0.0.0`, or a version of another major, has
+never released, and recording fails with "releases first".
 
 A dependency with unreleased normative changes must release first. Pending
 checks and tag-owned staging classify changes; historical verification checks
@@ -301,18 +353,27 @@ pins and ancestry without reclassifying history. Archives carry the full
 closure, so publishing component 1.1.0 cannot change blueprint 1.0.0's component
 1.0.0 schema, specification or corpus.
 
-The first release order is core, then component and listing, then blueprint.
+The release order is core, then component, then blueprint and listing.
 Refresh and record each dependent release branch after its dependencies publish.
+
+<a id="core-release-alignment"></a>**Every core release re-releases every
+dependent family in the same release set.** A core release is followed, before
+any other release, by a release of component, blueprint and listing recorded
+against it, so no two families sit on different core releases. A dependent
+family with no change of its own still releases a patch recorded against the
+new core release, made releasable by a commit under its own directory
+([CONTRIBUTING → How a commit reaches a release](../.github/CONTRIBUTING.md#how-a-commit-reaches-a-release)).
 
 ### Core-specific checks
 
-A kind family release records the core edition it was built and tested against
-([core v1 §9](../specifications/core/v1/spec.md#editions)). The gate keeps that
+A kind family release records the core release it was built and tested against
+([core v2 §9](../specifications/core/v2/spec.md#core-releases)). The gate keeps that
 record true. The pending gate runs in `task release:record`,
 `task check:published` and `task check:editions`. The tagged gate runs in
 `task release:stage`, on the tag's own tooling.
 
-**A releasable core commit** touches `specifications/core/v1` and either:
+**A releasable core commit** touches the core major the family cites, today
+`specifications/core/v2`, and either:
 
 - has a type that release-please's changelog shows: `feat`, `fix` or `docs`, per
   `.github/release-please/config.json`;
@@ -327,24 +388,25 @@ so is a releasable commit that does not touch core.
 A **pending** kind family entry fails when any of these hold:
 
 - the family's `spec.md` is missing, or its §2 "Normative dependencies" table
-  cites no core line;
-- core's manifest version is `0.0.0`, meaning core has never been released;
-- `requires.core` belongs to a different core line than the one §2 cites;
+  cites no core major;
+- core's manifest version for that major is `0.0.0`, or a version of another
+  major, meaning that core major has never been released;
+- `requires.core` belongs to a different core major than the one §2 cites;
 - `requires.core` is ahead of core's manifest version;
 - the tag `core/v<requires.core>` does not exist;
-- `git log core/v<requires.core>..HEAD -- specifications/core/v1` contains a
-  releasable commit.
+- `git log core/v<requires.core>..HEAD -- specifications/core/v<N>`, for the
+  core major `v<N>` that §2 cites, contains a releasable commit.
 
 A **tagged** kind family entry, staged by `task release:stage`, fails unless all
 of these hold:
 
 - `core/v<requires.core>` is an ancestor of the family tag;
 - no releasable core commit lies between the two;
-- the major version of `requires.core` matches the core line the family's
+- the major version of `requires.core` matches the core major the family's
   `spec.md` cites at the tag.
 
 **Warnings, not failures.** A non-releasable core commit since the recorded
-edition (`chore`, `refactor`, `test` and the like) warns. So does a
+core release (`chore`, `refactor`, `test` and the like) warns. So does a
 `requires.core` that trails core's manifest version. release-please opens no core
 release for a hidden type, so blocking on one would hold every family until
 someone manufactured a releasable core commit.
@@ -376,7 +438,7 @@ published, the version is tagged but not released. Every deploy then fails at
 path. Recover by dispatching the release workflow from `main` with the tag:
 
 ```sh
-gh workflow run release.yml --repo musher-dev/specifications --ref main -f tag=component/v1.2.0
+gh workflow run release.yml --repo musher-dev/specifications --ref main -f tag=component/v2.0.0
 ```
 
 A dispatched run skips release-please, finds the release by listing releases,

@@ -1,0 +1,52 @@
+specVersion: v2
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Redis server reached through a connection, handing its connection URL, address and database index to the nodes that use it.
+spec:
+  type: EXTERNAL
+  contract:
+    inputs:
+      redis:
+        description: Redis server this node stands for.
+        connection:
+          protocol: REDIS
+    outputs:
+      url:
+        description: Connection URL, including any credentials; rediss:// when the client uses TLS.
+        schema:
+          type: string
+        sensitive: true
+        presentationHint: CONNECTION_STRING
+        from:
+          input: redis
+          member: url
+      host:
+        description: Hostname of the Redis server.
+        schema:
+          type: string
+        presentationHint: HOSTNAME
+        from:
+          input: redis
+          member: host
+      port:
+        description: Port the Redis server listens on.
+        schema:
+          type: integer
+        from:
+          input: redis
+          member: port
+      tls:
+        description: Whether the client uses TLS.
+        schema:
+          type: boolean
+        from:
+          input: redis
+          member: tls
+      database:
+        description: Database index the client selects, 0 unless the connection names another.
+        schema:
+          type: integer
+        from:
+          input: redis
+          member: database

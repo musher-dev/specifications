@@ -1,0 +1,12 @@
+{
+  "id": "semantic-075-s3-members-forwarded",
+  "phase": "semantic",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#contract",
+  "requirements": [
+    "COMP-CONNECTION-002",
+    "COMP-OUT-003",
+    "COMP-OUT-004"
+  ],
+  "summary": "Every S3 member is forwarded with its protocol's type and sensitivity, the optional pathStyle taking its default."
+}

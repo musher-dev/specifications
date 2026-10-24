@@ -1,0 +1,50 @@
+specVersion: v2
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: EXTERNAL
+  contract:
+    inputs:
+      db:
+        description: Connection this node stands for
+        connection:
+          protocol: REDIS
+    outputs:
+      host:
+        description: Forwarded host
+        schema:
+          type: string
+        from:
+          input: db
+          member: host
+      port:
+        description: Forwarded port
+        schema:
+          type: integer
+        from:
+          input: db
+          member: port
+      tls:
+        description: Forwarded tls
+        schema:
+          type: boolean
+        from:
+          input: db
+          member: tls
+      database:
+        description: Forwarded database, 0 when the connection names none
+        schema:
+          type: integer
+        from:
+          input: db
+          member: database
+      url:
+        description: Forwarded url
+        schema:
+          type: string
+        sensitive: true
+        from:
+          input: db
+          member: url

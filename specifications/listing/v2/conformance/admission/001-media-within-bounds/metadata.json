@@ -1,0 +1,11 @@
+{
+  "id": "admission-001-media-within-bounds",
+  "phase": "admission",
+  "expected": "pass",
+  "clause": "specifications/listing/v2/spec.md#media",
+  "requirements": [
+    "LIST-MEDIA-005"
+  ],
+  "summary": "A square 256 px icon, a 1280x800 screenshot and a 4096 px wide overview image are admitted.",
+  "document": "pgvector/listing.yaml"
+}

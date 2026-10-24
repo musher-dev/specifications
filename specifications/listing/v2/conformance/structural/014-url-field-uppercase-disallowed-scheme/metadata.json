@@ -1,0 +1,10 @@
+{
+  "id": "structural-014-url-field-uppercase-disallowed-scheme",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/listing/v2/spec.md#presentation",
+  "requirements": [
+    "LIST-URL-001"
+  ],
+  "summary": "Folding case in the scheme does not admit a scheme outside the permitted set."
+}

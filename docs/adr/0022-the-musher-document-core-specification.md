@@ -18,11 +18,11 @@ without being named as one.
 
 Every other family reaches its shared rules by citing component. Blueprint §2
 and listing §2 both say that "all envelope rules in
-[component §2](../../specifications/component/v1/spec.md#envelope), and the
+[component §2](../../specifications/component/v2/spec.md#envelope), and the
 version compatibility rules in
-[component §3](../../specifications/component/v1/spec.md#compatibility), apply
+[component §3](../../specifications/component/v2/spec.md#compatibility), apply
 identically". Both §6s are "as defined in component §7". Both §7s open "the
-codes in [component §8](../../specifications/component/v1/spec.md#diagnostics)
+codes in [component §8](../../specifications/component/v2/spec.md#diagnostics)
 apply. This family adds:". Both §10s open "Component §11 applies in full".
 Component §7.1 says the YAML profile "governs all three families", and
 component §8 calls its `parser` and `structural` rows "the shared envelope
@@ -34,14 +34,14 @@ blueprint's `structural-002-wrong-kind` pins exactly that ID, for a document
 whose `kind` must be `BLUEPRINT`. `COMP-ENV-007` states a rule for the whole
 contract, then lists the one placement it allows in component. It does not
 list blueprint's `size: null`, which
-[blueprint §4.3](../../specifications/blueprint/v1/spec.md#node-compute) has to
+[blueprint §4.3](../../specifications/blueprint/v2/spec.md#node-compute) has to
 defend separately.
 
 **The item directory belongs to one of its users.**
-[Blueprint §3.1](../../specifications/blueprint/v1/spec.md#item-directory)
+[Blueprint §3.1](../../specifications/blueprint/v2/spec.md#item-directory)
 defines the item root as "the directory containing `blueprint.yaml`". A
 `COMPONENT` item has no such file, so
-[listing §3.1](../../specifications/listing/v1/spec.md#item-directory) defines a
+[listing §3.1](../../specifications/listing/v2/spec.md#item-directory) defines a
 second item root and adds "the two definitions agree wherever both apply". The
 rules measured against that root are declared twice. `BP-ID-001` and
 `LIST-ID-001` have the same text. `BP-ID-002` is unconditional, while
