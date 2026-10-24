@@ -90,6 +90,15 @@
       },
       "tree": "77962ff576d30e5ed09dc557521a0912419feeb2"
     },
+    "blueprint/v2.0.0": {
+      "bundleSha256": "90af173a303790de9df1e08224c824dd912798e5644b98c30c31d7d22412c92f",
+      "path": "specifications/blueprint/v2",
+      "requires": {
+        "component": "2.0.0",
+        "core": "2.0.0"
+      },
+      "tree": "3301c85c57676682ba068253e30614121af2bf96"
+    },
     "component/v1.0.0": {
       "bundleSha256": "8bbbf9bbcb282991f5157732bfd92b3481692390e582f29c6e9f91c472ac124c",
       "path": "specifications/component/v1",
@@ -154,6 +163,14 @@
       },
       "tree": "50d4d36d19924764410f829b265134928f43d984"
     },
+    "component/v2.0.0": {
+      "bundleSha256": "3ffb508d81765bf2d9fdd168c16e2720912391ba4b6032d391088786bbeb8323",
+      "path": "specifications/component/v2",
+      "requires": {
+        "core": "2.0.0"
+      },
+      "tree": "1dbe18796d4baba4a41b293cc510748ae46eafd6"
+    },
     "core/v1.0.0": {
       "bundleSha256": null,
       "path": "specifications/core/v1",
@@ -168,6 +185,11 @@
       "bundleSha256": null,
       "path": "specifications/core/v1",
       "tree": "151d95e68d6707bf142acec70583f8215bc69bca"
+    },
+    "core/v2.0.0": {
+      "bundleSha256": null,
+      "path": "specifications/core/v2",
+      "tree": "172a22eb370110bad31cb812401e3827ffc8e0a3"
     },
     "listing/v1.0.0": {
       "bundleSha256": "8a0ac418d4dacfc998310d11bf8003a1841e10b0869ca6b2b294caafb845305d",
@@ -184,6 +206,14 @@
         "core": "1.1.0"
       },
       "tree": "dac9e0bf3a34ec98fb4359239b4104ca4bc3b55c"
+    },
+    "listing/v2.0.0": {
+      "bundleSha256": "5b7b311eb2bf879b50a98fc171d0f22937a15cf592014d0ba6feb60f2272856a",
+      "path": "specifications/listing/v2",
+      "requires": {
+        "core": "2.0.0"
+      },
+      "tree": "e1a7753024a3d67083e72f2fb14367068d0946b5"
     }
   },
   "version": 2
