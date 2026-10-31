@@ -32,7 +32,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { BindingsError, readBindings } from '../lib/bindings.ts'
-import { listTreeFiles, readBlobAtRef } from '../lib/git.ts'
+import { archiveAtRef, gitEnvironment, listTreeFiles, readBlobAtRef } from '../lib/git.ts'
 import {
   BUNDLER_ENTRY,
   discoverFamilies,
@@ -706,14 +706,9 @@ function baseTooling(
 
   const dir = mkdtempSync(join(tmpdir(), 'musher-changes-'))
   const cleanup = (): void => rmSync(dir, { recursive: true, force: true })
-  const archive = spawnSync(
-    'git',
-    ['archive', '--format=tar', base, '--', TOOLS_SOURCE_ROOT, SPECIFICATIONS_ROOT],
-    { cwd: repoRoot, maxBuffer: 512 * 1024 * 1024 },
-  )
+  const archive = archiveAtRef(repoRoot, base, [TOOLS_SOURCE_ROOT, SPECIFICATIONS_ROOT])
   const extracted =
-    archive.status === 0 &&
-    spawnSync('tar', ['-x', '-C', dir], { input: archive.stdout }).status === 0
+    archive !== null && spawnSync('tar', ['-x', '-C', dir], { input: archive }).status === 0
   if (!extracted) {
     cleanup()
     return null
@@ -751,12 +746,7 @@ export function unifiedDiff(name: string, before: string, after: string): string
     const result = spawnSync(
       'git',
       ['diff', '--no-index', '--no-color', '--no-ext-diff', '--', `base/${name}`, `head/${name}`],
-      {
-        cwd: dir,
-        encoding: 'utf8',
-        maxBuffer: 64 * 1024 * 1024,
-        env: { ...process.env, GIT_CONFIG_GLOBAL: '/dev/null', GIT_CONFIG_SYSTEM: '/dev/null' },
-      },
+      { cwd: dir, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, env: gitEnvironment(dir) },
     )
     if (result.status === 0) return ''
     if (result.status !== 1) throw new Error(`git diff --no-index failed — ${result.stderr.trim()}`)
