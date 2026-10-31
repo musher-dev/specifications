@@ -1,4 +1,4 @@
-# Musher Component Document Specification v2
+# Musher Component Document Specification, version 2
 
 **Status:** Stable
 **Family:** `component`
@@ -22,7 +22,7 @@ appear in all capitals, as shown here.
 >
 > A disagreement between two normative artifacts is a defect in this
 > specification and blocks a release. Until it is fixed this document governs.
-> That is how to read a broken component contract, not a licence for the schema
+> That is how to read a broken specification, not a licence for the schema
 > to be wrong.
 
 ---
