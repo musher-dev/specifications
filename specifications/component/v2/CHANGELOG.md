@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/musher-dev/specifications/compare/component/v2.0.0...component/v2.0.1) (2026-10-31)
+
+
+### Specification prose
+
+* **repo:** correct stale v2 wording, and clean up tooling, CI and docs ([#207](https://github.com/musher-dev/specifications/issues/207)) ([af0725d](https://github.com/musher-dev/specifications/commit/af0725da7304205bc0f07bf2df8ea7356bf8bd22))
+
 ## 2.0.0 (2026-10-24)
 
 
