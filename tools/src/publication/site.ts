@@ -27,16 +27,18 @@
  * The guarantee that the bytes themselves never change is checked offline by
  * `task check:published` and online by `task site:fetch`.
  */
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
-import { dirname, join } from 'node:path'
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { basename, dirname, join } from 'node:path'
 import { isShallow, listTreeFiles, readBlobAtRef } from '../lib/git.ts'
 import {
   CATALOG_NAME,
   canonicalJson,
   discoverFamilies,
+  exampleFiles,
   familyPaths,
   hasPart,
   inRepo,
+  isExampleFile,
   type Json,
   parseSpecPath,
   RELEASE_CACHE_DIR,
@@ -405,21 +407,20 @@ export function assembleSite(options: SiteOptions): SiteResult {
    * true for a released version as well as for `main`.
    */
   const examplesAt = (family: string, major: string, ref: string, dir: string): ExampleDoc[] => {
-    const isExample = (path: string): boolean => path.endsWith('.yaml') || path.endsWith('.yml')
     if (ref === 'main') {
       const local = discoverFamilies(repoRoot).find((f) => f.name === family && f.major === major)
-      if (local === undefined || !existsSync(local.examplesDir)) return []
-      return readdirSync(local.examplesDir)
-        .filter(isExample)
-        .sort()
-        .map((name) => ({ name, body: readFileSync(join(local.examplesDir, name), 'utf8') }))
+      if (local === undefined) return []
+      return exampleFiles(local).map((path) => ({
+        name: basename(path),
+        body: readFileSync(path, 'utf8'),
+      }))
     }
     const examples = releaseDirPaths(dir).examples
     const files = hasPart(family, major, 'examples')
       ? requireTreeAtRef(repoRoot, ref, examples, `${family}/${major} examples`)
       : listTreeFiles(repoRoot, ref, examples)
     return files
-      .filter(isExample)
+      .filter(isExampleFile)
       .sort()
       .map((path) => {
         const blob = readBlobAtRef(repoRoot, ref, path)

@@ -22,20 +22,17 @@
  */
 import { spawnSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
-import { join } from 'node:path'
 import {
   discoverFamilies,
   Failures,
   isObject,
+  JSONSCHEMA_CLI,
   type Json,
-  REPO_ROOT,
   relativeToRepo,
   sourceModules,
   walkObjects,
 } from '../lib/layout.ts'
 import { ensureBundleFile, familyBundle } from './bundle.ts'
-
-const CLI = join(REPO_ROOT, 'tools', 'node_modules', '.bin', 'jsonschema')
 
 /**
  * Sourcemeta lint rules this repository does not adopt, and why.
@@ -113,7 +110,7 @@ export function orphanDefinitions(schema: Json, publicEntries: readonly string[]
 }
 
 function run(args: string[]): { status: number; output: string } {
-  const result = spawnSync(CLI, args, { encoding: 'utf8' })
+  const result = spawnSync(JSONSCHEMA_CLI, args, { encoding: 'utf8' })
   return {
     status: result.status ?? 1,
     output: `${result.stdout ?? ''}${result.stderr ?? ''}`,
@@ -135,7 +132,7 @@ export function absentCliIsFailure(
  * Report an absent CLI: in CI, fail the process; elsewhere, say it was skipped.
  * Returns only when the caller should stop without failing.
  */
-export function reportAbsentCli(check: string, cli: string = CLI): void {
+export function reportAbsentCli(check: string, cli: string = JSONSCHEMA_CLI): void {
   if (absentCliIsFailure()) {
     console.error(
       `  ✗ ${relativeToRepo(cli)} is not installed, and CI=true — ${check} cannot be skipped ` +
@@ -148,7 +145,7 @@ export function reportAbsentCli(check: string, cli: string = CLI): void {
 }
 
 function main(): void {
-  if (!existsSync(CLI)) {
+  if (!existsSync(JSONSCHEMA_CLI)) {
     reportAbsentCli('check:standards')
     return
   }

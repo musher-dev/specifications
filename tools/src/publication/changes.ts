@@ -35,6 +35,7 @@ import { BindingsError, readBindings } from '../lib/bindings.ts'
 import { archiveAtRef, gitEnvironment, listTreeFiles, readBlobAtRef } from '../lib/git.ts'
 import {
   BUNDLER_ENTRY,
+  CASE_METADATA_FILE,
   discoverFamilies,
   type Family,
   familyPaths,
@@ -333,11 +334,12 @@ function reachableSpecs(family: Family, families: readonly Family[]): ReachableS
 /** Requirement IDs each case of a family's corpus cited at a ref, keyed by case path. */
 function citationsAt(repoRoot: string, ref: string, family: Family): Map<string, Set<string>> {
   const dir = familyPaths(family.name, family.major).conformance
+  const suffix = `/${CASE_METADATA_FILE}`
   const cases = new Map<string, Set<string>>()
   for (const path of listTreeFiles(repoRoot, ref, dir)) {
-    if (!path.endsWith('/metadata.json')) continue
+    if (!path.endsWith(suffix)) continue
     const cited = requirementsOfMetadata(readBlobAtRef(repoRoot, ref, path)?.toString('utf8'))
-    cases.set(path.slice(dir.length + 1, -'/metadata.json'.length), cited)
+    cases.set(path.slice(dir.length + 1, -suffix.length), cited)
   }
   return cases
 }
@@ -428,7 +430,7 @@ export function movedNames(
     for (const [casePath, cited] of casesBefore) {
       if (!cited.has(id)) continue
       for (const spec of reach) {
-        const metadata = join(spec.conformanceDir, ...casePath.split('/'), 'metadata.json')
+        const metadata = join(spec.conformanceDir, ...casePath.split('/'), CASE_METADATA_FILE)
         if (!existsSync(metadata)) continue
         for (const now of requirementsOfMetadata(readFileSync(metadata, 'utf8'))) {
           if (!cited.has(now) && reachable.has(now)) pinnedNow.add(now)

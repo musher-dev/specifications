@@ -31,6 +31,9 @@ import { tmpdir } from 'node:os'
 import { dirname, isAbsolute, join, normalize } from 'node:path'
 import { BindingsError, readBindings } from '../lib/bindings.ts'
 import {
+  CASE_DIAGNOSTICS_FILE,
+  CASE_INDEX_FILE,
+  CASE_METADATA_FILE,
   CORE_FAMILY,
   canonicalJson,
   discoverFamilies,
@@ -420,7 +423,7 @@ function declaredCodes(families: readonly Family[]): ReadonlySet<string> {
 }
 
 function loadIndex(family: Family, failures: Failures): CaseIndexEntry[] {
-  const indexPath = join(family.conformanceDir, 'cases.json')
+  const indexPath = join(family.conformanceDir, CASE_INDEX_FILE)
   if (!existsSync(indexPath)) return []
 
   const index = readJson(indexPath)
@@ -781,7 +784,7 @@ function checkCaseShape(
 
   if (metadata.expected !== 'fail') return ok ? [] : null
 
-  const diagnosticsPath = join(caseDir, 'diagnostics.json')
+  const diagnosticsPath = join(caseDir, CASE_DIAGNOSTICS_FILE)
   if (!existsSync(diagnosticsPath)) {
     failures.add(`${label}: a failing case must declare diagnostics.json`)
     return null
@@ -949,7 +952,7 @@ export function runCase(
   const caseDir = join(family.conformanceDir, entry.path)
   const label = `${familyKey(family)}/${entry.id}`
 
-  const metadataPath = join(caseDir, 'metadata.json')
+  const metadataPath = join(caseDir, CASE_METADATA_FILE)
   if (!existsSync(metadataPath)) {
     failures.add(`${label}: missing ${relativeToRepo(metadataPath)}`)
     return 'failed'

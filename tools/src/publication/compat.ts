@@ -14,11 +14,15 @@ import {
 } from '../conformance/conformance.ts'
 import { listTreeFiles, readBlobAtRef } from '../lib/git.ts'
 import {
+  CASE_DIAGNOSTICS_FILE,
+  CASE_INDEX_FILE,
+  CASE_METADATA_FILE,
   discoverFamilies,
   Failures,
   type Family,
   failCli,
   hasPart,
+  isExampleFile,
   isObject,
   isRetiredMajor,
   type Json,
@@ -96,10 +100,10 @@ function relax(
     )
   const dir = join(scratch, caseDir)
   writeFileSync(
-    join(dir, 'metadata.json'),
+    join(dir, CASE_METADATA_FILE),
     `${JSON.stringify({ ...metadata, expected: 'pass' }, null, 2)}\n`,
   )
-  const diagnostics = join(dir, 'diagnostics.json')
+  const diagnostics = join(dir, CASE_DIAGNOSTICS_FILE)
   if (existsSync(diagnostics)) rmSync(diagnostics)
 }
 
@@ -152,7 +156,7 @@ export function replayRelease(
       writeFileSync(target, requiredBlob(repoRoot, release.tag, path))
     }
     const index = JSON.parse(
-      requiredBlob(repoRoot, release.tag, `${corpusPath}/cases.json`).toString('utf8'),
+      requiredBlob(repoRoot, release.tag, `${corpusPath}/${CASE_INDEX_FILE}`).toString('utf8'),
     ) as Json
     if (!isObject(index) || !Array.isArray(index.cases))
       throw new LayoutError(`${release.tag} has an invalid conformance index`)
@@ -169,7 +173,7 @@ export function replayRelease(
       if (raw.path.split('/').some((p) => p === '..') || isAbsolute(raw.path))
         throw new LayoutError('historical case escapes corpus')
       const metadata = JSON.parse(
-        readFileSync(join(scratch, raw.path, 'metadata.json'), 'utf8'),
+        readFileSync(join(scratch, raw.path, CASE_METADATA_FILE), 'utf8'),
       ) as CaseMetadata
       relax(scratch, release.tag, raw.path, metadata, relaxed)
       // Rejections also pin observable meaning; replay all implemented cases.
@@ -194,7 +198,7 @@ export function replayRelease(
     if (family.role !== 'core') {
       const validate = compileFamily(family)
       for (const path of partFiles(repoRoot, recorded, 'examples')) {
-        if (!/\.ya?ml$/.test(path)) continue
+        if (!isExampleFile(path)) continue
         const parsed = parseDocumentBytes(requiredBlob(repoRoot, release.tag, path))
         count++
         if ('errors' in parsed)

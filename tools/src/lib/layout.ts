@@ -35,6 +35,13 @@ export const CONFORMANCE_FORMAT_FILE = 'docs/conformance.md'
  * corpus, and that member name outlives any move in this tree (docs/adr/0023 §6).
  */
 export const CONFORMANCE_FORMAT_ARCHIVE_PATH = 'conformance/README.md'
+/**
+ * The files the fixture format names inside a corpus: the index at its root,
+ * and each case's declared outcome and declared diagnostics.
+ */
+export const CASE_INDEX_FILE = 'cases.json'
+export const CASE_METADATA_FILE = 'metadata.json'
+export const CASE_DIAGNOSTICS_FILE = 'diagnostics.json'
 /** The publication ledger. See docs/adr/0006. */
 export const LEDGER_FILE = 'published.json'
 export const RELEASE_PLEASE_MANIFEST_FILE = '.github/release-please/manifest.json'
@@ -412,6 +419,11 @@ if (!existsSync(join(REPO_ROOT, SPECIFICATIONS_ROOT))) {
   )
 }
 export const SITE_DIR = join(REPO_ROOT, 'site')
+/**
+ * The Sourcemeta jsonschema CLI, as `bun install` in tools/ provides it: the
+ * independent 2020-12 implementation `check:standards` and `check:parity` ask.
+ */
+export const JSONSCHEMA_CLI = join(REPO_ROOT, 'tools', 'node_modules', '.bin', 'jsonschema')
 
 /** The public hostname the published schemas are served from. */
 export const SITE_HOST = 'specifications.musher.dev'
@@ -553,6 +565,25 @@ export function sourceModules(family: Family): string[] {
     .filter((e) => e.endsWith('.schema.json'))
     .sort()
     .map((e) => join(family.srcDir, e))
+}
+
+/** Whether a file is an example document, which is YAML: `.yaml` or `.yml`. */
+export function isExampleFile(path: string): boolean {
+  return /\.ya?ml$/.test(path)
+}
+
+/** Absolute paths of every example document in a family's working tree, in name order. */
+export function exampleFiles(family: Family): string[] {
+  let entries: string[]
+  try {
+    entries = readdirSync(family.examplesDir)
+  } catch {
+    return []
+  }
+  return entries
+    .filter(isExampleFile)
+    .sort()
+    .map((e) => join(family.examplesDir, e))
 }
 
 /** The module that is the family's entry point, if it has been authored. */
