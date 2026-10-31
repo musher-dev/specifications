@@ -25,18 +25,14 @@ v2 form. Generate renames from those tables rather than from this page.
 
 ## Pin the v2 releases
 
-Pin exact releases once they are tagged, in release order: `core/v2.0.0`, then
-`component/v2.0.0`, then `blueprint/v2.0.0` and `listing/v2.0.0`. Every core
-release re-releases every dependent family in the same release set
+Pin exact releases: `core/v2.0.0`, `component/v2.0.0`, `blueprint/v2.0.0` and
+`listing/v2.0.0`, which released in that order. Every core release re-releases
+every dependent family in the same release set
 ([Publication → The dependency gate](publication.md#core-release-alignment)),
 so all four always sit on one core release. Vendor each release archive, which
 carries its schema, specification, examples, conformance corpus and whole
 dependency closure, and verify it as
 [Verifying a release](../.github/SECURITY.md#verifying-a-release) shows.
-
-Before the tags exist, build from a pinned commit as
-[Using the schemas → Pinning](using-schemas.md#pinning) describes. Never pin
-`main`.
 
 ## Changes every consumer makes
 

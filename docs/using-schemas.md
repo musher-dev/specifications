@@ -18,9 +18,11 @@ Each bundle's `$id` is the URL it is served at. Each exact release URL has a
 `.sha256` file beside it, and `/<family>/versions.json` lists every release of a
 family.
 
-**Exact release URLs exist only after a family's first release.** Until then
-there is nothing immutable to pin, and whether a version has been released is
-explained in [Draft or released](publication.md#draft-or-released).
+Every kind family has released v2, starting at `2.0.0`, so each has an exact
+release URL to pin, such as
+`https://specifications.musher.dev/component/v2.0.0/component.schema.json`.
+Whether a given version has been released is explained in
+[Draft or released](publication.md#draft-or-released).
 
 ## <a id="in-your-editor"></a>In your editor
 
@@ -64,14 +66,13 @@ extension. These are the same patterns the catalog below publishes:
 }
 ```
 
-Before v2's first release, the v2 alias serves a build of `main` and moves with
-every push. Once `2.0.0` is tagged, it serves the newest v2 release.
+The v2 alias serves the newest v2 release, so it moves only when a v2 release
+ships.
 
 A tool that reads SchemaStore-format catalogs can discover all of this from
 `https://specifications.musher.dev/catalog.json`, which binds each family's
 file patterns to its major-version alias. Its `url` names the newest released
-major, so it moves to v2 when v2 is tagged, and its `versions` lists every
-major, v1 included.
+major, v2 since `2.0.0`, and its `versions` lists every major, v1 included.
 
 ### <a id="v1-urls"></a>v1 URLs
 
@@ -90,19 +91,6 @@ editor picks up backward-compatible additions without a configuration change,
 which is exactly what makes it the wrong target for a build: the bytes behind it
 change when a release ships. An exact release URL serves the same bytes for as
 long as the site exists.
-
-Before a family's first release, automation has no exact URL to pin, and the
-alias moves with every push to `main`. Pin a commit of this repository instead,
-and build the bundle from it:
-
-```sh
-git -C specifications checkout <commit>
-bun specifications/tools/src/schema/bundle.ts --stdout <family>/v2 > <family>.schema.json
-```
-
-The bundler needs no `bun install`
-([tools/README.md → Bundler CLI](../tools/README.md#bundler-cli)). Switch to the
-exact release URL once the family releases.
 
 ## <a id="offline"></a>Offline and vendoring
 

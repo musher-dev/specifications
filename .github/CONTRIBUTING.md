@@ -114,8 +114,9 @@ in the runner's exclusion list saying why the code or ID cannot be exercised.
 There is no blanket review requirement. A pull request that touches no path
 listed in [`.github/CODEOWNERS`](CODEOWNERS) merges once the required checks are
 green; [RULESETS.md](rulesets/RULESETS.md#main-branchjson) lists them. Today
-CODEOWNERS holds only the review gate's own two configuration files. Nobody has
-to approve such a pull request.
+CODEOWNERS lists only the review gate's own configuration: the `CODEOWNERS` file
+itself and the `.github/rulesets/` directory. Nobody has to approve such a pull
+request.
 
 That is a deliberate trade, not an oversight. It puts the weight on the checks,
 which is where it belongs for a repository whose contract can be verified by
@@ -196,7 +197,7 @@ messages, so put a footer at the end of the branch's last commit.
 
 Use the `core` scope for a change to `specifications/core/`. A releasable
 commit there holds every kind family's release until core has released it. See
-[docs/publication.md → The core gate](../docs/publication.md#the-dependency-gate).
+[docs/publication.md → The dependency gate](../docs/publication.md#the-dependency-gate).
 
 ### Squash merges and overrides
 
@@ -213,13 +214,13 @@ refactor(tools): read the layout from one module
 END_COMMIT_OVERRIDE
 ```
 
-**After core's first release, a pull request touching `specifications/core/`
-must not use an override.** This is the one statement of that rule; other pages
-point here. The core gate classifies core commits from `git log`, which holds
-the squash commit and not the pull request body. An
-override there would let release-please and the gate disagree about whether core
-has a releasable change. Split the pull request, or give it a title whose type is
-right for the core change. This is a review obligation, and no check enforces it.
+**A pull request touching `specifications/core/` must not use an override.**
+This is the one statement of that rule; other pages point here. The core gate
+classifies core commits from `git log`, which holds the squash commit and not
+the pull request body. An override there would let release-please and the gate
+disagree about whether core has a releasable change. Split the pull request, or
+give it a title whose type is right for the core change. This is a review
+obligation, and no check enforces it.
 
 ## Sign your work
 

@@ -13,7 +13,7 @@ nodes reference sit inside the same item, or in the catalog.
 
 | Major | Specification | Examples | Released? |
 |---|---|---|---|
-| `v2` | [`v2/spec.md`](v2/spec.md) | [`v2/examples/`](v2/examples/) | Not yet. Every release is in [`published.json`](../../published.json) ([how to tell](../../docs/publication.md#draft-or-released)) |
+| `v2` | [`v2/spec.md`](v2/spec.md) | [`v2/examples/`](v2/examples/) | Released from [`2.0.0`](https://github.com/musher-dev/specifications/releases/tag/blueprint%2Fv2.0.0). Every release is in [`published.json`](../../published.json) ([how to tell](../../docs/publication.md#draft-or-released)) |
 | `v1` | Retired: v2 supersedes it, and its released bytes stay at their tags | | Released from [`1.0.0`](https://github.com/musher-dev/specifications/releases/tag/blueprint%2Fv1.0.0) |
 
 What changed from v1, field by field:
@@ -51,7 +51,7 @@ dependencies" table in [§2](v2/spec.md#envelope).
 | `BP-GRAPH` | The node graph | [§4](v2/spec.md#node-graph) |
 | `BP-REF` | Document references | [§4.1](v2/spec.md#component-reference) |
 | `BP-BIND` | Bindings, what they name, and the value-dependency graph | [§4.2](v2/spec.md#bindings), [§5.1](v2/spec.md#recipients) |
-| `BP-NODE` | Node compute, storage and exposure | [§4.3](v2/spec.md#node-compute), [§4.5](v2/spec.md#access) |
+| `BP-NODE` | Node compute, storage, placement and exposure | [§4.3](v2/spec.md#node-compute), [§4.4](v2/spec.md#placement-constraints), [§4.5](v2/spec.md#access) |
 | `BP-ACCESS` | What the platform does for an exposure | [§4.5](v2/spec.md#access) |
 | `BP-PARAM` | Deployment parameters, their recipients and origins | [§5](v2/spec.md#parameters) |
 | `BP-PLACEHOLDER` | A parameter's `from` | [§5.2](v2/spec.md#value-sources) |
@@ -67,7 +67,7 @@ Every ID, the clause stating it, and the cases pinning it:
 | | URL |
 |---|---|
 | Major-version alias | `https://specifications.musher.dev/blueprint/v2/blueprint.schema.json` |
-| Exact release (after first release) | `https://specifications.musher.dev/blueprint/v2.<MINOR>.<PATCH>/blueprint.schema.json` |
+| Exact release | `https://specifications.musher.dev/blueprint/v2.<MINOR>.<PATCH>/blueprint.schema.json` |
 
 Which one to use, and how to bind it, is in
 [Using the schemas](../../docs/using-schemas.md). The schema is authored in

@@ -97,11 +97,11 @@ family's complete behaviour. Each has executable forms:
   `diagnostics.json` declare, and the validation scopes an implementation claims. This
   page does not restate it; a corpus means what that page says it means.
 
-The prose, the bundle, the corpora and the fixture format are normative, and none is permitted to
-disagree with another. A disagreement between two of them is a defect in the
-specification and blocks a release. Until it is fixed the prose governs, but
-that is how to read a broken contract, not a licence for a schema or a fixture
-to be wrong.
+The prose, the bundle, the corpora and the fixture format are normative, and
+none is permitted to disagree with another. A disagreement between two of them
+is a defect in the specification and blocks a release. Until it is fixed the
+prose governs, but that is how to read a broken specification, not a licence
+for a schema or a fixture to be wrong.
 
 Diagnostic codes (`ERR_*`) and the phase at which validation fails are
 normative. Schema `description` fields, examples, generated documentation (the

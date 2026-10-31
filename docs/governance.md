@@ -36,8 +36,9 @@ beyond the [DCO](../.github/CONTRIBUTING.md#sign-your-work) is required.
 Ordinary changes — a new optional field, a corrected description, an additional
 conformance fixture — need green CI. Green CI is the whole of the mechanical
 gate: review is required only on the paths listed in
-[`.github/CODEOWNERS`](../.github/CODEOWNERS), which are the review gate's own two
-configuration files and nothing else.
+[`.github/CODEOWNERS`](../.github/CODEOWNERS), which are the review gate's own
+configuration and nothing else: the `CODEOWNERS` file itself and the
+`.github/rulesets/` directory.
 
 Maintainer approval is still expected on a change of consequence, and this
 document still requires it where it says so below. What changed is that it is
@@ -109,11 +110,12 @@ is created.
 That window was opened once more, after the first tags, by
 [ADR 0033](adr/0033-inputs-are-the-only-way-into-a-component.md) §5, for
 component and blueprint v1, before anyone outside the project had adopted them.
-`check:compat` stops replaying exactly the five releases that record names, and a
-test pins that list. That reset was spent, so the next narrowing was a new major
-on the terms above: v2, for all four families
-([ADR 0038](adr/0038-v2-one-vocabulary-and-v1-retires.md)). v2 is the current
-major, and the guarantee runs from its first tag, `2.0.0`. v1 is retired.
+`check:compat` stopped replaying exactly the five releases that record names.
+That reset was spent, so the next narrowing was a new major on the terms above:
+v2, for all four families
+([ADR 0038](adr/0038-v2-one-vocabulary-and-v1-retires.md)). v1's retirement
+has since stopped every v1 replay, and the list of five went with it. v2 is the
+current major, and the guarantee runs from its first tag, `2.0.0`.
 
 **A retired major** is a major that is recorded and tagged but has no directory
 on `main`. Requirement 2 above says the previous major keeps working unchanged,
@@ -268,15 +270,15 @@ holding `contents: write` and `id-token: write`. That is why the whole of
 named because its token reaches outside GitHub. It is pinned to an exact version
 in `tools/package.json` and the lockfile rather than fetched at deploy time, so
 the code that receives the token changes only through a diff someone opened
-deliberately — never through a resolution that moved on its own. `tools/` is not a CODEOWNERS path, so that
-diff is not gated on a review; the exact pin plus the lockfile is what carries
-the guarantee. For the same reason it is excluded from the grouped Dependabot
-update in [`.github/dependabot.yml`](../.github/dependabot.yml): folded into four
-other packages' lockfile churn it would arrive as a diff nobody opened *for
-it*, which is not the deliberate one this paragraph promises. It always comes
-as its own pull request. See
-[ADR 0016](adr/0016-dependency-update-policy.md). Nothing published derives
-from wrangler.
+deliberately — never through a resolution that moved on its own. `tools/` is
+not a CODEOWNERS path, so that diff is not gated on a review; the exact pin plus
+the lockfile is what carries the guarantee. For the same reason it is excluded
+from the grouped Dependabot update in
+[`.github/dependabot.yml`](../.github/dependabot.yml): folded into every other
+package's lockfile churn it would arrive as a diff nobody opened *for it*, which
+is not the deliberate one this paragraph promises. It always comes as its own
+pull request. See [ADR 0016](adr/0016-dependency-update-policy.md). Nothing
+published derives from wrangler.
 
 ## Security
 

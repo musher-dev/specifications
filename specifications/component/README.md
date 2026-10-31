@@ -17,7 +17,7 @@ patterns [editors bind](../../docs/using-schemas.md#in-your-editor).
 
 | Major | Specification | Examples | Released? |
 |---|---|---|---|
-| `v2` | [`v2/spec.md`](v2/spec.md) | [`v2/examples/`](v2/examples/) | Not yet. Every release is in [`published.json`](../../published.json) ([how to tell](../../docs/publication.md#draft-or-released)) |
+| `v2` | [`v2/spec.md`](v2/spec.md) | [`v2/examples/`](v2/examples/) | Released from [`2.0.0`](https://github.com/musher-dev/specifications/releases/tag/component%2Fv2.0.0). Every release is in [`published.json`](../../published.json) ([how to tell](../../docs/publication.md#draft-or-released)) |
 | `v1` | Retired: v2 supersedes it, and its released bytes stay at their tags | | Released from [`1.0.0`](https://github.com/musher-dev/specifications/releases/tag/component%2Fv1.0.0) |
 
 What changed from v1, field by field:
@@ -60,13 +60,16 @@ authoritative list is the "Normative dependencies" table in
 | `COMP-BUILD` | Build recipe, build context and build secrets | [§5.1](v2/spec.md#build) |
 | `COMP-EP` | Endpoints, probes, and the fields naming them | [§5.2](v2/spec.md#endpoints), [§5.4](v2/spec.md#health) |
 | `COMP-ENVVAR` | Environment variables | [§5.3](v2/spec.md#env-vars) |
+| `COMP-VOL` | Volume mount paths, and whether replicas share a volume | [§5.5](v2/spec.md#volumes) |
 | `COMP-JOB` | When a job runs, and its schedule | [§5.7](v2/spec.md#jobs) |
+| `COMP-CONTRACT` | Input and output names | [§6](v2/spec.md#contract) |
 | `COMP-DESC` | Component, input and output descriptions | [§4](v2/spec.md#metadata), [§6](v2/spec.md#contract) |
 | `COMP-INPUT` | Inputs with no environment target | [§6.1](v2/spec.md#inputs) |
 | `COMP-OUT` | Outputs | [§6.2](v2/spec.md#outputs) |
 | `COMP-PLACEHOLDER` | Placeholders in output templates | [§6.2](v2/spec.md#outputs) |
 | `COMP-VAL` | Value schemas | [§6.3](v2/spec.md#value-schema) |
 | `COMP-CONNECTION` | Connection inputs and their protocols | [§6.4](v2/spec.md#connection-requirements) |
+| `COMP-SEC` | Keeping sensitive values out of public output, and trusting a viewer's identity | [§11](v2/spec.md#security) |
 
 Every ID, the clause stating it, and the cases pinning it:
 [component/v2 in docs/traceability.md](../../docs/traceability.md#componentv2).
@@ -76,7 +79,7 @@ Every ID, the clause stating it, and the cases pinning it:
 | | URL |
 |---|---|
 | Major-version alias | `https://specifications.musher.dev/component/v2/component.schema.json` |
-| Exact release (after first release) | `https://specifications.musher.dev/component/v2.<MINOR>.<PATCH>/component.schema.json` |
+| Exact release | `https://specifications.musher.dev/component/v2.<MINOR>.<PATCH>/component.schema.json` |
 
 Which one to use, and how to bind it, is in
 [Using the schemas](../../docs/using-schemas.md). The schema is authored in

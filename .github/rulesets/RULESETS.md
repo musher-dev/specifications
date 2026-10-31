@@ -70,11 +70,12 @@ the code-owner requirement is evaluated per changed file.
 [ADR 0015](../../docs/adr/0015-selective-code-owner-review.md) says why.
 
 Seven invariants keep the mechanism working. Each one breaks it *silently*. The
-first four are checked by `task check:rulesets`, within the limits each states;
-the last three are only visible against live GitHub state. Separately, RUL-01
-to RUL-04 check each ruleset file's shape: valid JSON with the required keys, a
-known `target` and `enforcement`, no server-side field, and a non-empty `rules`
-array. RUL-07 checks the gate's two values above.
+first four are checked against the repository's files, within the limits each
+states: invariants 1, 2 and 4 by `task check:rulesets`, and invariant 3 by
+`task check:conventions`. The last three are only visible against live GitHub
+state. Separately, RUL-01 to RUL-04 check each ruleset file's shape: valid JSON
+with the required keys, a known `target` and `enforcement`, no server-side
+field, and a non-empty `rules` array. RUL-07 checks the gate's two values above.
 
 1. **No `*` catch-all in `.github/CODEOWNERS`.** It makes every pull request
    code-owned, which is the blanket gate again wearing a different hat. RUL-05.
@@ -152,7 +153,11 @@ run it during a security review, or whenever review behaviour surprises you:
 ```sh
 for pair in "20585885:main-branch.json" "20585889:release-tags.json"; do
   id="${pair%%:*}"; file=".github/rulesets/${pair##*:}"
-  diff -u     <(jq -S '{name,target,enforcement,bypass_actors,conditions,rules}' "$file")     <(gh api "repos/musher-dev/specifications/rulesets/$id"         --jq '{name,target,enforcement,bypass_actors,conditions,rules}' | jq -S .)     && echo "in step: $file" || echo "DRIFT: $file"
+  diff -u \
+    <(jq -S '{name,target,enforcement,bypass_actors,conditions,rules}' "$file") \
+    <(gh api "repos/musher-dev/specifications/rulesets/$id" \
+        --jq '{name,target,enforcement,bypass_actors,conditions,rules}' | jq -S .) \
+    && echo "in step: $file" || echo "DRIFT: $file"
 done
 ```
 
@@ -191,10 +196,12 @@ the blanket approval requirement could not be satisfied by the only maintainer.
 The selective gate above exists so that a bypass in the audit log is a signal
 again.
 
-**`release-tags` declared `bypass_actors: []` and the live ruleset granted
-`OrganizationAdmin` bypass anyway** — the file had never been re-applied. It was
-reconciled in the file's favour on 2026-08-25, which is what the paragraph below
-has always claimed.
+**`release-tags` once drifted too.** Until 2026-08-25 the file declared
+`bypass_actors: []` while the live ruleset granted `OrganizationAdmin` bypass,
+because the file had never been re-applied. It was reconciled in the file's
+favour that day, which left the ruleset with no bypass at all until
+[ADR 0037](../../docs/adr/0037-the-repository-adopts-engineering-conventions-0-7-0.md)
+blocked tag creation and gave it the one bypass actor below.
 
 **`release-tags` allows one bypass actor: the `musher-release` GitHub App**
 (`actor_id` 4991671, `actor_type: Integration`). Blocking creation needs it:
