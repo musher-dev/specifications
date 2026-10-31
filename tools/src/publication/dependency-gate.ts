@@ -34,7 +34,9 @@ function declarations(repoRoot: string, path: string, failures: Failures, ref?: 
   try {
     const bindings = parseBindings(text)
     if (bindings === null) {
-      failures.add(`${specPath}: cites no core line or normative dependencies`)
+      failures.add(
+        `${specPath}: §2 declares no normative dependencies, so it cites no core major version`,
+      )
       return []
     }
     return bindings.dependencies
@@ -44,7 +46,7 @@ function declarations(repoRoot: string, path: string, failures: Failures, ref?: 
   }
 }
 
-/** Choose direct dependencies once, using the declared major lines. */
+/** Choose direct dependencies once, using the declared major versions. */
 export function selectDependencies(
   repoRoot: string,
   path: string,
@@ -65,7 +67,7 @@ export function selectDependencies(
     }
     selected[dependency.family] = version
   }
-  if (selected.core === undefined) failures.add(`${path}: cites no released core line`)
+  if (selected.core === undefined) failures.add(`${path}: cites no released core major version`)
   return selected as Dependencies
 }
 
@@ -124,7 +126,7 @@ export function dependencyClosure(
   return new Map([...found].sort(([a], [b]) => a.localeCompare(b)))
 }
 
-/** Pending releases and tag-owned staging check declared lines and changed dependency rules. */
+/** Pending releases and tag-owned staging check declared major versions and changed dependency rules. */
 export function assertDependencyContent(
   repoRoot: string,
   tag: string,
@@ -140,7 +142,7 @@ export function assertDependencyContent(
     const version = requires[dependency.family]
     if (version === undefined || `v${version.split('.')[0]}` !== dependency.line) {
       failures.add(
-        `${tag}: requires.${dependency.family} must select the declared ${dependency.line} line`,
+        `${tag}: requires.${dependency.family} must select the declared major version, ${dependency.line}`,
       )
     }
   }

@@ -1,5 +1,6 @@
 /**
- * Read the parameters a kind family binds to core, out of its own §2.
+ * Read what a kind family fixes of what core leaves to it, and the
+ * specifications it depends on, out of its own §2.
  *
  * Core v2 §1.1 leaves a family four things to decide — its `kind` constant, the
  * section that defines its `metadata`, the fields that accept `null`, and the
@@ -31,7 +32,7 @@ export interface SectionRef {
 export interface Dependency {
   /** The family name, e.g. `core`. */
   readonly family: string
-  /** The major line depended on, e.g. `v1`. */
+  /** The major version depended on, e.g. `v2`. */
   readonly line: string
 }
 
@@ -129,27 +130,28 @@ function tableRows(section: readonly string[], header: readonly string[]): strin
 
 type ParameterKey = 'kind' | 'metadata' | 'nullFields' | 'itemDocument'
 
-/** Which core parameter a row's first cell names. */
+/** Which of the things core leaves to the family a row's first cell names. */
 function parameterOf(label: string): ParameterKey {
   if (label.startsWith('`kind`')) return 'kind'
   if (label.startsWith('`metadata`')) return 'metadata'
   if (label.startsWith('Fields accepting `null`')) return 'nullFields'
   if (label.startsWith('Item document')) return 'itemDocument'
-  throw new BindingsError(`"${label}" is not a core parameter this table may bind`)
+  throw new BindingsError(`"${label}" is not something core §1.1 leaves to the family`)
 }
 
 function parseParameters(rows: readonly string[][]): Omit<FamilyBindings, 'dependencies'> {
   const values = new Map<ParameterKey, string>()
   for (const [label = '', value = ''] of rows) {
     const key = parameterOf(label)
-    if (values.has(key)) throw new BindingsError(`core parameter ${key} is bound twice`)
+    if (values.has(key))
+      throw new BindingsError(`the "Left to the family" table fixes ${key} twice`)
     values.set(key, value)
   }
   const missing = (['kind', 'metadata', 'nullFields', 'itemDocument'] as const).filter(
     (key) => !values.has(key),
   )
   if (missing.length > 0) {
-    throw new BindingsError(`the parameters table does not bind ${missing.join(', ')}`)
+    throw new BindingsError(`the "Left to the family" table does not fix ${missing.join(', ')}`)
   }
 
   const kindCell = values.get('kind') as string
@@ -249,10 +251,12 @@ export function parseBindings(markdown: string): FamilyBindings | null {
     null
   if (parameters === null && dependencies === null) return null
   if (parameters === null) {
-    throw new BindingsError('§2 lists normative dependencies but binds no core parameters')
+    throw new BindingsError('§2 lists normative dependencies but has no "Left to the family" table')
   }
   if (dependencies === null) {
-    throw new BindingsError('§2 binds core parameters but lists no normative dependencies')
+    throw new BindingsError(
+      '§2 has a "Left to the family" table but lists no normative dependencies',
+    )
   }
   return { ...parseParameters(parameters), dependencies: parseDependencies(dependencies) }
 }

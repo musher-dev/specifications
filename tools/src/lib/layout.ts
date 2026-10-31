@@ -160,8 +160,8 @@ export const ROOT_ENTRIES: readonly string[] = [
  * The base family: the Musher Document Core Specification (docs/adr/0022).
  *
  * It defines no `kind` and ships no schema — only prose and a parser-phase
- * corpus. Every other family is a *kind* family, which binds core's parameters
- * in its own §2 and publishes a bundle.
+ * corpus. Every other family is a *kind* family, which fixes what core leaves
+ * to it in its own §2 and publishes a bundle.
  */
 export const CORE_FAMILY = 'core'
 

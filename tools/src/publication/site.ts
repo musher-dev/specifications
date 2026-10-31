@@ -198,7 +198,7 @@ interface PublishedVersion {
 }
 
 /**
- * A schema-less family's major line: the ref its `/reference/<family>/<major>/spec/`
+ * A schema-less family's major version: the ref its `/reference/<family>/<major>/spec/`
  * page reads, with no schema URL beside it.
  */
 interface ProseLine {
@@ -1194,7 +1194,7 @@ function renderProseFamilyIndex(
         : [
             `<p>${link(`/${RESERVED_PATH}/${family}/${newest.major}/spec/`, 'Read the specification')}</p>`,
           ]),
-      '<h2>Lines</h2>',
+      '<h2>Major versions</h2>',
       ...(lineRows.length === 0
         ? [
             '<p class="muted">This family is no longer authored here. Its released versions',
@@ -1202,7 +1202,7 @@ function renderProseFamilyIndex(
           ]
         : [
             '<table>',
-            '<thead><tr><th>Line</th><th>Serving</th><th>Prose</th></tr></thead>',
+            '<thead><tr><th>Major version</th><th>Serving</th><th>Prose</th></tr></thead>',
             `<tbody>${lineRows.join('')}</tbody>`,
             '</table>',
           ]),

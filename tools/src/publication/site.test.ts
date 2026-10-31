@@ -764,7 +764,7 @@ describe('assembleSite', () => {
     const result = assembleSite({ repoRoot: fx.root, siteDir: site })
     const served = servedPaths(site)
 
-    // Prose for the line and for the release, and a family index.
+    // Prose for the major version and for the release, and a family index.
     for (const path of [
       '/reference/core/v1/spec/index.html',
       '/reference/core/v1.0.0/spec/index.html',
@@ -784,7 +784,7 @@ describe('assembleSite', () => {
     expect(result.pinned).toBe(1)
     expect(result.aliases).toBe(1)
 
-    // The line serves its newest tag, not main.
+    // The major version serves its newest tag, not main.
     const line = readSite(fx, 'reference', 'core', 'v1', 'spec', 'index.html')
     expect(line).toContain('Core released prose')
     expect(line).not.toContain('Core draft prose')
