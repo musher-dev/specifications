@@ -49,15 +49,14 @@ jobs:
           install-args: aqua:oven-sh/bun node aqua:go-task/task aqua:rhysd/actionlint aqua:vale-cli/vale
 
       # BASE_REF is empty on a push, where check:adr falls back to origin/main.
-      # The suite includes check:docs, which fails when docs/traceability.md or
-      # the ADR index is stale.
+      # The suite includes check:docs, which fails when docs/traceability.md,
+      # the ADR index, or docs/terminology.md and its Vale styles are stale;
+      # check:terms, which holds the term records to the schemas and each
+      # spec.md; and check:types, which typechecks the tooling.
       - name: Run the lint suite
         env:
           BASE_REF: ${{ github.event.pull_request.base.sha }}
         run: task ci:lint
-
-      - name: Typecheck the tooling
-        run: task check:types
 
   # ---------------------------------------------------------------------------
   # The normative gates
