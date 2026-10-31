@@ -155,6 +155,7 @@ function main(): void {
 
   const failures = new Failures()
   let validated = 0
+  const bundlePaths: string[] = []
 
   for (const family of discoverFamilies()) {
     const paths = [...sourceModules(family)]
@@ -165,9 +166,12 @@ function main(): void {
         family.name === 'blueprint' ? ['BlueprintResolutionRecord'] : [],
       ))
         failures.add(`${family.name}/${family.major}: unreferenced definition ${name}`)
-    // The CLI reads files, so the bundle is written to dist/ first.
+    // The CLI reads files, so the bundle is written to dist/ first, once.
     const bundlePath = ensureBundleFile(family)
-    if (bundlePath !== null) paths.push(bundlePath)
+    if (bundlePath !== null) {
+      paths.push(bundlePath)
+      bundlePaths.push(bundlePath)
+    }
 
     for (const path of paths) {
       const { status, output } = run(['metaschema', path])
@@ -195,9 +199,7 @@ function main(): void {
   // does not accept goes in EXCLUDED_RULES with a written reason, which is a
   // claim a reviewer can argue with. What is no longer available is neither
   // adopting nor rejecting it.
-  for (const family of discoverFamilies()) {
-    const bundlePath = ensureBundleFile(family)
-    if (bundlePath === null) continue
+  for (const bundlePath of bundlePaths) {
     const { output } = run(['lint', bundlePath])
     for (const line of output.split('\n')) {
       const rule = /\(([a-z_]+)\)\s*$/.exec(line)?.[1]

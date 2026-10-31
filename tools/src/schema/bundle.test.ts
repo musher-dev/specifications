@@ -6,7 +6,7 @@
  */
 import { afterEach, describe, expect, test } from 'bun:test'
 import { spawnSync } from 'node:child_process'
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { discoverKinds, familyPaths, REPO_ROOT } from '../lib/layout.ts'
 import { FixtureRepo } from '../testing/fixture.ts'
@@ -102,11 +102,15 @@ describe('familyBundle and ensureBundleFile', () => {
     expect(familyBundle(family)).toContain('edited')
   })
 
-  test('writes the bundle under dist/ and returns its path', () => {
+  test('writes the bundle under dist/ and returns its path, leaving nothing else there', () => {
     const { fx, family } = sources()
     const path = ensureBundleFile(family)
     expect(path).toBe(join(fx.root, ...COMPONENT.bundle.split('/')))
     expect(readFileSync(path as string, 'utf8')).toBe(familyBundle(family) as string)
+    fx.writeSources('component', 'v1', fx.bundleDoc('component', 'v1', { description: 'edited' }))
+    expect(ensureBundleFile(family)).toBe(path)
+    expect(readFileSync(path as string, 'utf8')).toContain('edited')
+    expect(readdirSync(dirname(path as string))).toEqual(['component.schema.json'])
   })
 })
 

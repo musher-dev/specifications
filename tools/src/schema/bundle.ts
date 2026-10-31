@@ -22,7 +22,7 @@
  * NON-NORMATIVE, like everything under tools/.
  */
 import { createHash } from 'node:crypto'
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname } from 'node:path'
 import { parseBindings } from '../lib/bindings.ts'
 import {
@@ -269,6 +269,11 @@ export function pinnedBundle(
  * For a tool that must hand another program a file. Rewrites only when the
  * bytes differ, so a CLI that caches by modification time is not invalidated
  * for nothing.
+ *
+ * `check:standards` and `check:parity` run in parallel and both call this, so
+ * the bytes go to a file of this process's own beside the bundle and are
+ * renamed over it. A rename within one directory is atomic: a reader sees the
+ * old bundle or the new one, never a partly written file.
  */
 export function ensureBundleFile(family: FamilyRef): string | null {
   const bundle = familyBundle(family)
@@ -282,7 +287,14 @@ export function ensureBundleFile(family: FamilyRef): string | null {
   }
   if (current !== bundle) {
     mkdirSync(dirname(path), { recursive: true })
-    writeFileSync(path, bundle, 'utf8')
+    const partial = `${path}.${process.pid}.tmp`
+    try {
+      writeFileSync(partial, bundle, 'utf8')
+      renameSync(partial, path)
+    } catch (error) {
+      rmSync(partial, { force: true })
+      throw error
+    }
   }
   return path
 }
