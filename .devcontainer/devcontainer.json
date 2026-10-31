@@ -185,17 +185,17 @@
         // build output under dist/: post-create runs `task bundle`, and so
         // must you after editing schemas/src.
         "yaml.schemas": {
-          "./dist/component/v1/component.schema.json": [
-            "specifications/component/v1/examples/*.yaml",
-            "specifications/component/v1/conformance/**/case.yaml"
+          "./dist/component/v2/component.schema.json": [
+            "specifications/component/v2/examples/*.yaml",
+            "specifications/component/v2/conformance/**/case.yaml"
           ],
-          "./dist/blueprint/v1/blueprint.schema.json": [
-            "specifications/blueprint/v1/examples/*.yaml",
-            "specifications/blueprint/v1/conformance/**/case.yaml"
+          "./dist/blueprint/v2/blueprint.schema.json": [
+            "specifications/blueprint/v2/examples/*.yaml",
+            "specifications/blueprint/v2/conformance/**/case.yaml"
           ],
-          "./dist/listing/v1/listing.schema.json": [
-            "specifications/listing/v1/examples/*.yaml",
-            "specifications/listing/v1/conformance/**/case.yaml"
+          "./dist/listing/v2/listing.schema.json": [
+            "specifications/listing/v2/examples/*.yaml",
+            "specifications/listing/v2/conformance/**/case.yaml"
           ]
         },
 
