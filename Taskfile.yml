@@ -47,13 +47,24 @@ vars:
 # Every fragment is flattened (TASK-20), so each task answers to the name its
 # fragment writes. The fragments write their full names (`check:format`,
 # `ci:lint`, `setup:tools`), so those names, which CI, the hooks and
-# CONTRIBUTING use, did not change when the namespaces went away.
+# CONTRIBUTING use, did not change when the namespaces went away. Each task
+# sits in the fragment its name gives (TASK-27): `bundle` in
+# bundle.Taskfile.yml, `site:build` in site.Taskfile.yml (docs/adr/0042).
 includes:
   setup:
     taskfile: taskfiles/setup.Taskfile.yml
     flatten: true
-  build:
-    taskfile: taskfiles/build.Taskfile.yml
+  bundle:
+    taskfile: taskfiles/bundle.Taskfile.yml
+    flatten: true
+  changes:
+    taskfile: taskfiles/changes.Taskfile.yml
+    flatten: true
+  docs:
+    taskfile: taskfiles/docs.Taskfile.yml
+    flatten: true
+  site:
+    taskfile: taskfiles/site.Taskfile.yml
     flatten: true
   check:
     taskfile: taskfiles/check.Taskfile.yml

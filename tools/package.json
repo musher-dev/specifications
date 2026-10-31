@@ -13,7 +13,6 @@
     "bundle": "bun run src/schema/bundle.ts",
     "examples": "bun run src/conformance/examples.ts",
     "conformance": "bun run src/conformance/conformance.ts",
-    "catalog": "bun run src/publication/catalog.ts",
     "format": "biome format --write .",
     "format:check": "biome ci ."
   },

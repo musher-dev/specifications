@@ -123,7 +123,7 @@ as `component-v2/`. A kind family archive's directory holds:
   dependencies and the complete dependency closure, including tags, commits,
   tree identities and bundle digests;
 - `release.json`, the
-  [engineering conventions' release record](https://github.com/musher-dev/engineering-conventions/blob/v0.7.0/engineering-conventions/definitions/conventions/interfaces/publishing-interfaces.md#the-release-record):
+  [engineering conventions' release record](https://github.com/musher-dev/engineering-conventions/blob/v0.9.3/engineering-conventions/definitions/conventions/interfaces/publishing-interfaces.md#the-release-record):
   the repository, the bundle output (`<family>-release`), the version, tag and
   commit, and the family's schema interface (`<family>-schema`) with the
   bundle's SHA-256. A repository that vendors the archive keeps it unchanged,

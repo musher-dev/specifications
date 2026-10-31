@@ -31,9 +31,9 @@ missing from this table fails CONF-03; a file no caller names fails CONF-04.
 | `mise/locks/` | mise | Per-tool lock files `mise lock` writes for npm tools; read by `mise install --locked` |
 | `actions/actionlint.yaml` | actionlint | `-config-file .config/actions/actionlint.yaml` |
 | `markdown/markdownlint.jsonc` | markdownlint-cli2 | `--config .config/markdown/markdownlint.jsonc` |
-| `markdown/vale.ini` | Vale | `--config .config/markdown/vale.ini` in `task check:prose`; `conventions prose` finds it under `.config/` |
-| `markdown/styles/MusherSpecifications/Terms.yml` | Vale | Applied by `BasedOnStyles = MusherSpecifications` in `markdown/vale.ini`, whose `StylesPath` is `markdown/styles/`. The other styles there are packages `vale sync` downloads, gitignored |
-| `markdown/styles/MusherSpecifications/Discouraged.yml` | Vale | Generated with `Terms.yml` from `docs/terminology.yaml` by `task docs`; applied the same way |
+| `prose/vale.ini` | Vale | `--config .config/prose/vale.ini` in `task check:prose`; `conventions prose` finds it under `.config/` |
+| `prose/styles/MusherSpecifications/Terms.yml` | Vale | Applied by `BasedOnStyles = MusherSpecifications` in `prose/vale.ini`, whose `StylesPath` is `prose/styles/`. The other styles there are packages `vale sync` downloads, gitignored |
+| `prose/styles/MusherSpecifications/Discouraged.yml` | Vale | Generated with `Terms.yml` from `docs/terminology.yaml` by `task docs`; applied the same way |
 | `commits/committed.toml` | committed | `--config .config/commits/committed.toml` in the commit-msg hook and the Validate Pull Request workflow; read by `task check:title` and `task check:commits` |
 | `spelling/cspell.json` | cspell | `--config .config/spelling/cspell.json` |
 | `spelling/musher.txt` | cspell | Resolved via `dictionaryDefinitions[].path` in `spelling/cspell.json` |

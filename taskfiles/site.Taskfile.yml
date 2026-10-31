@@ -1,48 +1,16 @@
-# Build and reporting tasks — everything that regenerates a generated artifact,
-# plus the one step that ships it.
+# Site: the publication tree served at specifications.musher.dev, each task
+# named `site:<step>`. `site:fetch` verifies every tagged release and caches
+# its bundle, `site:build` assembles site/, `site:deploy` uploads it, and
+# `site:verify-live` checks what the origin then serves.
 #
-# Included flattened, so these keep their bare names (`task bundle`, not
-# `task build:bundle`): CI, the hooks and CONTRIBUTING all call them by name.
+# Included flattened (TASK-20), so each task answers to the name written here:
+# the Validate, Deploy and Release workflows call them by those names.
 #
 # `dir:` is absolute via {{.ROOT_DIR}} throughout this directory. A relative
 # `dir:` in an included taskfile resolves against *that file's* directory.
 version: '3'
 
 tasks:
-  bundle:
-    desc: Build every schema bundle and the catalog into dist/, and regenerate the generated docs
-    dir: '{{.ROOT_DIR}}/{{.TOOLS_DIR}}'
-    cmds:
-      # Writes dist/<family>/<major>/<family>.schema.json and dist/catalog.json.
-      # Nothing else needs this first: every check and site:build builds the
-      # bundles in memory. It is for reading, vendoring, and editor bindings.
-      - bun run src/schema/bundle.ts
-      - task: docs
-
-  docs:
-    desc: Regenerate docs/traceability.md, the ADR index, and docs/terminology.md with its Vale styles
-    dir: '{{.ROOT_DIR}}/{{.TOOLS_DIR}}'
-    cmds:
-      # All are committed, and `task check:docs` fails when any is stale. The
-      # terminology step writes docs/terminology.md and the generated
-      # MusherSpecifications Vale style (Terms.yml, Discouraged.yml) from
-      # docs/terminology.yaml.
-      - bun run src/render/traceability.ts
-      - bun run src/render/adr-index.ts
-      - bun run src/render/terminology.ts
-
-  catalog:
-    desc: Regenerate the SchemaStore catalog index into dist/
-    dir: '{{.ROOT_DIR}}/{{.TOOLS_DIR}}'
-    cmds:
-      - bun run src/publication/catalog.ts
-
-  changes:
-    desc: Report what this branch does to the published contract (BASE=origin/main; -- --diff adds bundle diffs)
-    dir: '{{.ROOT_DIR}}/{{.TOOLS_DIR}}'
-    cmds:
-      - bun run src/publication/changes.ts {{.BASE | default "origin/main"}} {{.CLI_ARGS}}
-
   site:fetch:
     desc: Verify every tagged release on GitHub and cache its bundle in .cache/releases
     dir: '{{.ROOT_DIR}}/{{.TOOLS_DIR}}'

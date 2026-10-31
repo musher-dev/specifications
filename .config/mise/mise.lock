@@ -161,32 +161,32 @@ url = "https://github.com/crate-ci/committed/releases/download/v1.1.11/committed
 url_api = "https://api.github.com/repos/crate-ci/committed/releases/assets/361544941"
 
 [[tools."github:musher-dev/engineering-conventions"]]
-version = "0.9.1"
+version = "0.9.3"
 backend = "github:musher-dev/engineering-conventions"
-specifiers = ["0.9.1"]
+specifiers = ["0.9.3"]
 
 [tools."github:musher-dev/engineering-conventions"."platforms.linux-arm64"]
-checksum = "sha256:c3722ac37060cdcdf48f0c5706a4cc1673d2b2a0036ed2f01f55bea7c571b29f"
-url = "https://github.com/musher-dev/engineering-conventions/releases/download/v0.9.1/engineering-conventions-0.9.1.tar.gz"
-url_api = "https://api.github.com/repos/musher-dev/engineering-conventions/releases/assets/645257274"
+checksum = "sha256:925ae19b4593d4b6d960b5697c8b5f6847540bb03a607f7106db8f29607a715a"
+url = "https://github.com/musher-dev/engineering-conventions/releases/download/v0.9.3/engineering-conventions-0.9.3.tar.gz"
+url_api = "https://api.github.com/repos/musher-dev/engineering-conventions/releases/assets/672757249"
 provenance = "github-attestations"
 
 [tools."github:musher-dev/engineering-conventions"."platforms.linux-x64"]
-checksum = "sha256:c3722ac37060cdcdf48f0c5706a4cc1673d2b2a0036ed2f01f55bea7c571b29f"
-url = "https://github.com/musher-dev/engineering-conventions/releases/download/v0.9.1/engineering-conventions-0.9.1.tar.gz"
-url_api = "https://api.github.com/repos/musher-dev/engineering-conventions/releases/assets/645257274"
+checksum = "sha256:925ae19b4593d4b6d960b5697c8b5f6847540bb03a607f7106db8f29607a715a"
+url = "https://github.com/musher-dev/engineering-conventions/releases/download/v0.9.3/engineering-conventions-0.9.3.tar.gz"
+url_api = "https://api.github.com/repos/musher-dev/engineering-conventions/releases/assets/672757249"
 provenance = "github-attestations"
 
 [tools."github:musher-dev/engineering-conventions"."platforms.macos-arm64"]
-checksum = "sha256:c3722ac37060cdcdf48f0c5706a4cc1673d2b2a0036ed2f01f55bea7c571b29f"
-url = "https://github.com/musher-dev/engineering-conventions/releases/download/v0.9.1/engineering-conventions-0.9.1.tar.gz"
-url_api = "https://api.github.com/repos/musher-dev/engineering-conventions/releases/assets/645257274"
+checksum = "sha256:925ae19b4593d4b6d960b5697c8b5f6847540bb03a607f7106db8f29607a715a"
+url = "https://github.com/musher-dev/engineering-conventions/releases/download/v0.9.3/engineering-conventions-0.9.3.tar.gz"
+url_api = "https://api.github.com/repos/musher-dev/engineering-conventions/releases/assets/672757249"
 provenance = "github-attestations"
 
 [tools."github:musher-dev/engineering-conventions"."platforms.macos-x64"]
-checksum = "sha256:c3722ac37060cdcdf48f0c5706a4cc1673d2b2a0036ed2f01f55bea7c571b29f"
-url = "https://github.com/musher-dev/engineering-conventions/releases/download/v0.9.1/engineering-conventions-0.9.1.tar.gz"
-url_api = "https://api.github.com/repos/musher-dev/engineering-conventions/releases/assets/645257274"
+checksum = "sha256:925ae19b4593d4b6d960b5697c8b5f6847540bb03a607f7106db8f29607a715a"
+url = "https://github.com/musher-dev/engineering-conventions/releases/download/v0.9.3/engineering-conventions-0.9.3.tar.gz"
+url_api = "https://api.github.com/repos/musher-dev/engineering-conventions/releases/assets/672757249"
 provenance = "github-attestations"
 
 [[tools.node]]

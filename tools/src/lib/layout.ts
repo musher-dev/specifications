@@ -666,7 +666,7 @@ export const TERMINOLOGY_SCHEMA_FILE = 'docs/terminology.schema.json'
 /** The generated glossary page, committed; `task check:docs` fails when it is stale. */
 export const TERMINOLOGY_DOC_FILE = 'docs/terminology.md'
 /** The generated Vale style the prose-scope aliases project into. */
-export const VALE_STYLE_DIR = '.config/markdown/styles/MusherSpecifications'
+export const VALE_STYLE_DIR = '.config/prose/styles/MusherSpecifications'
 /** Banned prose aliases, as a Vale substitution rule at level error. */
 export const VALE_TERMS_FILE = `${VALE_STYLE_DIR}/Terms.yml`
 /** Discouraged prose aliases, as a Vale substitution rule at level warning. */

@@ -109,7 +109,6 @@ the command line) and environment variables shown.
 |---|---|---|---|
 | `bundle` | Builds every bundle and the catalog into `dist/`, then runs `docs` | `src/schema/bundle.ts` | — |
 | `docs` | Regenerates `docs/traceability.md` and the ADR index | `src/render/traceability.ts`, `src/render/adr-index.ts` | — |
-| `catalog` | Regenerates `dist/catalog.json` | `src/publication/catalog.ts` | — |
 | `changes` | Reports what the branch does to the published contract | `src/publication/changes.ts` | `BASE` variable, default `origin/main`; `-- --diff` |
 | `check:title` | Fails unless the pull request title is a Conventional Commit with a type and a scope from `.config/commits/committed.toml` | `src/policy/title.ts` | `PR_TITLE` environment variable, required |
 | `check:ledger` | Fails if `published.json` changed a recorded entry | `src/publication/ledger.ts check` | `BASE_REF` environment variable; without it, only parses |
