@@ -16,8 +16,10 @@ consumer changes and defines nothing. Where it and a `spec.md` disagree, the
 v2 replaces v1. It is not run beside it. v1 is a
 [retired major](publication.md#retired-majors): its releases keep serving at
 their pinned URLs, and it takes no further release. A consumer migrates every
-stored document to v2 and then removes its v1 code path. The history of the v1
-migration is in [Downstream v1 adoption](downstream-v1-adoption.md).
+stored document to v2 and then removes its v1 code path. The guide to the v1
+migration,
+[Downstream v1 adoption](https://github.com/musher-dev/specifications/blob/core/v2.0.0/docs/downstream-v1-adoption.md),
+is kept as history at the `core/v2.0.0` tag.
 
 Every v2 `spec.md` ends its scope section with a **Migration from v1** table
 that maps each renamed field, value, diagnostic code and requirement ID to its

@@ -21,8 +21,6 @@ every guide by who it is for.
   Normative, unlike the guides on this page.
 - [Downstream v2 adoption](downstream-v2-adoption.md): what platform-api, the
   catalog, the CLI, Pelorus, the SDKs and the host agent change for v2.
-- [Downstream v1 adoption](downstream-v1-adoption.md): the v1 migration, kept as
-  history now that v1 is retired.
 - [Requirement traceability](traceability.md): every requirement ID, its clause,
   and its cases. Generated.
 - [Terminology](terminology.md): the glossary of the document vocabulary, with
