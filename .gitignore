@@ -7,10 +7,8 @@
 # Downloaded release assets and other tool caches.
 /.cache/
 
-# Tooling
-tools/node_modules/
+# Tooling dependencies, tools/node_modules/ among them.
 node_modules/
-*.tsbuildinfo
 
 # Dev container local state
 .devcontainer/.env
