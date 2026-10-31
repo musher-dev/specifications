@@ -21,7 +21,9 @@ tasks:
     desc: Check formatting and lint of the tooling sources
     dir: '{{.ROOT_DIR}}/{{.TOOLS_DIR}}'
     cmds:
-      - bun run biome ci .
+      # --error-on-warnings: `biome ci` alone passes with warnings, which then
+      # accumulate unread behind a green job.
+      - bun run biome ci --error-on-warnings .
 
   check:types:
     desc: Typecheck the tooling sources
