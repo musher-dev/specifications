@@ -23,7 +23,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Release tag to finish or re-verify, e.g. component/v1.0.0
+        description: Release tag to finish or re-verify, e.g. component/v2.0.0
         required: true
         type: string
 
@@ -309,7 +309,7 @@ jobs:
       # are fetched and hash-verified before they are included in its archive.
       - name: Fetch dependency artifacts
         env:
-          GH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
           ALLOW_PENDING_RELEASES: '1'
         run: task site:fetch
 
@@ -442,9 +442,9 @@ jobs:
           else
             meta="$(tar -xzOf "$ARCHIVE" "${root}/release.json")"
           fi
-          edition="$(jq -r '.requires.core // ""' <<<"$meta")"
-          if [[ ! "$edition" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "::error::${ARCHIVE}'s specification record names no core edition: ${meta}" >&2
+          core_release="$(jq -r '.requires.core // ""' <<<"$meta")"
+          if [[ ! "$core_release" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::${ARCHIVE}'s specification record names no core release: ${meta}" >&2
             exit 1
           fi
           note="Specification dependencies: $(jq -r '.requires | to_entries | sort_by(.key) | map(.key + "/v" + .value) | join(", ")' <<<"$meta")"
