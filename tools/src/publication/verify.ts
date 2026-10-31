@@ -101,8 +101,7 @@ export function verifyPublications(
         )
         continue
       }
-      const atTag = ledgerAtRef(repoRoot, tag)
-      const own = atTag.version === 2 ? atTag.releases[tag] : undefined
+      const own = ledgerAtRef(repoRoot, tag).releases[tag]
       if (own === undefined) {
         failures.add(
           `${tag}: the tag's own ${LEDGER_FILE} does not record it. An entry is written on the ` +

@@ -73,7 +73,7 @@ import { gitReader } from '../schema/sources.ts'
 import { assertCoreGateTaggedContent } from './core-gate.ts'
 import { assertDependencyContent, dependencyClosure } from './dependency-gate.ts'
 import { readCachedBundle, readPendingReleases } from './fetch.ts'
-import { type AnyLedger, ledgerAtRef, sameEntry } from './ledger.ts'
+import { type Ledger, ledgerAtRef, sameEntry } from './ledger.ts'
 import { readDeclarations, releaseRecord } from './release-record.ts'
 import { assetNames, isCore, parseReleaseTag, releaseTag, sha256 } from './releases.ts'
 
@@ -182,7 +182,7 @@ export function deterministicArchive(parent: string, root: string): Buffer {
   return gzip.stdout
 }
 
-function readLedgerAt(repoRoot: string, ref: string): AnyLedger {
+function readLedgerAt(repoRoot: string, ref: string): Ledger {
   try {
     return ledgerAtRef(repoRoot, ref)
   } catch (error) {
@@ -204,12 +204,10 @@ export function stageRelease(
   if (!tagExists(repoRoot, tag)) throw new StageError(`${tag} does not exist`)
 
   const atTag = readLedgerAt(repoRoot, tag)
-  if (atTag.version !== 2) throw new StageError(`${tag}: the tag's own ledger is not version 2`)
   const entry = atTag.releases[tag]
   if (entry === undefined) throw new StageError(`${tag}: the tag's own ledger does not record it`)
   const baseRef = options.baseLedgerRef ?? resolveBaseLedgerRef()
-  const base = readLedgerAt(repoRoot, baseRef)
-  const onBase = base.version === 2 ? base.releases[tag] : undefined
+  const onBase = readLedgerAt(repoRoot, baseRef).releases[tag]
   if (onBase === undefined) {
     throw new StageError(
       `${tag}: ${baseRef}'s ledger does not record it. A release is staged only once its ` +

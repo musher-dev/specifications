@@ -104,8 +104,7 @@ export function dependencyClosure(
       failures.add(`${tag}: ${dependencyTag} has no ledger entry`)
       return
     }
-    const historical = ledgerAtRef(repoRoot, dependencyTag)
-    const own = historical.version === 2 ? historical.releases[dependencyTag] : undefined
+    const own = ledgerAtRef(repoRoot, dependencyTag).releases[dependencyTag]
     if (
       own === undefined ||
       !sameEntry(own, entry) ||
