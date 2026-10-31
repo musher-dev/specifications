@@ -1,4 +1,4 @@
-# `.config/` — Tool Configuration
+# `.config/` — Tool configuration
 
 Every linter, formatter, and hook config lives here. One directory, one
 purpose: if a tool needs a config file and it is not provisioning the
@@ -6,8 +6,12 @@ container, it goes in here.
 
 Policy and rationale:
 [`docs/adr/0011-tooling-configuration-layout.md`](../docs/adr/0011-tooling-configuration-layout.md).
-Enforcement: `task check:config` (CFG-01..CFG-08, and CFG-09 for the repository root), implemented in
-[`tools/src/policy/config.ts`](../tools/src/policy/config.ts).
+Enforcement: `task check:conventions` holds this directory to the engineering
+conventions' CONF-01..CONF-09, which retired this repository's CFG-01..CFG-08
+([ADR 0037](../docs/adr/0037-the-repository-adopts-engineering-conventions-0-7-0.md)).
+`task check:config`, implemented in
+[`tools/src/policy/config.ts`](../tools/src/policy/config.ts), is CFG-09 alone:
+it holds the repository root to `ROOT_ENTRIES`.
 
 The convention is shared with `musher-dev/development-container` and
 `musher-dev/platform`. Keeping the three aligned is the point: a contributor
@@ -16,7 +20,7 @@ moving between them should not have to re-learn where the linter configs are.
 ## Index
 
 Every file, the tool that reads it, and how that tool is pointed at it. A file
-missing from this table fails CFG-03; a file no caller names fails CFG-04.
+missing from this table fails CONF-03; a file no caller names fails CONF-04.
 
 | File | Tool | How it is reached |
 | --- | --- | --- |
@@ -83,12 +87,14 @@ whole directory exists to prevent, and it is one command to rule out.
 
 ## Deliberately config-less
 
-**shellcheck.** Its threshold is passed at the call site because `.shellcheckrc`
-supports no `severity` key — the rcfile accepts only `disable`, `enable`,
-`external-sources`, `source`, `source-path` and `shell`, and an unrecognised
-key is silently ignored rather than rejected. A `.config/shell/shellcheckrc`
-holding `severity=warning` would look like a gate and enforce nothing. If
-shellcheck ever gains the key, the file becomes worth adding.
+**shellcheck.** It runs at its default severity, style, so every finding
+fails, and its two flags, `-x --source-path=SCRIPTDIR`, are passed at the call
+site. A config file would add nothing: `.shellcheckrc` supports no `severity`
+key — the rcfile takes only directives such as `disable`, `enable`,
+`source-path` and `shell`, and an unrecognised key is silently ignored rather
+than rejected. A `.config/shell/shellcheckrc` holding `severity=warning` would
+look like a threshold and change nothing. If shellcheck ever gains the key,
+and a threshold other than style is wanted, the file becomes worth adding.
 
 ## A trap worth knowing
 
@@ -100,4 +106,6 @@ lefthook.*  →  .lefthook.*  →  .config/lefthook.*
 
 A stray `lefthook.yml` at the repo root therefore **silently shadows** this
 directory's copy — no warning, no error, just a different set of hooks.
-`task check:config` (CFG-06) fails the build if one appears.
+`task check:conventions` (CONF-06) fails the build if one appears, and so does
+`task check:config` (CFG-09), to which it is a root entry `ROOT_ENTRIES` does
+not name.

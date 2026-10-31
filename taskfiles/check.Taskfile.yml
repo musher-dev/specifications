@@ -237,8 +237,8 @@ tasks:
     desc: ShellCheck the dev container scripts
     dir: '{{.ROOT_DIR}}'
     cmds:
-      # --severity is passed here rather than in a config file: .shellcheckrc
-      # has no severity key and ignores unrecognised ones silently.
+      # No --severity: ShellCheck runs at its default severity, style, so every
+      # finding fails. No config file either (.config/README.md says why).
       - shellcheck -x --source-path=SCRIPTDIR .devcontainer/scripts/*.sh .devcontainer/scripts/lib/*.sh
 
   check:shell:files:
