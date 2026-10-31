@@ -85,7 +85,7 @@ and the words to avoid are enforced in prose by the generated
 | [exemptible requests](#component-exemptible-requests) | component | The requests an endpoint can take without a viewer. |
 | [exposure](#blueprint-exposure) | blueprint | Who reaches an endpoint, and how. |
 | [EXTERNAL](#component-external) | component | Runs nothing; stands in for something outside the graph. |
-| [family](#core-family) | core | One specification, released on its own tag line. |
+| [family](#core-family) | core | One specification, released under its own tag prefix. |
 | [generated parameter](#blueprint-generated-parameter) | blueprint | A persisted random credential. |
 | [getting started](#listing-getting-started) | listing | What to do once the deployment is running. |
 | [git source](#component-git-source) | component | A repository the platform builds. |
@@ -499,9 +499,9 @@ reads variable values from.
 
 #### <a id="core-family"></a>family
 
-One specification of the Musher document format, released on its own tag line
-with its own corpus; every one but core also fixes a kind and publishes a schema
-bundle.
+One specification of the Musher document format, released under its own tag
+prefix with its own corpus; every one but core also fixes a kind and publishes a
+schema bundle.
 
 - **is versioned by:** [major version](#core-major-version)
 - **Verbs:** a family applies core; a family fixes what core leaves open; a
@@ -3137,8 +3137,8 @@ port below 1024, which admission may refuse.
 
 #### <a id="repository-release"></a>release
 
-One tagged, immutable version of one family, X.Y.Z on the family's tag line,
-recorded in the ledger and served from immutable GitHub assets.
+One tagged, immutable version of one family, X.Y.Z under the family's tag
+prefix, recorded in the ledger and served from immutable GitHub assets.
 
 - **Verbs:** release a family; a release records its core release
 - **Not to be confused with:** A publication to the catalog, which these specs
