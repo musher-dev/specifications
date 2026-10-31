@@ -21,6 +21,6 @@
     "cspell": "10",
     "markdownlint-cli2": "0.24.0",
     "typescript": "7.0.2",
-    "wrangler": "4.151.3"
+    "wrangler": "4.154.0"
   }
 }
