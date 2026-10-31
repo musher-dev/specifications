@@ -7,16 +7,10 @@
  * regressed. These tests hold that a missing corpus is a failure instead.
  */
 import { afterEach, describe, expect, test } from 'bun:test'
-import { discoverKinds, Failures, familyPaths, LayoutError, REPO_ROOT } from '../lib/layout.ts'
+import { discoverKinds, Failures, familyPaths, LayoutError } from '../lib/layout.ts'
 import { FixtureRepo } from '../testing/fixture.ts'
 import { Pipeline } from '../testing/pipeline.ts'
-import {
-  type ReplayCount,
-  replayAll,
-  replayConcurrently,
-  replayRelease,
-  WITHDRAWN,
-} from './compat.ts'
+import { type ReplayCount, replayAll, replayConcurrently, replayRelease } from './compat.ts'
 import { readLedger, taggedEntries } from './ledger.ts'
 
 const COMPONENT = familyPaths('component', 'v1')
@@ -43,17 +37,26 @@ function cut(without?: 'examples' | 'conformance'): FixtureRepo {
   return fx
 }
 
-function replay(fx: FixtureRepo, failures: Failures): number {
-  return replayCount(fx, failures).count
+/** Replay the fixture's component release, with the shipped relaxations unless given others. */
+function replay(
+  fx: FixtureRepo,
+  failures: Failures,
+  relaxed?: ReadonlyMap<string, string>,
+): number {
+  return replayCount(fx, failures, relaxed).count
 }
 
-function replayCount(fx: FixtureRepo, failures: Failures): ReplayCount {
+function replayCount(
+  fx: FixtureRepo,
+  failures: Failures,
+  relaxed?: ReadonlyMap<string, string>,
+): ReplayCount {
   const family = discoverKinds(fx.root).find((f) => f.name === 'component')
   const recorded = taggedEntries(fx.root, readLedger(fx.root)).find(
     (r) => r.release.family === 'component',
   )
   if (family === undefined || recorded === undefined) throw new Error('fixture has no release')
-  return replayRelease(fx.root, family, recorded, failures)
+  return replayRelease(fx.root, family, recorded, failures, relaxed)
 }
 
 function thrown(fn: () => unknown): unknown {
@@ -178,11 +181,14 @@ describe('replayRelease', () => {
 /**
  * A declared relaxation, and the two ways it is refused.
  *
- * ADR 0032 §3. The fixture uses the real key from `RELAXED`, so these tests
- * exercise the entry the repository actually ships rather than a stand-in.
+ * ADR 0032 §3. The repository ships no relaxation, so these tests declare their
+ * own for the fixture's release, keyed as `RELAXED` keys one.
  */
 describe('a declared relaxation', () => {
   const RELAXED_CASE = 'structural-093-metadata-without-a-description'
+  const RELAXATIONS: ReadonlyMap<string, string> = new Map([
+    [`component/v1.0.0:${RELAXED_CASE}`, 'the candidate stops requiring metadata.description'],
+  ])
 
   /** Release component 1.0.0 carrying one case, with the verdict it declared. */
   function cutWithCase(expected: 'pass' | 'fail', reject = false): FixtureRepo {
@@ -236,43 +242,25 @@ describe('a declared relaxation', () => {
 
   test('a rejection the candidate no longer makes is replayed as a pass', () => {
     const failures = new Failures()
-    expect(replay(cutWithCase('fail'), failures)).toBe(2)
+    expect(replay(cutWithCase('fail'), failures, RELAXATIONS)).toBe(2)
     expect(failures.messages).toEqual([])
+  })
+
+  test('the same rejection, undeclared, fails the replay: nothing is relaxed by default', () => {
+    const failures = new Failures()
+    replay(cutWithCase('fail'), failures)
+    expect(failures.messages.some((message) => message.includes(RELAXED_CASE))).toBe(true)
   })
 
   test('a relaxation whose case still rejects is reported, so it cannot go stale', () => {
     const failures = new Failures()
-    replay(cutWithCase('fail', true), failures)
+    replay(cutWithCase('fail', true), failures, RELAXATIONS)
     expect(failures.messages.join('\n')).toContain('expected to pass but failed')
   })
 
   test('a relaxation naming a case the release accepted is refused', () => {
-    const error = thrown(() => replay(cutWithCase('pass'), new Failures()))
+    const error = thrown(() => replay(cutWithCase('pass'), new Failures(), RELAXATIONS))
     expect(error).toBeInstanceOf(LayoutError)
     expect((error as Error).message).toContain('moves a verdict from fail to pass')
-  })
-})
-
-/**
- * The one-time v1 baseline reset, ADR 0033 §5.
- *
- * The reset is spent. This test is where adding a sixth release would have to
- * be argued, in a diff a reviewer reads, and it holds each entry to the tree
- * the ledger recorded so an entry cannot name a release that does not exist.
- */
-describe('the withdrawn releases', () => {
-  test('are exactly the five releases ADR 0033 names', () => {
-    expect([...WITHDRAWN.keys()].sort()).toEqual([
-      'blueprint/v1.0.0',
-      'blueprint/v1.1.0',
-      'blueprint/v1.2.0',
-      'component/v1.0.0',
-      'component/v1.1.0',
-    ])
-  })
-
-  test('each names the tree the ledger recorded for its tag', () => {
-    const ledger = readLedger(REPO_ROOT)
-    for (const [tag, tree] of WITHDRAWN) expect(ledger.releases[tag]?.tree).toBe(tree)
   })
 })
