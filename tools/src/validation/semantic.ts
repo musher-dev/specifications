@@ -1228,10 +1228,3 @@ export function semanticReport(
   }
   return { diagnostics: out, deferred, components: resolved, componentDigests, valueOrder: ordered }
 }
-export function semanticDiagnostics(
-  family: Family,
-  document: Json,
-  context: SemanticContext = {},
-): Diagnostic[] {
-  return semanticReport(family, document, context).diagnostics
-}

@@ -119,7 +119,6 @@ const record = (v: unknown): Record<string, Json> =>
 export const CONNECTION_MEMBERS: readonly string[] = [
   ...new Set(CONNECTION_PROTOCOLS.flatMap((p) => Object.keys(CONNECTION_PROTOCOL_MEMBERS[p]))),
 ]
-export type ConnectionMember = string
 /** Component §6.1: the key present says an input is a connection input. */
 export const isConnectionInput = (input: Json | undefined): boolean =>
   Object.hasOwn(record(input), 'connection')
