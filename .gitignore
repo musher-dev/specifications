@@ -31,9 +31,9 @@ Thumbs.db
 /.config/lefthook-local.yml
 
 # The Vale packages `vale sync` downloads into StylesPath
-# (.config/markdown/vale.ini). Only this repository's own style is tracked.
-/.config/markdown/styles/*
-!/.config/markdown/styles/MusherSpecifications/
+# (.config/prose/vale.ini). Only this repository's own style is tracked.
+/.config/prose/styles/*
+!/.config/prose/styles/MusherSpecifications/
 
 # Task runner cache
 .task/

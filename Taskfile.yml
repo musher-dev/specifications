@@ -26,7 +26,7 @@ vars:
   # The Markdown that check:md lints and fmt:md fixes, as markdownlint-cli2
   # globs, where a leading `#` excludes. Installed dependencies and build output
   # are not linted, nor is a worktree checked out under .claude/worktrees, nor
-  # .config/markdown/styles, where `vale sync` downloads its packages.
+  # .config/prose/styles, where `vale sync` downloads its packages.
   #
   # pull_request_template.md is excluded because it is a form fragment, not
   # a document: GitHub renders it into a textarea, so it has no title and
@@ -38,7 +38,7 @@ vars:
   # request — so it is excluded rather than linted or rewritten.
   MARKDOWN_GLOBS: >-
     "**/*.md" "#tools/node_modules" "#site" "#.claude/worktrees" "#.github/pull_request_template.md"
-    "#specifications/*/v*/CHANGELOG.md" "#.config/markdown/styles"
+    "#specifications/*/v*/CHANGELOG.md" "#.config/prose/styles"
 
 # No `env:` sets BUN_INSTALL_CACHE_DIR: the dev container sets it in
 # devcontainer.json, and anywhere else bun's own default applies. A path into

@@ -202,19 +202,17 @@ tasks:
         --config .config/spelling/cspell.json "**/*.md" "tools/src/**/*.ts" "**/*.schema.json"
 
   check:prose:
-    desc: Lint the published prose with Vale against .config/markdown/vale.ini (COPY-01..COPY-04)
+    desc: Lint the published prose with Vale against .config/prose/vale.ini (COPY-01..COPY-04)
     dir: '{{.ROOT_DIR}}'
     cmds:
       # `vale sync` installs the MusherProse package, at the release the
       # conventions pin names, into the config's StylesPath, which .gitignore
       # ignores except for this repository's own style.
-      - vale --config .config/markdown/vale.ini sync
+      - vale --config .config/prose/vale.ini sync
       # The files are the ones the config's styled section matches: every
       # README, the guides under docs/ and the v2 specifications, without the
-      # decision records, release-please's CHANGELOGs, the two history docs
-      # (docs/downstream-v1-adoption.md and docs/pre-release-migration.md, which
-      # must spell the vocabulary they retired) or the two generated pages,
-      # docs/traceability.md and docs/terminology.md. Vale's globs match
+      # decision records, release-please's CHANGELOGs or the two generated
+      # pages, docs/traceability.md and docs/terminology.md. Vale's globs match
       # the paths it is given, so it runs from the repository root. Vale exits
       # non-zero only for an error-level alert, so any alert it prints at the
       # config's MinAlertLevel fails the check here.
@@ -224,11 +222,10 @@ tasks:
           README.md ':(glob)**/README.md' ':(glob)docs/**/*.md' ':(glob)specifications/*/v2/*.md' \
           ':(exclude,glob)docs/adr/**' ':(exclude,glob)**/CHANGELOG.md' \
           ':(exclude)docs/traceability.md' ':(exclude)docs/terminology.md' \
-          ':(exclude)docs/downstream-v1-adoption.md' ':(exclude)docs/pre-release-migration.md' \
-          | xargs -0 vale --config .config/markdown/vale.ini --output=line --no-exit)"
+          | xargs -0 vale --config .config/prose/vale.ini --output=line --no-exit)"
         if [ -n "${alerts}" ]; then
           printf '%s\n' "${alerts}"
-          printf 'Vale reported %s alert(s); .config/markdown/vale.ini says which styles apply.\n' \
+          printf 'Vale reported %s alert(s); .config/prose/vale.ini says which styles apply.\n' \
             "$(printf '%s\n' "${alerts}" | wc -l | tr -d ' ')" >&2
           exit 1
         fi

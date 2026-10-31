@@ -23,7 +23,7 @@ The CLI, the platform API and every SDK implement what is defined here.
    git; no check covers it.
    `docs/traceability.md`, the ADR index, `docs/terminology.md` and the Vale
    styles generated with it (`Terms.yml` and `Discouraged.yml` under
-   `.config/markdown/styles/MusherSpecifications/`) are generated but
+   `.config/prose/styles/MusherSpecifications/`) are generated but
    committed: run `task docs`, and `task check:docs` fails when any is stale.
 2. **No remote `$ref`.** Every bundle resolves every reference inside its own
    `$defs`. `task check:schema` rejects a remote one.
