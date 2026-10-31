@@ -393,7 +393,6 @@ if (!existsSync(join(REPO_ROOT, SPECIFICATIONS_ROOT))) {
       'tools/src/lib/layout.ts derives it from its own location; if the file moved, fix the depth.',
   )
 }
-export const SPECIFICATIONS_DIR = join(REPO_ROOT, SPECIFICATIONS_ROOT)
 export const SITE_DIR = join(REPO_ROOT, 'site')
 
 /** The public hostname the published schemas are served from. */

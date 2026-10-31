@@ -1,6 +1,6 @@
 /**
- * Compile each family's authored modules into one self-contained compound
- * schema document.
+ * Compile each family's authored module into one self-contained schema
+ * document.
  *
  * The bundle is the artifact consumers actually fetch. Every reference resolves
  * inside `$defs`, so validation never touches the network.
@@ -75,9 +75,10 @@ function parseModule(reader: ModuleReader, path: string): { [k: string]: Json } 
  * Build a family's bundle, as canonical JSON text. Null when no module is
  * authored.
  *
- * Deterministic in its reader: modules are taken in name order whatever order
- * the reader lists them, and the output is canonicalized, so the same sources
- * give the same bytes from the working tree and from any ref.
+ * A family has exactly one module, its entry point. `check:schema` refuses a
+ * second, and so does this, rather than drop it: lint.ts says why embedding one
+ * is not supported. The output is canonicalized, so the same sources give the
+ * same bytes from the working tree and from any ref.
  */
 export function buildBundle(family: FamilyRef, options: BuildOptions = {}): string | null {
   const reader = options.reader ?? fsReader(family.repoRoot ?? REPO_ROOT)
@@ -92,38 +93,16 @@ export function buildBundle(family: FamilyRef, options: BuildOptions = {}): stri
   if (!names.includes(rootName)) {
     throw new Error(`${label(family)}: missing ${src}/${rootName}`)
   }
+  const others = names.filter((name) => name !== rootName)
+  if (others.length > 0) {
+    throw new Error(
+      `${label(family)}: ${src} holds ${others.join(', ')} beside ${rootName}, but a family ` +
+        'has one module (check:schema)',
+    )
+  }
 
   const root = parseModule(reader, `${src}/${rootName}`)
   const defs: { [k: string]: Json } = isObject(root.$defs) ? { ...root.$defs } : {}
-
-  // Embed every non-root module as a $defs member keyed by its concept name,
-  // and hoist its own $defs alongside. A 2020-12 compound schema document
-  // keeps each embedded resource's $id, so identity survives the inlining.
-  for (const name of names) {
-    if (name === rootName) continue
-    const path = `${src}/${name}`
-    const doc = parseModule(reader, path)
-    const key = conceptToDefName(name.slice(0, -MODULE_SUFFIX.length))
-
-    if (isObject(doc.$defs)) {
-      for (const [defName, value] of Object.entries(doc.$defs)) {
-        if (defName in defs) {
-          throw new Error(`${path}: $defs/${defName} collides with an existing definition`)
-        }
-        defs[defName] = value
-      }
-    }
-
-    const embedded: { [k: string]: Json } = {}
-    for (const [field, value] of Object.entries(doc)) {
-      if (field === '$defs' || field === '$schema') continue
-      embedded[field] = value
-    }
-    if (key in defs) {
-      throw new Error(`${path}: $defs/${key} collides with an existing definition`)
-    }
-    defs[key] = embedded
-  }
 
   const bundle: { [k: string]: Json } = {}
   for (const [field, value] of Object.entries(root)) {
@@ -201,13 +180,6 @@ function dnsLabelPattern(reader: ModuleReader, family: FamilyRef): string {
   const pattern = section?.match(/\x60(\^\[a-z\][^\x60]+\$)\x60/)?.[1]
   if (!pattern) throw new Error(`${label(family)}: the DNS-label grammar is missing from ${path}`)
   return pattern
-}
-
-function conceptToDefName(concept: string): string {
-  return concept
-    .split('-')
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join('')
 }
 
 /** Refuse to emit a bundle that would make a validator reach over the network. */

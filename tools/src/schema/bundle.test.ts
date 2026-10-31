@@ -11,7 +11,7 @@ import { dirname, join, resolve } from 'node:path'
 import { discoverKinds, familyPaths, REPO_ROOT } from '../lib/layout.ts'
 import { FixtureRepo } from '../testing/fixture.ts'
 import { buildBundle, ensureBundleFile, familyBundle, pinnedBundle } from './bundle.ts'
-import { fsReader, gitReader, type ModuleReader } from './sources.ts'
+import { fsReader, gitReader } from './sources.ts'
 
 const COMPONENT = familyPaths('component', 'v1')
 
@@ -22,7 +22,7 @@ afterEach(() => {
   repo = null
 })
 
-/** A component with a root module, a second module, and a cross-reference. */
+/** A component's one module, with a local reference, beside a file that is not a module. */
 function sources(): { fx: FixtureRepo; family: { name: string; major: string; repoRoot: string } } {
   const fx = new FixtureRepo()
   repo = fx
@@ -31,26 +31,12 @@ function sources(): { fx: FixtureRepo; family: { name: string; major: string; re
     $id: 'https://specifications.musher.dev/component/v1/component',
     title: 'Musher Component Document',
     type: 'object',
-    properties: { spec: { $ref: '#/$defs/ComponentWorkload' }, name: { $ref: '#/$defs/Name' } },
+    properties: { name: { $ref: '#/$defs/Name' } },
     $defs: { Name: { type: 'string', pattern: '^[a-z]+$' } },
   })
-  fx.writeFile(
-    `${COMPONENT.src}/component-workload.schema.json`,
-    `${JSON.stringify({
-      $schema: 'https://json-schema.org/draft/2020-12/schema',
-      $id: 'https://specifications.musher.dev/component/v1/component-workload',
-      type: 'object',
-      properties: { port: { $ref: '#/$defs/Port' } },
-      $defs: { Port: { type: 'integer', minimum: 1 } },
-    })}\n`,
-  )
   fx.writeFile(`${COMPONENT.src}/README.txt`, 'not a module\n')
   fx.commit('feat(component): sources')
   return { fx, family: { name: 'component', major: 'v1', repoRoot: fx.root } }
-}
-
-function reversed(reader: ModuleReader): ModuleReader {
-  return { list: (dir) => reader.list(dir).sort().reverse(), read: (path) => reader.read(path) }
 }
 
 describe('buildBundle', () => {
@@ -61,15 +47,16 @@ describe('buildBundle', () => {
     expect(fromFs).not.toBeNull()
     expect(fromGit).toBe(fromFs)
     const bundle = JSON.parse(fromFs as string)
-    expect(Object.keys(bundle.$defs).sort()).toEqual(['ComponentWorkload', 'Name', 'Port'])
+    expect(Object.keys(bundle.$defs)).toEqual(['Name'])
     expect(bundle.$id).toBe('https://specifications.musher.dev/component/v1/component.schema.json')
   })
 
-  test('the order a reader lists modules in does not change a byte', () => {
+  test('a second module beside the entry point is refused, not dropped', () => {
     const { fx, family } = sources()
-    const forward = buildBundle(family, { reader: fsReader(fx.root) })
-    expect(buildBundle(family, { reader: reversed(fsReader(fx.root)) })).toBe(forward)
-    expect(buildBundle(family, { reader: reversed(gitReader(fx.root, 'HEAD')) })).toBe(forward)
+    fx.writeFile(`${COMPONENT.src}/component-workload.schema.json`, '{}\n')
+    expect(() => buildBundle(family)).toThrow(
+      /component-workload\.schema\.json beside component\.schema\.json/,
+    )
   })
 
   test('a ref reads that ref, not the working tree', () => {

@@ -44,7 +44,7 @@ const CLI = join(REPO_ROOT, 'tools', 'node_modules', '.bin', 'jsonschema')
 interface Subject {
   readonly path: string
   /** What the corpus says should happen at the structural phase. */
-  readonly expectValid: boolean | null
+  readonly expectValid: boolean
 }
 
 /**
@@ -260,7 +260,7 @@ async function main(): Promise<void> {
 
       // Agreement is not enough on its own: both could be wrong together, and
       // the corpus is what says which verdict is correct.
-      if (subject.expectValid !== null && ajv !== subject.expectValid) {
+      if (ajv !== subject.expectValid) {
         failures.add(
           `${relativeToRepo(subject.path)}: both validators ${ajv ? 'accept' : 'reject'} it, ` +
             `but the corpus declares it structurally ${subject.expectValid ? 'valid' : 'invalid'}.`,
