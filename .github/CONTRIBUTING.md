@@ -159,10 +159,11 @@ Use the family's own scope, such as `component`, for a change under
 `build(deps):`, `build(deps-dev):`, or `ci(deps):`. See
 [ADR 0016](../docs/adr/0016-dependency-update-policy.md).
 
-`.config/commits/committed.toml` is the one source of these two lists.
-`task check:commits` holds the copies that cannot read it in step with it:
-this page, `.github/workflows/repository-pull-request-title.yml` and the
-prefixes in `.github/dependabot.yml`.
+`.config/commits/committed.toml` is the one source of these two lists. Three
+places repeat them because they cannot read that file: this page,
+`.github/workflows/repository-pull-request-title.yml` and the prefixes in
+`.github/dependabot.yml`. `task check:commits` fails when any of them disagrees
+with it.
 
 ### How a commit reaches a release
 

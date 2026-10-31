@@ -23,9 +23,10 @@ released: [Draft or released](docs/publication.md#draft-or-released).
 | blueprint | [`blueprint/v2/spec.md`](specifications/blueprint/v2/spec.md) | [README](specifications/blueprint/README.md) | [blueprint v2](https://specifications.musher.dev/reference/blueprint/v2/spec/) |
 | listing | [`listing/v2/spec.md`](specifications/listing/v2/spec.md) | [README](specifications/listing/README.md) | [listing v2](https://specifications.musher.dev/reference/listing/v2/spec/) |
 
-The rendered prose is generated and informative. What each family describes and how they depend on one
-another is set out in [specifications/README.md](specifications/README.md), and
-which of its parts are normative in
+The rendered prose is generated and informative. What each family describes,
+and how the families depend on one another, is set out in
+[specifications/README.md](specifications/README.md), and which parts of a
+family version are normative in
 [What is normative](specifications/README.md#what-is-normative).
 
 ## I want to…

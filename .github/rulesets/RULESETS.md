@@ -4,7 +4,7 @@ These JSON files are the version-controlled source of the repository's branch
 and tag protection. GitHub is the live system; this directory is the reviewable
 record of what it should say.
 
-The organisation-level rulesets do not fully cover this repository:
+The organization-level rulesets do not fully cover this repository:
 `branch-protection` applies to `~ALL` repos (it blocks deletion and
 non-fast-forward pushes), but `pr-workflow` targets a hardcoded repo list
 written in March 2026 that predates this repository. These repo-level rulesets

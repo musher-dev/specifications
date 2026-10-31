@@ -1,7 +1,7 @@
 # Listing specification
 
 A listing document presents one catalog item in the storefront: how it is
-shown, categorised, and found. The item is a blueprint item or a component item.
+shown, categorized, and found. The item is a blueprint item or a component item.
 A listing carries presentation only, and is never an input to deployment.
 
 A listing is an [item document](../core/v2/spec.md#item-directory),

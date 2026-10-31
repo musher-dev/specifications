@@ -185,16 +185,16 @@ of any other vocabulary of this shape.
 
 Releases are automated, one release-please package per family version, core
 included. Merging a Conventional Commit to `main` makes release-please, running
-as the release GitHub App, open a release PR. The App's permissions and credentials are
-listed in
+as the release GitHub App, open a release pull request. The App's permissions
+and credentials are listed in
 [Publication → Prerequisites](publication.md#prerequisites-before-the-first-tag).
-That PR records the pending version in the
+That pull request records the pending version in the
 [ledger](publication.md#the-ledger), [`published.json`](../published.json),
-and merging it tags `<family>/v<MAJOR>.<MINOR>.<PATCH>`. The schema and a release archive
-are then attached, with SLSA provenance, to a GitHub Release published as
-immutable, and `https://specifications.musher.dev/` is deployed from the
-verified assets. [docs/publication.md](publication.md) describes every step,
-the ledger, the core gate, and recovery from a failed release.
+and merging it tags `<family>/v<MAJOR>.<MINOR>.<PATCH>`. The schema and a
+release archive are then attached, with SLSA provenance, to a GitHub Release
+published as immutable, and `https://specifications.musher.dev/` is deployed
+from the verified assets. [docs/publication.md](publication.md) describes every
+step, the ledger, the core gate, and recovery from a failed release.
 
 Released versions are **immutable**. Tag deletion and update are blocked by
 repository ruleset, a published release's assets cannot change, and
@@ -219,7 +219,7 @@ makes released bytes immutable release assets.
    months from deprecation.
 3. **Retire** — removal happens only in a new major version. Migration rules
    ship alongside it. A whole major may itself retire once a newer one
-   supersedes it, as v1 did for v2: see
+   supersedes it, as v1 did when v2 superseded it: see
    [A retired major](#compatibility-review).
 
 ## Binary policy
