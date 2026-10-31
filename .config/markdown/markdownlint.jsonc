@@ -1,7 +1,8 @@
 // markdownlint rules for this repository's Markdown.
 //
 // Read by markdownlint-cli2 via an explicit --config path; never
-// auto-discovered. The call sites are `check:md` and `fmt:md` in Taskfile.yml.
+// auto-discovered. The call sites are `check:md` in taskfiles/check.Taskfile.yml
+// and `fmt:md` in Taskfile.yml, whose MARKDOWN_GLOBS names the files both read.
 // Rule reference: https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md
 //
 // Every relaxation below carries its reason, per .config/README.md rule 5.

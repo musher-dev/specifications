@@ -23,6 +23,22 @@ vars:
   # Build output: `task site:build` creates it, so it is not named `_DIR`, which
   # promises a directory the repository holds (TASK-08).
   SITE: site
+  # The Markdown that check:md lints and fmt:md fixes, as markdownlint-cli2
+  # globs, where a leading `#` excludes. Installed dependencies and build output
+  # are not linted, nor is a worktree checked out under .claude/worktrees, nor
+  # .config/markdown/styles, where `vale sync` downloads its packages.
+  #
+  # pull_request_template.md is excluded because it is a form fragment, not
+  # a document: GitHub renders it into a textarea, so it has no title and
+  # MD041 would be asking it to grow one.
+  #
+  # release-please writes specifications/*/v*/CHANGELOG.md. It is generated,
+  # its blank-line style (two blank lines before a `###` section) violates
+  # MD012, and a fix here would be overwritten by the next release pull
+  # request — so it is excluded rather than linted or rewritten.
+  MARKDOWN_GLOBS: >-
+    "**/*.md" "#tools/node_modules" "#site" "#.claude/worktrees" "#.github/pull_request_template.md"
+    "#specifications/*/v*/CHANGELOG.md" "#.config/markdown/styles"
 
 # No `env:` sets BUN_INSTALL_CACHE_DIR: the dev container sets it in
 # devcontainer.json, and anywhere else bun's own default applies. A path into
@@ -124,14 +140,14 @@ tasks:
   fmt:md:
     desc: Apply the Markdown fixes markdownlint can make itself
     cmds:
-      # The exclusions check:md makes, for its reasons: release-please's
-      # CHANGELOG.md is generated, and rewriting it would only be undone by the
-      # next release pull request.
+      # The files check:md lints, MARKDOWN_GLOBS above, whose comment says why
+      # each exclusion is made: release-please's CHANGELOG.md, for one, is
+      # generated, and rewriting it would only be undone by the next release
+      # pull request.
       - >-
         tools/node_modules/.bin/markdownlint-cli2 --fix
         --config .config/markdown/markdownlint.jsonc
-        "**/*.md" "#tools/node_modules" "#site" "#.claude/worktrees" "#.github/pull_request_template.md"
-        "#specifications/*/v*/CHANGELOG.md" "#.config/markdown/styles"
+        {{.MARKDOWN_GLOBS}}
 
   # ===========================================================================
   # Environment

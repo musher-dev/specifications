@@ -184,19 +184,14 @@ tasks:
     desc: Lint Markdown against .config/markdown/markdownlint.jsonc
     dir: '{{.ROOT_DIR}}'
     cmds:
-      # pull_request_template.md is excluded because it is a form fragment, not
-      # a document: GitHub renders it into a textarea, so it has no title and
-      # MD041 would be asking it to grow one.
-      #
-      # release-please writes specifications/*/v*/CHANGELOG.md. It is generated,
-      # its blank-line style (two blank lines before a `###` section) violates
-      # MD012, and a fix here would be overwritten by the next release pull
-      # request — so it is excluded rather than linted.
+      # MARKDOWN_GLOBS, in the root Taskfile.yml, names the files, and its
+      # comment says why each exclusion is made: pull_request_template.md is a
+      # form fragment with no title, and release-please's CHANGELOG.md is
+      # generated. fmt:md fixes the same files.
       - >-
         tools/node_modules/.bin/markdownlint-cli2
         --config .config/markdown/markdownlint.jsonc
-        "**/*.md" "#tools/node_modules" "#site" "#.claude/worktrees" "#.github/pull_request_template.md"
-        "#specifications/*/v*/CHANGELOG.md" "#.config/markdown/styles"
+        {{.MARKDOWN_GLOBS}}
 
   check:spelling:
     desc: Spell-check prose, tooling sources, and schema descriptions
