@@ -3,5 +3,5 @@
   "phase": "structural",
   "expected": "fail",
   "clause": "specifications/blueprint/v2/spec.md#node-graph",
-  "summary": "A blueprint omitting spec.components is rejected."
+  "summary": "A blueprint omitting spec.nodes is rejected."
 }

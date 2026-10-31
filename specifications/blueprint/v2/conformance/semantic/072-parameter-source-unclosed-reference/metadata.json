@@ -7,6 +7,6 @@
     "BP-PLACEHOLDER-001",
     "CORE-PLACEHOLDER-001"
   ],
-  "summary": "A parameter whose from opens a reference and never closes it is a malformed reference.",
+  "summary": "A parameter whose from opens a placeholder and never closes it is a malformed placeholder.",
   "document": "app/blueprint.yaml"
 }

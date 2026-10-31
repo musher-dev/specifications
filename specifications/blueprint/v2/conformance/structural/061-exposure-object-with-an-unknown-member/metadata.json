@@ -6,5 +6,5 @@
   "requirements": [
     "BP-NODE-006"
   ],
-  "summary": "The object form is closed; a document names no access policy in v1."
+  "summary": "The object form is closed; a document names no access policy."
 }

@@ -6,6 +6,6 @@
   "requirements": [
     "BP-PLACEHOLDER-001"
   ],
-  "summary": "A parameter whose from embeds a reference in surrounding text is rejected.",
+  "summary": "A parameter whose from embeds a placeholder in surrounding text is rejected.",
   "document": "app/blueprint.yaml"
 }
