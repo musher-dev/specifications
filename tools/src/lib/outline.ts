@@ -2,12 +2,14 @@
  * The outline of a `spec.md`: its numbered sections, and the section each
  * requirement ID is declared under.
  *
- * Three callers read the same shape, and used to carry a copy of the heading
- * pattern each: `prose.ts` turns a bare "§6.1" into a link, `traceability.ts`
- * shows each requirement against the clause stating it, and the conformance
- * runner checks that a case's `clause` encloses the requirements it pins. Three
- * copies of one pattern are three chances for the same heading to belong to
- * different sections, so it lives here.
+ * Five callers read the same shape. `prose.ts` turns a bare "§6.1" into a link,
+ * `traceability.ts` shows each requirement against the clause stating it, the
+ * conformance runner checks that a case's `clause` encloses the requirements it
+ * pins, `terms.ts` resolves a term record's section sources and collects the
+ * requirement ID prefixes, and `terminology.ts` links each source to its
+ * section. The first three used to carry a copy of the heading pattern each,
+ * and three copies of one pattern are three chances for the same heading to
+ * belong to different sections, so it lives here.
  *
  * NON-NORMATIVE, like everything under tools/.
  */

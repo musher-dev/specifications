@@ -1,5 +1,6 @@
 /**
- * Validate every example document against its family's published bundle.
+ * Validate every example document against its family's bundle, built fresh
+ * from the working tree's sources.
  *
  * Examples are copied verbatim into the documentation site, so an example that
  * does not validate is a documentation bug that ships. This check is why the

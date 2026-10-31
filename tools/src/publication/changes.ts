@@ -808,10 +808,8 @@ function main(): void {
   if (narrowing > 0) {
     console.log(
       `> **${narrowing} change(s) can reject a document that validates today.** ` +
-        'That is a breaking change: it needs maintainer approval and a `BREAKING CHANGE:` ' +
-        'trailer, and — once a family has been tagged — a new `v<N>` directory. While a ' +
-        'family is unpublished, ADR 0005 §1 waives the directory and the migration note ' +
-        'and nothing else.\n',
+        'That is a breaking change: it needs maintainer approval, a `BREAKING CHANGE:` ' +
+        'trailer and a new `v<N>` directory.\n',
     )
   } else {
     console.log('> No change here rejects a document that validates today.\n')

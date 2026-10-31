@@ -660,7 +660,6 @@ export function relativeToRepo(path: string): string {
   return path.startsWith(REPO_ROOT) ? path.slice(REPO_ROOT.length + 1) : path
 }
 
-/** Collected failures, reported together so one run surfaces every problem. */
 /**
  * End a command line on an error it cannot recover from — a layout the release
  * does not match, a network failure — with one line rather than a stack trace.
@@ -672,6 +671,7 @@ export function failCli(error: unknown): never {
   process.exit(1)
 }
 
+/** Collected failures, reported together so one run surfaces every problem. */
 export class Failures {
   private readonly items: string[] = []
 

@@ -9,9 +9,10 @@
  * schema lint compares the `kind` constant, and the conformance runner resolves
  * a family's diagnostic registry through its dependencies.
  *
- * A spec with neither table yields `null`, which is today's tree. A spec with
- * one table and not the other, or a table whose rows do not have the template's
- * shape, throws — a binding that fails to parse must not read as "unbound".
+ * A spec with neither table yields `null`, as core's own does: it fixes nothing
+ * for itself, and every kind family's §2 carries both. A spec with one table
+ * and not the other, or a table whose rows do not have the template's shape,
+ * throws — a binding that fails to parse must not read as "unbound".
  *
  * NON-NORMATIVE. The tables in spec.md are the rule; this only reads them.
  */
