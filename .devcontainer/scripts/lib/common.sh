@@ -4,7 +4,7 @@
 # This is a library file meant to be sourced, not executed directly.
 # Usage: source "path/to/common.sh"
 #
-# Provides logging, command helpers, directory setup, NVM/NPM utilities,
+# Provides logging, command helpers, directory setup, an NVM helper,
 # and tool verification functions used by all setup scripts.
 set -euo pipefail
 
@@ -51,11 +51,13 @@ has_cmd() {
 
 # Reports whether an install guarded by a MUSHER_INSTALL_* switch is wanted.
 #
-# devcontainer.json declares MUSHER_INSTALL_CLAUDE and MUSHER_INSTALL_CODEX and
-# .env.example documents them as the way to "skip the AI CLI installs on a slow
-# connection". No script read either one, so both CLIs installed unconditionally
-# — and they are most of the several minutes a cold container spends inside
-# postCreateCommand. This is what makes the documented switch real.
+# MUSHER_INSTALL_CLAUDE and MUSHER_INSTALL_CODEX are set, if at all, in
+# .devcontainer/.env, as .env.example documents; devcontainer.json deliberately
+# leaves them out of containerEnv, where they would override .env. The two
+# CLIs are most of the minutes a cold container spends in postCreateCommand,
+# which is what the switches are for. Each caller passes the default for an
+# unset switch: Claude Code installs unless switched off, Codex only when
+# switched on.
 #
 # Arguments:
 #   $1 — the switch's value, e.g. "${MUSHER_INSTALL_CLAUDE:-1}"
@@ -178,22 +180,6 @@ fix_nvm_permissions() {
     log "Fixing NVM permissions in ${nvm_dir}..."
     maybe_sudo chown -R "$(id -un):$(id -gn)" "$nvm_dir"
   fi
-}
-
-# --- NPM install helper ---
-
-# Installs an npm package globally with retry logic.
-#
-# Arguments:
-#   $1 — package name
-#   $2 — max attempts (default: 3)
-# Outputs:
-#   Writes progress to stderr via log()
-install_npm_cli() {
-  local package="${1:?usage: install_npm_cli <package> [attempts]}"
-  local attempts="${2:-3}"
-  log "Installing npm CLI: ${package}..."
-  retry "$attempts" 5 npm install -g "$package"
 }
 
 # --- Verification ---
