@@ -128,7 +128,7 @@ export function parameterOriginDiagnostics(
 ): Diagnostic[] {
   const from = at(parameter, 'from')
   if (typeof from !== 'string') return []
-  const path = '/spec/parameters/' + token(name) + '/from'
+  const path = `/spec/parameters/${token(name)}/from`
   const scan = scanReferences(from, PARAMETER_ORIGIN_NAMESPACES)
   // Core's codes (CORE-PLACEHOLDER-001..003) name what is wrong with a placeholder itself.
   if (scan.failures.length)
@@ -164,7 +164,7 @@ export function connectionBindingDiagnostics(
     for (const [name, binding] of Object.entries(record(at(n, 'bindings')))) {
       if (!Object.hasOwn(inputs, name)) continue
       const parameter = at(binding, 'parameter'),
-        path = '/spec/nodes/' + token(node) + '/bindings/' + token(name)
+        path = `/spec/nodes/${token(node)}/bindings/${token(name)}`
       // An undeclared parameter is ERR_UNKNOWN_PARAMETER, and nothing more.
       if (typeof parameter === 'string' && !Object.hasOwn(parameters, parameter)) continue
       const connection =
@@ -174,7 +174,7 @@ export function connectionBindingDiagnostics(
         out.push(
           diagnostic(
             'ERR_INVALID_CONNECTION_BINDING',
-            typeof parameter === 'string' ? path + '/parameter' : path,
+            typeof parameter === 'string' ? `${path}/parameter` : path,
           ),
         )
     }
@@ -209,7 +209,8 @@ function validHost(host: string): boolean {
 }
 /** One member value of the type, range and value set its protocol fixes (component §6.4). */
 function memberValueValid(p: ConnectionProtocol, name: string, value: Json | undefined): boolean {
-  const contract = CONNECTION_PROTOCOL_MEMBERS[p][name]!
+  const contract = CONNECTION_PROTOCOL_MEMBERS[p][name]
+  if (contract === undefined) throw new Error(`${p} defines no member ${name}`)
   if (contract.type === 'boolean') return typeof value === 'boolean'
   if (contract.type === 'integer')
     return name === 'port'
@@ -235,10 +236,10 @@ function viewProblem(
     return 'invalid'
   const p = protocol as ConnectionProtocol,
     v = record(view),
-    members = CONNECTION_PROTOCOL_MEMBERS[p],
-    carried = Object.keys(members).filter(
-      (m) => m !== CREDENTIAL_MEMBER[p] && members[m]!.derived !== true,
-    )
+    contracts = Object.entries(CONNECTION_PROTOCOL_MEMBERS[p]).filter(
+      ([m, contract]) => m !== CREDENTIAL_MEMBER[p] && contract.derived !== true,
+    ),
+    carried = contracts.map(([m]) => m)
   if (Object.keys(v).some((k) => k !== 'capabilities' && !carried.includes(k))) return 'invalid'
   for (const m of carried)
     if (Object.hasOwn(v, m) && !memberValueValid(p, m, v[m])) return 'invalid'
@@ -254,18 +255,23 @@ function viewProblem(
   // Every HTTP protocol's URL member is HTTPS and one of the credential's permitted base URLs.
   const base = CONNECTION_URL_MEMBER[p]
   if (base && Object.hasOwn(v, base)) {
-    const permitted = credential?.permittedBaseURLs
+    const url = v[base],
+      permitted = credential?.permittedBaseURLs
     if (
-      !absoluteURL(v[base], ['https:']) ||
+      typeof url !== 'string' ||
+      !absoluteURL(url, ['https:']) ||
       !Array.isArray(permitted) ||
-      !permitted.includes(v[base]!)
+      !permitted.includes(url)
     )
       return 'invalid'
   }
   // A REDIS server without authentication has no user to name.
   if (!credential && Object.hasOwn(v, 'username')) return 'invalid'
   const credentialMissing = !credential && !CREDENTIAL_OPTIONAL.has(p)
-  if (credentialMissing || carried.some((m) => members[m]!.required && !Object.hasOwn(v, m)))
+  if (
+    credentialMissing ||
+    contracts.some(([m, contract]) => contract.required && !Object.hasOwn(v, m))
+  )
     return 'incomplete'
   return undefined
 }
@@ -345,13 +351,13 @@ export function resolveConnections(
     if (!Object.hasOwn(origins, parameter))
       diagnostics.push(diagnostic('ERR_INVALID_RESOLUTION_CONTEXT', '/spec', true))
   for (const parameter of Object.keys(origins)) {
-    const path = '/spec/parameters/' + token(parameter)
+    const path = `/spec/parameters/${token(parameter)}`
     const acquired =
       context?.parameters && Object.hasOwn(context.parameters, parameter)
         ? context.parameters[parameter]
         : undefined
     if (!acquired || acquired.status === 'NOT_ACQUIRED') {
-      deferred.push({ rule: 'BP-CONNECTION-002', path, missing: 'connection:' + parameter })
+      deferred.push({ rule: 'BP-CONNECTION-002', path, missing: `connection:${parameter}` })
       continue
     }
     if (acquired.status !== 'SELECTED') {
@@ -388,7 +394,7 @@ export function resolveConnections(
   for (const [node, n] of Object.entries(record(at(blueprint, 'spec', 'nodes')))) {
     for (const [name, input] of Object.entries(inputsOf(components.get(node)))) {
       if (!isConnectionInput(input)) continue
-      const path = '/spec/nodes/' + token(node) + '/bindings/' + token(name)
+      const path = `/spec/nodes/${token(node)}/bindings/${token(name)}`
       const selection = selections.get(String(at(n, 'bindings', name, 'parameter')))
       if (!selection) continue
       const protocol = String(at(input, 'connection', 'protocol')) as ConnectionProtocol
@@ -407,9 +413,11 @@ export function resolveConnections(
       // default, the credential, and the derived `url` composed from them.
       const { capabilities: _capabilities, ...carried } = view
       const members: Record<string, Json> = {}
-      for (const [m, contract] of Object.entries(CONNECTION_PROTOCOL_MEMBERS[protocol]))
-        if (Object.hasOwn(carried, m)) members[m] = carried[m]!
+      for (const [m, contract] of Object.entries(CONNECTION_PROTOCOL_MEMBERS[protocol])) {
+        const value = Object.hasOwn(carried, m) ? carried[m] : undefined
+        if (value !== undefined) members[m] = value
         else if (contract.default !== undefined) members[m] = contract.default
+      }
       if (selection.credential) members[CREDENTIAL_MEMBER[protocol]] = selection.credential.value
       const url = composeConnectionURL(protocol, members)
       if (url !== undefined) members.url = url

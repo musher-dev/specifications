@@ -148,7 +148,7 @@ export function connectionMemberContract(name: string, protocol?: unknown): Reco
 export const percentEncode = (text: string): string =>
   encodeURIComponent(text).replace(
     /[!'()*]/g,
-    (c) => '%' + c.charCodeAt(0).toString(16).toUpperCase(),
+    (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`,
   )
 /** Component §6.4: the host of a composed URL, lowercased, with an IPv6 address bracketed. */
 const urlHost = (host: string): string =>

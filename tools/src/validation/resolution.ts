@@ -347,7 +347,7 @@ export function resolveDeployment(
       // BP-PARAM-004, BP-PARAM-009, BP-PARAM-011 and BP-PARAM-012: generated values,
       // hashes, variables, deployment facts and connections are never submitted. A
       // connection is replaced whole through acquisition instead.
-      fail('ERR_PARAMETER_NOT_SUBMITTABLE', '/spec/parameters/' + token(name), 'parameters')
+      fail('ERR_PARAMETER_NOT_SUBMITTABLE', `/spec/parameters/${token(name)}`, 'parameters')
   // BP-PARAM-005: a submitted parameter a binding reads has a submitted value or a
   // default, unless it is an optional parameter (blueprint §1.1): every input it
   // binds is optional, and is then absent.
@@ -368,7 +368,7 @@ export function resolveDeployment(
       !Object.hasOwn(record(p), 'default') &&
       !Object.hasOwn(context.parameters ?? {}, name)
     )
-      fail('ERR_MISSING_PARAMETER_VALUE', '/spec/parameters/' + token(name), 'parameters')
+      fail('ERR_MISSING_PARAMETER_VALUE', `/spec/parameters/${token(name)}`, 'parameters')
   if (context.allocations !== undefined && !isObject(context.allocations as unknown as Json)) {
     fail('ERR_INVALID_RESOLUTION_CONTEXT', '/spec/nodes', 'allocation')
     return result()
@@ -439,7 +439,7 @@ export function resolveDeployment(
     const source = parameterOrigin(p)
     // A submitted value was already rejected with ERR_PARAMETER_NOT_SUBMITTABLE.
     if (source?.namespace !== 'variables' || Object.hasOwn(context.parameters ?? {}, name)) continue
-    const path = '/spec/parameters/' + token(name) + '/from',
+    const path = `/spec/parameters/${token(name)}/from`,
       variable =
         context.variables && Object.hasOwn(context.variables, source.key)
           ? context.variables[source.key]
@@ -464,7 +464,7 @@ export function resolveDeployment(
     (context.deployment !== undefined &&
       (!isObject(context.deployment as unknown as Json) ||
         Object.keys(context.deployment).some((key) => key !== 'creator'))) ||
-    Object.keys(creator).some((key) => !DEPLOYMENT_FACT_PATHS.includes('creator.' + key))
+    Object.keys(creator).some((key) => !DEPLOYMENT_FACT_PATHS.includes(`creator.${key}`))
   ) {
     fail('ERR_INVALID_RESOLUTION_CONTEXT', '/spec/parameters', 'parameters')
     return result()
@@ -473,7 +473,7 @@ export function resolveDeployment(
     const source = parameterOrigin(p)
     if (source?.namespace !== 'deployment' || Object.hasOwn(context.parameters ?? {}, name))
       continue
-    const path = '/spec/parameters/' + token(name) + '/from',
+    const path = `/spec/parameters/${token(name)}/from`,
       field = source.key.slice('creator.'.length),
       fact = Object.hasOwn(creator, field) ? creator[field] : undefined
     if (fact === undefined)
@@ -515,7 +515,7 @@ export function resolveDeployment(
       value = record(allocation?.public as Json | undefined)[property]
     else if (property === 'publicURL' && allocation?.public?.scheme) {
       const p = allocation.public
-      value = `${p.scheme}://${addressHost(p.hostname)}${p.port === undefined ? '' : ':' + p.port}${(p.path ?? '').replace(/\/+$/, '')}`
+      value = `${p.scheme}://${addressHost(p.hostname)}${p.port === undefined ? '' : `:${p.port}`}${(p.path ?? '').replace(/\/+$/, '')}`
     }
     if (value === undefined) {
       missing(path, `allocation:${node}:${name}:${property}`)
@@ -536,7 +536,8 @@ export function resolveDeployment(
     const definition = record(at(report.components.get(node), 'spec', 'contract', 'outputs', name)),
       s = record(definition.from)
     let value: ResolvedValue | undefined
-    if (Object.hasOwn(s, 'value')) value = { value: s.value!, sensitive: false }
+    if (Object.hasOwn(s, 'value') && s.value !== undefined)
+      value = { value: s.value, sensitive: false }
     if (typeof s.input === 'string') {
       value = input(node, String(s.input))
       // BP-RESOLVE-001: an output forwarding an absent optional input.
@@ -552,11 +553,18 @@ export function resolveDeployment(
           'connection',
           'protocol',
         )
-        value = {
-          ...value,
-          value: record(value.value)[s.member]!,
-          sensitive: connectionMemberContract(s.member, protocol).sensitive === true,
-        }
+        const member = record(value.value)[s.member]
+        // Component §6.4: a resolved connection holds each member an output may
+        // forward, so one lacking it is invalid context.
+        if (member === undefined) {
+          fail('ERR_INVALID_RESOLUTION_CONTEXT', path)
+          value = undefined
+        } else
+          value = {
+            ...value,
+            value: member,
+            sensitive: connectionMemberContract(s.member, protocol).sensitive === true,
+          }
       }
     }
     if (typeof s.endpoint === 'string') value = endpoint(node, s.endpoint, String(s.property), path)
@@ -570,7 +578,10 @@ export function resolveDeployment(
       for (const ref of scan.references) {
         rendered += text.slice(atIndex, ref.offset).replaceAll('$${{', '${{')
         // Component §6.2: a self path is `endpoints.<endpoint>.<property>`.
-        const part = endpoint(node, ref.path[1]!, ref.path[2]!, path)
+        const [, endpointName, property] = ref.path
+        if (endpointName === undefined || property === undefined)
+          throw new Error(`${ref.raw} is not a self path to an endpoint property`)
+        const part = endpoint(node, endpointName, property, path)
         if (!part) {
           complete = false
           break
@@ -592,12 +603,13 @@ export function resolveDeployment(
     }
     if (value) {
       value = { ...value, sensitive: value.sensitive || definition.sensitive === true }
-      if (!valueFits(definition.schema!, value.value)) fail('ERR_VALUE_CONSTRAINT', path)
+      if (definition.schema === undefined || !valueFits(definition.schema, value.value))
+        fail('ERR_VALUE_CONSTRAINT', path)
       else outputs[id] = value
     }
     for (let i = diagnosticStart; i < diagnostics.length; i++) {
-      const d = diagnostics[i]!
-      if (d.path === path)
+      const d = diagnostics[i]
+      if (d?.path === path)
         diagnostics[i] = {
           ...d,
           related: [
@@ -629,10 +641,11 @@ export function resolveDeployment(
     if (value || isConnectionInput(definition)) {
       /* A connection input takes its value only from its selection, reported above. */
     } else if (!Object.keys(s).length) {
-      if (Object.hasOwn(definition, 'default'))
-        value = { value: definition.default!, sensitive: false }
+      if (Object.hasOwn(definition, 'default') && definition.default !== undefined)
+        value = { value: definition.default, sensitive: false }
       else if (definition.required !== false) fail('ERR_UNSATISFIED_REQUIRED_INPUT', path)
-    } else if (Object.hasOwn(s, 'value')) value = { value: s.value!, sensitive: false }
+    } else if (Object.hasOwn(s, 'value') && s.value !== undefined)
+      value = { value: s.value, sensitive: false }
     else if (typeof s.node === 'string') value = output(s.node, String(s.output))
     else if (typeof s.parameter === 'string') {
       const key = s.parameter,
@@ -667,7 +680,8 @@ export function resolveDeployment(
       } else {
         // A missing value was reported once for the parameter, in the parameters stage.
         value = submitted
-        if (!value && Object.hasOwn(p, 'default')) value = { value: p.default!, sensitive: false }
+        if (!value && Object.hasOwn(p, 'default') && p.default !== undefined)
+          value = { value: p.default, sensitive: false }
       }
     }
     if (value && (typeof value.sensitive !== 'boolean' || !boundedValue(value.value))) {
@@ -683,7 +697,10 @@ export function resolveDeployment(
           (typeof s.parameter === 'string' && parameterSensitivity.has(s.parameter)),
       }
       // The selection was checked against the protocol's members when it was acquired.
-      if (!isConnectionInput(definition) && !valueFits(definition.schema!, value.value))
+      if (
+        !isConnectionInput(definition) &&
+        (definition.schema === undefined || !valueFits(definition.schema, value.value))
+      )
         fail('ERR_VALUE_CONSTRAINT', path)
       else inputs[id] = value
     }
@@ -705,7 +722,8 @@ export function resolveDeployment(
     if (diagnostics.length) return result()
   }
   for (const node of Object.keys(nodes).sort()) {
-    environment[node] = Object.create(null)
+    const envVars: Record<string, ResolvedValue> = Object.create(null)
+    environment[node] = envVars
     for (const name of Object.keys(
       record(at(report.components.get(node), 'spec', 'contract', 'inputs')),
     ).sort()) {
@@ -721,7 +739,7 @@ export function resolveDeployment(
         )
       if (value && typeof target === 'string') {
         try {
-          environment[node]![target] = { ...value, value: encodeEnvironment(value.value) }
+          envVars[target] = { ...value, value: encodeEnvironment(value.value) }
         } catch {
           fail(
             'ERR_ENV_ENCODING',
@@ -763,9 +781,9 @@ const COMMIT = /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/
 function jcs(value: Json): string {
   if (Array.isArray(value)) return `[${value.map(jcs).join(',')}]`
   if (isObject(value))
-    return `{${Object.keys(value)
-      .sort()
-      .map((k) => `${JSON.stringify(k)}:${jcs(value[k]!)}`)
+    return `{${Object.entries(value)
+      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)) // RFC 8785 §3.2.3: UTF-16 code unit order
+      .map(([k, member]) => `${JSON.stringify(k)}:${jcs(member)}`)
       .join(',')}}`
   return JSON.stringify(value)
 }
@@ -791,7 +809,11 @@ export function recipeDigest(build: Json | undefined): string {
   if (recipe.context === undefined) recipe.context = '.'
   if (recipe.secrets !== undefined)
     recipe.secrets = Object.fromEntries(
-      Object.entries(record(recipe.secrets)).map(([id, s]) => [id, { input: at(s, 'input')! }]),
+      Object.entries(record(recipe.secrets)).map(([id, s]) => {
+        const input = at(s, 'input')
+        if (input === undefined) throw new Error(`build secret ${id} names no input`)
+        return [id, { input }]
+      }),
     )
   return (
     'sha256:' +
@@ -874,7 +896,7 @@ export function resolveSources(
       UPLOAD: builder ? ['uploadDigest', 'builderDigest'] : ['uploadDigest'],
     }[kind]
     if (
-      (has && !isObject(supplied[node]!)) ||
+      (has && !isObject(supplied[node])) ||
       Object.keys(e).some((key) => !allowed.includes(key)) ||
       (e.gitCommit !== undefined && !COMMIT.test(String(e.gitCommit))) ||
       ['imageDigest', 'uploadDigest', 'builderDigest'].some(
@@ -946,7 +968,7 @@ export function resolveBuilds(
     if (!component || (kind !== 'GIT' && kind !== 'UPLOAD')) continue
     const e = record(supplied[node])
     if (
-      (Object.hasOwn(supplied, node) && !isObject(supplied[node]!)) ||
+      (Object.hasOwn(supplied, node) && !isObject(supplied[node])) ||
       Object.keys(e).some((key) => key !== 'imageDigest' && key !== 'recipeDigest') ||
       ['imageDigest', 'recipeDigest'].some(
         (key) => e[key] !== undefined && !DIGEST.test(String(e[key])),
@@ -1053,13 +1075,13 @@ export function resolutionRecord(
   context: RecordContext,
 ): ResolutionRecord {
   const parsed = parseDocumentBytes(blueprint)
-  const family = discoverKinds().find((f) => f.name === 'blueprint')!
+  const family = discoverKinds().find((f) => f.name === 'blueprint')
+  if (family === undefined) throw new Error('no blueprint family')
   if ('errors' in parsed || !compileFamily(family)(parsed.value))
     throw new Error('invalid blueprint')
   const snapshot = context?.snapshot
   if (
-    !snapshot ||
-    snapshot.formatVersion !== 1 ||
+    snapshot?.formatVersion !== 1 ||
     !snapshot.identity ||
     !snapshot.version ||
     !snapshot.parameters ||
@@ -1077,14 +1099,15 @@ export function resolutionRecord(
   const expectedVariables = new Set<string>(),
     expectedCredentials = new Set<string>()
   for (const [node, authored] of Object.entries(nodes)) {
-    const c = components[node]!,
-      contract = report.components.get(node)!
+    const c = components[node],
+      contract = report.components.get(node)
+    if (c === undefined || contract === undefined) throw new Error('record node set mismatch')
     const source = record(at(contract, 'spec', 'workload', 'source'))
     const kind = sourceKind(contract)
     if (
       c.identity !== at(authored, 'componentRef') ||
       c.revision !== at(contract, 'metadata', 'revision') ||
-      c.digest !== 'sha256:' + report.componentDigests.get(node) ||
+      c.digest !== `sha256:${report.componentDigests.get(node)}` ||
       c.source !== kind ||
       !equal(c.volumes, at(authored, 'volumes') ?? {}) ||
       !equal(c.exposure, at(authored, 'exposure') ?? {}) ||
@@ -1175,7 +1198,7 @@ export function resolutionRecord(
     if (needed.has(name)) return
     needed.add(name)
     const selected = availableFamilies.find(
-      (f) => f.name === name && f.major === 'v' + specifications[name]?.split('.')[0],
+      (f) => f.name === name && f.major === `v${specifications[name]?.split('.')[0]}`,
     )
     if (!selected) throw new Error('unsupported specification edition')
     const declared = readBindings(selected)?.dependencies ?? []
@@ -1186,7 +1209,7 @@ export function resolutionRecord(
       const version = manifest[dependency.family]
       if (
         specifications[dependency.family] !== version ||
-        dependency.line !== 'v' + version?.split('.')[0]
+        dependency.line !== `v${version?.split('.')[0]}`
       )
         throw new Error('inconsistent specification dependency editions')
       visit(dependency.family)
@@ -1284,7 +1307,7 @@ export function resolutionRecord(
   const generated: ResolutionRecord = {
     version: 1,
     deploymentSnapshot: { identity: snapshot.identity, version: snapshot.version },
-    blueprintDigest: 'sha256:' + createHash('sha256').update(blueprint).digest('hex'),
+    blueprintDigest: `sha256:${createHash('sha256').update(blueprint).digest('hex')}`,
     specifications: { ...specifications },
     nodes: projected,
     variables: Object.fromEntries(
@@ -1300,7 +1323,9 @@ export function resolutionRecord(
       ]),
     ),
   }
-  const schema = JSON.parse(familyBundle(family)!)
+  const bundle = familyBundle(family)
+  if (bundle === null) throw new Error('no blueprint schema bundle')
+  const schema = JSON.parse(bundle)
   const validate = strictAjv().compile({
     ...schema.$defs.BlueprintResolutionRecord,
     $defs: schema.$defs,

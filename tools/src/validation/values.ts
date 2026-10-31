@@ -83,8 +83,7 @@ export function schemaProblem(schema: Json, depth = 0): string | undefined {
 
 export function boundedValue(value: Json): boolean {
   const stack = [{ value, depth: 0 }]
-  while (stack.length) {
-    const item = stack.pop()!
+  for (let item = stack.pop(); item !== undefined; item = stack.pop()) {
     if (item.depth > MAX_DEPTH) return false
     const v = item.value
     if (v !== null && !['string', 'number', 'boolean', 'object'].includes(typeof v)) return false
@@ -121,16 +120,12 @@ export function compatible(from: Record<string, Json>, to: Record<string, Json>)
 }
 /** Logical object ordering is independent of the document-envelope serializer. */
 export function logicalJson(value: Json): string {
-  if (Array.isArray(value)) return '[' + value.map(logicalJson).join(',') + ']'
+  if (Array.isArray(value)) return `[${value.map(logicalJson).join(',')}]`
   if (isObject(value))
-    return (
-      '{' +
-      Object.keys(value)
-        .sort((a, b) => Buffer.compare(Buffer.from(a), Buffer.from(b)))
-        .map((key) => JSON.stringify(key) + ':' + logicalJson(value[key]!))
-        .join(',') +
-      '}'
-    )
+    return `{${Object.entries(value)
+      .sort(([a], [b]) => Buffer.compare(Buffer.from(a), Buffer.from(b)))
+      .map(([key, member]) => `${JSON.stringify(key)}:${logicalJson(member)}`)
+      .join(',')}}`
   return JSON.stringify(value)
 }
 export function encodeEnvironment(value: Json): string {

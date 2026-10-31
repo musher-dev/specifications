@@ -1,7 +1,9 @@
+// biome-ignore-all lint/suspicious/noTemplateCurlyInString: the `${{ }}` placeholder grammar is the data under test, not a template literal
 import { describe, expect, test } from 'bun:test'
-import type { Json } from '../lib/layout.ts'
+import { isObject, type Json } from '../lib/layout.ts'
 import { isConnectionInput } from './connections.ts'
 import {
+  type ConnectionAcquisition,
   type ConnectionSelection,
   connectionBindingDiagnostics,
   parameterOrigin,
@@ -10,17 +12,25 @@ import {
   selectConnection,
 } from './selections.ts'
 
+/** `T` with its members writable, so that a test can replace or remove one. */
+type Writable<T> = { -readonly [K in keyof T]: T[K] }
+type NodeFixture = { componentRef: string; bindings: Record<string, Json> }
+/** The blueprint fixture, typed for the edits a test makes to a copy of it. */
+type BlueprintFixture = {
+  spec: {
+    parameters: Record<string, Json>
+    nodes: Record<string, NodeFixture> & { app: NodeFixture }
+  }
+}
+
 /** An input of the fixture component, or a member of a resolved value. */
 function at(value: Json | undefined, key: string): Json | undefined {
-  const inputs = (component as any).spec.contract.inputs
-  if (value === component) return inputs[key]
-  return value !== null && typeof value === 'object' && !Array.isArray(value)
-    ? value[key]
-    : undefined
+  const object: Json | undefined = value === component ? component.spec.contract.inputs : value
+  return isObject(object) ? object[key] : undefined
 }
 
 /** An external node standing for one connection (component §6.4). */
-const component: Json = {
+const component = {
   spec: {
     type: 'EXTERNAL',
     contract: {
@@ -34,7 +44,7 @@ const component: Json = {
     },
   },
 }
-const blueprint: Json = {
+const blueprint: BlueprintFixture = {
   spec: {
     parameters: {
       primary: { from: '${{ connections.llm.default }}' },
@@ -49,29 +59,31 @@ const blueprint: Json = {
   },
 }
 const components = new Map([['app', component]])
-const selection = (parameter = 'primary'): ConnectionSelection => ({
-  identity: 'connection-1',
-  version: '1',
-  deployment: 'deploy-1',
-  parameter,
-  request: { from: '${{ connections.llm.default }}', identity: 'default-policy', version: '3' },
-  selectionKind: 'MANAGED',
-  costOwner: 'org-1',
-  credential: {
-    identity: 'credential-1',
-    rotation: 0,
-    value: 'synthetic-only',
-    permittedBaseURLs: ['https://gateway.example/openai/v1'],
-  },
-  views: {
-    OPENAI_CHAT_COMPLETIONS: {
-      baseURL: 'https://gateway.example/openai/v1',
-      model: 'model-a',
-      capabilities: ['STREAMING', 'TOOL_CALLS'],
+/** A fresh selection, typed as written so that a test can edit any member of it. */
+const selection = (parameter = 'primary') =>
+  ({
+    identity: 'connection-1',
+    version: '1',
+    deployment: 'deploy-1',
+    parameter,
+    request: { from: '${{ connections.llm.default }}', identity: 'default-policy', version: '3' },
+    selectionKind: 'MANAGED',
+    costOwner: 'org-1',
+    credential: {
+      identity: 'credential-1',
+      rotation: 0,
+      value: 'synthetic-only',
+      permittedBaseURLs: ['https://gateway.example/openai/v1'],
     },
-  },
-})
-const run = (s = selection()) =>
+    views: {
+      OPENAI_CHAT_COMPLETIONS: {
+        baseURL: 'https://gateway.example/openai/v1',
+        model: 'model-a',
+        capabilities: ['STREAMING', 'TOOL_CALLS'],
+      },
+    },
+  }) satisfies ConnectionSelection
+const run = (s: ConnectionSelection = selection()) =>
   resolveConnections(blueprint, components, {
     deployment: 'deploy-1',
     parameters: { primary: { status: 'SELECTED', persisted: true, selection: s } },
@@ -96,7 +108,7 @@ describe('atomic named connections', () => {
     })
   })
   test('a connection and an input must agree in kind', () => {
-    const b = structuredClone(blueprint) as any
+    const b = structuredClone(blueprint)
     b.spec.nodes.app.bindings.llm = { value: 'x' }
     expect(connectionBindingDiagnostics(b, components)).toMatchObject([
       { code: 'ERR_INVALID_CONNECTION_BINDING', path: '/spec/nodes/app/bindings/llm' },
@@ -136,9 +148,9 @@ describe('atomic named connections', () => {
   })
   test('rejects missing capability and wrong protocol without any projection', () => {
     const s = selection()
-    ;(s.views.OPENAI_CHAT_COMPLETIONS as any).capabilities = []
+    s.views.OPENAI_CHAT_COMPLETIONS.capabilities = []
     expect(run(s).diagnostics[0]?.code).toBe('ERR_CONNECTION_INCOMPATIBLE')
-    const wrong = selection() as any
+    const wrong: Writable<ConnectionSelection> = selection()
     wrong.views = {
       ANTHROPIC_MESSAGES: {
         baseURL: 'https://gateway.example/openai/v1',
@@ -150,28 +162,32 @@ describe('atomic named connections', () => {
   })
   test('a destination change cannot keep a scoped managed credential', () => {
     const s = selection()
-    ;(s.views.OPENAI_CHAT_COMPLETIONS as any).baseURL = 'https://arbitrary.example/v1'
+    s.views.OPENAI_CHAT_COMPLETIONS.baseURL = 'https://arbitrary.example/v1'
     expect(run(s).diagnostics[0]?.code).toBe('ERR_INVALID_RESOLUTION_CONTEXT')
     expect(JSON.stringify(run(s))).not.toContain('synthetic-only')
   })
   test('partial replacement, wrong deployment or parameter and unpersisted selections fail', () => {
-    for (const field of ['credential', 'views', 'request']) {
-      const s = selection() as any
+    for (const field of ['credential', 'views', 'request'] as const) {
+      const s: Partial<Writable<ConnectionSelection>> = selection()
       delete s[field]
-      expect(run(s).inputs).toEqual({})
+      expect(run(s as ConnectionSelection).inputs).toEqual({})
     }
     expect(run({ ...selection(), deployment: 'clone' }).inputs).toEqual({})
     expect(run(selection('other')).inputs).toEqual({})
     const r = resolveConnections(blueprint, components, {
       deployment: 'deploy-1',
       parameters: {
-        primary: { status: 'SELECTED', persisted: false, selection: selection() } as any,
+        primary: {
+          status: 'SELECTED',
+          persisted: false,
+          selection: selection(),
+        } as unknown as ConnectionAcquisition,
       },
     })
     expect(r.diagnostics[0]?.code).toBe('ERR_INVALID_RESOLUTION_CONTEXT')
   })
   test('two connection parameters with the same protocol remain independent and one failure withholds all values', () => {
-    const b = structuredClone(blueprint) as any
+    const b = structuredClone(blueprint)
     b.spec.parameters.second = { from: '${{ connections.llm.secondary }}' }
     b.spec.nodes.worker = {
       componentRef: 'acme/app',
@@ -179,10 +195,10 @@ describe('atomic named connections', () => {
     }
     const cs = new Map([...components, ['worker', component]] as [string, Json][])
     const second = selection('second')
-    ;(second as any).identity = 'connection-2'
-    ;(second as any).credential.identity = 'credential-2'
-    ;(second as any).request.from = '${{ connections.llm.secondary }}'
-    ;(second.views.OPENAI_CHAT_COMPLETIONS as any).model = 'model-b'
+    second.identity = 'connection-2'
+    second.credential.identity = 'credential-2'
+    second.request.from = '${{ connections.llm.secondary }}'
+    second.views.OPENAI_CHAT_COMPLETIONS.model = 'model-b'
     const context = {
       deployment: 'deploy-1',
       parameters: {
@@ -201,15 +217,17 @@ describe('atomic named connections', () => {
     ).toEqual({})
   })
   test('both protocol views can project from one explicitly shared connection', () => {
-    const c = structuredClone(component) as any
+    const c = structuredClone(component)
     c.spec.contract.inputs.llm.connection.protocol = 'ANTHROPIC_MESSAGES'
-    const s = selection() as any
+    const s = selection()
     s.credential.permittedBaseURLs.push('https://gateway.example/anthropic')
-    s.views.ANTHROPIC_MESSAGES = {
-      baseURL: 'https://gateway.example/anthropic',
-      model: 'model-a',
-      capabilities: ['STREAMING'],
-    }
+    Object.assign(s.views, {
+      ANTHROPIC_MESSAGES: {
+        baseURL: 'https://gateway.example/anthropic',
+        model: 'model-a',
+        capabilities: ['STREAMING'],
+      },
+    })
     const r = resolveConnections(blueprint, new Map([['app', c]]), {
       deployment: 'deploy-1',
       parameters: { primary: { status: 'SELECTED', persisted: true, selection: s } },
@@ -295,7 +313,7 @@ test('the selection answers the request the parameter made', () => {
 })
 
 test('a managed credential cannot be reused under another connection parameter', () => {
-  const b = structuredClone(blueprint) as Record<string, any>
+  const b = structuredClone(blueprint)
   b.spec.parameters.second = { from: '${{ connections.llm.default }}' }
   b.spec.nodes.worker = {
     componentRef: 'acme/app',
@@ -344,7 +362,7 @@ test('a complete user replacement supplies its own endpoint, credential and mode
 })
 
 test('a variables parameter cannot fill a connection input', () => {
-  const b = structuredClone(blueprint) as Record<string, any>
+  const b = structuredClone(blueprint)
   b.spec.parameters.region = { from: '${{ variables.cloud.region }}' }
   b.spec.nodes.app.bindings.llm = { parameter: 'region' }
   expect(connectionBindingDiagnostics(b as Json, components)).toContainEqual(
@@ -461,7 +479,10 @@ describe('connections for any protocol', () => {
   })
   test('a USER selection missing a member is incompatible, a managed one is malformed', () => {
     const { database: _database, ...partial } = view
-    const user = pg({ selectionKind: 'USER', views: { POSTGRES: partial } }) as any
+    const user: Writable<ConnectionSelection> = pg({
+      selectionKind: 'USER',
+      views: { POSTGRES: partial },
+    })
     delete user.provisioning
     expect(resolve(user).diagnostics[0]?.code).toBe('ERR_CONNECTION_INCOMPATIBLE')
     expect(resolve(pg({ views: { POSTGRES: partial } })).diagnostics[0]?.code).toBe(
@@ -487,7 +508,7 @@ describe('connections for any protocol', () => {
         parameters: { db: { status: 'SELECTED', persisted: true, selection: s } },
       })
     test('a server without authentication has no credential and takes database 0', () => {
-      const s = pg({ views: { REDIS: cache } }) as any
+      const s: Writable<ConnectionSelection> = pg({ views: { REDIS: cache } })
       delete s.credential
       const r = run(s)
       expect(r.diagnostics).toEqual([])
@@ -508,7 +529,9 @@ describe('connections for any protocol', () => {
       )
     })
     test('a username without a credential, a missing tls or a negative database is malformed', () => {
-      const s = pg({ views: { REDIS: { ...cache, username: 'app' } } }) as any
+      const s: Writable<ConnectionSelection> = pg({
+        views: { REDIS: { ...cache, username: 'app' } },
+      })
       delete s.credential
       expect(run(s).diagnostics[0]?.code).toBe('ERR_INVALID_RESOLUTION_CONTEXT')
       const { tls: _tls, ...noTLS } = cache

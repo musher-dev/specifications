@@ -1,3 +1,4 @@
+// biome-ignore-all lint/suspicious/noTemplateCurlyInString: the `${{ }}` placeholder grammar is the data under test, not a template literal
 /**
  * The `${{ namespace.path }}` grammar: what opens a placeholder, what is an
  * escape, and which of `CORE-PLACEHOLDER-001..003` a bad one is.

@@ -298,8 +298,9 @@ export function listingObligations(
   const diagnostics: Diagnostic[] = [],
     deferred: DeferredRule[] = []
   const media = mediaReferences(document)
-  if (media.length && !context.itemRoot)
-    deferred.push({ rule: 'LIST-MEDIA-005', path: media[0]!.pointer, missing: 'itemRoot' })
+  const [first] = media
+  if (first && !context.itemRoot)
+    deferred.push({ rule: 'LIST-MEDIA-005', path: first.pointer, missing: 'itemRoot' })
   else if (context.itemRoot) {
     const root = context.itemRoot
     for (const { path, pointer, role } of media) {

@@ -139,7 +139,7 @@ export function observe(family: Family, c: BehaviorCase): Json {
     if (c.operation === 'validate')
       return validateDocument(family, source, context) as unknown as Json
     if (c.operation === 'normalize') {
-      const bundle = JSON.parse(familyBundle(family)!)
+      const bundle = JSON.parse(familyBundle(family) ?? 'null')
       const once = normalizeDocument(bundle, document)
       return {
         value: once,
@@ -174,8 +174,12 @@ export function observe(family: Family, c: BehaviorCase): Json {
     let generated = 0
     const store = {
       getOrCreate(key: string, create: () => ResolvedValue) {
-        if (!entries.has(key)) entries.set(key, create())
-        return entries.get(key)!
+        let entry = entries.get(key)
+        if (entry === undefined) {
+          entry = create()
+          entries.set(key, entry)
+        }
+        return entry
       },
     }
     const steps = at(c.input, 'steps')
@@ -187,7 +191,7 @@ export function observe(family: Family, c: BehaviorCase): Json {
           String(at(step, 'deployment')),
           String(at(step, 'parameter')),
           Number(at(step, 'rotation')),
-          () => ({ value: 'synthetic-' + ++generated, sensitive: true }),
+          () => ({ value: `synthetic-${++generated}`, sensitive: true }),
         ) as unknown as Json,
       )
     return { generated, values }
@@ -281,7 +285,7 @@ export function runBehaviorCases(family: Family, log: (line: string) => void) {
       for (const [path, expected] of Object.entries(c.expect)) {
         const value = pointer(observed, path)
         if (value === undefined || canonicalJson(value) !== canonicalJson(expected))
-          throw new Error('observation differs at ' + path)
+          throw new Error(`observation differs at ${path}`)
         if (path.endsWith('/code') && typeof expected === 'string') result.codes.add(expected)
       }
       for (const requirement of c.requirements) result.requirements.add(requirement)

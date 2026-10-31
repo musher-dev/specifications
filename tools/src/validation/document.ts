@@ -69,8 +69,8 @@ export function parseDocument(source: string): { value: Json } | { errors: Diagn
       source.startsWith('\uFEFF') ? source.slice(1) : source,
     )) {
       const pending: { value: unknown; depth: number }[] = [{ value: token, depth: 0 }]
-      while (pending.length) {
-        const { value, depth } = pending.pop()!
+      for (let item = pending.pop(); item !== undefined; item = pending.pop()) {
+        const { value, depth } = item
         if (value === null || typeof value !== 'object') continue
         const node = value as Record<string, unknown>
         const next =
@@ -108,7 +108,8 @@ export function parseDocument(source: string): { value: Json } | { errors: Diagn
   } catch {
     return { errors: [diagnostic('ERR_INVALID_YAML', 'document cannot be composed')] }
   }
-  if (docs.length !== 1)
+  const first = docs[0]
+  if (docs.length !== 1 || first === undefined)
     return {
       errors: [
         diagnostic(
@@ -117,7 +118,6 @@ export function parseDocument(source: string): { value: Json } | { errors: Diagn
         ),
       ],
     }
-  const first = docs[0]!
   for (const error of first.errors)
     errors.push(
       diagnostic(
@@ -129,8 +129,8 @@ export function parseDocument(source: string): { value: Json } | { errors: Diagn
 
   // Iterative representation walk: never expand aliases or convert an invalid AST.
   const stack: { node: unknown; depth: number }[] = [{ node: first.contents, depth: 0 }]
-  while (stack.length) {
-    const { node, depth } = stack.pop()!
+  for (let item = stack.pop(); item !== undefined; item = stack.pop()) {
+    const { node, depth } = item
     if (depth > MAX_DEPTH) {
       errors.push(diagnostic('ERR_DEPTH_EXCEEDED', 'document exceeds nesting limit'))
       continue

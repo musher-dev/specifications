@@ -16,7 +16,8 @@ export function observeConnectionLifecycle(input: Json): Json {
     try {
       const store = {
         getOrCreate(key: string, create: () => ConnectionSelection) {
-          if (persisted.has(key)) return persisted.get(key)!
+          const existing = persisted.get(key)
+          if (existing !== undefined) return existing
           if (fault === 'beforeAcquisition') throw new Error('interrupted')
           const selected = create()
           if (fault === 'beforePersistence') throw new Error('interrupted')
@@ -32,38 +33,41 @@ export function observeConnectionLifecycle(input: Json): Json {
         generation,
         (key) => {
           // The same acquisition operation must not mint twice, even if local persistence failed.
-          if (!issued.has(key)) {
+          let selection = issued.get(key)
+          if (selection === undefined) {
             const id = String(issued.size + 1),
               version = String(at(step, 'defaultVersion') ?? '1')
-            issued.set(key, {
-              identity: 'connection-' + id,
+            selection = {
+              identity: `connection-${id}`,
               version,
               deployment,
               parameter,
               selectionKind: 'MANAGED',
               costOwner: 'synthetic-org',
               request: {
+                // biome-ignore lint/suspicious/noTemplateCurlyInString: a Musher `${{ }}` placeholder is data here, not a template literal
                 from: '${{ connections.llm.default }}',
                 identity: 'default-policy',
                 version,
               },
               credential: {
-                identity: 'credential-' + id,
+                identity: `credential-${id}`,
                 rotation: generation,
-                value: 'synthetic-' + id,
+                value: `synthetic-${id}`,
                 permittedBaseURLs: ['https://gateway.example/openai/v1'],
               },
               views: {
                 OPENAI_CHAT_COMPLETIONS: {
                   baseURL: 'https://gateway.example/openai/v1',
-                  model: 'model-' + version,
+                  model: `model-${version}`,
                   capabilities: ['STREAMING', 'TOOL_CALLS'],
                 },
               },
-            })
+            }
+            issued.set(key, selection)
           }
           if (fault === 'afterIssuance') throw new Error('interrupted')
-          return structuredClone(issued.get(key)!)
+          return structuredClone(selection)
         },
         () => at(step, 'revoked') !== true,
       )

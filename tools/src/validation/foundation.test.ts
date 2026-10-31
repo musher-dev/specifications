@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto'
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { discoverKinds, type Json } from '../lib/layout.ts'
+import { discoverKinds, type Family, type Json } from '../lib/layout.ts'
 import { MAX_DEPTH, parseDocument, parseDocumentBytes } from './document.ts'
 import {
   credential,
@@ -19,8 +19,13 @@ import { validateDocument } from './validator.ts'
 import { encodeEnvironment, valueFits } from './values.ts'
 
 const families = discoverKinds()
-const componentFamily = families.find((f) => f.name === 'component')!
-const blueprintFamily = families.find((f) => f.name === 'blueprint')!
+function kind(name: string): Family {
+  const found = families.find((f) => f.name === name)
+  if (found === undefined) throw new Error(`no ${name} family`)
+  return found
+}
+const componentFamily = kind('component')
+const blueprintFamily = kind('blueprint')
 const roots: string[] = []
 afterEach(() => {
   for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true })
@@ -31,7 +36,7 @@ const component = (inputs: object = {}, outputs: object = {}) => ({
   metadata: { revision: 1, description: 'A synthetic worker.' },
   spec: {
     type: 'WORKER',
-    workload: { source: { image: 'example/worker@sha256:' + 'a'.repeat(64) } },
+    workload: { source: { image: `example/worker@sha256:${'a'.repeat(64)}` } },
     contract: { inputs, outputs },
   },
 })
@@ -52,11 +57,11 @@ function item(
   mkdirSync(itemRoot)
   const nodes = Object.fromEntries(
     Object.entries(components).map(([name, c]) => {
-      writeFileSync(join(itemRoot, name + '.yaml'), JSON.stringify(c))
+      writeFileSync(join(itemRoot, `${name}.yaml`), JSON.stringify(c))
       return [
         name,
         {
-          componentRef: './' + name + '.yaml',
+          componentRef: `./${name}.yaml`,
           compute: { profile: 'general.standard.small' },
           bindings: bindings[name] ?? {},
         },
@@ -90,7 +95,7 @@ test('parser rejects complex keys, malformed bytes, unsafe numbers and deep repr
   })
   expect(parseDocument('x: .nan')).toMatchObject({ errors: [{ code: 'ERR_INVALID_NUMBER' }] })
   expect(
-    'errors' in parseDocument('['.repeat(MAX_DEPTH + 1) + '0' + ']'.repeat(MAX_DEPTH + 1)),
+    'errors' in parseDocument(`${'['.repeat(MAX_DEPTH + 1)}0${']'.repeat(MAX_DEPTH + 1)}`),
   ).toBe(true)
   expect(() => parseDocument('x: &a [*a]')).not.toThrow()
 })
@@ -142,6 +147,7 @@ test('a variable is authorized, typed, sensitive and never submitted', () => {
   const setup = item(
     { web: component({ url: input() }) },
     { web: { url: { parameter: 'baseURL' } } },
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: a Musher `${{ }}` placeholder is data here, not a template literal
     { baseURL: { from: '${{ variables.errors.reportingURL }}' } },
   )
   const variable = {
@@ -156,8 +162,10 @@ test('a variable is authorized, typed, sensitive and never submitted', () => {
     variables: { 'errors.reportingURL': variable },
   })
   expect(resolved.status).toBe('VALID')
-  expect(resolved.inputs['web:in:url']?.sensitive).toBe(true)
-  expect(inspectValue(resolved.inputs['web:in:url']!)).toEqual({ sensitive: true, redacted: true })
+  const url = resolved.inputs['web:in:url']
+  if (url === undefined) throw new Error('web:in:url did not resolve')
+  expect(url.sensitive).toBe(true)
+  expect(inspectValue(url)).toEqual({ sensitive: true, redacted: true })
   expect(resolveDeployment(setup.document, setup.context).status).toBe('INCOMPLETE')
   expect(
     resolveDeployment(setup.document, {
@@ -193,6 +201,7 @@ test('a variable failure is reported once per parameter, at its from', () => {
   const setup = item(
     { api: component({ url: input() }), web: component({ url: input() }) },
     { api: { url: { parameter: 'reportingURL' } }, web: { url: { parameter: 'reportingURL' } } },
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: a Musher `${{ }}` placeholder is data here, not a template literal
     { reportingURL: { from: '${{ variables.errors.reportingURL }}' } },
   )
   const variable = {
@@ -277,7 +286,7 @@ test('published dependencies are incomplete without context and invalid with a b
   ).toBe('VALID')
   const source = JSON.stringify(component())
   const invalid = validateDocument(blueprintFamily, JSON.stringify(d), {
-    componentDocuments: { [ref + '@1']: { source, digest: 'wrong' } },
+    componentDocuments: { [`${ref}@1`]: { source, digest: 'wrong' } },
   })
   expect(invalid.status).toBe('INVALID')
   const root = mkdtempSync(join(tmpdir(), 'musher-foundation-'))
@@ -288,7 +297,7 @@ test('published dependencies are incomplete without context and invalid with a b
     validateDocument(blueprintFamily, JSON.stringify(d), {
       itemRoot,
       componentDocuments: {
-        [ref + '@1']: { source, digest: createHash('sha256').update(source).digest('hex') },
+        [`${ref}@1`]: { source, digest: createHash('sha256').update(source).digest('hex') },
       },
     }).status,
   ).toBe('VALID')
@@ -298,11 +307,15 @@ test('credentials persist across retries and rotate only by explicit generation'
   let calls = 0
   const store = {
     getOrCreate(key: string, create: () => ResolvedValue) {
-      if (!entries.has(key)) entries.set(key, create())
-      return entries.get(key)!
+      let entry = entries.get(key)
+      if (entry === undefined) {
+        entry = create()
+        entries.set(key, entry)
+      }
+      return entry
     },
   }
-  const create = () => ({ value: 'synthetic-' + ++calls, sensitive: false })
+  const create = () => ({ value: `synthetic-${++calls}`, sensitive: false })
   expect(credential(store, 'install', 'key', 0, create)).toEqual(
     credential(store, 'install', 'key', 0, create),
   )
@@ -322,8 +335,8 @@ function recordSetup() {
       compute: { identity: 'general.standard.small', version: '1' },
       identity: './web.yaml',
       revision: 1,
-      digest: 'sha256:' + createHash('sha256').update(JSON.stringify(c)).digest('hex'),
-      imageDigest: 'sha256:' + 'a'.repeat(64),
+      digest: `sha256:${createHash('sha256').update(JSON.stringify(c)).digest('hex')}`,
+      imageDigest: `sha256:${'a'.repeat(64)}`,
       volumes: {},
       exposure: {},
     },
@@ -485,7 +498,7 @@ test('endpoint ports derive from declarations and allocation views cannot disagr
       ...c.spec,
       type: 'SERVICE',
       workload: {
-        source: { image: 'example/service@sha256:' + 'a'.repeat(64) },
+        source: { image: `example/service@sha256:${'a'.repeat(64)}` },
         endpoints: { web: { protocol: 'HTTP', targetPort: 8080 } },
       },
     },
@@ -548,7 +561,7 @@ test('dynamic output constraints report actual component location and resolution
       ...c.spec,
       type: 'SERVICE',
       workload: {
-        source: { image: 'example/service@sha256:' + 'a'.repeat(64) },
+        source: { image: `example/service@sha256:${'a'.repeat(64)}` },
         endpoints: { web: { protocol: 'HTTP', targetPort: 8080 } },
       },
     },
@@ -573,7 +586,7 @@ test('dynamic output constraints report actual component location and resolution
 })
 
 test('deep concrete syntax is rejected before recursive composition, without misreporting UTF-8', () => {
-  const source = '['.repeat(10000) + '0' + ']'.repeat(10000)
+  const source = `${'['.repeat(10000)}0${']'.repeat(10000)}`
   expect(parseDocument(source)).toMatchObject({ errors: [{ code: 'ERR_DEPTH_EXCEEDED' }] })
   expect(parseDocumentBytes(Buffer.from(source))).toMatchObject({
     errors: [{ code: 'ERR_DEPTH_EXCEEDED' }],
