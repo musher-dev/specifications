@@ -11,39 +11,48 @@ version its tag's copy names. Bun runs the TypeScript directly, so there is no
 build step. Dependencies are pinned by `bun.lock`, and `task setup` installs
 them.
 
-Every task in [`taskfiles/`](../taskfiles/) runs from this directory as
-`bun run src/<group>/<script>.ts`, so a script can also be run by hand from
-`tools/` with the same command.
+A task in [`taskfiles/`](../taskfiles/) that runs one of these scripts runs it
+from this directory as `bun run src/<group>/<script>.ts`, so the script can
+also be run by hand from `tools/` with the same command. The other tasks call a
+tool, as the Script column of the tables below shows.
 
 ## Groups
 
 - **`lib/`**: shared helpers. `layout.ts` spells every repository path, `git.ts`
   reads refs, `outline.ts` indexes a `spec.md`'s sections and requirement IDs,
-  and `bindings.ts` reads the parameters a kind family binds to core.
+  `bindings.ts` reads what a kind family's §2 fixes and the specifications it
+  depends on, and `references.ts` parses the `${{ }}` placeholder grammar.
 - **`schema/`**: the bundler (`bundle.ts`, `sources.ts`), the schema policy
   lint (`lint.ts`), and the independent meta-validation (`standards.ts`).
 - **`validation/`**: the parser, structural and semantic phases this repository
   runs over documents, and the effective-value resolver.
-- **`conformance/`**: the conformance runner, example validation, and the
-  Ajv-against-Blaze parity check.
+- **`conformance/`**: the conformance runner, its behavioural cases
+  (`behavior.ts`, and `connection-lifecycle.ts`, the synthetic store the
+  connection cases observe), example validation, and the Ajv-against-Blaze
+  parity check.
 - **`publication/`**: the ledger, recording and staging a release, verifying
-  releases offline and against GitHub, the core gate, the compatibility replay,
-  the change report, the catalog, and the site assembler.
+  releases offline and against GitHub, the core and dependency gates, the
+  compatibility replay, the change report, the catalog, and the site
+  assembler.
 - **`render/`**: generated pages and documents: the traceability matrix, the
-  ADR index, the prose and field reference, and the post-deploy live check.
-- **`policy/`**: repository rules: `.config/` layout, the review gate, commit
-  vocabulary, tracked build output, generated-document freshness, links, and
-  ADRs.
+  ADR index, the glossary and its Vale styles (`terminology.ts`), the prose and
+  field reference, the page chrome they share (`html.ts`), and the post-deploy
+  live check.
+- **`policy/`**: repository rules: the root's entries, the review gate, commit
+  vocabulary and pull request titles (`commits.ts`, `title.ts`), tracked build
+  output, generated-document freshness, the term records (`terms.ts`), links,
+  and ADRs.
 - **`testing/`**: test support only. No task runs anything here.
 
 ## <a id="checks"></a>Checks
 
 `task check` runs these steps in parallel, as Task `deps`: every step reads
-the tree and writes only to a scratch directory of its own, so none depends on
-another's result. Each step's output is printed in one block when it finishes,
-a failing step does not stop the others, and the run fails once all have
-reported. CI runs the same steps across the jobs of the Validate workflow, in
-parallel within each: **Tools / Lint** runs `task ci:lint` and `check:types`,
+the tree and writes only to a scratch directory of its own, or, for the two
+that hand a bundle to another program, to `dist/` by an atomic rename, so none
+depends on another's result. Each step's output is printed in one block when it
+finishes, a failing step does not stop the others, and the run fails once all
+have reported. CI runs the same steps across the jobs of the Validate workflow,
+in parallel within each: **Tools / Lint** runs `task ci:lint`,
 **Specifications / Schema** runs `task contracts:check contracts:breaking
 ci:test`, **Site / Build** runs `check:published`, then the CI-only steps
 listed [below](#ci-only), and **Conventions / Check** runs `check:conventions`.
@@ -57,7 +66,7 @@ process of its own; both report in the order they would sequentially.
 
 | Task | What it enforces | Script | Rule IDs |
 |---|---|---|---|
-| `check:format` | Biome formatting and lint of `tools/` | `biome ci .` | — |
+| `check:format` | Biome formatting and lint of `tools/`, warnings included | `biome ci --error-on-warnings .` | — |
 | `check:config` | The repository root holds only `ROOT_ENTRIES`. The `.config/` layout, CFG-01..CFG-08 until [ADR 0037](../docs/adr/0037-the-repository-adopts-engineering-conventions-0-7-0.md), is the conventions' CONF family now | `src/policy/config.ts` | CFG-09 |
 | `check:rulesets` | The two halves of the review gate agree, and the ruleset files apply cleanly. Required contexts, RUL-09 until [ADR 0037](../docs/adr/0037-the-repository-adopts-engineering-conventions-0-7-0.md), are the conventions' GHA-15 now | `src/policy/rulesets.ts` | RUL-01..RUL-08 |
 | `check:conventions` | The repository against the pinned engineering-conventions release, every family enforced: any finding not waived in `.repo/conventions.toml` fails ([ADR 0037](../docs/adr/0037-the-repository-adopts-engineering-conventions-0-7-0.md)) | `conventions check --fail-on warning` | The release's own |
@@ -73,12 +82,13 @@ process of its own; both report in the order they would sequentially.
 | `check:compat` | No released version's accepted documents are rejected by the candidate schema | `src/publication/compat.ts` | — |
 | `check:test` | The tooling test suite | `bun test` | — |
 | `check:commits` | Every copy of the commit vocabulary agrees with `.config/commits/committed.toml` | `src/policy/commits.ts` | — |
-| `check:docs` | `docs/traceability.md` and the ADR index match a fresh generation | `src/policy/docs.ts` | — |
+| `check:docs` | `docs/traceability.md`, the ADR index, and `docs/terminology.md` with its generated Vale styles match a fresh generation | `src/policy/docs.ts` | — |
 | `check:terms` | Term records in `docs/terminology.yaml` are valid, every v2 identifier is claimed by a record, no banned alias is used, and every defined term has a record | `src/policy/terms.ts` | — |
 | `check:links` | Every internal Markdown link and anchor resolves | `src/policy/links.ts` | — |
 | `check:adr` | ADR numbering, headers and relations, and link-target-only edits to accepted ADRs | `src/policy/adr.ts` | ADR-01..ADR-04 |
 | `check:md` | markdownlint over every Markdown file | `markdownlint-cli2` | — |
 | `check:spelling` | Prose, tooling sources and schema descriptions spell-check clean | `cspell` | — |
+| `check:prose` | Every README, the guides under `docs/` and the v2 specifications pass Vale with the conventions' MusherProse package and this repository's MusherSpecifications style, as `.config/markdown/vale.ini` sets them (COPY-01..COPY-04). The decision records, the CHANGELOGs, the two history guides and the two generated pages are left out. Any alert fails | `vale` | — |
 | `check:shell` | ShellCheck over the dev container scripts | `shellcheck` | — |
 | `check:workflow` | actionlint over `.github/workflows` | `actionlint` | — |
 
@@ -108,7 +118,7 @@ the command line) and environment variables shown.
 | Task | What it does | Script | Takes |
 |---|---|---|---|
 | `bundle` | Builds every bundle and the catalog into `dist/`, then runs `docs` | `src/schema/bundle.ts` | — |
-| `docs` | Regenerates `docs/traceability.md` and the ADR index | `src/render/traceability.ts`, `src/render/adr-index.ts` | — |
+| `docs` | Regenerates `docs/traceability.md`, the ADR index, and `docs/terminology.md` with its Vale styles | `src/render/traceability.ts`, `src/render/adr-index.ts`, `src/render/terminology.ts` | — |
 | `changes` | Reports what the branch does to the published contract | `src/publication/changes.ts` | `BASE` variable, default `origin/main`; `-- --diff` |
 | `check:title` | Fails unless the pull request title is a Conventional Commit with a type and a scope from `.config/commits/committed.toml` | `src/policy/title.ts` | `PR_TITLE` environment variable, required |
 | `check:ledger` | Fails if `published.json` changed a recorded entry | `src/publication/ledger.ts check` | `BASE_REF` environment variable; without it, only parses |
@@ -127,16 +137,19 @@ tasks fit together in a release is in [Publication](../docs/publication.md).
 
 `src/lib/layout.ts` is the only place a repository path is spelled. Every other
 script asks it where a family's prose, schema sources, examples and corpus live.
-A guard test in `src/lib/layout.test.ts` fails the suite when any other module
-outside `testing/` quotes a string beginning `specifications/` or
-`conformance/`, or assembles one from `'schemas', 'dist'` segments.
+A guard test in `src/lib/layout.test.ts` fails the suite when a line of code in
+any other module outside `testing/` quotes a string beginning `specifications/`
+or `conformance/`, assembles a path from `'schemas', 'dist'` or
+`'schemas', 'src'` segments, or passes `'.github'` or `'.config'` as a segment
+with another after it. Comments are not read, and a fixture path written as one
+string, such as `'.config/README.md'`, passes.
 
 The layout distinguishes two roles of family, as
 [specifications/README.md](../specifications/README.md#kind-family) defines
 them. **Core** is the base family: it
 defines no `kind`, carries prose and a parser-phase corpus, and has no schema and
-no examples. Every other family is a **kind** family, which binds core's
-parameters and publishes a bundle. `discoverFamilies` lists core first, and
+no examples. Every other family is a **kind** family, which fixes what core
+leaves to it in its §2 and publishes a bundle. `discoverFamilies` lists core first, and
 `discoverKinds` lists only kind families. A tool reading a released ref asks
 through `requireAtRef` and its variants, which throw a `LayoutError` when a path
 the layout names is absent, rather than returning nothing and passing.
@@ -149,9 +162,6 @@ The bundler's command line is a downstream contract:
 bun tools/src/schema/bundle.ts --stdout <family>/<major> [--version X.Y.Z]
 ```
 
-This is how to get a bundle before a family's first release, when no exact
-release URL exists yet: pin a commit of this repository and run it there.
-
 It prints one bundle: the major-version alias, or with `--version` the pinned
 bundle carrying that release's `$id`. With no arguments it writes every bundle
 and the catalog into `dist/`. Downstream repositories run it at a pinned commit
@@ -162,8 +172,10 @@ contract to build a base commit's bundle with that commit's own bundler.
 
 ## Tests
 
-Tests sit beside the module they test, as `<module>.test.ts`, and `bun test`
-from `tools/` runs them all (`task check:test`). Nothing in a test touches this
+Tests sit beside the code they test, most as `<module>.test.ts`. A few are
+named for what they cover across modules instead, such as
+`publication/e2e.test.ts`, the whole release flow in order. `bun test` from
+`tools/` runs them all (`task check:test`). Nothing in a test touches this
 repository's own history. The support modules in `src/testing/` provide what the
 tests need instead:
 
