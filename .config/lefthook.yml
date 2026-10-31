@@ -2,7 +2,8 @@
 # `lefthook.*` -> `.lefthook.*` -> `.config/lefthook.*` and stopping at the
 # first match -- which is why it is the one config here not passed by path,
 # and why a stray lefthook.yml at the repo root would silently shadow it.
-# `task check:config` (CFG-06) fails the build if one appears.
+# `task check:config` (CFG-09) fails the build on one, as a root entry
+# ROOT_ENTRIES does not name, and so does `task check:conventions` (CONF-06).
 #
 # Keep min_version equal to the lefthook version .config/mise/config.toml pins
 # (HOOKS-02).
@@ -35,10 +36,12 @@ pre-commit:
       run: task check:schema
       fail_text: "A schema module failed meta-validation. Run 'task check:schema' for the report."
 
+    # No glob: any new path can add a root entry, so no glob can say which
+    # commits to check. check:config reads the index, so it judges what is
+    # staged, and it takes a fraction of a second.
     - name: config
-      glob: '.config/**'
       run: task check:config
-      fail_text: "The .config/ layout or the root allowlist broke. Run 'task check:config'; .config/README.md has the rules."
+      fail_text: "The repository root holds an entry ROOT_ENTRIES (tools/src/lib/layout.ts) does not name. Run 'task check:config' (CFG-09); docs/adr/0024 says where things go."
 
     # Both halves of the review gate, plus the workflows whose job names its
     # required checks name -- renaming a job is the quiet way to break it.

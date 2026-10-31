@@ -147,14 +147,11 @@ tasks:
         '
 
   # ===========================================================================
-  # Hooks — thin wrappers invoked by lefthook
+  # Hooks
+  #
+  # Lefthook's pre-commit jobs call the check tasks themselves
+  # (.config/lefthook.yml); its pre-push job runs this one.
   # ===========================================================================
-
-  hooks:pre-commit:
-    desc: Fast checks run on staged changes
-    cmds:
-      - task: check:format
-      - task: check:schema
 
   hooks:pre-push:
     desc: Full verification before pushing
