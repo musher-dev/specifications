@@ -161,7 +161,7 @@ export function buildMatrix(repoRoot: string = REPO_ROOT): string {
       const links = cases
         .map(
           (c) =>
-            `[\`${c.family}/${c.major}/${c.behaviorId ?? c.path}\`](${c.behaviorId ? repoLink(OUTPUT_DIR, familyPaths(c.family, c.major).conformance + '/' + c.path) : conformanceLink(OUTPUT_DIR, c.family, c.major, c.path)})`,
+            `[\`${c.family}/${c.major}/${c.behaviorId ?? c.path}\`](${c.behaviorId ? repoLink(OUTPUT_DIR, `${familyPaths(c.family, c.major).conformance}/${c.path}`) : conformanceLink(OUTPUT_DIR, c.family, c.major, c.path)})`,
         )
         .join('<br>')
       lines.push(

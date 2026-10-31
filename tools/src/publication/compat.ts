@@ -162,19 +162,16 @@ export const WITHDRAWN: ReadonlyMap<string, string> = new Map([
  * its tree and every other fixture file stay as the tag wrote them.
  */
 function relax(scratch: string, tag: string, caseDir: string, metadata: CaseMetadata): void {
-  if (!RELAXED.has(tag + ':' + metadata.id)) return
+  if (!RELAXED.has(`${tag}:${metadata.id}`)) return
   if (metadata.expected !== 'fail')
     throw new LayoutError(
-      tag +
-        ' relaxes ' +
-        metadata.id +
-        ', which it did not reject. A relaxation only ' +
+      `${tag} relaxes ${metadata.id}, which it did not reject. A relaxation only ` +
         'moves a verdict from fail to pass',
     )
   const dir = join(scratch, caseDir)
   writeFileSync(
     join(dir, 'metadata.json'),
-    JSON.stringify({ ...metadata, expected: 'pass' }, null, 2) + '\n',
+    `${JSON.stringify({ ...metadata, expected: 'pass' }, null, 2)}\n`,
   )
   const diagnostics = join(dir, 'diagnostics.json')
   if (existsSync(diagnostics)) rmSync(diagnostics)
@@ -183,7 +180,7 @@ function relax(scratch: string, tag: string, caseDir: string, metadata: CaseMeta
 /** Missing or malformed historical evidence cannot silently become zero checks. */
 function requiredBlob(repoRoot: string, tag: string, path: string): Buffer {
   const bytes = readBlobAtRef(repoRoot, tag, path)
-  if (bytes === null) throw new LayoutError(tag + ' is missing historical evidence ' + path)
+  if (bytes === null) throw new LayoutError(`${tag} is missing historical evidence ${path}`)
   return bytes
 }
 
@@ -225,10 +222,10 @@ export function replayRelease(
       writeFileSync(target, requiredBlob(repoRoot, release.tag, path))
     }
     const index = JSON.parse(
-      requiredBlob(repoRoot, release.tag, corpusPath + '/cases.json').toString('utf8'),
+      requiredBlob(repoRoot, release.tag, `${corpusPath}/cases.json`).toString('utf8'),
     ) as Json
     if (!isObject(index) || !Array.isArray(index.cases))
-      throw new LayoutError(release.tag + ' has an invalid conformance index')
+      throw new LayoutError(`${release.tag} has an invalid conformance index`)
     const context = loadContext(repoRoot, failures)
     const candidate = { ...family, conformanceDir: scratch }
     for (const raw of index.cases) {
@@ -238,7 +235,7 @@ export function replayRelease(
         typeof raw.id !== 'string' ||
         typeof raw.phase !== 'string'
       )
-        throw new LayoutError(release.tag + ' has an invalid case entry')
+        throw new LayoutError(`${release.tag} has an invalid case entry`)
       if (raw.path.split('/').some((p) => p === '..') || isAbsolute(raw.path))
         throw new LayoutError('historical case escapes corpus')
       const metadata = JSON.parse(
@@ -257,13 +254,13 @@ export function replayRelease(
       )
       if (outcome !== 'skipped') count++
       else if (IMPLEMENTED_PHASES.has(metadata.phase))
-        failures.add(release.tag + ' historical obligation cannot be checked: ' + metadata.id)
+        failures.add(`${release.tag} historical obligation cannot be checked: ${metadata.id}`)
       else unrunnable++
     }
     const behavior = runBehaviorCases(candidate, () => {})
     count += behavior.ran
     for (const failure of behavior.failures)
-      failures.add(release.tag + ' behavioural regression: ' + failure)
+      failures.add(`${release.tag} behavioural regression: ${failure}`)
     if (family.role !== 'core') {
       const validate = compileFamily(family)
       for (const path of partFiles(repoRoot, recorded, 'examples')) {
@@ -271,9 +268,9 @@ export function replayRelease(
         const parsed = parseDocumentBytes(requiredBlob(repoRoot, release.tag, path))
         count++
         if ('errors' in parsed)
-          failures.add(release.tag + ' accepted ' + path + ', but the candidate parser rejects it')
+          failures.add(`${release.tag} accepted ${path}, but the candidate parser rejects it`)
         else if (!validate(parsed.value))
-          failures.add(release.tag + ' accepted ' + path + ', but the candidate schema rejects it')
+          failures.add(`${release.tag} accepted ${path}, but the candidate schema rejects it`)
       }
     }
     return { count, unrunnable }

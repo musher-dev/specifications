@@ -24,10 +24,11 @@ function release(s: ReturnType<typeof setup>, schema?: Json) {
   })
 }
 function replay(s: ReturnType<typeof setup>) {
-  const family = discoverFamilies(s.fx.root).find((f) => f.name === s.family)!
+  const family = discoverFamilies(s.fx.root).find((f) => f.name === s.family)
   const recorded = taggedEntries(s.fx.root, readLedger(s.fx.root)).find(
     (r) => r.release.family === s.family,
-  )!
+  )
+  if (family === undefined || recorded === undefined) throw new Error('fixture has no release')
   const failures = new Failures()
   const { count } = replayRelease(s.fx.root, family, recorded, failures)
   return { failures, count }
@@ -35,11 +36,11 @@ function replay(s: ReturnType<typeof setup>) {
 function flat(s: ReturnType<typeof setup>, source: string, metadata: object) {
   const path = 'semantic/001-history'
   s.fx.writeFile(
-    s.paths.conformance + '/cases.json',
+    `${s.paths.conformance}/cases.json`,
     JSON.stringify({ cases: [{ id: 'semantic-001-history', phase: 'semantic', path }] }),
   )
   s.fx.writeFile(
-    s.paths.conformance + '/' + path + '/metadata.json',
+    `${s.paths.conformance}/${path}/metadata.json`,
     JSON.stringify({
       id: 'semantic-001-history',
       phase: 'semantic',
@@ -47,7 +48,7 @@ function flat(s: ReturnType<typeof setup>, source: string, metadata: object) {
       ...metadata,
     }),
   )
-  s.fx.writeFile(s.paths.conformance + '/' + path + '/case.yaml', source)
+  s.fx.writeFile(`${s.paths.conformance}/${path}/case.yaml`, source)
 }
 test('historical semantic acceptance survives removal of the current fixture', () => {
   const s = setup()
@@ -67,7 +68,7 @@ test('historical semantic acceptance survives removal of the current fixture', (
   )
   release(s)
   s.fx.remove(s.paths.conformance)
-  s.fx.writeFile(s.paths.conformance + '/cases.json', '{"cases":[]}')
+  s.fx.writeFile(`${s.paths.conformance}/cases.json`, '{"cases":[]}')
   // Structural validation accepts this historical document. Current semantics reject it.
   const { failures, count } = replay(s)
   expect(count).toBe(2)
@@ -94,11 +95,11 @@ test('historical tree media and declared symlinks are reconstructed', () => {
   const s = setup('listing'),
     path = 'semantic/001-history'
   s.fx.writeFile(
-    s.paths.conformance + '/cases.json',
+    `${s.paths.conformance}/cases.json`,
     JSON.stringify({ cases: [{ id: 'semantic-001-history', phase: 'semantic', path }] }),
   )
   s.fx.writeFile(
-    s.paths.conformance + '/' + path + '/metadata.json',
+    `${s.paths.conformance}/${path}/metadata.json`,
     JSON.stringify({
       id: 'semantic-001-history',
       phase: 'semantic',
@@ -108,17 +109,17 @@ test('historical tree media and declared symlinks are reconstructed', () => {
     }),
   )
   s.fx.writeFile(
-    s.paths.conformance + '/' + path + '/tree/app/listing.yaml',
+    `${s.paths.conformance}/${path}/tree/app/listing.yaml`,
     JSON.stringify({
       kind: 'LISTING',
       metadata: { slug: 'app' },
       spec: { itemType: 'COMPONENT', icon: 'media/icon.png' },
     }),
   )
-  s.fx.writeFile(s.paths.conformance + '/' + path + '/tree/app/media/original.png', '')
+  s.fx.writeFile(`${s.paths.conformance}/${path}/tree/app/media/original.png`, '')
   // A component item holds exactly one component document (LIST-ITEM-002).
   s.fx.writeFile(
-    s.paths.conformance + '/' + path + '/tree/app/component.yaml',
+    `${s.paths.conformance}/${path}/tree/app/component.yaml`,
     JSON.stringify({ kind: 'COMPONENT' }),
   )
   release(s)
@@ -130,7 +131,7 @@ test('historical tree media and declared symlinks are reconstructed', () => {
 test('historical behavioural observations survive replacement of current fixtures', () => {
   const s = setup('listing')
   s.fx.writeFile(
-    s.paths.conformance + '/behavior.json',
+    `${s.paths.conformance}/behavior.json`,
     JSON.stringify([
       {
         id: 'historical-rendering',

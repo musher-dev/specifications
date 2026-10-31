@@ -87,20 +87,27 @@ const EXCLUDED_RULES: ReadonlyMap<string, string> = new Map([
 export function orphanDefinitions(schema: Json, publicEntries: readonly string[] = []): string[] {
   if (!isObject(schema)) return []
   const defs = isObject(schema.$defs) ? schema.$defs : {}
-  for (const entry of publicEntries)
-    if (!Object.hasOwn(defs, entry)) throw new Error('missing public schema entry point: ' + entry)
+  const definition = (name: string): Json | undefined =>
+    Object.hasOwn(defs, name) ? defs[name] : undefined
   const root = { ...schema }
   delete root.$defs
-  const reachable = new Set<string>(),
-    pending = [root, ...publicEntries.map((name) => defs[name]!)]
-  for (const entry of publicEntries) reachable.add(entry)
-  for (let i = 0; i < pending.length; i++)
-    for (const { node } of walkObjects(pending[i]!)) {
+  const reachable = new Set<string>()
+  const pending: Json[] = [root]
+  for (const entry of publicEntries) {
+    const def = definition(entry)
+    if (def === undefined) throw new Error(`missing public schema entry point: ${entry}`)
+    reachable.add(entry)
+    pending.push(def)
+  }
+  // `for…of` reads the length at every step, so a definition pushed here is walked too.
+  for (const next of pending)
+    for (const { node } of walkObjects(next)) {
       if (typeof node.$ref !== 'string' || !node.$ref.startsWith('#/$defs/')) continue
       const name = decodeURIComponent(node.$ref.slice('#/$defs/'.length))
-      if (reachable.has(name) || !Object.hasOwn(defs, name)) continue
+      const def = definition(name)
+      if (reachable.has(name) || def === undefined) continue
       reachable.add(name)
-      pending.push(defs[name]!)
+      pending.push(def)
     }
   return Object.keys(defs).filter((name) => !reachable.has(name))
 }
