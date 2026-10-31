@@ -21,14 +21,18 @@
  * NON-NORMATIVE, like everything under tools/.
  */
 import { spawn } from 'node:child_process'
-import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { availableParallelism } from 'node:os'
 import { join, resolve } from 'node:path'
 import {
+  CASE_INDEX_FILE,
+  CASE_METADATA_FILE,
   discoverFamilies,
+  exampleFiles,
   Failures,
   type Family,
   isObject,
+  JSONSCHEMA_CLI,
   type Json,
   REPO_ROOT,
   readJson,
@@ -39,12 +43,10 @@ import { reportAbsentCli } from '../schema/standards.ts'
 import { parseDocument } from '../validation/document.ts'
 import { compileFamily } from '../validation/validator.ts'
 
-const CLI = join(REPO_ROOT, 'tools', 'node_modules', '.bin', 'jsonschema')
-
 interface Subject {
   readonly path: string
   /** What the corpus says should happen at the structural phase. */
-  readonly expectValid: boolean | null
+  readonly expectValid: boolean
 }
 
 /**
@@ -68,7 +70,10 @@ const CONCURRENCY = Math.max(1, availableParallelism())
 /** Run one CLI invocation to completion, collecting what it printed. */
 function run(args: string[]): Promise<{ status: number | null; output: string }> {
   return new Promise((done, fail) => {
-    const child = spawn(CLI, args, { cwd: REPO_ROOT, stdio: ['ignore', 'pipe', 'pipe'] })
+    const child = spawn(JSONSCHEMA_CLI, args, {
+      cwd: REPO_ROOT,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    })
     let output = ''
     child.stdout.setEncoding('utf8').on('data', (text: string) => {
       output += text
@@ -176,16 +181,9 @@ async function blazeRejects(schema: string, instances: string[]): Promise<Set<st
  * which is what lets it reach the semantic phase at all.
  */
 function subjectsFor(family: Family): Subject[] {
-  const subjects: Subject[] = []
+  const subjects: Subject[] = exampleFiles(family).map((path) => ({ path, expectValid: true }))
 
-  if (existsSync(family.examplesDir)) {
-    for (const name of readdirSync(family.examplesDir).sort()) {
-      if (!name.endsWith('.yaml') && !name.endsWith('.yml')) continue
-      subjects.push({ path: join(family.examplesDir, name), expectValid: true })
-    }
-  }
-
-  const indexPath = join(family.conformanceDir, 'cases.json')
+  const indexPath = join(family.conformanceDir, CASE_INDEX_FILE)
   if (!existsSync(indexPath)) return subjects
 
   const index = readJson(indexPath)
@@ -194,7 +192,7 @@ function subjectsFor(family: Family): Subject[] {
   for (const entry of cases as Json[]) {
     if (!isObject(entry) || typeof entry.path !== 'string' || entry.phase === 'parser') continue
     const dir = join(family.conformanceDir, entry.path)
-    const metadata = readJson(join(dir, 'metadata.json'))
+    const metadata = readJson(join(dir, CASE_METADATA_FILE))
     if (!isObject(metadata)) continue
 
     // A tree case's document sits inside `tree/`; a flat case is `case.yaml`.
@@ -214,8 +212,8 @@ function subjectsFor(family: Family): Subject[] {
 }
 
 async function main(): Promise<void> {
-  if (!existsSync(CLI)) {
-    reportAbsentCli('check:parity', CLI)
+  if (!existsSync(JSONSCHEMA_CLI)) {
+    reportAbsentCli('check:parity')
     return
   }
 
@@ -260,7 +258,7 @@ async function main(): Promise<void> {
 
       // Agreement is not enough on its own: both could be wrong together, and
       // the corpus is what says which verdict is correct.
-      if (subject.expectValid !== null && ajv !== subject.expectValid) {
+      if (ajv !== subject.expectValid) {
         failures.add(
           `${relativeToRepo(subject.path)}: both validators ${ajv ? 'accept' : 'reject'} it, ` +
             `but the corpus declares it structurally ${subject.expectValid ? 'valid' : 'invalid'}.`,

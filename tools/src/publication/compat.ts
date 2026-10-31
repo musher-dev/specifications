@@ -14,11 +14,15 @@ import {
 } from '../conformance/conformance.ts'
 import { listTreeFiles, readBlobAtRef } from '../lib/git.ts'
 import {
+  CASE_DIAGNOSTICS_FILE,
+  CASE_INDEX_FILE,
+  CASE_METADATA_FILE,
   discoverFamilies,
   Failures,
   type Family,
   failCli,
   hasPart,
+  isExampleFile,
   isObject,
   isRetiredMajor,
   type Json,
@@ -69,91 +73,11 @@ function partFiles(
  * would hide the one thing this gate exists to catch. An entry whose case still
  * rejects is refused as well, by `runCase` reporting a pass that failed, so a
  * relaxation cannot outlive the release that needed it.
- */
-const RELAXED: ReadonlyMap<string, string> = new Map([
-  [
-    'component/v1.0.0:structural-093-metadata-without-a-description',
-    'component v1.1.0 makes metadata.description structurally optional and requires it of a ' +
-      'published component instead (COMP-DESC-003), so a document this case rejected is now ' +
-      'one an author may still be writing',
-  ],
-  [
-    'blueprint/v1.0.0:structural-050-missing-metadata-description',
-    'blueprint v1.1.0 makes metadata.description structurally optional and requires it of a ' +
-      'published blueprint instead (BP-ID-005), for the reason above',
-  ],
-  [
-    'blueprint/v1.0.0:structural-013-empty-component-graph',
-    'blueprint v1.2.0 lets spec.components be empty and requires a node of a published ' +
-      'blueprint instead (BP-GRAPH-001), so a blueprint can be stored before its first node ' +
-      'is chosen',
-  ],
-  [
-    'blueprint/v1.1.0:structural-013-empty-component-graph',
-    'blueprint v1.2.0 lets spec.components be empty (BP-GRAPH-001), for the reason above',
-  ],
-  [
-    'component/v1.2.0:structural-083-service-without-a-workload',
-    'component v1.3.0 makes a workload structurally optional and requires it of a published ' +
-      'component instead (COMP-TYPE-006), so a component can be stored before its runtime is ' +
-      'written',
-  ],
-  [
-    'component/v1.2.0:structural-008-job-without-command',
-    'component v1.3.0 requires command of a published JOB instead (COMP-TYPE-007), for the ' +
-      'reason above',
-  ],
-  [
-    'component/v1.2.0:structural-033-service-without-endpoints',
-    'component v1.3.0 requires an endpoint of a published SERVICE instead (COMP-TYPE-002), ' +
-      'for the reason above',
-  ],
-  [
-    'component/v1.2.0:structural-034-service-with-empty-endpoints',
-    'component v1.3.0 requires an endpoint of a published SERVICE (COMP-TYPE-002), so a ' +
-      'draft can drop its last endpoint while replacing it',
-  ],
-  [
-    'component/v1.2.0:structural-064-external-publishing-nothing',
-    'component v1.3.0 requires an output of a published EXTERNAL component instead ' +
-      '(COMP-EXT-003), so a draft can drop its last output while replacing it',
-  ],
-  [
-    'component/v1.2.0:structural-106-external-without-outputs',
-    'component v1.3.0 requires an output of a published EXTERNAL component (COMP-EXT-003), ' +
-      'for the reason above',
-  ],
-  [
-    'component/v1.2.0:structural-075-input-without-a-description',
-    'component v1.3.0 requires every input and output of a published component to be ' +
-      'described instead (COMP-DESC-004), so an editor can store a row before its description ' +
-      'is written',
-  ],
-  [
-    'component/v1.2.0:structural-076-output-without-a-description',
-    'component v1.3.0 requires every output of a published component to be described ' +
-      '(COMP-DESC-004), for the reason above',
-  ],
-])
-
-/**
- * Releases the compatibility guarantee no longer runs from, keyed by tag, with
- * the tree the ledger recorded for each.
  *
- * ADR 0033 §5 reset the component and blueprint v1 baselines once, before anyone
- * outside the project had adopted them. These releases stay published and their
- * ledger entries stay as they are; only the replay stops. The tree makes an
- * entry name one release rather than a tag name any repository could cut, and
- * `compat.test.ts` pins the map to exactly these five, because the reset is
- * spent: the next narrowing of either family is a `v2`.
+ * Empty. Every entry it held keyed a v1 release, and v1 is a retired major,
+ * which `plan` never replays.
  */
-export const WITHDRAWN: ReadonlyMap<string, string> = new Map([
-  ['component/v1.0.0', '5af4dcf60367343633d474826a36061e42981457'],
-  ['component/v1.1.0', '736b712df60b955046968467b4c6a0d12d3f3ee9'],
-  ['blueprint/v1.0.0', '7b353998bdb24adc2371709963fe25e2e8f08a0f'],
-  ['blueprint/v1.1.0', 'a1a2b61358a4276f7c45c6cae77f2294854be5ad'],
-  ['blueprint/v1.2.0', '88ec9331e54eb422ef7ffbeb1a84561ced93ed6d'],
-])
+const RELAXED: ReadonlyMap<string, string> = new Map<string, string>()
 
 /**
  * Apply a declared relaxation to the reconstructed case, in the scratch corpus.
@@ -161,29 +85,32 @@ export const WITHDRAWN: ReadonlyMap<string, string> = new Map([
  * Rewriting the historical `metadata.json` is the whole of it: the document,
  * its tree and every other fixture file stay as the tag wrote them.
  */
-function relax(scratch: string, tag: string, caseDir: string, metadata: CaseMetadata): void {
-  if (!RELAXED.has(tag + ':' + metadata.id)) return
+function relax(
+  scratch: string,
+  tag: string,
+  caseDir: string,
+  metadata: CaseMetadata,
+  relaxed: ReadonlyMap<string, string>,
+): void {
+  if (!relaxed.has(`${tag}:${metadata.id}`)) return
   if (metadata.expected !== 'fail')
     throw new LayoutError(
-      tag +
-        ' relaxes ' +
-        metadata.id +
-        ', which it did not reject. A relaxation only ' +
+      `${tag} relaxes ${metadata.id}, which it did not reject. A relaxation only ` +
         'moves a verdict from fail to pass',
     )
   const dir = join(scratch, caseDir)
   writeFileSync(
-    join(dir, 'metadata.json'),
-    JSON.stringify({ ...metadata, expected: 'pass' }, null, 2) + '\n',
+    join(dir, CASE_METADATA_FILE),
+    `${JSON.stringify({ ...metadata, expected: 'pass' }, null, 2)}\n`,
   )
-  const diagnostics = join(dir, 'diagnostics.json')
+  const diagnostics = join(dir, CASE_DIAGNOSTICS_FILE)
   if (existsSync(diagnostics)) rmSync(diagnostics)
 }
 
 /** Missing or malformed historical evidence cannot silently become zero checks. */
 function requiredBlob(repoRoot: string, tag: string, path: string): Buffer {
   const bytes = readBlobAtRef(repoRoot, tag, path)
-  if (bytes === null) throw new LayoutError(tag + ' is missing historical evidence ' + path)
+  if (bytes === null) throw new LayoutError(`${tag} is missing historical evidence ${path}`)
   return bytes
 }
 
@@ -203,12 +130,16 @@ export interface ReplayCount {
  * Reconstruct the release's own corpus, including item trees and binary parser
  * subjects. Evaluate it with candidate semantics and schemas. Never execute
  * historical tooling, and never substitute today's fixture contents.
+ *
+ * `relaxed` is the set of declared relaxations, keyed as `RELAXED` is. Only a
+ * test passes another.
  */
 export function replayRelease(
   repoRoot: string,
   family: Family,
   recorded: RecordedRelease,
   failures: Failures,
+  relaxed: ReadonlyMap<string, string> = RELAXED,
 ): ReplayCount {
   const { release, entry } = recorded
   const scratch = mkdtempSync(join(tmpdir(), 'musher-compat-'))
@@ -225,10 +156,10 @@ export function replayRelease(
       writeFileSync(target, requiredBlob(repoRoot, release.tag, path))
     }
     const index = JSON.parse(
-      requiredBlob(repoRoot, release.tag, corpusPath + '/cases.json').toString('utf8'),
+      requiredBlob(repoRoot, release.tag, `${corpusPath}/${CASE_INDEX_FILE}`).toString('utf8'),
     ) as Json
     if (!isObject(index) || !Array.isArray(index.cases))
-      throw new LayoutError(release.tag + ' has an invalid conformance index')
+      throw new LayoutError(`${release.tag} has an invalid conformance index`)
     const context = loadContext(repoRoot, failures)
     const candidate = { ...family, conformanceDir: scratch }
     for (const raw of index.cases) {
@@ -238,13 +169,13 @@ export function replayRelease(
         typeof raw.id !== 'string' ||
         typeof raw.phase !== 'string'
       )
-        throw new LayoutError(release.tag + ' has an invalid case entry')
+        throw new LayoutError(`${release.tag} has an invalid case entry`)
       if (raw.path.split('/').some((p) => p === '..') || isAbsolute(raw.path))
         throw new LayoutError('historical case escapes corpus')
       const metadata = JSON.parse(
-        readFileSync(join(scratch, raw.path, 'metadata.json'), 'utf8'),
+        readFileSync(join(scratch, raw.path, CASE_METADATA_FILE), 'utf8'),
       ) as CaseMetadata
-      relax(scratch, release.tag, raw.path, metadata)
+      relax(scratch, release.tag, raw.path, metadata, relaxed)
       // Rejections also pin observable meaning; replay all implemented cases.
       const outcome = runCase(
         context,
@@ -257,23 +188,23 @@ export function replayRelease(
       )
       if (outcome !== 'skipped') count++
       else if (IMPLEMENTED_PHASES.has(metadata.phase))
-        failures.add(release.tag + ' historical obligation cannot be checked: ' + metadata.id)
+        failures.add(`${release.tag} historical obligation cannot be checked: ${metadata.id}`)
       else unrunnable++
     }
     const behavior = runBehaviorCases(candidate, () => {})
     count += behavior.ran
     for (const failure of behavior.failures)
-      failures.add(release.tag + ' behavioural regression: ' + failure)
+      failures.add(`${release.tag} behavioural regression: ${failure}`)
     if (family.role !== 'core') {
       const validate = compileFamily(family)
       for (const path of partFiles(repoRoot, recorded, 'examples')) {
-        if (!/\.ya?ml$/.test(path)) continue
+        if (!isExampleFile(path)) continue
         const parsed = parseDocumentBytes(requiredBlob(repoRoot, release.tag, path))
         count++
         if ('errors' in parsed)
-          failures.add(release.tag + ' accepted ' + path + ', but the candidate parser rejects it')
+          failures.add(`${release.tag} accepted ${path}, but the candidate parser rejects it`)
         else if (!validate(parsed.value))
-          failures.add(release.tag + ' accepted ' + path + ', but the candidate schema rejects it')
+          failures.add(`${release.tag} accepted ${path}, but the candidate schema rejects it`)
       }
     }
     return { count, unrunnable }
@@ -292,8 +223,6 @@ function plan(repoRoot: string): Planned[] {
   const families = new Map(discoverFamilies(repoRoot).map((f) => [`${f.name}/${f.major}`, f]))
   return taggedEntries(repoRoot, readLedger(repoRoot)).map((recorded): Planned => {
     const { release } = recorded
-    if (WITHDRAWN.get(release.tag) === recorded.entry.tree)
-      return { replay: false, note: `${release.tag}: withdrawn by ADR 0033 §5, not replayed` }
     const family = families.get(`${release.family}/${release.major}`)
     // A retired major still has published versions, but no working tree to
     // replay them against; its releases are verified from their tags instead.

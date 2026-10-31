@@ -27,16 +27,18 @@
  * The guarantee that the bytes themselves never change is checked offline by
  * `task check:published` and online by `task site:fetch`.
  */
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
-import { dirname, join } from 'node:path'
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { basename, dirname, join } from 'node:path'
 import { isShallow, listTreeFiles, readBlobAtRef } from '../lib/git.ts'
 import {
   CATALOG_NAME,
   canonicalJson,
   discoverFamilies,
+  exampleFiles,
   familyPaths,
   hasPart,
   inRepo,
+  isExampleFile,
   type Json,
   parseSpecPath,
   RELEASE_CACHE_DIR,
@@ -196,7 +198,7 @@ interface PublishedVersion {
 }
 
 /**
- * A schema-less family's major line: the ref its `/reference/<family>/<major>/spec/`
+ * A schema-less family's major version: the ref its `/reference/<family>/<major>/spec/`
  * page reads, with no schema URL beside it.
  */
 interface ProseLine {
@@ -405,21 +407,20 @@ export function assembleSite(options: SiteOptions): SiteResult {
    * true for a released version as well as for `main`.
    */
   const examplesAt = (family: string, major: string, ref: string, dir: string): ExampleDoc[] => {
-    const isExample = (path: string): boolean => path.endsWith('.yaml') || path.endsWith('.yml')
     if (ref === 'main') {
       const local = discoverFamilies(repoRoot).find((f) => f.name === family && f.major === major)
-      if (local === undefined || !existsSync(local.examplesDir)) return []
-      return readdirSync(local.examplesDir)
-        .filter(isExample)
-        .sort()
-        .map((name) => ({ name, body: readFileSync(join(local.examplesDir, name), 'utf8') }))
+      if (local === undefined) return []
+      return exampleFiles(local).map((path) => ({
+        name: basename(path),
+        body: readFileSync(path, 'utf8'),
+      }))
     }
     const examples = releaseDirPaths(dir).examples
     const files = hasPart(family, major, 'examples')
       ? requireTreeAtRef(repoRoot, ref, examples, `${family}/${major} examples`)
       : listTreeFiles(repoRoot, ref, examples)
     return files
-      .filter(isExample)
+      .filter(isExampleFile)
       .sort()
       .map((path) => {
         const blob = readBlobAtRef(repoRoot, ref, path)
@@ -1193,7 +1194,7 @@ function renderProseFamilyIndex(
         : [
             `<p>${link(`/${RESERVED_PATH}/${family}/${newest.major}/spec/`, 'Read the specification')}</p>`,
           ]),
-      '<h2>Lines</h2>',
+      '<h2>Major versions</h2>',
       ...(lineRows.length === 0
         ? [
             '<p class="muted">This family is no longer authored here. Its released versions',
@@ -1201,7 +1202,7 @@ function renderProseFamilyIndex(
           ]
         : [
             '<table>',
-            '<thead><tr><th>Line</th><th>Serving</th><th>Prose</th></tr></thead>',
+            '<thead><tr><th>Major version</th><th>Serving</th><th>Prose</th></tr></thead>',
             `<tbody>${lineRows.join('')}</tbody>`,
             '</table>',
           ]),

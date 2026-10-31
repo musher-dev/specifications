@@ -5,9 +5,11 @@
 # checks: a check added to a job is added here, where a developer can run the
 # same job locally, instead of only in YAML nobody executes before pushing.
 #
-# `task check` runs everything; these two are its split into the Tools / Lint
-# and Specifications / Schema jobs. Every check in either must also be in `check`. Like `check`,
-# each runs its checks as parallel deps. The one exception to one task per job:
+# `task check` runs everything; these two are its share of the Tools / Lint and
+# Specifications / Schema jobs, and every check in either must also be in
+# `check`. The rest of `check` runs in the Site / Build job (check:published)
+# and the Conventions / Check job (check:conventions). Like `check`, each runs
+# its checks as parallel deps. The one exception to one task per job:
 # Specifications / Schema also names `contracts:check contracts:breaking` on its
 # command line, which is where the conventions look for them (IFACE-12).
 #
@@ -20,10 +22,12 @@ tasks:
     desc: Lint suite as run in CI
     deps:
       - task: check:format
+      - task: check:types
       - task: check:config
       - task: check:rulesets
       - task: check:commits
       - task: check:docs
+      - task: check:terms
       - task: check:links
       - task: check:adr
       - task: check:md

@@ -40,8 +40,9 @@ base_setup_config_dirs() {
 
 # --- Cache directories ---
 
-# Creates cache directories for all dev tools so caches land
-# under a single tree instead of scattering across the filesystem.
+# Creates the cache directories devcontainer.json points XDG_CACHE_HOME,
+# NPM_CONFIG_CACHE and BUN_INSTALL_CACHE_DIR at, so caches land under a single
+# tree, on the cache volume, instead of scattering across the filesystem.
 #
 # Globals:
 #   _HOME — read, user home directory
@@ -50,14 +51,7 @@ base_setup_config_dirs() {
 base_setup_cache_dirs() {
   setup_config_dirs \
     "xdg cache:${_HOME}/.cache" \
-    "uv cache:${_HOME}/.cache/uv" \
-    "ruff cache:${_HOME}/.cache/ruff" \
-    "pip cache:${_HOME}/.cache/pip" \
-    "mypy cache:${_HOME}/.cache/mypy" \
     "npm cache:${_HOME}/.cache/npm" \
-    "deno cache:${_HOME}/.cache/deno" \
-    "go mod cache:${_HOME}/.cache/go/mod" \
-    "go build cache:${_HOME}/.cache/go/build" \
     "bun cache:${_HOME}/.cache/bun"
 }
 

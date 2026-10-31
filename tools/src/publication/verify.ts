@@ -21,13 +21,12 @@
  *
  * NON-NORMATIVE, like everything under tools/.
  */
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync } from 'node:fs'
 import { isDirty, isEmptyRepository, isShallow, tagExists, treeId } from '../lib/git.ts'
 import {
   Failures,
   familyPaths,
   inRepo,
-  type Json,
   LEDGER_FILE,
   parseManifestKey,
   RELEASE_PLEASE_MANIFEST_FILE,
@@ -37,7 +36,7 @@ import {
 import { pinnedBundle } from '../schema/bundle.ts'
 import { assertCoreGatePending } from './core-gate.ts'
 import { assertDependencyContent, dependencyClosure } from './dependency-gate.ts'
-import { type Ledger, ledgerAtRef, readLedger, sameEntry, validateLedger } from './ledger.ts'
+import { type Ledger, ledgerAtRef, readLedger, sameEntry } from './ledger.ts'
 import {
   discoverReleases,
   isCore,
@@ -48,17 +47,15 @@ import {
   UNRELEASED_VERSION,
 } from './releases.ts'
 
+/** The working tree's ledger, or null with one failure per problem `readLedger` found. */
 function loadLedger(repoRoot: string, failures: Failures): Ledger | null {
-  const path = inRepo(repoRoot, LEDGER_FILE)
-  if (!existsSync(path)) return { version: 2, releases: {} }
-  let doc: Json
   try {
-    doc = JSON.parse(readFileSync(path, 'utf8')) as Json
+    return readLedger(repoRoot)
   } catch (error) {
-    failures.add(`${LEDGER_FILE}: not JSON — ${(error as Error).message}`)
+    // `readLedger` throws every problem at once, one to a line.
+    for (const problem of (error as Error).message.split('\n')) failures.add(problem)
     return null
   }
-  return validateLedger(doc, failures)
 }
 
 export function verifyPublications(
@@ -101,8 +98,7 @@ export function verifyPublications(
         )
         continue
       }
-      const atTag = ledgerAtRef(repoRoot, tag)
-      const own = atTag.version === 2 ? atTag.releases[tag] : undefined
+      const own = ledgerAtRef(repoRoot, tag).releases[tag]
       if (own === undefined) {
         failures.add(
           `${tag}: the tag's own ${LEDGER_FILE} does not record it. An entry is written on the ` +

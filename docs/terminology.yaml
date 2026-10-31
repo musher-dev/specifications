@@ -143,10 +143,10 @@ terms:
     display_name: family
     context: core
     definition: >-
-      One specification of the Musher document format, released on its own tag
-      line with its own corpus; every one but core also fixes a kind and
+      One specification of the Musher document format, released under its own
+      tag prefix with its own corpus; every one but core also fixes a kind and
       publishes a schema bundle.
-    shortDefinition: One specification, released on its own tag line.
+    shortDefinition: One specification, released under its own tag prefix.
     associated:
       - { relation: is-versioned-by, term: core.major-version }
     verbs: [a family applies core, a family fixes what core leaves open, a family permits a namespace]
@@ -3205,8 +3205,8 @@ terms:
     display_name: release
     context: repository
     definition: >-
-      One tagged, immutable version of one family, X.Y.Z on the family's tag
-      line, recorded in the ledger and served from immutable GitHub assets.
+      One tagged, immutable version of one family, X.Y.Z under the family's tag
+      prefix, recorded in the ledger and served from immutable GitHub assets.
     shortDefinition: One tagged, immutable version of a family.
     verbs: [release a family, a release records its core release]
     confusables: ["A publication to the catalog, which these specs never call a release.", "Pelorus Release, which is a rollout."]

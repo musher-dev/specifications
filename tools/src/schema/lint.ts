@@ -63,24 +63,25 @@ export function lintFamilies(
       )
     }
 
-    // The bundler cannot yet embed a second module correctly. It keeps an
-    // embedded module's `$id`, which makes it a separate schema resource under
-    // 2020-12, while hoisting that module's `$defs` to the bundle root — so an
-    // internal `#/$defs/Foo` inside it would resolve against its own base URI
-    // and find nothing. `assertSelfContained` would not catch it either: that
-    // check is lexical and resolves against the root's `$defs`, where `Foo`
-    // does exist. The result would be a bundle that passes every gate and no
-    // validator can resolve.
+    // One module per family is the supported configuration, and the bundler
+    // refuses a second. Embedding one is not a copy: an embedded module keeps
+    // its `$id`, which makes it a separate schema resource under 2020-12, so
+    // its `$defs` must stay inside it. Hoisted to the bundle root, an internal
+    // `#/$defs/Foo` would resolve against the module's own base URI and find
+    // nothing, and `assertSelfContained` would not notice: that check is
+    // lexical and resolves against the root's `$defs`, where `Foo` does exist.
+    // The result would be a bundle that passes every gate and no validator can
+    // resolve.
     //
-    // Lifting this needs the bundler fixed, a fixture exercising exactly that
-    // shape, and two independent validators agreeing on the output. Until then
-    // one module per family is the supported configuration, and saying so here
-    // is better than discovering it in a published bundle.
+    // Lifting this needs a bundler that embeds correctly, a fixture exercising
+    // exactly that shape, and two independent validators agreeing on the
+    // output. Saying so here is better than discovering it in a published
+    // bundle.
     if (modules.length > 1) {
       failures.add(
         `${family.name}/${family.major}: ${modules.length} source modules, but the ` +
-          'bundler supports one. Embedding a second would hoist its $defs away from ' +
-          'the $id they resolve under. See tools/src/schema/bundle.ts.',
+          'bundler builds a family from one. Embedding a second would need its $defs ' +
+          'kept under its own $id. See tools/src/schema/lint.ts.',
       )
     }
 

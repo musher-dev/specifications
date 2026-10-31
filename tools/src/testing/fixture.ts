@@ -191,8 +191,8 @@ export class FixtureRepo {
   }
 
   /**
-   * A kind family spec.md: `prose`, then a §2 carrying the bindings and
-   * dependency tables the core gate reads the cited core line from.
+   * A kind family spec.md: `prose`, then a §2 carrying the "Left to the family"
+   * and dependency tables the core gate reads the cited core major version from.
    */
   kindSpec(family: string, prose = '## <a id="scope"></a>1. Scope\n', coreLine = 'v1'): string {
     return [

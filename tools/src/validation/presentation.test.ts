@@ -46,7 +46,9 @@ describe('install-form controls', () => {
     const blueprint = {
       spec: {
         parameters: {
+          // biome-ignore lint/suspicious/noTemplateCurlyInString: a Musher `${{ }}` placeholder is data here, not a template literal
           region: { from: '${{ variables.cloud.region }}', ui: { label: 'Region' } },
+          // biome-ignore lint/suspicious/noTemplateCurlyInString: a Musher `${{ }}` placeholder is data here, not a template literal
           llm: { from: '${{ connections.llm.default }}', ui: { label: 'Language model' } },
           key: { generator: {}, ui: { label: 'Key' } },
           title: { ui: { label: 'Title', order: 1 } },

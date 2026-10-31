@@ -352,7 +352,7 @@ describe('stageRelease', () => {
     )
   })
 
-  test('refuses when requires.core is not on the core line the family cites', () => {
+  test('refuses when requires.core is not in the core major version the family cites', () => {
     const { fx, p } = fixture()
     p.releaseCore('1.0.0')
     forge(fx, { coreLine: 'v2' })

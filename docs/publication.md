@@ -26,14 +26,15 @@ release-please finds no release tagged `0.0.0`, so it proposes exactly
 types imply (only a `Release-As:` footer overrides it), and never a version that
 could collide with a tag of the previous major. It still needs one releasable
 commit under the package's directory to open the release pull request.
-That is how v2 releases as `2.0.0`: each v2 package sets
+That is how v2 released as `2.0.0`: each v2 package sets
 `"initial-version": "2.0.0"`, and the v1 packages and manifest keys are gone.
-After the first release, the manifest carries the released version and
-release-please bumps from it as usual. Nothing pins the version: the config
-carries no `release-as`, so the `2.0.0` is one-shot. Each package also sets
-`bump-minor-pre-major` and `bump-patch-for-minor-pre-major`, which the
-engineering conventions require of a package whose manifest reads below `1.0.0`
-(REL-08); they act only below `1.0.0`, so they never change a v2 bump. The change is still declared breaking,
+After a package's first release, the manifest carries the released version, as
+every v2 key has since `2.0.0`, and release-please bumps from it as usual.
+Nothing pins the version: the config carries no `release-as`, so the `2.0.0`
+was one-shot. Each package also sets `bump-minor-pre-major` and
+`bump-patch-for-minor-pre-major`, which the engineering conventions require of a
+package whose manifest reads below `1.0.0` (REL-08); they act only below
+`1.0.0`, so they never change a v2 bump. A new major is still declared breaking,
 by `BREAKING CHANGE:` footers, because the declaration is a review obligation
 whatever version is proposed.
 
@@ -122,7 +123,7 @@ as `component-v2/`. A kind family archive's directory holds:
   dependencies and the complete dependency closure, including tags, commits,
   tree identities and bundle digests;
 - `release.json`, the
-  [engineering conventions' release record](https://github.com/musher-dev/engineering-conventions/blob/v0.7.0/engineering-conventions/definitions/conventions/interfaces/publishing-interfaces.md#the-release-record):
+  [engineering conventions' release record](https://github.com/musher-dev/engineering-conventions/blob/v0.9.3/engineering-conventions/definitions/conventions/interfaces/publishing-interfaces.md#the-release-record):
   the repository, the bundle output (`<family>-release`), the version, tag and
   commit, and the family's schema interface (`<family>-schema`) with the
   bundle's SHA-256. A repository that vendors the archive keeps it unchanged,
@@ -201,8 +202,8 @@ on `main`. v1 of every family is one: its directories moved to v2
   which is a decision for a new ADR.
 
 `catalog.json` names every major an editor may bind, retired ones included,
-and points its `url` at the newest released major, so editors move to v2 when
-`2.0.0` is tagged.
+and points its `url` at the newest released major, which has been v2 since
+`2.0.0` was tagged.
 
 ## What the site serves
 

@@ -6,6 +6,6 @@
   "requirements": [
     "BP-NODE-007"
   ],
-  "summary": "RESTRICTED access to a GRPC endpoint is unsupported in v1 and rejected at access.",
+  "summary": "RESTRICTED access to a GRPC endpoint is unsupported and rejected at access.",
   "document": "app/blueprint.yaml"
 }

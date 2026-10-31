@@ -35,7 +35,7 @@
     // Nested checkouts of this repository, not its prose.
     ".claude/worktrees/**",
     // The Vale packages `vale sync` downloads, gitignored: not our prose.
-    ".config/markdown/styles/**",
+    ".config/prose/styles/**",
     // The dictionary itself, and a licence whose wording is not ours to edit.
     ".config/spelling/**",
     "LICENSE",

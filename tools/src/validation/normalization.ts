@@ -80,11 +80,12 @@ export function normalizeDocument(bundle: Json, document: Json): Json {
         (Object.hasOwn(properties, key) ? properties[key] : undefined) ??
         schema.additionalProperties ??
         {}
-      if (Object.hasOwn(value, key)) output[key] = visit(field, value[key]!, depth + 1)
+      const authored = Object.hasOwn(value, key) ? value[key] : undefined
+      if (authored !== undefined) output[key] = visit(field, authored, depth + 1)
       else {
         const resolved = schemaOf(field, null)
-        if (Object.hasOwn(resolved, 'default'))
-          output[key] = visit(field, resolved.default!, depth + 1)
+        const fallback = Object.hasOwn(resolved, 'default') ? resolved.default : undefined
+        if (fallback !== undefined) output[key] = visit(field, fallback, depth + 1)
       }
     }
     return output

@@ -71,7 +71,7 @@ test('rejects missing dependency releases and a wrong declared major', () => {
     failures,
     [],
   )
-  expect(failures.messages.join('\n')).toContain('declared v2 line')
+  expect(failures.messages.join('\n')).toContain('declared major version, v2')
 })
 
 test('rejects conflicting transitive core releases', () => {
@@ -123,7 +123,7 @@ test('archives verified dependency bytes and stays pinned after a newer dependen
     'component',
     'v1',
     '1.1.0',
-    fx.bundleDoc('component', 'v1', { description: 'new edition' }),
+    fx.bundleDoc('component', 'v1', { description: 'a later release' }),
   )
   const second = output()
   stageRelease(fx.root, 'blueprint/v1.0.0', second, { baseLedgerRef: 'main' })

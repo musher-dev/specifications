@@ -12,8 +12,8 @@
  * it is an independent second opinion on whether a published bundle is a valid
  * 2020-12 document at all.
  *
- * `lint` is advisory here rather than blocking, and the exclusions below are
- * reviewed rather than assumed — see EXCLUDED_RULES.
+ * `lint` blocks too: a finding fails the build unless its rule is excluded, and
+ * the exclusions below are reviewed rather than assumed — see EXCLUDED_RULES.
  *
  * The CLI is AGPL-3.0. It is used as a development and CI tool only; nothing it
  * produces is distributed, and no schema in this repository derives from it.
@@ -22,20 +22,17 @@
  */
 import { spawnSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
-import { join } from 'node:path'
 import {
   discoverFamilies,
   Failures,
   isObject,
+  JSONSCHEMA_CLI,
   type Json,
-  REPO_ROOT,
   relativeToRepo,
   sourceModules,
   walkObjects,
 } from '../lib/layout.ts'
 import { ensureBundleFile, familyBundle } from './bundle.ts'
-
-const CLI = join(REPO_ROOT, 'tools', 'node_modules', '.bin', 'jsonschema')
 
 /**
  * Sourcemeta lint rules this repository does not adopt, and why.
@@ -87,26 +84,33 @@ const EXCLUDED_RULES: ReadonlyMap<string, string> = new Map([
 export function orphanDefinitions(schema: Json, publicEntries: readonly string[] = []): string[] {
   if (!isObject(schema)) return []
   const defs = isObject(schema.$defs) ? schema.$defs : {}
-  for (const entry of publicEntries)
-    if (!Object.hasOwn(defs, entry)) throw new Error('missing public schema entry point: ' + entry)
+  const definition = (name: string): Json | undefined =>
+    Object.hasOwn(defs, name) ? defs[name] : undefined
   const root = { ...schema }
   delete root.$defs
-  const reachable = new Set<string>(),
-    pending = [root, ...publicEntries.map((name) => defs[name]!)]
-  for (const entry of publicEntries) reachable.add(entry)
-  for (let i = 0; i < pending.length; i++)
-    for (const { node } of walkObjects(pending[i]!)) {
+  const reachable = new Set<string>()
+  const pending: Json[] = [root]
+  for (const entry of publicEntries) {
+    const def = definition(entry)
+    if (def === undefined) throw new Error(`missing public schema entry point: ${entry}`)
+    reachable.add(entry)
+    pending.push(def)
+  }
+  // `for…of` reads the length at every step, so a definition pushed here is walked too.
+  for (const next of pending)
+    for (const { node } of walkObjects(next)) {
       if (typeof node.$ref !== 'string' || !node.$ref.startsWith('#/$defs/')) continue
       const name = decodeURIComponent(node.$ref.slice('#/$defs/'.length))
-      if (reachable.has(name) || !Object.hasOwn(defs, name)) continue
+      const def = definition(name)
+      if (reachable.has(name) || def === undefined) continue
       reachable.add(name)
-      pending.push(defs[name]!)
+      pending.push(def)
     }
   return Object.keys(defs).filter((name) => !reachable.has(name))
 }
 
 function run(args: string[]): { status: number; output: string } {
-  const result = spawnSync(CLI, args, { encoding: 'utf8' })
+  const result = spawnSync(JSONSCHEMA_CLI, args, { encoding: 'utf8' })
   return {
     status: result.status ?? 1,
     output: `${result.stdout ?? ''}${result.stderr ?? ''}`,
@@ -128,7 +132,7 @@ export function absentCliIsFailure(
  * Report an absent CLI: in CI, fail the process; elsewhere, say it was skipped.
  * Returns only when the caller should stop without failing.
  */
-export function reportAbsentCli(check: string, cli: string = CLI): void {
+export function reportAbsentCli(check: string, cli: string = JSONSCHEMA_CLI): void {
   if (absentCliIsFailure()) {
     console.error(
       `  ✗ ${relativeToRepo(cli)} is not installed, and CI=true — ${check} cannot be skipped ` +
@@ -141,13 +145,14 @@ export function reportAbsentCli(check: string, cli: string = CLI): void {
 }
 
 function main(): void {
-  if (!existsSync(CLI)) {
+  if (!existsSync(JSONSCHEMA_CLI)) {
     reportAbsentCli('check:standards')
     return
   }
 
   const failures = new Failures()
   let validated = 0
+  const bundlePaths: string[] = []
 
   for (const family of discoverFamilies()) {
     const paths = [...sourceModules(family)]
@@ -158,9 +163,12 @@ function main(): void {
         family.name === 'blueprint' ? ['BlueprintResolutionRecord'] : [],
       ))
         failures.add(`${family.name}/${family.major}: unreferenced definition ${name}`)
-    // The CLI reads files, so the bundle is written to dist/ first.
+    // The CLI reads files, so the bundle is written to dist/ first, once.
     const bundlePath = ensureBundleFile(family)
-    if (bundlePath !== null) paths.push(bundlePath)
+    if (bundlePath !== null) {
+      paths.push(bundlePath)
+      bundlePaths.push(bundlePath)
+    }
 
     for (const path of paths) {
       const { status, output } = run(['metaschema', path])
@@ -177,20 +185,17 @@ function main(): void {
   // Blocking. A finding outside the excluded set fails the build.
   //
   // This was advisory, on the reasoning that "a generic linter's opinion does
-  // not get to fail this repository's build". That is right about the six rules
-  // in EXCLUDED_RULES and wrong about the shape: printing a finding nobody has
-  // to act on means a new *class* of finding can appear and stay, indefinitely,
-  // with CI green — and the schemas are about to be rewritten surface by
-  // surface, which is when a linter is worth the most and an ignored line is
-  // worth the least.
+  // not get to fail this repository's build". That is right about the rules in
+  // EXCLUDED_RULES and wrong about the shape: printing a finding nobody has to
+  // act on means a new *class* of finding can appear and stay, indefinitely,
+  // with CI green — and a schema edit is when a linter is worth the most and
+  // an ignored line is worth the least.
   //
   // The disagreement is preserved rather than overruled: a rule this repository
   // does not accept goes in EXCLUDED_RULES with a written reason, which is a
   // claim a reviewer can argue with. What is no longer available is neither
   // adopting nor rejecting it.
-  for (const family of discoverFamilies()) {
-    const bundlePath = ensureBundleFile(family)
-    if (bundlePath === null) continue
+  for (const bundlePath of bundlePaths) {
     const { output } = run(['lint', bundlePath])
     for (const line of output.split('\n')) {
       const rule = /\(([a-z_]+)\)\s*$/.exec(line)?.[1]

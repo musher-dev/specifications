@@ -1,4 +1,4 @@
-# Conformance Suite
+# Conformance suite
 
 A language-neutral corpus of test vectors. An implementation conforms to a
 Musher specification family when it produces the declared outcome for every
@@ -191,7 +191,7 @@ is an `admission` case, and its files are images whose headers state the
 dimensions under test, such as the real PNG headers of listing's
 `admission/001-media-within-bounds`.
 
-An adapter that cannot materialise a tree SKIPs those cases. It MUST NOT report
+An adapter that cannot materialize a tree SKIPs those cases. It MUST NOT report
 them as passed.
 
 The contract is set by
@@ -240,7 +240,7 @@ about the rest of it.
 
 `default` in JSON Schema is an annotation. Validators do not insert it, so two
 implementations can both accept the same document and still disagree about what
-it says: one materialising `periodSeconds: 10` into its object model, one
+it says: one materializing `periodSeconds: 10` into its object model, one
 leaving the field absent and reading the default when it needs to, and a third
 treating an explicit `null` as different from an omission. All three pass an
 acceptance fixture. Only one of them can be right about how often to poll.

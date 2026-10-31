@@ -7,6 +7,6 @@
     "BP-NODE-005",
     "COMP-EP-003"
   ],
-  "summary": "A PUBLIC HTTP-family endpoint whose component declares no readiness probe is rejected.",
+  "summary": "A PUBLIC URL-addressed endpoint whose component declares no readiness probe is rejected.",
   "document": "app/blueprint.yaml"
 }

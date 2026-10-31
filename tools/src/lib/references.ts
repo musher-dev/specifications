@@ -38,8 +38,6 @@ export const RESERVED_NAMESPACES = [
   'nodes',
 ] as const
 
-export type Namespace = (typeof RESERVED_NAMESPACES)[number]
-
 const RESERVED = new Set<string>(RESERVED_NAMESPACES)
 
 /**

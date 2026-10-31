@@ -32,9 +32,10 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { BindingsError, readBindings } from '../lib/bindings.ts'
-import { listTreeFiles, readBlobAtRef } from '../lib/git.ts'
+import { archiveAtRef, gitEnvironment, listTreeFiles, readBlobAtRef } from '../lib/git.ts'
 import {
   BUNDLER_ENTRY,
+  CASE_METADATA_FILE,
   discoverFamilies,
   type Family,
   familyPaths,
@@ -333,11 +334,12 @@ function reachableSpecs(family: Family, families: readonly Family[]): ReachableS
 /** Requirement IDs each case of a family's corpus cited at a ref, keyed by case path. */
 function citationsAt(repoRoot: string, ref: string, family: Family): Map<string, Set<string>> {
   const dir = familyPaths(family.name, family.major).conformance
+  const suffix = `/${CASE_METADATA_FILE}`
   const cases = new Map<string, Set<string>>()
   for (const path of listTreeFiles(repoRoot, ref, dir)) {
-    if (!path.endsWith('/metadata.json')) continue
+    if (!path.endsWith(suffix)) continue
     const cited = requirementsOfMetadata(readBlobAtRef(repoRoot, ref, path)?.toString('utf8'))
-    cases.set(path.slice(dir.length + 1, -'/metadata.json'.length), cited)
+    cases.set(path.slice(dir.length + 1, -suffix.length), cited)
   }
   return cases
 }
@@ -428,7 +430,7 @@ export function movedNames(
     for (const [casePath, cited] of casesBefore) {
       if (!cited.has(id)) continue
       for (const spec of reach) {
-        const metadata = join(spec.conformanceDir, ...casePath.split('/'), 'metadata.json')
+        const metadata = join(spec.conformanceDir, ...casePath.split('/'), CASE_METADATA_FILE)
         if (!existsSync(metadata)) continue
         for (const now of requirementsOfMetadata(readFileSync(metadata, 'utf8'))) {
           if (!cited.has(now) && reachable.has(now)) pinnedNow.add(now)
@@ -706,14 +708,9 @@ function baseTooling(
 
   const dir = mkdtempSync(join(tmpdir(), 'musher-changes-'))
   const cleanup = (): void => rmSync(dir, { recursive: true, force: true })
-  const archive = spawnSync(
-    'git',
-    ['archive', '--format=tar', base, '--', TOOLS_SOURCE_ROOT, SPECIFICATIONS_ROOT],
-    { cwd: repoRoot, maxBuffer: 512 * 1024 * 1024 },
-  )
+  const archive = archiveAtRef(repoRoot, base, [TOOLS_SOURCE_ROOT, SPECIFICATIONS_ROOT])
   const extracted =
-    archive.status === 0 &&
-    spawnSync('tar', ['-x', '-C', dir], { input: archive.stdout }).status === 0
+    archive !== null && spawnSync('tar', ['-x', '-C', dir], { input: archive }).status === 0
   if (!extracted) {
     cleanup()
     return null
@@ -751,12 +748,7 @@ export function unifiedDiff(name: string, before: string, after: string): string
     const result = spawnSync(
       'git',
       ['diff', '--no-index', '--no-color', '--no-ext-diff', '--', `base/${name}`, `head/${name}`],
-      {
-        cwd: dir,
-        encoding: 'utf8',
-        maxBuffer: 64 * 1024 * 1024,
-        env: { ...process.env, GIT_CONFIG_GLOBAL: '/dev/null', GIT_CONFIG_SYSTEM: '/dev/null' },
-      },
+      { cwd: dir, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, env: gitEnvironment(dir) },
     )
     if (result.status === 0) return ''
     if (result.status !== 1) throw new Error(`git diff --no-index failed — ${result.stderr.trim()}`)
@@ -816,10 +808,8 @@ function main(): void {
   if (narrowing > 0) {
     console.log(
       `> **${narrowing} change(s) can reject a document that validates today.** ` +
-        'That is a breaking change: it needs maintainer approval and a `BREAKING CHANGE:` ' +
-        'trailer, and — once a family has been tagged — a new `v<N>` directory. While a ' +
-        'family is unpublished, ADR 0005 §1 waives the directory and the migration note ' +
-        'and nothing else.\n',
+        'That is a breaking change: it needs maintainer approval, a `BREAKING CHANGE:` ' +
+        'trailer and a new `v<N>` directory.\n',
     )
   } else {
     console.log('> No change here rejects a document that validates today.\n')

@@ -187,11 +187,11 @@ describe('record', () => {
       })
     }
 
-    test('refuses a family whose §2 cites no core line', () => {
+    test('refuses a family whose §2 cites no core major version', () => {
       const { fx } = ready()
       fx.writeFile(COMPONENT.spec, '## <a id="scope"></a>1. Scope\n')
       fx.commit('docs(component): lose the bindings')
-      expect(refusal(() => record(fx.root))).toContain('cites no core line')
+      expect(refusal(() => record(fx.root))).toContain('cites no core major version')
     })
   })
 })

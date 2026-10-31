@@ -6,6 +6,6 @@
   "requirements": [
     "BP-PLACEHOLDER-001"
   ],
-  "summary": "A parameter whose from concatenates two references is rejected.",
+  "summary": "A parameter whose from concatenates two placeholders is rejected.",
   "document": "app/blueprint.yaml"
 }

@@ -6,6 +6,6 @@
   "requirements": [
     "BP-NODE-005"
   ],
-  "summary": "A PUBLIC HTTP-family endpoint in the object form requires a readiness probe, as bare PUBLIC does.",
+  "summary": "A PUBLIC URL-addressed endpoint in the object form requires a readiness probe, as bare PUBLIC does.",
   "document": "app/blueprint.yaml"
 }

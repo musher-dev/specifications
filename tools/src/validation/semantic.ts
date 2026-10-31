@@ -18,7 +18,7 @@ import {
   isConnectionInput,
   protocolMember,
 } from './connections.ts'
-import { type Diagnostic, parseDocument, parseDocumentBytes } from './document.ts'
+import { type Diagnostic, parseDocumentBytes } from './document.ts'
 import { type LicenseList, MEDIA_BYTES, markdownFields, mediaReferences, walk } from './listing.ts'
 import { MEDIA_PATH, schemeIsPermitted } from './listing-policy.ts'
 import {
@@ -53,7 +53,6 @@ export const at = (value: Json | undefined, ...keys: string[]): Json | undefined
   keys.reduce<Json | undefined>((v, k) => record(v)[k], value)
 const child = (value: Json | undefined, key: string) => at(value, key)
 const asString = (value: Json | undefined) => (typeof value === 'string' ? value : undefined)
-const keysOf = (value: Json | undefined) => Object.keys(record(value))
 export const token = (value: string) => value.replaceAll('~', '~0').replaceAll('/', '~1')
 const issue = (out: Diagnostic[], code: string, path: string) =>
   out.push({ code, path, message: code, phase: 'semantic' })
@@ -195,7 +194,8 @@ export function cronIsValid(cron: string): boolean {
   const number = (text: string, [min, max]: readonly [number, number]) =>
     /^[0-9]+$/.test(text) && Number(text) >= min && Number(text) <= max
   return fields.every((field, i) => {
-    const range = CRON_FIELDS[i]!
+    const range = CRON_FIELDS[i]
+    if (range === undefined) throw new Error(`no range for cron field ${i}`)
     return field.split(',').every((element) => {
       const [base = '', step, ...rest] = element.split('/')
       if (rest.length || (step !== undefined && !(/^[0-9]+$/.test(step) && Number(step) > 0)))
@@ -346,7 +346,7 @@ export function componentDiagnostics(document: Json): Diagnostic[] {
       path = `/spec/workload/build/secrets/${token(id)}`
     if (typeof input === 'string') {
       read.add(input)
-      inputReferenceDiagnostics(out, contract, input, path + '/input', true)
+      inputReferenceDiagnostics(out, contract, input, `${path}/input`, true)
     }
     if (Object.hasOwn(record(build.arguments), id)) issue(out, 'ERR_CONFLICTING_ENV_VAR', path)
   }
@@ -360,8 +360,8 @@ export function componentDiagnostics(document: Json): Diagnostic[] {
       mounts.some(
         (other) =>
           path === other ||
-          path.startsWith(other === '/' ? '/' : other + '/') ||
-          other.startsWith(path === '/' ? '/' : path + '/'),
+          path.startsWith(other === '/' ? '/' : `${other}/`) ||
+          other.startsWith(path === '/' ? '/' : `${path}/`),
       )
     )
       issue(out, 'ERR_INVALID_MOUNT', `/spec/workload/volumes/${token(name)}/mountPath`)
@@ -379,7 +379,7 @@ export function componentDiagnostics(document: Json): Diagnostic[] {
       // A connection input has no schema: its protocol fixes its members (§6.4).
       if (direction === 'inputs' && isConnectionInput(v)) continue
       if (v.schema === undefined || schemaProblem(v.schema))
-        issue(out, 'ERR_INVALID_VALUE_SCHEMA', path + '/schema')
+        issue(out, 'ERR_INVALID_VALUE_SCHEMA', `${path}/schema`)
       // Component §6.2: the key present in `from` is the output's origin.
       const from = record(v.from)
       const literal =
@@ -390,7 +390,7 @@ export function componentDiagnostics(document: Json): Diagnostic[] {
             : constantTemplate(from)
       const literalPath =
         direction === 'inputs'
-          ? path + '/default'
+          ? `${path}/default`
           : path + (Object.hasOwn(from, 'value') ? '/from/value' : '/from/template')
       if (literal !== undefined && v.schema !== undefined && !valueFits(v.schema, literal))
         issue(out, 'ERR_VALUE_CONSTRAINT', literalPath)
@@ -398,7 +398,7 @@ export function componentDiagnostics(document: Json): Diagnostic[] {
         issue(out, 'ERR_SENSITIVE_LITERAL', literalPath)
       const target = at(v.target, 'envVar')
       if (typeof target === 'string') {
-        if (env.has(target)) issue(out, 'ERR_CONFLICTING_ENV_VAR', path + '/target/envVar')
+        if (env.has(target)) issue(out, 'ERR_CONFLICTING_ENV_VAR', `${path}/target/envVar`)
         env.add(target)
       }
       if (direction !== 'outputs') continue
@@ -406,7 +406,7 @@ export function componentDiagnostics(document: Json): Diagnostic[] {
         read.add(from.input)
         const input = at(contract, 'inputs', from.input)
         const member = asString(from.member)
-        if (!input) issue(out, 'ERR_UNKNOWN_INPUT', path + '/from/input')
+        if (!input) issue(out, 'ERR_UNKNOWN_INPUT', `${path}/from/input`)
         // COMP-OUT-004: a connection input is read one member at a time, and a
         // value input has no members.
         else if (isConnectionInput(record(input)) !== (member !== undefined))
@@ -421,21 +421,21 @@ export function componentDiagnostics(document: Json): Diagnostic[] {
           const contract = protocolMember(at(input, 'connection', 'protocol'), member)
           if (!contract) {
             if (CONNECTION_MEMBERS.includes(member))
-              issue(out, 'ERR_UNKNOWN_CONNECTION_MEMBER', path + '/from/member')
+              issue(out, 'ERR_UNKNOWN_CONNECTION_MEMBER', `${path}/from/member`)
           } else if (!compatible({ schema: { type: contract.type } }, v))
-            issue(out, 'ERR_VALUE_CONSTRAINT', path + '/from/input')
+            issue(out, 'ERR_VALUE_CONSTRAINT', `${path}/from/input`)
           else if (contract.sensitive && v.sensitive !== true)
-            issue(out, 'ERR_VALUE_CONSTRAINT', path + '/from/member')
+            issue(out, 'ERR_VALUE_CONSTRAINT', `${path}/from/member`)
           // COMP-OUT-003: an optional member without a default may be absent.
           else if (!guaranteedMember(contract))
-            issue(out, 'ERR_INPUT_NOT_GUARANTEED', path + '/from/member')
+            issue(out, 'ERR_INPUT_NOT_GUARANTEED', `${path}/from/member`)
         } else if (!compatible(record(input), v))
-          issue(out, 'ERR_VALUE_CONSTRAINT', path + '/from/input')
+          issue(out, 'ERR_VALUE_CONSTRAINT', `${path}/from/input`)
         // COMP-OUT-003: an origin that can be absent cannot produce the output.
         // It is checked after the type rule so that a document breaking both
         // keeps the code v1.0.0 gave it.
         else if (at(input, 'required') === false && at(input, 'default') === undefined)
-          issue(out, 'ERR_INPUT_NOT_GUARANTEED', path + '/from/input')
+          issue(out, 'ERR_INPUT_NOT_GUARANTEED', `${path}/from/input`)
       }
       const template = typeof from.template === 'string' ? from.template : undefined
       if (template !== undefined) {
@@ -448,7 +448,7 @@ export function componentDiagnostics(document: Json): Diagnostic[] {
               : failure.kind === 'unknown-namespace'
                 ? 'ERR_UNKNOWN_PLACEHOLDER_NAMESPACE'
                 : 'ERR_NAMESPACE_NOT_PERMITTED',
-            path + '/from/template',
+            `${path}/from/template`,
           )
       }
       // COMP-PLACEHOLDER-001: a `self` path of any shape but `endpoints.<endpoint>.<property>`
@@ -460,10 +460,10 @@ export function componentDiagnostics(document: Json): Diagnostic[] {
           issue(out, problem, path + (template === undefined ? '/from' : '/from/template'))
         // COMP-EP-012: a template produces a string, and an array has no text form in one.
         else if (template !== undefined && addressProperty(ref.property)?.type === 'array')
-          issue(out, 'ERR_VALUE_CONSTRAINT', path + '/from/template')
+          issue(out, 'ERR_VALUE_CONSTRAINT', `${path}/from/template`)
       }
       if (template !== undefined && at(v.schema, 'type') !== 'string')
-        issue(out, 'ERR_VALUE_CONSTRAINT', path + '/schema')
+        issue(out, 'ERR_VALUE_CONSTRAINT', `${path}/schema`)
       if (typeof from.endpoint === 'string') {
         const type = addressProperty(String(from.property))?.type ?? 'string'
         const declared = at(v.schema, 'type')
@@ -472,7 +472,7 @@ export function componentDiagnostics(document: Json): Diagnostic[] {
             ? declared !== 'array' || at(v.schema, 'items', 'type') !== 'string'
             : declared !== type && !(type === 'integer' && declared === 'number')
         )
-          issue(out, 'ERR_VALUE_CONSTRAINT', path + '/schema')
+          issue(out, 'ERR_VALUE_CONSTRAINT', `${path}/schema`)
       }
     }
   }
@@ -901,7 +901,7 @@ export function semanticReport(
       category = at(component, 'spec', 'type')
     // BP-NODE-001..002: compute agrees with whether the component runs.
     if (component && category === 'EXTERNAL' && n.compute !== undefined)
-      issue(out, 'ERR_COMPUTE_FORBIDDEN', base + '/compute')
+      issue(out, 'ERR_COMPUTE_FORBIDDEN', `${base}/compute`)
     if (component && category !== 'EXTERNAL' && n.compute === undefined)
       issue(out, 'ERR_COMPUTE_REQUIRED', base)
     if (component) {
@@ -913,12 +913,12 @@ export function semanticReport(
           !allocated[volume] ||
           Number(at(allocated[volume], 'sizeGiB')) < Number(at(declared[volume], 'minSizeGiB'))
         )
-          issue(out, 'ERR_INVALID_VOLUME_ALLOCATION', base + '/volumes/' + token(volume))
+          issue(out, 'ERR_INVALID_VOLUME_ALLOCATION', `${base}/volumes/${token(volume)}`)
       }
       for (const endpoint of Object.keys(record(n.exposure))) {
         const e = at(workload, 'endpoints', endpoint)
         const exposure = effectiveExposure(n.exposure, endpoint)
-        const where = base + '/exposure/' + token(endpoint)
+        const where = `${base}/exposure/${token(endpoint)}`
         if (!e) issue(out, 'ERR_UNKNOWN_ENDPOINT', where)
         else if (exposure.visibility === 'PUBLIC' && category === 'WORKER')
           issue(out, 'ERR_ENDPOINT_NOT_EXPOSABLE', where)
@@ -931,11 +931,11 @@ export function semanticReport(
             issue(out, 'ERR_READINESS_REQUIRED', where)
           // BP-NODE-007: sign-in and a request header exist only on HTTP, HTTPS and WS.
           if (exposure.access === 'RESTRICTED' && !VIEWER.includes(String(at(e, 'protocol'))))
-            issue(out, 'ERR_ENDPOINT_NOT_HTTP', where + '/access')
+            issue(out, 'ERR_ENDPOINT_NOT_HTTP', `${where}/access`)
           // BP-NODE-008: an OpenID Connect client, and each request taken without a
           // viewer, is one the component declares.
           if (exposure.viewerIdentity === 'OIDC' && at(e, 'oidc') === undefined)
-            issue(out, 'ERR_ENDPOINT_NOT_OIDC_CLIENT', where + '/viewerIdentity')
+            issue(out, 'ERR_ENDPOINT_NOT_OIDC_CLIENT', `${where}/viewerIdentity`)
           const exemptions = at(record(n.exposure)[endpoint], 'accessExemptions')
           if (Array.isArray(exemptions))
             exemptions.forEach((value, i) => {
@@ -969,14 +969,14 @@ export function semanticReport(
             out.push({
               code,
               path: Object.hasOwn(record(n.exposure), ref.endpoint)
-                ? base + '/exposure/' + token(ref.endpoint)
-                : base + '/componentRef',
+                ? `${base}/exposure/${token(ref.endpoint)}`
+                : `${base}/componentRef`,
               message: code,
               phase: 'semantic',
               related: [
                 {
                   artifact: String(n.componentRef),
-                  path: '/spec/contract/outputs/' + token(output),
+                  path: `/spec/contract/outputs/${token(output)}`,
                 },
               ],
             })
@@ -991,18 +991,18 @@ export function semanticReport(
         )
           out.push({
             code: 'ERR_UNSATISFIED_REQUIRED_INPUT',
-            path: base + '/componentRef',
+            path: `${base}/componentRef`,
             message: 'ERR_UNSATISFIED_REQUIRED_INPUT',
             phase: 'semantic',
             related: [
-              { artifact: String(n.componentRef), path: '/spec/contract/inputs/' + token(input) },
+              { artifact: String(n.componentRef), path: `/spec/contract/inputs/${token(input)}` },
             ],
           })
       }
     }
     for (const [input, binding] of Object.entries(record(n.bindings))) {
       const s = record(binding),
-        path = base + '/bindings/' + token(input),
+        path = `${base}/bindings/${token(input)}`,
         consumer = record(inputs[input])
       if (component && !inputs[input]) issue(out, 'ERR_UNKNOWN_INPUT', path)
       dependencies.set(
@@ -1012,7 +1012,7 @@ export function semanticReport(
       if (typeof s.parameter === 'string') {
         const p = parameters[s.parameter]
         if (!p) {
-          issue(out, 'ERR_UNKNOWN_PARAMETER', path + '/parameter')
+          issue(out, 'ERR_UNKNOWN_PARAMETER', `${path}/parameter`)
           continue
         }
         // BP-CONNECTION-001 decides whether a connection and an input agree in kind,
@@ -1031,27 +1031,27 @@ export function semanticReport(
             issue(
               out,
               'ERR_VALUE_CONSTRAINT',
-              '/spec/parameters/' + token(String(s.parameter)) + '/default',
+              `/spec/parameters/${token(String(s.parameter))}/default`,
             )
           if (value !== undefined && consumer.sensitive === true)
             issue(
               out,
               'ERR_SENSITIVE_LITERAL',
-              '/spec/parameters/' + token(String(s.parameter)) + '/default',
+              `/spec/parameters/${token(String(s.parameter))}/default`,
             )
         }
       } else if (typeof s.node === 'string') {
-        if (!nodes[s.node]) issue(out, 'ERR_UNKNOWN_NODE', path + '/node')
+        if (!nodes[s.node]) issue(out, 'ERR_UNKNOWN_NODE', `${path}/node`)
         const producer = resolved.get(s.node),
           output = at(producer, 'spec', 'contract', 'outputs', String(s.output))
-        if (producer && !output) issue(out, 'ERR_UNKNOWN_OUTPUT', path + '/output')
+        if (producer && !output) issue(out, 'ERR_UNKNOWN_OUTPUT', `${path}/output`)
         if (
           output &&
           inputs[input] &&
           !isConnectionInput(consumer) &&
           !compatible(record(output), consumer)
         )
-          issue(out, 'ERR_INCOMPATIBLE_TYPE', path + '/output')
+          issue(out, 'ERR_INCOMPATIBLE_TYPE', `${path}/output`)
         const literal =
           at(output, 'from', 'value') !== undefined
             ? at(output, 'from', 'value')
@@ -1068,14 +1068,14 @@ export function semanticReport(
           s.value !== undefined &&
           !valueFits(consumer.schema, s.value)
         )
-          issue(out, 'ERR_VALUE_CONSTRAINT', path + '/value')
-        if (consumer.sensitive === true) issue(out, 'ERR_SENSITIVE_LITERAL', path + '/value')
+          issue(out, 'ERR_VALUE_CONSTRAINT', `${path}/value`)
+        if (consumer.sensitive === true) issue(out, 'ERR_SENSITIVE_LITERAL', `${path}/value`)
       }
     }
   }
   for (const [name, p] of Object.entries(parameters)) {
     const receivers = consumers.get(name) ?? [],
-      path = '/spec/parameters/' + token(name)
+      path = `/spec/parameters/${token(name)}`
     // BP-PARAM-001: a generated value a hash names, and that carries `ui`, reaches
     // the deployer through disclosure without a binding of its own.
     const used =
@@ -1098,19 +1098,19 @@ export function semanticReport(
     const hashed = at(p, 'hash', 'parameter')
     if (typeof hashed === 'string') {
       const source = Object.hasOwn(parameters, hashed) ? parameters[hashed] : undefined
-      if (source === undefined) issue(out, 'ERR_UNKNOWN_PARAMETER', path + '/hash/parameter')
+      if (source === undefined) issue(out, 'ERR_UNKNOWN_PARAMETER', `${path}/hash/parameter`)
       else if (at(source, 'generator') === undefined)
-        issue(out, 'ERR_INVALID_HASHED_PARAMETER', path + '/hash/parameter')
+        issue(out, 'ERR_INVALID_HASHED_PARAMETER', `${path}/hash/parameter`)
       else if (
         at(p, 'hash', 'algorithm') === 'BCRYPT' &&
         encodedLength(at(source, 'generator')) > BCRYPT_INPUT_BYTES
       )
-        issue(out, 'ERR_INVALID_HASHED_PARAMETER', path + '/hash/algorithm')
+        issue(out, 'ERR_INVALID_HASHED_PARAMETER', `${path}/hash/algorithm`)
     }
     if (
       receivers.length > 1 &&
       receivers.some(
-        (v) => canonicalJson(v.schema ?? null) !== canonicalJson(receivers[0]!.schema ?? null),
+        (v) => canonicalJson(v.schema ?? null) !== canonicalJson(receivers[0]?.schema ?? null),
       )
     )
       issue(out, 'ERR_CONFLICTING_INPUT_SCHEMA', path)
@@ -1129,10 +1129,10 @@ export function semanticReport(
             String(v) === member,
         )
       )
-        issue(out, 'ERR_UNKNOWN_ENUM_MEMBER', path + '/ui/enumLabels/' + token(member))
+        issue(out, 'ERR_UNKNOWN_ENUM_MEMBER', `${path}/ui/enumLabels/${token(member)}`)
     for (const supply of ['generator', 'hash'])
       if (at(p, supply) !== undefined && receivers.some((v) => at(v.schema, 'type') !== 'string'))
-        issue(out, 'ERR_VALUE_CONSTRAINT', path + '/' + supply)
+        issue(out, 'ERR_VALUE_CONSTRAINT', `${path}/${supply}`)
   }
   // Kahn ordering separates value dependencies from discovery relationships.
   const pending = new Map<string, number>(),
@@ -1147,11 +1147,13 @@ export function semanticReport(
   }
   const ready = [...pending].filter(([, n]) => n === 0).map(([key]) => key),
     ordered: string[] = []
-  for (let i = 0; i < ready.length; i++) {
-    const key = ready[i]!
+  // A key appended to `ready` while it is iterated is still visited.
+  for (const key of ready) {
     ordered.push(key)
     for (const dependent of dependents.get(key) ?? []) {
-      const n = pending.get(dependent)! - 1
+      const count = pending.get(dependent)
+      if (count === undefined) throw new Error(`no pending count for ${dependent}`)
+      const n = count - 1
       pending.set(dependent, n)
       if (n === 0) ready.push(dependent)
     }
@@ -1180,8 +1182,8 @@ export function semanticReport(
     known.set(key, value)
     const path =
       direction === 'in'
-        ? '/spec/nodes/' + token(node) + '/bindings/' + token(name)
-        : '/spec/nodes/' + token(node) + '/componentRef'
+        ? `/spec/nodes/${token(node)}/bindings/${token(name)}`
+        : `/spec/nodes/${token(node)}/componentRef`
     if (
       definition.schema &&
       !valueFits(definition.schema, value) &&
@@ -1197,7 +1199,7 @@ export function semanticReport(
               related: [
                 {
                   artifact: String(at(nodes[node], 'componentRef')),
-                  path: '/spec/contract/outputs/' + token(name),
+                  path: `/spec/contract/outputs/${token(name)}`,
                 },
               ],
             }
@@ -1217,7 +1219,7 @@ export function semanticReport(
               related: [
                 {
                   artifact: String(at(nodes[node], 'componentRef')),
-                  path: '/spec/contract/outputs/' + token(name),
+                  path: `/spec/contract/outputs/${token(name)}`,
                 },
               ],
             }
@@ -1225,11 +1227,4 @@ export function semanticReport(
       })
   }
   return { diagnostics: out, deferred, components: resolved, componentDigests, valueOrder: ordered }
-}
-export function semanticDiagnostics(
-  family: Family,
-  document: Json,
-  context: SemanticContext = {},
-): Diagnostic[] {
-  return semanticReport(family, document, context).diagnostics
 }

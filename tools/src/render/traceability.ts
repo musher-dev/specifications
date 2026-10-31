@@ -14,6 +14,8 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, posix } from 'node:path'
 import {
+  CASE_INDEX_FILE,
+  CASE_METADATA_FILE,
   conformanceLink,
   discoverFamilies,
   type Family,
@@ -83,7 +85,7 @@ function requirementsIn(family: Family): Requirement[] {
 function citations(repoRoot: string): Map<string, Citation[]> {
   const cited = new Map<string, Citation[]>()
   for (const family of discoverFamilies(repoRoot)) {
-    const indexPath = join(family.conformanceDir, 'cases.json')
+    const indexPath = join(family.conformanceDir, CASE_INDEX_FILE)
     if (!existsSync(indexPath)) continue
     const index = readJson(indexPath)
     const cases = isObject(index) && Array.isArray(index.cases) ? index.cases : []
@@ -108,7 +110,7 @@ function citations(repoRoot: string): Map<string, Citation[]> {
     }
     for (const entry of cases as Json[]) {
       if (!isObject(entry) || typeof entry.path !== 'string') continue
-      const metadata = readJson(join(family.conformanceDir, entry.path, 'metadata.json'))
+      const metadata = readJson(join(family.conformanceDir, entry.path, CASE_METADATA_FILE))
       if (!isObject(metadata) || !Array.isArray(metadata.requirements)) continue
       for (const requirement of metadata.requirements) {
         if (typeof requirement !== 'string') continue
@@ -161,7 +163,7 @@ export function buildMatrix(repoRoot: string = REPO_ROOT): string {
       const links = cases
         .map(
           (c) =>
-            `[\`${c.family}/${c.major}/${c.behaviorId ?? c.path}\`](${c.behaviorId ? repoLink(OUTPUT_DIR, familyPaths(c.family, c.major).conformance + '/' + c.path) : conformanceLink(OUTPUT_DIR, c.family, c.major, c.path)})`,
+            `[\`${c.family}/${c.major}/${c.behaviorId ?? c.path}\`](${c.behaviorId ? repoLink(OUTPUT_DIR, `${familyPaths(c.family, c.major).conformance}/${c.path}`) : conformanceLink(OUTPUT_DIR, c.family, c.major, c.path)})`,
         )
         .join('<br>')
       lines.push(

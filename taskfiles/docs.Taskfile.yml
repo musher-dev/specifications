@@ -1,0 +1,23 @@
+# Docs: `task docs`, which regenerates the documents the repository commits
+# although a tool writes them: docs/traceability.md, the ADR index, and
+# docs/terminology.md with its Vale style. `task check:docs` is the gate.
+#
+# Included flattened (TASK-20), so the task answers to the name written here:
+# `task bundle` runs it, and the generated files name it as their source.
+#
+# `dir:` is absolute via {{.ROOT_DIR}} throughout this directory. A relative
+# `dir:` in an included taskfile resolves against *that file's* directory.
+version: '3'
+
+tasks:
+  docs:
+    desc: Regenerate docs/traceability.md, the ADR index, and docs/terminology.md with its Vale styles
+    dir: '{{.ROOT_DIR}}/{{.TOOLS_DIR}}'
+    cmds:
+      # All are committed, and `task check:docs` fails when any is stale. The
+      # terminology step writes docs/terminology.md and the generated
+      # MusherSpecifications Vale style (Terms.yml, Discouraged.yml) from
+      # docs/terminology.yaml.
+      - bun run src/render/traceability.ts
+      - bun run src/render/adr-index.ts
+      - bun run src/render/terminology.ts

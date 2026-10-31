@@ -1,0 +1,17 @@
+# Changes: `task changes`, which reports what a branch does to the published
+# contract, in a specification reviewer's terms. It only reports:
+# `check:compat` and `contracts:breaking` are the gates.
+#
+# Included flattened (TASK-20), so the task answers to the name written here:
+# the Specifications / Schema job and CONTRIBUTING call it `task changes`.
+#
+# `dir:` is absolute via {{.ROOT_DIR}} throughout this directory. A relative
+# `dir:` in an included taskfile resolves against *that file's* directory.
+version: '3'
+
+tasks:
+  changes:
+    desc: Report what this branch does to the published contract (BASE=origin/main; -- --diff adds bundle diffs)
+    dir: '{{.ROOT_DIR}}/{{.TOOLS_DIR}}'
+    cmds:
+      - bun run src/publication/changes.ts {{.BASE | default "origin/main"}} {{.CLI_ARGS}}

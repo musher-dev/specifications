@@ -1,4 +1,4 @@
-# Security Policy
+# Security policy
 
 ## Reporting a vulnerability
 
@@ -42,19 +42,24 @@ asset has a SLSA provenance attestation, and every release since
 [ADR 0037](../docs/adr/0037-the-repository-adopts-engineering-conventions-0-7-0.md)
 also carries `SHA256SUMS` over its other assets.
 
-The examples verify `component/v1.0.0`, a release of the retired v1 major,
-which stays published and verifiable for good. A v2 release, such as
-`component/v2.0.0`, is verified the same way under its own tag.
+The examples verify `component/v2.0.0`, whose assets are
+`component-v2.0.0.tar.gz`, `component.schema.json` and `SHA256SUMS`. Any other
+release is verified the same way under its own tag and asset names, except that
+a release published before ADR 0037 has no `SHA256SUMS` for the last step to
+check.
 
 ```sh
+# Download the release's assets
+gh release download component/v2.0.0 --repo musher-dev/specifications
+
 # The release is published and immutable
-gh release verify component/v1.0.0 --repo musher-dev/specifications
+gh release verify component/v2.0.0 --repo musher-dev/specifications
 
 # A downloaded file matches the digest GitHub recorded for that asset
-gh release verify-asset component/v1.0.0 component-v1.0.0.tar.gz --repo musher-dev/specifications
+gh release verify-asset component/v2.0.0 component-v2.0.0.tar.gz --repo musher-dev/specifications
 
 # Provenance
-gh attestation verify component-v1.0.0.tar.gz --repo musher-dev/specifications
+gh attestation verify component-v2.0.0.tar.gz --repo musher-dev/specifications
 
 # Every download against the release's SHA256SUMS
 sha256sum --check --ignore-missing SHA256SUMS
@@ -66,8 +71,8 @@ beside it, and [`published.json`](https://specifications.musher.dev/published.js
 records each release's `bundleSha256`, the hash of those same bytes:
 
 ```sh
-curl -sO https://specifications.musher.dev/component/v1.0.0/component.schema.json
-curl -s https://specifications.musher.dev/component/v1.0.0/component.schema.json.sha256 \
+curl -sO https://specifications.musher.dev/component/v2.0.0/component.schema.json
+curl -s https://specifications.musher.dev/component/v2.0.0/component.schema.json.sha256 \
   | sha256sum --check -
 ```
 

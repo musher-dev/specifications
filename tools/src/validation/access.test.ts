@@ -98,7 +98,11 @@ test('a viewer identity property exists under its own mode, and a claim header u
     },
     'web',
   )
-  const reads = (property: string) => forwards(exposure, addressProperty(property)!)
+  const reads = (property: string) => {
+    const known = addressProperty(property)
+    if (known === undefined) throw new Error(`${property} is not an address property`)
+    return forwards(exposure, known)
+  }
   expect(reads('viewerIdentityHeader')).toBe(true)
   expect(reads('viewerNameHeader')).toBe(true)
   expect(reads('viewerEmailHeader')).toBe(false)
@@ -119,7 +123,7 @@ test('bcrypt reads 72 bytes, so a source must encode to 72 characters or fewer',
 })
 
 test('a stored hash has the one format its algorithm produces', () => {
-  const bcrypt = '$2b$12$' + './' + 'Ab9'.repeat(17)
+  const bcrypt = `$2b$12$./${'Ab9'.repeat(17)}`
   const argon =
     '$argon2id$v=19$m=19456,t=2,p=1$c29tZXNhbHRzb21lc2FsdA$' +
     'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8'
@@ -209,8 +213,8 @@ test('a resolution record carries the object form of an exposure', () => {
       compute: { identity: 'general.standard.small', version: '1' },
       identity: './web.yaml',
       revision: 1,
-      digest: 'sha256:' + createHash('sha256').update(JSON.stringify(component)).digest('hex'),
-      imageDigest: 'sha256:' + 'b'.repeat(64),
+      digest: `sha256:${createHash('sha256').update(JSON.stringify(component)).digest('hex')}`,
+      imageDigest: `sha256:${'b'.repeat(64)}`,
       volumes: {},
       exposure: { web: exposure },
     },

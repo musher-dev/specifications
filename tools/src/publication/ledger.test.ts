@@ -6,7 +6,6 @@ import { afterEach, describe, expect, test } from 'bun:test'
 import { CORE_FAMILY, Failures, familyPaths, type Json, LEDGER_FILE } from '../lib/layout.ts'
 import { FixtureRepo } from '../testing/fixture.ts'
 import {
-  type AnyLedger,
   assertAppendOnly,
   EMPTY_LEDGER,
   type Ledger,
@@ -43,7 +42,7 @@ function problems(doc: Json): string[] {
   return [...failures.messages]
 }
 
-function appendOnly(base: AnyLedger, head: Ledger): string[] {
+function appendOnly(base: Ledger, head: Ledger): string[] {
   const failures = new Failures()
   assertAppendOnly(base, head, failures)
   return [...failures.messages]
@@ -178,18 +177,6 @@ describe('assertAppendOnly', () => {
       ).toContain('is immutable')
     }
   })
-
-  test('accepts rewriting an empty version 1 ledger as version 2', () => {
-    expect(appendOnly({ version: 1, releases: {} }, base)).toEqual([])
-  })
-
-  test('refuses rewriting a version 1 ledger that recorded anything', () => {
-    const v1: AnyLedger = {
-      version: 1,
-      releases: { 'component/v1.0.0': { path: 'x', sourceSha256: SHA, publishedSha256: SHA } },
-    }
-    expect(appendOnly(v1, base)[0]).toContain('Only an empty version 1 ledger')
-  })
 })
 
 describe('reading', () => {
@@ -202,12 +189,12 @@ describe('reading', () => {
     expect(ledgerAtRef(fx.root, 'HEAD')).toEqual(EMPTY_LEDGER)
   })
 
-  test('a version 1 ledger at a ref reads back as version 1', () => {
+  test('a version 1 ledger at a ref is refused, as in the working tree', () => {
     const fx = new FixtureRepo()
     repo = fx
     fx.setLedger({ version: 1, releases: {} })
     fx.commit('chore: the old ledger')
-    expect(ledgerAtRef(fx.root, 'HEAD')).toEqual({ version: 1, releases: {} })
+    expect(() => ledgerAtRef(fx.root, 'HEAD')).toThrow(/"version" must be 2/)
   })
 
   test('a ref that does not resolve fails rather than reading as empty', () => {

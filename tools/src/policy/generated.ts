@@ -8,9 +8,9 @@
  * under `dist/`, which `.gitignore` excludes; this catches the `git add -f`, the
  * resurrected legacy path, and the file a merge brings back.
  *
- * docs/traceability.md and the ADR index are generated but deliberately
- * committed, so they are not build output here; `task check:docs` holds them
- * current.
+ * docs/traceability.md, the ADR index, docs/terminology.md and the Vale styles
+ * generated beside it are generated but deliberately committed, so they are not
+ * build output here; `task check:docs` holds them current.
  *
  * NON-NORMATIVE, like everything under tools/.
  */

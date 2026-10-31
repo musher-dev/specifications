@@ -17,14 +17,15 @@ every guide by who it is for.
 - [Implementing a family](../specifications/README.md#implementing): the reading
   order and the corpora a conformance claim covers.
 - [Conformance suite](conformance.md): the fixture format every
-  corpus follows, and the profiles an implementation claims. Normative, unlike
-  the guides on this page.
+  corpus follows, and the validation scopes an implementation claims.
+  Normative, unlike the guides on this page.
 - [Downstream v2 adoption](downstream-v2-adoption.md): what platform-api, the
   catalog, the CLI, Pelorus, the SDKs and the host agent change for v2.
-- [Downstream v1 adoption](downstream-v1-adoption.md): the v1 migration, kept as
-  history now that v1 is retired.
 - [Requirement traceability](traceability.md): every requirement ID, its clause,
   and its cases. Generated.
+- [Terminology](terminology.md): the glossary of the document vocabulary, with
+  each term's definition, the identifiers that spell it and the words to avoid.
+  Generated from `terminology.yaml`.
 
 ## Contributors: changing a specification
 

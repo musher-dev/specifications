@@ -35,10 +35,35 @@ export const CONFORMANCE_FORMAT_FILE = 'docs/conformance.md'
  * corpus, and that member name outlives any move in this tree (docs/adr/0023 §6).
  */
 export const CONFORMANCE_FORMAT_ARCHIVE_PATH = 'conformance/README.md'
+/**
+ * The files the fixture format names inside a corpus: the index at its root,
+ * and each case's declared outcome and declared diagnostics.
+ */
+export const CASE_INDEX_FILE = 'cases.json'
+export const CASE_METADATA_FILE = 'metadata.json'
+export const CASE_DIAGNOSTICS_FILE = 'diagnostics.json'
 /** The publication ledger. See docs/adr/0006. */
 export const LEDGER_FILE = 'published.json'
 export const RELEASE_PLEASE_MANIFEST_FILE = '.github/release-please/manifest.json'
 export const RELEASE_PLEASE_CONFIG_FILE = '.github/release-please/config.json'
+/** The one list of Conventional Commits types and scopes (COMMIT-01). */
+export const COMMIT_RULES_FILE = '.config/commits/committed.toml'
+/**
+ * The copies of that list `task check:commits` holds to it: the title
+ * workflow's inline lists, Dependabot's commit prefixes, and the lists the
+ * contributor guide prints.
+ */
+export const PULL_REQUEST_TITLE_WORKFLOW_FILE =
+  '.github/workflows/repository-pull-request-title.yml'
+export const DEPENDABOT_FILE = '.github/dependabot.yml'
+export const CONTRIBUTING_FILE = '.github/CONTRIBUTING.md'
+/**
+ * The two halves of the code-owner review gate `task check:rulesets` holds
+ * together: GitHub's rulesets, one JSON file each, and the ownership registry
+ * (docs/adr/0015).
+ */
+export const RULESETS_DIR = '.github/rulesets'
+export const CODEOWNERS_FILE = '.github/CODEOWNERS'
 /** The generated requirement traceability matrix. */
 export const TRACEABILITY_FILE = 'docs/traceability.md'
 /** The architecture decision records, one `NNNN-title.md` each. */
@@ -135,8 +160,8 @@ export const ROOT_ENTRIES: readonly string[] = [
  * The base family: the Musher Document Core Specification (docs/adr/0022).
  *
  * It defines no `kind` and ships no schema — only prose and a parser-phase
- * corpus. Every other family is a *kind* family, which binds core's parameters
- * in its own §2 and publishes a bundle.
+ * corpus. Every other family is a *kind* family, which fixes what core leaves
+ * to it in its own §2 and publishes a bundle.
  */
 export const CORE_FAMILY = 'core'
 
@@ -393,8 +418,12 @@ if (!existsSync(join(REPO_ROOT, SPECIFICATIONS_ROOT))) {
       'tools/src/lib/layout.ts derives it from its own location; if the file moved, fix the depth.',
   )
 }
-export const SPECIFICATIONS_DIR = join(REPO_ROOT, SPECIFICATIONS_ROOT)
 export const SITE_DIR = join(REPO_ROOT, 'site')
+/**
+ * The Sourcemeta jsonschema CLI, as `bun install` in tools/ provides it: the
+ * independent 2020-12 implementation `check:standards` and `check:parity` ask.
+ */
+export const JSONSCHEMA_CLI = join(REPO_ROOT, 'tools', 'node_modules', '.bin', 'jsonschema')
 
 /** The public hostname the published schemas are served from. */
 export const SITE_HOST = 'specifications.musher.dev'
@@ -538,6 +567,25 @@ export function sourceModules(family: Family): string[] {
     .map((e) => join(family.srcDir, e))
 }
 
+/** Whether a file is an example document, which is YAML: `.yaml` or `.yml`. */
+export function isExampleFile(path: string): boolean {
+  return /\.ya?ml$/.test(path)
+}
+
+/** Absolute paths of every example document in a family's working tree, in name order. */
+export function exampleFiles(family: Family): string[] {
+  let entries: string[]
+  try {
+    entries = readdirSync(family.examplesDir)
+  } catch {
+    return []
+  }
+  return entries
+    .filter(isExampleFile)
+    .sort()
+    .map((e) => join(family.examplesDir, e))
+}
+
 /** The module that is the family's entry point, if it has been authored. */
 export function rootModulePath(family: Family): string {
   return join(family.srcDir, `${family.name}.schema.json`)
@@ -612,7 +660,6 @@ export function relativeToRepo(path: string): string {
   return path.startsWith(REPO_ROOT) ? path.slice(REPO_ROOT.length + 1) : path
 }
 
-/** Collected failures, reported together so one run surfaces every problem. */
 /**
  * End a command line on an error it cannot recover from — a layout the release
  * does not match, a network failure — with one line rather than a stack trace.
@@ -624,6 +671,7 @@ export function failCli(error: unknown): never {
   process.exit(1)
 }
 
+/** Collected failures, reported together so one run surfaces every problem. */
 export class Failures {
   private readonly items: string[] = []
 
@@ -665,8 +713,13 @@ export const TERMINOLOGY_FILE = 'docs/terminology.yaml'
 export const TERMINOLOGY_SCHEMA_FILE = 'docs/terminology.schema.json'
 /** The generated glossary page, committed; `task check:docs` fails when it is stale. */
 export const TERMINOLOGY_DOC_FILE = 'docs/terminology.md'
+/**
+ * Vale's StylesPath: `vale sync` downloads its packages here, which .gitignore
+ * ignores apart from the one style this repository generates.
+ */
+export const VALE_STYLES_ROOT = '.config/prose/styles'
 /** The generated Vale style the prose-scope aliases project into. */
-export const VALE_STYLE_DIR = '.config/markdown/styles/MusherSpecifications'
+export const VALE_STYLE_DIR = `${VALE_STYLES_ROOT}/MusherSpecifications`
 /** Banned prose aliases, as a Vale substitution rule at level error. */
 export const VALE_TERMS_FILE = `${VALE_STYLE_DIR}/Terms.yml`
 /** Discouraged prose aliases, as a Vale substitution rule at level warning. */

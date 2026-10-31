@@ -15,8 +15,9 @@
  *   tagged    `core/v<requires.core>` must be an ancestor of the family tag.
  *             That is all `check:published` asks of history. `release:stage`,
  *             on the tag's own tooling, also requires no releasable core commit
- *             between them and its major to be the core line the family's §2
- *             cites — classification is never re-run by newer tooling.
+ *             between them and its major to be the core major version the
+ *             family's §2 cites — classification is never re-run by newer
+ *             tooling.
  *
  * A commit is releasable when its type is one release-please's changelog shows,
  * read from the same configuration release-please reads, when it is breaking,
@@ -167,7 +168,7 @@ export function classifyCommit(
   return types.has(type) ? 'releasable' : 'non-releasable'
 }
 
-/** The core line a core version belongs to, e.g. `1.2.0` → `v1`. */
+/** The major version a core release belongs to, e.g. `1.2.0` → `v1`. */
 function lineOf(version: string): string {
   return `v${version.split('.')[0]}`
 }
@@ -197,8 +198,8 @@ function describe(commits: readonly ClassifiedCommit[]): string {
 }
 
 /**
- * The core line a kind family's §2 cites, or null with a failure added.
- * `label` names the spec in the message.
+ * The core major version a kind family's §2 cites, or null with a failure
+ * added. `label` names the spec in the message.
  */
 export function citedCoreLine(markdown: string, label: string, failures: Failures): string | null {
   let bindings: ReturnType<typeof parseBindings>
@@ -212,8 +213,8 @@ export function citedCoreLine(markdown: string, label: string, failures: Failure
   const line = bindings?.dependencies.find((d) => d.family === CORE_FAMILY)?.line
   if (line === undefined) {
     failures.add(
-      `${label} §2 cites no core line in its "Normative dependencies" table, so the core ` +
-        'release a family release requires cannot be checked against it.',
+      `${label} §2 cites no core major version in its "Normative dependencies" table, so ` +
+        'the core release a family release requires cannot be checked against it.',
     )
     return null
   }
@@ -242,7 +243,7 @@ export function pendingKindReleases(repoRoot: string): PendingKindRelease[] {
 
 /**
  * The core version a kind family at `path` would record now: the manifest
- * version of the core line its working-tree §2 cites. Null when it cites none;
+ * version of the core major version its working-tree §2 cites. Null when it cites none;
  * `assertCoreGatePending` reports why. `0.0.0` when that major has never
  * released, including a manifest that still reads a previous major's version.
  */
@@ -274,7 +275,7 @@ export function assertCoreGatePending(
     const specPath = releaseDirPaths(path).spec
     const absolute = inRepo(repoRoot, specPath)
     if (!existsSync(absolute)) {
-      failures.add(`${tag}: ${specPath} does not exist, so it cites no core line`)
+      failures.add(`${tag}: ${specPath} does not exist, so it cites no core major version`)
       continue
     }
     const line = citedCoreLine(readFileSync(absolute, 'utf8'), specPath, failures)
@@ -373,8 +374,8 @@ export function assertCoreGateTagged(
 /**
  * The whole tagged gate, as `release:stage` runs it with the tag's own
  * tooling: ancestry, no releasable core commit between the core tag and the
- * family tag, and `requires.core`'s major matching the core line the family's
- * §2 cites at the tag. `path` is the ledger's; it defaults to where the layout
+ * family tag, and `requires.core`'s major matching the core major version the
+ * family's §2 cites at the tag. `path` is the ledger's; it defaults to where the layout
  * keeps the family today.
  */
 export function assertCoreGateTaggedContent(

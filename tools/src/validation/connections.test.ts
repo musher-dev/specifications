@@ -39,10 +39,13 @@ test('optional members state a default or may be absent, and url is derived', ()
     default: 0,
   })
   expect(protocolMember('S3', 'pathStyle')?.default).toBe(false)
-  for (const name of ['username', 'password'])
-    expect(guaranteedMember(protocolMember('REDIS', name)!)).toBe(false)
-  for (const name of ['database', 'url', 'tls'])
-    expect(guaranteedMember(protocolMember('REDIS', name)!)).toBe(true)
+  const redis = (name: string) => {
+    const contract = protocolMember('REDIS', name)
+    if (contract === undefined) throw new Error(`REDIS defines no ${name}`)
+    return contract
+  }
+  for (const name of ['username', 'password']) expect(guaranteedMember(redis(name))).toBe(false)
+  for (const name of ['database', 'url', 'tls']) expect(guaranteedMember(redis(name))).toBe(true)
   expect(protocolMember('POSTGRES', 'url')?.derived).toBe(true)
 })
 
@@ -109,6 +112,9 @@ test('only the language-model protocols take capabilities, and S3 is HTTP-based'
   ])
   expect(HTTP_CONNECTION_PROTOCOLS.has('S3')).toBe(true)
   expect(HTTP_CONNECTION_PROTOCOLS.has('POSTGRES')).toBe(false)
-  for (const protocol of HTTP_CONNECTION_PROTOCOLS)
-    expect(protocolMember(protocol, CONNECTION_URL_MEMBER[protocol]!)).toBeDefined()
+  for (const protocol of HTTP_CONNECTION_PROTOCOLS) {
+    const url = CONNECTION_URL_MEMBER[protocol]
+    if (url === undefined) throw new Error(`${protocol} names no URL member`)
+    expect(protocolMember(protocol, url)).toBeDefined()
+  }
 })

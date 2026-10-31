@@ -20,7 +20,7 @@
 #   - node, and the node Feature in .devcontainer/devcontainer.json
 #   - lefthook, and min_version in .config/lefthook.yml
 #   - engineering-conventions, and the release in the MusherProse URL in
-#     .config/markdown/vale.ini (COPY-02)
+#     .config/prose/vale.ini (COPY-02)
 # and one held equal by hand:
 #   - task, and go-task/setup-task in .github/workflows/release.yml, which
 #     builds a tag's own tree and so cannot count on this file being there
@@ -41,12 +41,12 @@ node = "24.18.0"
 # .config/commits/committed.toml (COMMIT-02). The github: backend, because
 # aqua's registry entry lists no linux/arm64 asset.
 "github:crate-ci/committed" = "1.1.11"
-# Lints the prose against .config/markdown/vale.ini (`task check:prose`,
+# Lints the prose against .config/prose/vale.ini (`task check:prose`,
 # COPY-01..04). The same version bin/conventions runs for `conventions prose`.
 "aqua:vale-cli/vale" = "3.22.0"
 
 # --- The conventions release this repository is checked against (ADR 0036) --
-"github:musher-dev/engineering-conventions" = "0.9.1"
+"github:musher-dev/engineering-conventions" = "0.9.3"
 
 # --- Opt-in -----------------------------------------------------------------
 # @openai/codex is pinned here but NOT installed by default: it is opt-in via

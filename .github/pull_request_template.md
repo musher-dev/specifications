@@ -16,8 +16,8 @@
 - [ ] **Breaking** — a previously valid document now fails.
 
 A breaking change requires maintainer approval (an obligation, not a gate), a
-new `v<N>` directory, and a migration note after the family's first release.
-Before that release, drafts may be corrected in place under the
+new `v<N>` directory, and a migration note. The one exception is a brand-new
+family before its first release: its drafts may be corrected in place under the
 [governance exception](../docs/governance.md#compatibility-review). Preserve
 acceptance and defined meaning within a released major version.
 

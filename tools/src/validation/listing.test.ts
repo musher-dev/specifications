@@ -10,11 +10,16 @@ import {
 } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
-import { discoverKinds } from '../lib/layout.ts'
+import { discoverKinds, type Family } from '../lib/layout.ts'
 import { dimensionProblem, imageDimensions, unknownLicenses } from './listing.ts'
 import { validateDocument } from './validator.ts'
 
-const listing = discoverKinds().find((f) => f.name === 'listing')!
+function kind(name: string): Family {
+  const found = discoverKinds().find((f) => f.name === name)
+  if (found === undefined) throw new Error(`no ${name} family`)
+  return found
+}
+const listing = kind('listing')
 
 function scratch(files: Record<string, string | Uint8Array>): string {
   const root = mkdtempSync(join(tmpdir(), 'musher-listing-'))

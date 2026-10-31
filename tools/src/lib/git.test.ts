@@ -9,7 +9,7 @@ import { readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { FixtureRepo } from '../testing/fixture.ts'
-import { git, gitEnvironment, readBlobAtRef } from './git.ts'
+import { archiveAtRef, git, gitEnvironment, readBlobAtRef } from './git.ts'
 
 describe('gitEnvironment', () => {
   test('ignores the global and system config', () => {
@@ -164,6 +164,27 @@ describe('readBlobAtRef', () => {
       fixture.writeFile('present.md', 'here\n')
       fixture.commit('one file')
       expect(readBlobAtRef(fixture.root, 'HEAD', 'absent.md')).toBeNull()
+    } finally {
+      fixture.cleanup()
+    }
+  })
+})
+
+describe('archiveAtRef', () => {
+  test('archives the paths as of the ref, and is null for a ref git cannot resolve', () => {
+    const fixture = new FixtureRepo()
+    try {
+      fixture.writeFile('kept/a.md', 'archived\n')
+      fixture.writeFile('other/b.md', 'left out\n')
+      fixture.commit('two directories')
+      fixture.writeFile('kept/a.md', 'a later edit\n')
+      const archive = archiveAtRef(fixture.root, 'HEAD', ['kept'])
+      if (archive === null) throw new Error('git archive produced nothing')
+      const listing = spawnSync('tar', ['-t'], { input: archive })
+      expect(listing.stdout.toString('utf8').trim().split('\n')).toEqual(['kept/', 'kept/a.md'])
+      const content = spawnSync('tar', ['-xO', 'kept/a.md'], { input: archive })
+      expect(content.stdout.toString('utf8')).toBe('archived\n')
+      expect(archiveAtRef(fixture.root, 'never-created', ['kept'])).toBeNull()
     } finally {
       fixture.cleanup()
     }

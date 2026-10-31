@@ -78,11 +78,15 @@ export function gitEnvironment(
 }
 
 /** Git invoked in the neutralised environment `gitEnvironment` describes. */
-function run(repoRoot: string, args: string[]): { status: number; stdout: Buffer; stderr: string } {
+function run(
+  repoRoot: string,
+  args: string[],
+  maxBuffer = 64 * 1024 * 1024,
+): { status: number; stdout: Buffer; stderr: string } {
   const result = spawnSync('git', args, {
     cwd: repoRoot,
     env: gitEnvironment(repoRoot),
-    maxBuffer: 64 * 1024 * 1024,
+    maxBuffer,
   })
   if (result.error !== undefined) {
     throw new Error(`git ${args.join(' ')} could not be run — ${result.error.message}`)
@@ -160,6 +164,28 @@ export function listTreeChildren(repoRoot: string, ref: string, dir: string): st
   return names
 }
 
+/**
+ * A tar archive of `paths` as of a ref, as `git archive` writes it, or null when
+ * git cannot produce one: a ref or path it does not carry, or an archive larger
+ * than the buffer.
+ */
+export function archiveAtRef(
+  repoRoot: string,
+  ref: string,
+  paths: readonly string[],
+): Buffer | null {
+  try {
+    const { status, stdout } = run(
+      repoRoot,
+      ['archive', '--format=tar', ref, '--', ...paths],
+      512 * 1024 * 1024,
+    )
+    return status === 0 ? stdout : null
+  } catch {
+    return null
+  }
+}
+
 /** How many times a short blob read is retried before it is reported. */
 const BLOB_READ_ATTEMPTS = 3
 
@@ -193,7 +219,7 @@ export function readBlobAtRef(repoRoot: string, ref: string, path: string): Buff
   )
 }
 
-/** True when `ref` names a tag in this repository. */
+/** True when `tag` names a tag in this repository. */
 export function tagExists(repoRoot: string, tag: string): boolean {
   const { status, stderr } = run(repoRoot, ['rev-parse', '--verify', '--quiet', `refs/tags/${tag}`])
   if (status === 0) return true

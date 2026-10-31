@@ -1,6 +1,6 @@
 /**
- * Regenerate the SchemaStore-compatible catalog, as build output under `dist/`.
- * The site serves it at `/catalog.json`.
+ * Build the SchemaStore-compatible catalog. `bundle.ts` writes it into `dist/`
+ * beside the bundles, and `site.ts` serves it at `/catalog.json`.
  *
  * The catalog is how a generic editor discovers the right schema for a file
  * without the author writing a modeline. It intentionally points at the
@@ -16,13 +16,10 @@
  * `bundle.ts` imports this module, so it reads the ledger with `node:`
  * builtins rather than through `ledger.ts`.
  */
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
-import { dirname } from 'node:path'
+import { existsSync } from 'node:fs'
 import {
   bundleUrl,
-  CATALOG_FILE,
   CORE_FAMILY,
-  canonicalJson,
   discoverKinds,
   inRepo,
   isObject,
@@ -31,8 +28,6 @@ import {
   REPO_ROOT,
   readJson,
 } from '../lib/layout.ts'
-
-const CATALOG_PATH = inRepo(REPO_ROOT, CATALOG_FILE)
 
 /**
  * Glob patterns an editor uses to bind a family's schema to a file.
@@ -130,13 +125,3 @@ export function buildCatalog(repoRoot: string = REPO_ROOT): Json {
     schemas,
   }
 }
-
-function main(): void {
-  const catalog = buildCatalog()
-  mkdirSync(dirname(CATALOG_PATH), { recursive: true })
-  writeFileSync(CATALOG_PATH, canonicalJson(catalog), 'utf8')
-  const count = ((catalog as { schemas: Json[] }).schemas ?? []).length
-  console.log(`  ✓ ${CATALOG_FILE} (${count} schema(s))`)
-}
-
-if (import.meta.main) main()

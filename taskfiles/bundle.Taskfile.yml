@@ -1,0 +1,20 @@
+# Bundle: `task bundle`, which writes every schema bundle and the catalog into
+# dist/, then regenerates the generated docs.
+#
+# Included flattened (TASK-20), so the task answers to the name written here:
+# CI, the dev container and CONTRIBUTING call it `task bundle`.
+#
+# `dir:` is absolute via {{.ROOT_DIR}} throughout this directory. A relative
+# `dir:` in an included taskfile resolves against *that file's* directory.
+version: '3'
+
+tasks:
+  bundle:
+    desc: Build every schema bundle and the catalog into dist/, and regenerate the generated docs
+    dir: '{{.ROOT_DIR}}/{{.TOOLS_DIR}}'
+    cmds:
+      # Writes dist/<family>/<major>/<family>.schema.json and dist/catalog.json.
+      # Nothing else needs this first: every check and site:build builds the
+      # bundles in memory. It is for reading, vendoring, and editor bindings.
+      - bun run src/schema/bundle.ts
+      - task: docs

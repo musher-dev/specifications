@@ -49,15 +49,14 @@ jobs:
           install-args: aqua:oven-sh/bun node aqua:go-task/task aqua:rhysd/actionlint aqua:vale-cli/vale
 
       # BASE_REF is empty on a push, where check:adr falls back to origin/main.
-      # The suite includes check:docs, which fails when docs/traceability.md or
-      # the ADR index is stale.
+      # The suite includes check:docs, which fails when docs/traceability.md,
+      # the ADR index, or docs/terminology.md and its Vale styles are stale;
+      # check:terms, which holds the term records to the schemas and each
+      # spec.md; and check:types, which typechecks the tooling.
       - name: Run the lint suite
         env:
           BASE_REF: ${{ github.event.pull_request.base.sha }}
         run: task ci:lint
-
-      - name: Typecheck the tooling
-        run: task check:types
 
   # ---------------------------------------------------------------------------
   # The normative gates
@@ -79,8 +78,9 @@ jobs:
           install-args: aqua:oven-sh/bun node aqua:go-task/task
 
       # Every check here builds the bundles in memory from schemas/src; none is
-      # committed (docs/adr/0023). The suite includes check:editions: every kind
-      # family names the core edition it implements (docs/adr/0023 §5).
+      # committed (docs/adr/0023). The suite includes check:editions: a kind
+      # family release records the core release it was built against, and
+      # waits for core's releasable changes (docs/adr/0023 §5).
       # contracts:check and contracts:breaking are the interface gates the
       # conventions name (IFACE-12): check:schema, check:generated,
       # check:examples and check:compat, under the names every producer uses.

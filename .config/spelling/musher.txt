@@ -8,7 +8,6 @@
 # --- Musher domain -----------------------------------------------------------
 healthz
 storefront
-storefronts
 submittable
 endpointless
 exposable
@@ -17,7 +16,6 @@ undeployable
 # --- Specification craft -----------------------------------------------------
 acyclicity
 basename
-basenames
 extensionless
 fixtured
 modeline
@@ -68,15 +66,12 @@ gpgsign
 metaschema
 nojekyll
 nosniff
-pycache
 quot
 rcfile
 subschema
-subschemas
 Taskfile
 taskfiles
 unindexed
-unioned
 vendored
 worktrees
 Airbyte

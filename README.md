@@ -7,8 +7,8 @@ conformance corpora. The platform API and Musher's internal data models are
 specified elsewhere. An implementation that disagrees with what is published
 here is defective.
 
-**Status:** v2 is the current major of every family, and it releases as
-`2.0.0`. v1 is retired: its directories are gone from `main`, and every v1
+**Status:** v2 is the current major of every family, first released as `2.0.0`
+on 2026-10-24. v1 is retired: its directories are gone from `main`, and every v1
 release keeps serving at its pinned URL
 ([ADR 0038](docs/adr/0038-v2-one-vocabulary-and-v1-retires.md)).
 [`published.json`](published.json) lists every release. What makes a version
@@ -23,9 +23,10 @@ released: [Draft or released](docs/publication.md#draft-or-released).
 | blueprint | [`blueprint/v2/spec.md`](specifications/blueprint/v2/spec.md) | [README](specifications/blueprint/README.md) | [blueprint v2](https://specifications.musher.dev/reference/blueprint/v2/spec/) |
 | listing | [`listing/v2/spec.md`](specifications/listing/v2/spec.md) | [README](specifications/listing/README.md) | [listing v2](https://specifications.musher.dev/reference/listing/v2/spec/) |
 
-The rendered prose is generated and informative. What each family describes and how they depend on one
-another is set out in [specifications/README.md](specifications/README.md), and
-which of its parts are normative in
+The rendered prose is generated and informative. What each family describes,
+and how the families depend on one another, is set out in
+[specifications/README.md](specifications/README.md), and which parts of a
+family version are normative in
 [What is normative](specifications/README.md#what-is-normative).
 
 ## I want to…
@@ -49,8 +50,8 @@ specifications/   one directory per family; each major version, v<N>/, releases 
 docs/             guides, governance, the fixture format, traceability, and decisions
 tools/            non-normative build and check scripts (Bun and TypeScript)
 taskfiles/        the tasks behind `task check`
-.claude/          Claude Code's settings and rules; no brief (AGENTS.md is the brief)
 .config/          every linter, formatter, and hook configuration, and the tool pins
+.devcontainer/    the development container, the supported environment
 .github/          contributing, security, rulesets, and workflows
 .repo/            what the repository is and publishes, for the engineering conventions
 AGENTS.md         the brief for every coding agent, Claude Code included

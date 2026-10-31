@@ -527,7 +527,7 @@
           "$ref": "#/$defs/ComponentProbe"
         },
         "readiness": {
-          "description": "Traffic gate; failure pulls the replica from routing without a restart. Required for a SERVICE exposing a public endpoint.",
+          "description": "Traffic gate; failure pulls the replica from routing without a restart. Required when a blueprint exposes one of its URL-addressed endpoints PUBLIC (COMP-EP-003).",
           "$ref": "#/$defs/ComponentProbe"
         },
         "startup": {

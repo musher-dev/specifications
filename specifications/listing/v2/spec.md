@@ -1,4 +1,4 @@
-# Musher Listing Document Specification v2
+# Musher Listing Document Specification, version 2
 
 **Status:** Stable
 **Family:** `listing`

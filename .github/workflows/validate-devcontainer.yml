@@ -1,5 +1,10 @@
 name: Validate Dev Container
 
+# Builds the dev container (DEVC-10), which takes minutes, so it runs only for a
+# change that can affect the build. It is not a required check, which is why it
+# may filter on `paths:`. ShellCheck of the dev container scripts is not here:
+# Validate's Tools / Lint job runs it on every pull request (`task check:shell`).
+
 on:
   push:
     branches: [main]
@@ -16,20 +21,6 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  shellcheck:
-    name: ShellCheck
-    runs-on: ubuntu-24.04
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: ludeeus/action-shellcheck@00cae500b08a931fb5698e11e79bfbd38e612a38 # 2.0.0
-        env:
-          SHELLCHECK_OPTS: -x --source-path=SCRIPTDIR
-        with:
-          scandir: .devcontainer/scripts
-
   lockfile:
     name: Feature Lockfile
     runs-on: ubuntu-24.04
@@ -39,23 +30,8 @@ jobs:
         with:
           persist-credentials: false
       # --frozen-lockfile fails if devcontainer-lock.json is missing or if its
-      # resolved Feature digests drift from devcontainer.json.
+      # resolved Feature digests drift from devcontainer.json. The CLI is pinned
+      # to an exact release, because a bare package name runs whatever npm
+      # resolves as newest on the day of the run.
       - name: Enforce devcontainer-lock.json is current
-        run: npx -y @devcontainers/cli build --workspace-folder . --frozen-lockfile
-
-  env_check:
-    name: Env Template Sync
-    runs-on: ubuntu-24.04
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: ./.github/actions/setup-tools
-        with:
-          install-args: aqua:go-task/task
-          tooling: 'false'
-      - name: Verify .env and .env.example stay in sync
-        run: |
-          cp .devcontainer/.env.example .devcontainer/.env
-          task env:check
+        run: npx -y @devcontainers/cli@0.89.0 build --workspace-folder . --frozen-lockfile

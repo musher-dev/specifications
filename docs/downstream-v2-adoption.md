@@ -16,8 +16,10 @@ consumer changes and defines nothing. Where it and a `spec.md` disagree, the
 v2 replaces v1. It is not run beside it. v1 is a
 [retired major](publication.md#retired-majors): its releases keep serving at
 their pinned URLs, and it takes no further release. A consumer migrates every
-stored document to v2 and then removes its v1 code path. The history of the v1
-migration is in [Downstream v1 adoption](downstream-v1-adoption.md).
+stored document to v2 and then removes its v1 code path. The guide to the v1
+migration,
+[Downstream v1 adoption](https://github.com/musher-dev/specifications/blob/core/v2.0.0/docs/downstream-v1-adoption.md),
+is kept as history at the `core/v2.0.0` tag.
 
 Every v2 `spec.md` ends its scope section with a **Migration from v1** table
 that maps each renamed field, value, diagnostic code and requirement ID to its
@@ -25,18 +27,14 @@ v2 form. Generate renames from those tables rather than from this page.
 
 ## Pin the v2 releases
 
-Pin exact releases once they are tagged, in release order: `core/v2.0.0`, then
-`component/v2.0.0`, then `blueprint/v2.0.0` and `listing/v2.0.0`. Every core
-release re-releases every dependent family in the same release set
+Pin exact releases: `core/v2.0.0`, `component/v2.0.0`, `blueprint/v2.0.0` and
+`listing/v2.0.0`, which released in that order. Every core release re-releases
+every dependent family in the same release set
 ([Publication → The dependency gate](publication.md#core-release-alignment)),
 so all four always sit on one core release. Vendor each release archive, which
 carries its schema, specification, examples, conformance corpus and whole
 dependency closure, and verify it as
 [Verifying a release](../.github/SECURITY.md#verifying-a-release) shows.
-
-Before the tags exist, build from a pinned commit as
-[Using the schemas → Pinning](using-schemas.md#pinning) describes. Never pin
-`main`.
 
 ## Changes every consumer makes
 

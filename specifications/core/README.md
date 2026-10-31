@@ -16,8 +16,8 @@ own executable form is a parser-phase conformance corpus.
 
 | Major | Specification | Corpus | Released? |
 |---|---|---|---|
-| `v2` | [`v2/spec.md`](v2/spec.md) | [`v2/conformance/`](v2/conformance/) | Not until a `core/v2.*` tag exists. Every release is in [`published.json`](../../published.json) ([how to tell](../../docs/publication.md#draft-or-released)) |
-| `v1` | Retired. Its released bytes stay at their pinned URLs and in [`published.json`](../../published.json) | Retired | Released from [`1.0.0`](https://github.com/musher-dev/specifications/releases/tag/core%2Fv1.0.0); superseded by v2 |
+| `v2` | [`v2/spec.md`](v2/spec.md) | [`v2/conformance/`](v2/conformance/) | Released from [`2.0.0`](https://github.com/musher-dev/specifications/releases/tag/core%2Fv2.0.0). Every release is in [`published.json`](../../published.json) ([how to tell](../../docs/publication.md#draft-or-released)) |
+| `v1` | Retired. Its released bytes are kept in its tagged release archives and recorded in [`published.json`](../../published.json) | Retired | Released from [`1.0.0`](https://github.com/musher-dev/specifications/releases/tag/core%2Fv1.0.0); superseded by v2 |
 
 v1 is a retired major version: it is tagged and recorded, but has no directory
 on the main branch and receives no further release. v2 supersedes it, and
@@ -34,14 +34,14 @@ records the core release it was built and tested against
 2. [§2 Document envelope](v2/spec.md#envelope)
 3. [§4 Items](v2/spec.md#items)
 4. [§6 Validation phases](v2/spec.md#validation-phases), including
-   [§6.0 Validation scope](v2/spec.md#validation-scope) and
-   [§6.1 The Musher YAML profile](v2/spec.md#yaml-profile)
+   [§6.1 Validation scope](v2/spec.md#validation-scope) and
+   [§6.2 The Musher YAML profile](v2/spec.md#yaml-profile)
 5. [§7 Diagnostics](v2/spec.md#diagnostics) and
    [§8 Conformance](v2/spec.md#conformance)
 
 An implementation implements every section of this specification, together with
 the external specifications it cites: [YAML
-1.2.2](https://yaml.org/spec/1.2.2/), for the YAML profile in §6.1. The list
+1.2.2](https://yaml.org/spec/1.2.2/), for the YAML profile in §6.2. The list
 above is where to begin, not what to implement.
 
 ## Builds on
@@ -55,10 +55,10 @@ apply core v2 and say so in their own §2.
 | Prefix | Covers | Section |
 |---|---|---|
 | `CORE-ENV` | The document envelope | [§2](v2/spec.md#envelope) |
-| `CORE-ITEM` | Item identity | [§4.2](v2/spec.md#item-identity) |
+| `CORE-ITEM` | The YAML files of an item, and item identity | [§4.1](v2/spec.md#item-directory), [§4.2](v2/spec.md#item-identity) |
 | `CORE-PLACEHOLDER` | The placeholder grammar and its reserved namespaces | [§5.2](v2/spec.md#placeholder-grammar) |
-| `CORE-ADMISSION` | Completing every obligation of a publication or deployment scope | [§6.0](v2/spec.md#validation-scope) |
-| `CORE-YAML` | The Musher YAML profile | [§6.1](v2/spec.md#yaml-profile) |
+| `CORE-ADMISSION` | Completing every obligation of a publication or deployment scope | [§6.1](v2/spec.md#validation-scope) |
+| `CORE-YAML` | The Musher YAML profile | [§6.2](v2/spec.md#yaml-profile) |
 
 Every ID, the clause stating it, and the cases pinning it:
 [core/v2 in docs/traceability.md](../../docs/traceability.md#corev2).

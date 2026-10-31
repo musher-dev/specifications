@@ -1,7 +1,7 @@
 # Listing specification
 
 A listing document presents one catalog item in the storefront: how it is
-shown, categorised, and found. The item is a blueprint item or a component item.
+shown, categorized, and found. The item is a blueprint item or a component item.
 A listing carries presentation only, and is never an input to deployment.
 
 A listing is an [item document](../core/v2/spec.md#item-directory),
@@ -11,7 +11,7 @@ A listing is an [item document](../core/v2/spec.md#item-directory),
 
 | Major | Specification | Examples | Released? |
 |---|---|---|---|
-| `v2` | [`v2/spec.md`](v2/spec.md) | [`v2/examples/`](v2/examples/) | Not yet. Every release is in [`published.json`](../../published.json) ([how to tell](../../docs/publication.md#draft-or-released)) |
+| `v2` | [`v2/spec.md`](v2/spec.md) | [`v2/examples/`](v2/examples/) | Released from [`2.0.0`](https://github.com/musher-dev/specifications/releases/tag/listing%2Fv2.0.0). Every release is in [`published.json`](../../published.json) ([how to tell](../../docs/publication.md#draft-or-released)) |
 | `v1` | Retired: v2 supersedes it, and its released bytes stay at their tags | | Released from [`1.0.0`](https://github.com/musher-dev/specifications/releases/tag/listing%2Fv1.0.0) |
 
 What changed from v1, field by field:
@@ -63,7 +63,7 @@ Every ID, the clause stating it, and the cases pinning it:
 | | URL |
 |---|---|
 | Major-version alias | `https://specifications.musher.dev/listing/v2/listing.schema.json` |
-| Exact release (after first release) | `https://specifications.musher.dev/listing/v2.<MINOR>.<PATCH>/listing.schema.json` |
+| Exact release | `https://specifications.musher.dev/listing/v2.<MINOR>.<PATCH>/listing.schema.json` |
 
 Which one to use, and how to bind it, is in
 [Using the schemas](../../docs/using-schemas.md). The schema is authored in

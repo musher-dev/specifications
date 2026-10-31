@@ -56,9 +56,6 @@ export interface Ledger {
   readonly releases: { readonly [tag: string]: LedgerEntry }
 }
 
-/** A base branch's ledger, which may predate version 2. Only its emptiness matters then. */
-export type AnyLedger = Ledger | { readonly version: 1; readonly releases: { [tag: string]: Json } }
-
 export const EMPTY_LEDGER: Ledger = { version: 2, releases: {} }
 
 const TREE_ID = /^[0-9a-f]{40}(?:[0-9a-f]{24})?$/
@@ -204,45 +201,24 @@ export function sameEntry(a: LedgerEntry, b: LedgerEntry): boolean {
 }
 
 /**
- * The ledger as of a git ref. Absent there is empty; a version 1 ledger comes
- * back as such, for the one comparison that accepts it.
+ * The ledger as of a git ref, held to the same shape as the working tree's.
+ * Absent there is empty.
  *
  * The ref itself must resolve, so a base branch that was never fetched fails
  * rather than reading as "nothing was ever published".
  */
-export function ledgerAtRef(repoRoot: string, ref: string): AnyLedger {
+export function ledgerAtRef(repoRoot: string, ref: string): Ledger {
   assertCommit(repoRoot, ref)
   const blob = readBlobAtRef(repoRoot, ref, LEDGER_FILE)
   if (blob === null) return EMPTY_LEDGER
-  const source = `${ref}:${LEDGER_FILE}`
-  const text = blob.toString('utf8')
-  const doc = JSON.parse(text) as Json
-  if (isObject(doc) && doc.version === 1) {
-    if (!isObject(doc.releases)) throw new Error(`${source}: version 1 ledger has no "releases"`)
-    return { version: 1, releases: doc.releases }
-  }
-  return parseLedger(text, source)
+  return parseLedger(blob.toString('utf8'), `${ref}:${LEDGER_FILE}`)
 }
 
 /**
  * The ledger only ever grows. Removing or editing an entry is the paper form of
  * unpublishing a released version, so it fails the build rather than the review.
- *
- * The one rewrite allowed is version 1 to version 2, and only from an empty
- * version 1 ledger: nothing was published under the old shape, so nothing is
- * lost (docs/adr/0023 §3).
  */
-export function assertAppendOnly(base: AnyLedger, head: Ledger, failures: Failures): void {
-  if (base.version === 1) {
-    const recorded = Object.keys(base.releases)
-    if (recorded.length > 0) {
-      failures.add(
-        `${LEDGER_FILE}: the base ledger is version 1 and records ${recorded.join(', ')}. ` +
-          'Only an empty version 1 ledger may be rewritten as version 2.',
-      )
-    }
-    return
-  }
+export function assertAppendOnly(base: Ledger, head: Ledger, failures: Failures): void {
   for (const [tag, entry] of Object.entries(base.releases)) {
     const now = head.releases[tag]
     if (now === undefined) {
