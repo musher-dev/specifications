@@ -42,6 +42,13 @@ const EXEMPT_DIRS = ['testing/']
 const PATH_LITERAL = /['"`](specifications|conformance)\//
 /** A path assembled from segments instead: `join(dir, 'schemas', 'dist')`. */
 const PATH_SEGMENTS = /['"`]schemas['"`]\s*,\s*['"`](dist|src)['"`]/
+/** A dot directory as the first of several segments: `join(root, '.github', 'CODEOWNERS')`. */
+const DOT_DIRECTORY_SEGMENT = /['"`]\.(github|config)['"`]\s*,/
+
+/** Whether a line of code spells a repository path. */
+function spellsPath(line: string): boolean {
+  return PATH_LITERAL.test(line) || PATH_SEGMENTS.test(line) || DOT_DIRECTORY_SEGMENT.test(line)
+}
 
 function typescriptFiles(dir: string): string[] {
   const found: string[] = []
@@ -65,9 +72,7 @@ function pathLiterals(): { scanned: number; offenders: string[] } {
       const code = line.trimStart()
       // Prose may name a path; only code is read by a tool.
       if (code.startsWith('*') || code.startsWith('//') || code.startsWith('/*')) continue
-      if (PATH_LITERAL.test(line) || PATH_SEGMENTS.test(line)) {
-        offenders.push(`${rel}:${index + 1}: ${code}`)
-      }
+      if (spellsPath(line)) offenders.push(`${rel}:${index + 1}: ${code}`)
     }
   }
   return { scanned, offenders }
@@ -89,6 +94,17 @@ describe('the layout guard', () => {
     // A guard that found no files would pass for the wrong reason.
     expect(scanned).toBeGreaterThan(20)
     expect(offenders).toEqual([])
+  })
+
+  test('catches a path spelled or assembled, and passes a fixture file written whole', () => {
+    for (const line of [
+      "const dir = 'specifications/component/v2'",
+      "join(dir, 'schemas', 'dist')",
+      "join(REPO_ROOT, '.github', 'dependabot.yml')",
+      "join(repoRoot, '.config', 'commits', 'committed.toml')",
+    ])
+      expect(spellsPath(line)).toBe(true)
+    expect(spellsPath("repo.writeFile('.config/README.md', '# Tool configuration\\n')")).toBe(false)
   })
 })
 

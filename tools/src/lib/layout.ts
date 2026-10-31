@@ -39,6 +39,24 @@ export const CONFORMANCE_FORMAT_ARCHIVE_PATH = 'conformance/README.md'
 export const LEDGER_FILE = 'published.json'
 export const RELEASE_PLEASE_MANIFEST_FILE = '.github/release-please/manifest.json'
 export const RELEASE_PLEASE_CONFIG_FILE = '.github/release-please/config.json'
+/** The one list of Conventional Commits types and scopes (COMMIT-01). */
+export const COMMIT_RULES_FILE = '.config/commits/committed.toml'
+/**
+ * The copies of that list `task check:commits` holds to it: the title
+ * workflow's inline lists, Dependabot's commit prefixes, and the lists the
+ * contributor guide prints.
+ */
+export const PULL_REQUEST_TITLE_WORKFLOW_FILE =
+  '.github/workflows/repository-pull-request-title.yml'
+export const DEPENDABOT_FILE = '.github/dependabot.yml'
+export const CONTRIBUTING_FILE = '.github/CONTRIBUTING.md'
+/**
+ * The two halves of the code-owner review gate `task check:rulesets` holds
+ * together: GitHub's rulesets, one JSON file each, and the ownership registry
+ * (docs/adr/0015).
+ */
+export const RULESETS_DIR = '.github/rulesets'
+export const CODEOWNERS_FILE = '.github/CODEOWNERS'
 /** The generated requirement traceability matrix. */
 export const TRACEABILITY_FILE = 'docs/traceability.md'
 /** The architecture decision records, one `NNNN-title.md` each. */

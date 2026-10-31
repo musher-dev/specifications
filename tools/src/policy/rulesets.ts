@@ -27,10 +27,7 @@
  */
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { Failures, REPO_ROOT } from '../lib/layout.ts'
-
-const RULESETS_DIR = join('.github', 'rulesets')
-const CODEOWNERS = join('.github', 'CODEOWNERS')
+import { CODEOWNERS_FILE, Failures, inRepo, REPO_ROOT, RULESETS_DIR } from '../lib/layout.ts'
 
 /** The ruleset carrying the review gate. Named because RUL-07/08 only apply to it. */
 const MAIN_RULESET = 'main-branch.json'
@@ -78,7 +75,7 @@ function parseCodeowners(text: string): CodeownersEntry[] {
 
 export function rulesetViolations(repoRoot: string = REPO_ROOT): string[] {
   const problems: string[] = []
-  const dir = join(repoRoot, RULESETS_DIR)
+  const dir = inRepo(repoRoot, RULESETS_DIR)
 
   const files = existsSync(dir)
     ? readdirSync(dir)
@@ -174,18 +171,18 @@ export function rulesetViolations(repoRoot: string = REPO_ROOT): string[] {
 
 function codeownersViolations(repoRoot: string): string[] {
   const problems: string[] = []
-  const path = join(repoRoot, CODEOWNERS)
+  const path = inRepo(repoRoot, CODEOWNERS_FILE)
 
   if (!existsSync(path)) {
     problems.push(
-      `RUL-05: ${CODEOWNERS} is missing. With \`require_code_owner_review: true\` and no ` +
+      `RUL-05: ${CODEOWNERS_FILE} is missing. With \`require_code_owner_review: true\` and no ` +
         'ownership registry, the gate protects nothing at all.',
     )
     return problems
   }
 
   for (const entry of parseCodeowners(readFileSync(path, 'utf8'))) {
-    const at = `${CODEOWNERS}:${entry.line}`
+    const at = `${CODEOWNERS_FILE}:${entry.line}`
 
     if (entry.pattern === '*') {
       problems.push(

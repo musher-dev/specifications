@@ -22,7 +22,7 @@
  *
  * NON-NORMATIVE, like everything under tools/.
  */
-import { REPO_ROOT } from '../lib/layout.ts'
+import { COMMIT_RULES_FILE, REPO_ROOT } from '../lib/layout.ts'
 import { readCommitRules } from './commits.ts'
 
 export interface Vocabulary {
@@ -90,9 +90,7 @@ function main(): void {
     return
   }
   for (const problem of problems) console.error(`  ✗ ${problem}`)
-  console.error(
-    '\nThe title becomes the squash commit subject; see .config/commits/committed.toml.',
-  )
+  console.error(`\nThe title becomes the squash commit subject; see ${COMMIT_RULES_FILE}.`)
   process.exit(1)
 }
 
