@@ -288,27 +288,20 @@ jobs:
         run: npx -y @devcontainers/cli@0.89.0 build --workspace-folder . --frozen-lockfile
 
       # As opening it in an editor does: initialize.sh on the runner, then
-      # post-create, startup and post-attach in the container. post-create
-      # fails the start when a CLI base_verify_tools checks is missing. Its
-      # `mise install --locked` checks the pins through the GitHub API, which
-      # the runner's shared IP would call anonymously at 60 an hour; the token
-      # is this job's read-only one, and with it set lib/github-auth.sh stores
-      # no gh login.
+      # post-create, startup and post-attach in the container. post-create is
+      # its own toolchain check: base_verify_tools verifies every CLI the
+      # container was asked to install (Codex only when MUSHER_INSTALL_CODEX
+      # asks for it), and post-create exits non-zero when one is missing, which
+      # fails `up`. Its `mise install --locked` checks the pins through the
+      # GitHub API, which the runner's shared IP would call anonymously at 60
+      # an hour; the token is this job's read-only one, and with it set
+      # lib/github-auth.sh stores no gh login.
       - name: Start the dev container and run its lifecycle
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: >-
           npx -y @devcontainers/cli@0.89.0 up --workspace-folder .
           --remote-env "GITHUB_TOKEN=${GITHUB_TOKEN}" --remote-env CI=true
-
-      - name: Check mise installed every pin
-        run: |
-          set -euo pipefail
-          missing="$(npx -y @devcontainers/cli@0.89.0 exec --workspace-folder . mise ls --missing --no-header)"
-          if [ -n "$missing" ]; then
-            echo "::error title=Dev Container::mise pins missing after post-create: ${missing}"
-            exit 1
-          fi
 
   required:
     name: Validate / Required
