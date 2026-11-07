@@ -6,13 +6,15 @@
 # family's immutable GitHub Release (docs/adr/0023 §2). The site serves every
 # released schema at its `$id` URL, and deploy.yml is what publishes it. Each
 # kind family's schema is an interface, delivered by its family's bundle, which
-# carries the release record listing it (docs/adr/0037).
+# carries the release record listing it (docs/adr/0037). Each family's
+# registries are a data interface its bundle delivers, and core's bundle also
+# delivers the schemas they are valid against (docs/adr/0043).
 schema_version = 2
 
 [[outputs]]
 id = "core-release"
 kind = "bundle"
-description = "The core specification's release archive: prose and parser-phase corpus."
+description = "The core specification's release archive: prose, parser-phase corpus, registries and interface schemas."
 source = "specifications/core/v2/"
 publish_workflow = "release.yml"
 location = "https://github.com/musher-dev/specifications/releases"
@@ -21,7 +23,7 @@ docs = "docs/publication.md#release-assets"
 [[outputs]]
 id = "component-release"
 kind = "bundle"
-description = "The component family's release archive: prose, schema, examples and corpus."
+description = "The component family's release archive: prose, schema, examples, corpus and registries."
 source = "specifications/component/v2/"
 publish_workflow = "release.yml"
 location = "https://github.com/musher-dev/specifications/releases"
@@ -30,7 +32,7 @@ docs = "docs/publication.md#release-assets"
 [[outputs]]
 id = "blueprint-release"
 kind = "bundle"
-description = "The blueprint family's release archive: prose, schema, examples and corpus."
+description = "The blueprint family's release archive: prose, schema, examples, corpus and registries."
 source = "specifications/blueprint/v2/"
 publish_workflow = "release.yml"
 location = "https://github.com/musher-dev/specifications/releases"
@@ -39,7 +41,7 @@ docs = "docs/publication.md#release-assets"
 [[outputs]]
 id = "listing-release"
 kind = "bundle"
-description = "The listing family's release archive: prose, schema, examples and corpus."
+description = "The listing family's release archive: prose, schema, examples, corpus and registries."
 source = "specifications/listing/v2/"
 publish_workflow = "release.yml"
 location = "https://github.com/musher-dev/specifications/releases"
@@ -86,3 +88,61 @@ delivered_by = "listing-release"
 compatibility = "gated"
 audience = "public"
 docs = "docs/using-schemas.md#which-url"
+
+# The registries (docs/adr/0043). Each is a committed projection `task docs`
+# writes from spec.md and docs/terminology.yaml, so `generated`: check:docs is
+# its drift check and check:compat:registry its breaking-change check. spec.md
+# stays normative for every requirement ID and code.
+[[interfaces]]
+id = "core-registry-schemas"
+format = "json-schema"
+description = "The JSON Schemas of the registries and the term records, for every consumer that reads them."
+definitions = ["specifications/core/v2/interfaces/registry/"]
+delivered_by = "core-release"
+compatibility = "gated"
+audience = "public"
+docs = "docs/using-schemas.md#registries"
+
+[[interfaces]]
+id = "core-registry"
+format = "data"
+description = "Core's requirement IDs, diagnostic codes, ordered lists and every term record, as JSON."
+definitions = ["specifications/core/v2/registry/"]
+delivered_by = "core-release"
+compatibility = "gated"
+audience = "public"
+generated = true
+docs = "docs/using-schemas.md#registries"
+
+[[interfaces]]
+id = "component-registry"
+format = "data"
+description = "The component family's requirement IDs and every diagnostic code its documents may report, as JSON."
+definitions = ["specifications/component/v2/registry/"]
+delivered_by = "component-release"
+compatibility = "gated"
+audience = "public"
+generated = true
+docs = "docs/using-schemas.md#registries"
+
+[[interfaces]]
+id = "blueprint-registry"
+format = "data"
+description = "The blueprint family's requirement IDs and every diagnostic code its documents may report, as JSON."
+definitions = ["specifications/blueprint/v2/registry/"]
+delivered_by = "blueprint-release"
+compatibility = "gated"
+audience = "public"
+generated = true
+docs = "docs/using-schemas.md#registries"
+
+[[interfaces]]
+id = "listing-registry"
+format = "data"
+description = "The listing family's requirement IDs and every diagnostic code its documents may report, as JSON."
+definitions = ["specifications/listing/v2/registry/"]
+delivered_by = "listing-release"
+compatibility = "gated"
+audience = "public"
+generated = true
+docs = "docs/using-schemas.md#registries"
