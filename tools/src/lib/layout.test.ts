@@ -118,6 +118,9 @@ describe('familyPaths', () => {
       bundle: 'dist/component/v1/component.schema.json',
       examples: 'specifications/component/v1/examples',
       conformance: 'specifications/component/v1/conformance',
+      registry: 'specifications/component/v1/registry',
+      interfaces: 'specifications/component/v1/interfaces',
+      protocols: 'specifications/component/v1/protocols',
       manifestKey: 'specifications/component/v1',
     })
   })
