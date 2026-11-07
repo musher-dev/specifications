@@ -229,5 +229,15 @@ would be breaking.
   its Telegram `token` to `botToken` and adopts the Slack and Discord members.
 - An SDK that enumerates protocols or members gains three protocols and five
   member names; one that enumerates them from the records needs no change.
-- The runner validates every acquisition against the evidence schema, so a
-  malformed acquisition is reported where the schema finds it.
+- The runner validates the `connections` context against the evidence schema:
+  each acquisition, reported at its parameter, and then the context's own
+  `deployment` and `parameters`, reported at `/spec`. Two outcomes differ from
+  the 2.0.0 tooling. An acquisition whose status is not `SELECTED` but that
+  carries a stray `selection` or `persisted`, such as a `DENIED` one, is now
+  `ERR_INVALID_RESOLUTION_CONTEXT` where that tooling reported its status's
+  code, `ERR_CONNECTION_DENIED`. A context with a member other than
+  `deployment` and `parameters`, or without either, is now
+  `ERR_INVALID_RESOLUTION_CONTEXT`. Both are malformed evidence, which
+  blueprint §5.3 already rejected, and no released case supplies either: every
+  `connections` context in the 2.0.0 corpus has exactly those two members, and
+  no acquisition there that is not `SELECTED` carries a selection.

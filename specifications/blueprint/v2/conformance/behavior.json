@@ -6984,6 +6984,69 @@
     }
   },
   {
+    "id": "connection-context-unknown-member",
+    "suite": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-CONNECTION-002"
+    ],
+    "tree": {
+      "telegram-app/blueprint.yaml": "{\"specVersion\":\"v2\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"telegram-app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"bot\":{\"from\":\"${{ connections.telegram.default }}\",\"ui\":{\"label\":\"Telegram bot\"}}},\"nodes\":{\"bot\":{\"componentRef\":\"./telegram.yaml\",\"bindings\":{\"telegram\":{\"parameter\":\"bot\"}}},\"app\":{\"componentRef\":\"./app.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"telegramBaseURL\":{\"node\":\"bot\",\"output\":\"baseURL\"},\"telegramBotToken\":{\"node\":\"bot\",\"output\":\"botToken\"}}}}}}",
+      "telegram-app/telegram.yaml": "{\"specVersion\":\"v2\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture external messaging service.\"},\"spec\":{\"type\":\"EXTERNAL\",\"contract\":{\"inputs\":{\"telegram\":{\"description\":\"Messaging service this node stands for.\",\"connection\":{\"protocol\":\"TELEGRAM_BOT\"}}},\"outputs\":{\"baseURL\":{\"description\":\"Bot API base URL.\",\"schema\":{\"type\":\"string\"},\"from\":{\"input\":\"telegram\",\"member\":\"baseURL\"}},\"botToken\":{\"description\":\"Bot token.\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"from\":{\"input\":\"telegram\",\"member\":\"botToken\"}}}}}}",
+      "telegram-app/app.yaml": "{\"specVersion\":\"v2\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}},\"contract\":{\"inputs\":{\"telegramBaseURL\":{\"description\":\"Telegram Bot API base URL\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVar\":\"TELEGRAM_API_URL\"}},\"telegramBotToken\":{\"description\":\"Telegram bot token\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVar\":\"TELEGRAM_BOT_TOKEN\"}}},\"outputs\":{}}}}"
+    },
+    "document": "telegram-app/blueprint.yaml",
+    "context": {
+      "connections": {
+        "deployment": "deploy-1",
+        "parameters": {
+          "bot": {
+            "status": "SELECTED",
+            "persisted": true,
+            "selection": {
+              "identity": "connection-bot",
+              "version": "1",
+              "deployment": "deploy-1",
+              "parameter": "bot",
+              "request": {
+                "from": "${{ connections.telegram.default }}",
+                "identity": "default-policy",
+                "version": "1"
+              },
+              "selectionKind": "MANAGED",
+              "provisioning": "GRANTED",
+              "costOwner": "org-1",
+              "credential": {
+                "identity": "credential-bot",
+                "rotation": 0,
+                "value": "synthetic-only",
+                "permittedBaseURLs": [
+                  "https://api.telegram.org"
+                ]
+              },
+              "views": {
+                "TELEGRAM_BOT": {}
+              }
+            }
+          }
+        },
+        "selections": {}
+      }
+    },
+    "expect": {
+      "/status": "INVALID",
+      "/inputs": {}
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_INVALID_RESOLUTION_CONTEXT",
+        "path": "/spec",
+        "phase": "resolution",
+        "stage": "connections"
+      }
+    ]
+  },
+  {
     "id": "publication-admits-the-platform-catalog",
     "suite": "resolution",
     "operation": "validate",

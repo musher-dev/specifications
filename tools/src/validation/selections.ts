@@ -50,8 +50,10 @@ const memberSchemas = strictAjv()
 const memberValidators = new Map<string, ReturnType<typeof memberSchemas.compile>>()
 /**
  * Blueprint §5.3: evidence the connection-evidence schema rejects is
- * malformed. The schema is generated from the registry (render/protocols.ts),
- * and `task check:docs` keeps the committed copy current.
+ * malformed: the whole `connections` context, each acquisition in it, and
+ * each selection. The schema is generated from the registry
+ * (render/protocols.ts), and `task check:docs` keeps the committed copy
+ * current.
  */
 const evidence = (() => {
   const schema = JSON.parse(
@@ -67,6 +69,7 @@ const evidence = (() => {
   return {
     acquisition: memberSchemas.compile({ $ref: `${schema.$id}#/$defs/ConnectionAcquisition` }),
     selection: memberSchemas.compile({ $ref: `${schema.$id}#/$defs/ConnectionSelection` }),
+    context: memberSchemas.compile({ $ref: schema.$id }),
   }
 })()
 /**
@@ -460,6 +463,11 @@ export function resolveConnections(
       else selections.set(parameter, acquired.selection)
     }
   }
+  // The context as a whole, its `deployment` and `parameters` and nothing
+  // else, has the evidence schema's shape too. An acquisition it rejects is
+  // already reported at its parameter, so only what remains is reported here.
+  if (context !== undefined && !diagnostics.length && !evidence.context(context))
+    diagnostics.push(diagnostic('ERR_INVALID_RESOLUTION_CONTEXT', '/spec', true))
   for (const [node, n] of Object.entries(record(at(blueprint, 'spec', 'nodes')))) {
     for (const [name, input] of Object.entries(inputsOf(components.get(node)))) {
       if (!isConnectionInput(input)) continue

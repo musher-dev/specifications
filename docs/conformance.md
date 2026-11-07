@@ -475,7 +475,8 @@ platform knows it lacks.
 facts of the endpoint's mode. `oidcClient` is `{identity, version, issuerURL,
 clientID, secret}`, beside `public` and never inside it.
 
-**`connections`.** A `connections` entry validates against blueprint's
+**`connections`.** A `connections` entry as a whole, each acquisition in it,
+and each selection validate against blueprint's
 [connection-evidence schema](../specifications/blueprint/v2/interfaces/connection-evidence.schema.json),
 which `task docs` generates from component's protocol registry
 ([component v2 §6.4](../specifications/component/v2/spec.md#protocol-registry)).
