@@ -270,14 +270,17 @@ holding `contents: write` and `id-token: write`. That is why the whole of
 named because its token reaches outside GitHub. It is pinned to an exact version
 in `tools/package.json` and the lockfile rather than fetched at deploy time, so
 the code that receives the token changes only through a diff someone opened
-deliberately — never through a resolution that moved on its own. `tools/` is
+deliberately, never through a resolution that moved on its own. `tools/` is
 not a CODEOWNERS path, so that diff is not gated on a review; the exact pin plus
 the lockfile is what carries the guarantee. For the same reason it is excluded
 from the grouped Dependabot update in
 [`.github/dependabot.yml`](../.github/dependabot.yml): folded into every other
 package's lockfile churn it would arrive as a diff nobody opened *for it*, which
-is not the deliberate one this paragraph promises. It always comes as its own
-pull request. See [ADR 0016](adr/0016-dependency-update-policy.md). Nothing
+is not the deliberate one this paragraph promises. Dependabot therefore always
+brings it as its own pull request. A maintainer may still move it inside a
+larger pull request, but only by naming the bump and its old and new versions
+in that pull request's description, so the diff is still one someone opened
+for it. See [ADR 0016](adr/0016-dependency-update-policy.md). Nothing
 published derives from wrangler.
 
 ## Security

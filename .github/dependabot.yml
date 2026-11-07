@@ -55,6 +55,8 @@ updates:
         # credential, and docs/governance.md -> Tooling dependencies rests its
         # guarantee on that pin moving only through a diff someone opened
         # deliberately. Inside the group it would arrive folded into somebody
-        # else's lockfile churn, so it is kept out and reviewed on its own.
+        # else's lockfile churn, so it is kept out and reviewed on its own. A
+        # maintainer may still bump it in a larger pull request that names the
+        # bump in its description (docs/governance.md).
         exclude-patterns:
           - 'wrangler'
