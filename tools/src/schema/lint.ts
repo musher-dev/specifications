@@ -12,6 +12,7 @@ import {
   Failures,
   type Family,
   familyPaths,
+  interfaceSchemaFiles,
   isObject,
   type Json,
   METASCHEMA,
@@ -43,6 +44,7 @@ export function lintFamilies(
   let moduleCount = 0
 
   for (const family of families) {
+    moduleCount += lintInterfaces(family, seenIds, failures)
     if (family.role === 'core') {
       checkCoreHasNoSchema(family, failures)
       continue
@@ -139,19 +141,61 @@ function main(): void {
 }
 
 /**
- * Core ships no schema (docs/adr/0022).
+ * Core ships no document schema (docs/adr/0022), so it carries no `schemas/`.
  *
- * A core schema would either enumerate every `kind` — gating each new family on
- * a core release — or leave the envelope open, which the closed-object rule
- * forbids and which would duplicate every family bundle. Each kind family's
- * root expresses the envelope instead, and `checkEnvelope` holds them to it.
+ * A core document schema would either enumerate every `kind`, gating each new
+ * family on a core release, or leave the envelope open, which the closed-object
+ * rule forbids and which would duplicate every family bundle. Each kind
+ * family's root expresses the envelope instead, and `checkEnvelope` holds them
+ * to it. What core does publish as JSON Schema describes what is not a
+ * document, such as its registries, and lives in `interfaces/`, which
+ * `lintInterfaces` checks (docs/adr/0043).
  */
 export function checkCoreHasNoSchema(family: Family, failures: Failures): void {
   if (!existsSync(family.schemasDir)) return
   failures.add(
-    `${familyPaths(family.name, family.major).schemas}: core ships no schema — ADR 0022. ` +
-      "The envelope is expressed by each kind family's root schema.",
+    `${familyPaths(family.name, family.major).schemas}: core ships no document schema, ADR 0022. ` +
+      "The envelope is expressed by each kind family's root schema, and core's interface " +
+      `schemas belong in ${familyPaths(family.name, family.major).interfaces}/.`,
   )
+}
+
+/**
+ * Lint a family version's interface schemas: the JSON Schemas under
+ * `interfaces/` of what is not an authored document (docs/adr/0043). Each is
+ * published as it is written, never bundled, so each must already be what a
+ * bundle is: 2020-12, an `$id` under the family version, every reference
+ * inside the file, and every object closed. Returns how many were linted.
+ */
+export function lintInterfaces(
+  family: Family,
+  seenIds: Map<string, string>,
+  failures: Failures,
+): number {
+  const files = interfaceSchemaFiles(family)
+  for (const path of files) {
+    const rel = relativeToRepo(path)
+    if (!MODULE_NAME.test(path.split('/').pop() ?? '')) {
+      failures.add(`${rel}: filename must be <concept>.schema.json, lowercase kebab-case`)
+    }
+    let doc: Json
+    try {
+      doc = readJson(path)
+    } catch (error) {
+      failures.add(`${rel}: not valid JSON: ${(error as Error).message}`)
+      continue
+    }
+    if (!isObject(doc)) {
+      failures.add(`${rel}: root must be an object`)
+      continue
+    }
+    checkDialect(doc, rel, failures)
+    checkId(doc, rel, family.name, family.major, seenIds, failures)
+    checkRefs(doc, rel, failures)
+    checkClosedObjects(doc, rel, failures)
+    checkMetaValid(doc, rel, failures)
+  }
+  return files.length
 }
 
 const ENVELOPE_PROPERTIES = ['specVersion', 'kind', 'metadata', 'spec'] as const
