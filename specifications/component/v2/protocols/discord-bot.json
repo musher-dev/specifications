@@ -28,7 +28,7 @@
         "minLength": 1,
         "pattern": "^[Hh][Tt][Tt][Pp][Ss]://"
       },
-      "description": "HTTPS base URL of the Discord API; without it, the vendor's public one."
+      "description": "HTTPS root of the Discord API, without the API version segment, such as /v10, which the client appends; without it, the vendor's public one. A permittedBaseURLs entry matches this root exactly."
     },
     {
       "name": "botToken",

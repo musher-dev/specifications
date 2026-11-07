@@ -441,7 +441,7 @@
           "type": "string",
           "minLength": 1,
           "pattern": "^[Hh][Tt][Tt][Pp][Ss]://",
-          "description": "HTTPS base URL of the Telegram Bot API; without it, the vendor's public one."
+          "description": "HTTPS root of the Telegram Bot API, without the /bot<token> segment the client appends to it; without it, the vendor's public one. A permittedBaseURLs entry matches this root exactly."
         }
       }
     },
@@ -454,7 +454,7 @@
           "type": "string",
           "minLength": 1,
           "pattern": "^[Hh][Tt][Tt][Pp][Ss]://",
-          "description": "HTTPS base URL of the Slack Web API; without it, the vendor's public one."
+          "description": "HTTPS root of the Slack Web API, to which the client appends each method name; without it, the vendor's public one. A permittedBaseURLs entry matches this root exactly."
         }
       }
     },
@@ -467,7 +467,7 @@
           "type": "string",
           "minLength": 1,
           "pattern": "^[Hh][Tt][Tt][Pp][Ss]://",
-          "description": "HTTPS base URL of the Discord API; without it, the vendor's public one."
+          "description": "HTTPS root of the Discord API, without the API version segment, such as /v10, which the client appends; without it, the vendor's public one. A permittedBaseURLs entry matches this root exactly."
         },
         "applicationID": {
           "type": "string",

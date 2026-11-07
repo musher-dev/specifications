@@ -32,7 +32,7 @@
         "minLength": 1,
         "pattern": "^[Hh][Tt][Tt][Pp][Ss]://"
       },
-      "description": "HTTPS base URL of the Slack Web API; without it, the vendor's public one."
+      "description": "HTTPS root of the Slack Web API, to which the client appends each method name; without it, the vendor's public one. A permittedBaseURLs entry matches this root exactly."
     },
     {
       "name": "botToken",

@@ -1512,6 +1512,9 @@ others ([derived URLs](#derived-urls)). Sensitive members are in bold.
 - `baseURL` and `endpointURL` are HTTPS URLs; blueprint holds a connection to
   that ([blueprint §5.3](../../blueprint/v2/spec.md#connections)). A messaging
   protocol's `baseURL` is optional, and defaults to its service's public API.
+  It is the API's root: it excludes the API version segment, such as
+  Discord's `/v10`, and Telegram's `/bot<token>` segment, which the client
+  appends. A credential's `permittedBaseURLs` entry matches that root exactly.
 - `botToken` is the token of a bot or app, in its service's format, which this
   specification does not validate. The `SLACK_APP` `appToken` is the app-level
   token a Socket Mode connection opens with, and its `signingSecret` verifies

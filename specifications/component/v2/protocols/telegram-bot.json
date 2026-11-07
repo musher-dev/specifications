@@ -24,7 +24,7 @@
         "minLength": 1,
         "pattern": "^[Hh][Tt][Tt][Pp][Ss]://"
       },
-      "description": "HTTPS base URL of the Telegram Bot API; without it, the vendor's public one."
+      "description": "HTTPS root of the Telegram Bot API, without the /bot<token> segment the client appends to it; without it, the vendor's public one. A permittedBaseURLs entry matches this root exactly."
     },
     {
       "name": "botToken",
