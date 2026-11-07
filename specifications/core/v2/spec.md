@@ -11,7 +11,7 @@ BCP 14 [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119) and
 appear in all capitals, as shown here.
 
 > **What is normative.** This document defines the behaviour every Musher
-> document family shares. It releases no JSON Schema of its own
+> document family shares. It releases no document schema of its own
 > ([§10](#not-supported)). Each family's bundle is the executable form of that
 > family's structural validity, and states this document's envelope rules for
 > that family's documents. The [conformance corpus](../../../docs/conformance.md)
@@ -898,7 +898,17 @@ checks that hold a family release while this document has unreleased releasable
 changes, and why its other unreleased changes only warn, are set out in
 [ADR 0023](../../../docs/adr/0023-published-bytes-are-immutable-release-assets.md),
 as [ADR 0037](../../../docs/adr/0037-the-repository-adopts-engineering-conventions-0-7-0.md)
-§3 refines it.
+and [ADR 0043](../../../docs/adr/0043-registries-are-released-data-interfaces.md)
+refine it.
+
+**What a core release delivers.** This paragraph is informative. Besides this
+document and its corpus, a core release carries `registry/`, which states this
+document's requirement IDs, its diagnostic codes, the ordered lists of
+[§6](#validation-phases), [§6.1](#validation-scope), [§6.4](#resolution-stages),
+[§7](#diagnostics) and [§5.2](#placeholder-grammar), and every term record, as
+JSON, and `interfaces/`, the schemas of the validation result and of those
+files. Each registry is generated from this document and never disagrees with
+it; where one did, this document would govern.
 
 **What a core release may change.** This paragraph is informative: it records
 this repository's release policy. Within v2, a minor core release adds a clause,

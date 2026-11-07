@@ -32,10 +32,12 @@ tool, as the Script column of the tables below shows.
   parity check.
 - **`publication/`**: the ledger, recording and staging a release, verifying
   releases offline and against GitHub, the core and dependency gates, the
-  compatibility replay, the change report, the catalog, and the site
+  compatibility replay, the compatibility gate for registries and interface
+  schemas (`compat-registry.ts`), the change report, the catalog, and the site
   assembler.
 - **`render/`**: generated pages and documents: the traceability matrix, the
-  ADR index, the glossary and its Vale styles (`terminology.ts`), the prose and
+  ADR index, the glossary and its Vale styles (`terminology.ts`), each family
+  version's registries (`registry.ts`), the prose and
   field reference, the page chrome they share (`html.ts`), and the post-deploy
   live check.
 - **`policy/`**: repository rules: the root's entries, the review gate, commit
@@ -80,9 +82,10 @@ process of its own; both report in the order they would sequentially.
 | `check:published` | Every ledger entry matches git: a tagged entry its tag's tree and ledger, a pending entry `HEAD` and a fresh build | `src/publication/verify.ts` | — |
 | `check:editions` | Where core stands, and the core gate on every pending kind family release | `src/publication/core-gate.ts` | — |
 | `check:compat` | No released version's accepted documents are rejected by the candidate schema | `src/publication/compat.ts` | — |
+| `check:compat:registry` | No registry, protocol record or interface schema drops or narrows what its family version's newest release delivered | `src/publication/compat-registry.ts` | — |
 | `check:test` | The tooling test suite | `bun test` | — |
 | `check:commits` | Every copy of the commit vocabulary agrees with `.config/commits/committed.toml` | `src/policy/commits.ts` | — |
-| `check:docs` | `docs/traceability.md`, the ADR index, and `docs/terminology.md` with its generated Vale styles match a fresh generation | `src/policy/docs.ts` | — |
+| `check:docs` | `docs/traceability.md`, the ADR index, `docs/terminology.md` with its generated Vale styles, and every family version's `registry/` match a fresh generation | `src/policy/docs.ts` | — |
 | `check:terms` | Term records in `docs/terminology.yaml` are valid, every v2 identifier is claimed by a record, no banned alias is used, and every defined term has a record | `src/policy/terms.ts` | — |
 | `check:links` | Every internal Markdown link and anchor resolves | `src/policy/links.ts` | — |
 | `check:adr` | ADR numbering, headers and relations, and link-target-only edits to accepted ADRs | `src/policy/adr.ts` | ADR-01..ADR-04 |
@@ -118,7 +121,7 @@ the command line) and environment variables shown.
 | Task | What it does | Script | Takes |
 |---|---|---|---|
 | `bundle` | Builds every bundle and the catalog into `dist/`, then runs `docs` | `src/schema/bundle.ts` | — |
-| `docs` | Regenerates `docs/traceability.md`, the ADR index, and `docs/terminology.md` with its Vale styles | `src/render/traceability.ts`, `src/render/adr-index.ts`, `src/render/terminology.ts` | — |
+| `docs` | Regenerates `docs/traceability.md`, the ADR index, `docs/terminology.md` with its Vale styles, and every family version's `registry/` | `src/render/traceability.ts`, `src/render/adr-index.ts`, `src/render/terminology.ts`, `src/render/registry.ts` | — |
 | `changes` | Reports what the branch does to the published contract | `src/publication/changes.ts` | `BASE` variable, default `origin/main`; `-- --diff` |
 | `check:title` | Fails unless the pull request title is a Conventional Commit with a type and a scope from `.config/commits/committed.toml` | `src/policy/title.ts` | `PR_TITLE` environment variable, required |
 | `check:ledger` | Fails if `published.json` changed a recorded entry | `src/publication/ledger.ts check` | `BASE_REF` environment variable; without it, only parses |
@@ -146,10 +149,13 @@ string, such as `'.config/README.md'`, passes.
 
 The layout distinguishes two roles of family, as
 [specifications/README.md](../specifications/README.md#kind-family) defines
-them. **Core** is the base family: it
-defines no `kind`, carries prose and a parser-phase corpus, and has no schema and
-no examples. Every other family is a **kind** family, which fixes what core
-leaves to it in its §2 and publishes a bundle. `discoverFamilies` lists core first, and
+them. **Core** is the base family: it defines no `kind`, carries prose, a
+parser-phase corpus, its registries and the schemas of its interfaces, and has
+no document schema and no examples. Every other family is a **kind** family,
+which fixes what core leaves to it in its §2 and publishes a bundle. A part
+added after a family's first release, such as `registry/`, has a floor in
+`PART_SINCE`: a release older than it does not carry the part, so the 2.0.0
+tags still verify. `discoverFamilies` lists core first, and
 `discoverKinds` lists only kind families. A tool reading a released ref asks
 through `requireAtRef` and its variants, which throw a `LayoutError` when a path
 the layout names is absent, rather than returning nothing and passing.

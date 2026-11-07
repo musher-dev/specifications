@@ -165,7 +165,7 @@ export function checkCoreHasNoSchema(family: Family, failures: Failures): void {
  * `interfaces/` of what is not an authored document (docs/adr/0043). Each is
  * published as it is written, never bundled, so each must already be what a
  * bundle is: 2020-12, an `$id` under the family version, every reference
- * inside the file, and every object closed. Returns how many were linted.
+ * inside the file, and every object closed. Returns how many it checked.
  */
 export function lintInterfaces(
   family: Family,

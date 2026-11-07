@@ -6882,6 +6882,32 @@
       ]
     },
     {
+      "id": "repository.registry",
+      "display_name": "registry",
+      "context": "repository",
+      "definition": "A JSON projection, committed beside a family version's spec.md and released with it, of facts that spec.md or the term records state: requirement IDs, diagnostic codes, and for core the ordered lists and every term record.",
+      "shortDefinition": "A released JSON projection of a family version's IDs, codes or lists.",
+      "associated": [
+        {
+          "relation": "projects",
+          "term": "repository.specification"
+        }
+      ],
+      "confusables": [
+        "The diagnostics table in a spec.md, which stays normative.",
+        "The connection protocol registry, whose records are their own source."
+      ],
+      "source": [
+        "docs/using-schemas.md#registries",
+        "ADR 0043"
+      ],
+      "stability": "provisional",
+      "status": "approved",
+      "tags": [
+        "publication"
+      ]
+    },
+    {
       "id": "repository.not-supported",
       "display_name": "not supported in v2",
       "context": "repository",

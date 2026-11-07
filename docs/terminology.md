@@ -10,7 +10,7 @@ it. `task check:terms` holds the records, the schemas and the prose together,
 and the words to avoid are enforced in prose by the generated
 `MusherSpecifications` Vale style.
 
-210 record(s). A record marked *proposed* is an open item, not yet a decision.
+211 record(s). A record marked *proposed* is an open item, not yet a decision.
 
 ## Index
 
@@ -158,6 +158,7 @@ and the words to avoid are enforced in prose by the generated
 | [published media set](#listing-published-media-set) | listing | Media path to served location, after ingest. |
 | [readiness probe](#component-readiness-probe) | component | Gates traffic, without restart. |
 | [record stage](#deployment-record-stage) | deployment | Persists the snapshot, writes the record. |
+| [registry](#repository-registry) | repository | A released JSON projection of a family version's IDs, codes or lists. |
 | [release](#repository-release) | repository | One tagged, immutable version of a family. |
 | [replica](#deployment-replica) | deployment | One running copy of a workload. |
 | [requirement ID](#repository-requirement-id) | repository | The stable name of one rule, such as COMP-EP-004. |
@@ -3244,6 +3245,21 @@ port below 1024, which admission may refuse.
   §5.2](../specifications/component/v2/spec.md#endpoints), [ADR
   0038](adr/0038-v2-one-vocabulary-and-v1-retires.md)
 - **Status:** approved, stable. Tags: security.
+
+#### <a id="repository-registry"></a>registry
+
+A JSON projection, committed beside a family version's spec.md and released with
+it, of facts that spec.md or the term records state: requirement IDs, diagnostic
+codes, and for core the ordered lists and every term record.
+
+- **projects:** [specification](#repository-specification)
+- **Not to be confused with:** The diagnostics table in a spec.md, which stays
+  normative.
+- **Not to be confused with:** The connection protocol registry, whose records
+  are their own source.
+- **Source:** [docs/using-schemas.md#registries](using-schemas.md#registries),
+  [ADR 0043](adr/0043-registries-are-released-data-interfaces.md)
+- **Status:** approved, provisional. Tags: publication.
 
 #### <a id="repository-release"></a>release
 
