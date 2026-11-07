@@ -504,9 +504,9 @@ terms:
     context: core
     definition: >-
       The validation phase run by the publisher or the platform, for
-      obligations that need the catalog, an account or a policy, such as a
-      revision that increases or a description present at publication.
-    shortDefinition: Publisher and platform checks that need the catalog or policy.
+      obligations that need published documents, an account or a policy, such
+      as a revision that increases or a description present at publication.
+    shortDefinition: Publisher and platform checks that need published documents or policy.
     kind_of: [core.validation-phase]
     aliases:
       - { text: capability, status: banned, scope: [identifier], suggest: admission, note: "The phase value and the case-tree directory." }
@@ -676,16 +676,42 @@ terms:
     display_name: catalog
     context: catalog
     definition: >-
-      The published collection of items, keyed by identity and revision, that
-      a component reference by UUID resolves against and a storefront
-      browses.
-    shortDefinition: The published collection of items.
-    verbs: [publish to the catalog, the catalog holds an item]
-    confusables: ["An OCI registry, which holds images; a registry is never the catalog, and 'registry' stays legitimate for an OCI registry or a model registry."]
+      The curated, public collection of published items, each with a listing,
+      that a storefront offers.
+    shortDefinition: The curated, public collection of listed items.
+    associated:
+      - { relation: complements, term: catalog.library }
+    verbs: [list an item in the catalog, the catalog offers an item]
+    confusables:
+      - "An OCI registry, which holds images; a registry is never the catalog, and 'registry' stays legitimate for an OCI registry or a model registry."
+      - "An organization's library, which holds what it published for its own use, listed or not."
+      - "The platform's compute or storage catalog, which holds what the platform offers to run on, not items."
     aliases:
       - { text: component registry, status: discouraged, scope: [prose], suggest: catalog }
       - { text: the registry, status: discouraged, scope: [prose], suggest: the catalog, note: "Say catalog for the published collection; an OCI registry stays a registry." }
-    source: [listing v2 §1.1, core v2 §4.1, ADR 0038]
+    source: [core v2 §1.3, listing v2 §1.1, core v2 §4.1, ADR 0038, ADR 0046]
+    stability: stable
+    status: approved
+    tags: [catalog]
+
+  - id: catalog.library
+    display_name: library
+    context: catalog
+    definition: >-
+      The documents and items one organization has published for its own use,
+      which no storefront offers and which need no listing.
+    shortDefinition: What one organization has published for its own use.
+    associated:
+      - { relation: complements, term: catalog.catalog }
+    verbs: [publish to its library, the library holds a component]
+    example: "A component an organization publishes for its own blueprints sits in its library, and its catalog references resolve to it."
+    confusables:
+      - "A software library a validator links, the sense core v2 §6.3 uses."
+      - "The catalog, which is curated and public; an item in a library is listed in the catalog only by publishing a listing there."
+    aliases:
+      - { text: private catalog, status: discouraged, scope: [prose], suggest: library }
+      - { text: organization catalog, status: discouraged, scope: [prose], suggest: library }
+    source: [core v2 §1.3, ADR 0046]
     stability: stable
     status: approved
     tags: [catalog]
@@ -708,15 +734,15 @@ terms:
     display_name: catalog item
     context: catalog
     definition: >-
-      A directory the catalog publishes as one unit, holding its item documents
-      and component documents at one item root: a blueprint item or a
-      component item.
+      A directory published as one unit, to a library or to the catalog,
+      holding its item documents and component documents at one item root: a
+      blueprint item or a component item.
     shortDefinition: A directory published as one unit.
-    part_of: [catalog.catalog]
+    confusables: ["Membership of the catalog: the name is the item's form, and an item in a library is one too."]
     identifiers: { requirement_prefixes: [CORE-ITEM] }
     aliases:
       - { text: deployable thing, status: banned, scope: [prose], suggest: catalog item }
-    source: [listing v2 §1.1, core v2 §1.3, core v2 §4.1, core v2 §4.2, ADR 0038]
+    source: [listing v2 §1.1, core v2 §1.3, core v2 §4.1, core v2 §4.2, ADR 0038, ADR 0046]
     stability: stable
     status: approved
     tags: [catalog]
@@ -725,9 +751,10 @@ terms:
     display_name: blueprint item
     context: catalog
     definition: >-
-      A catalog item whose root holds blueprint.yaml and listing.yaml, and
-      every component document the blueprint's nodes reference.
-    shortDefinition: blueprint.yaml, listing.yaml and the components they use.
+      A catalog item whose root holds blueprint.yaml, every component document
+      the blueprint's nodes reference, and listing.yaml once it is listed in
+      the catalog.
+    shortDefinition: blueprint.yaml and the components it uses, and listing.yaml once listed.
     kind_of: [catalog.catalog-item]
     identifiers: { codes: [ERR_UNREFERENCED_COMPONENT] }
     source: [listing v2 §1.1, blueprint v2 §3, blueprint v2 §3.1]
@@ -753,15 +780,18 @@ terms:
     display_name: publication
     context: catalog
     definition: >-
-      The act of admitting a document or an item into the catalog, after every
-      admission-phase obligation it carries has completed.
-    shortDefinition: Admitting a document into the catalog.
+      The act of admitting a document or an item into an organization's
+      library or into the catalog, after every admission-phase obligation it
+      carries has completed.
+    shortDefinition: Admitting a document into a library or the catalog.
     associated:
       - { relation: completes, term: core.admission-phase }
+      - { relation: admits-into, term: catalog.library }
+      - { relation: admits-into, term: catalog.catalog }
     verbs: [publish a component, a revision counts publications]
     aliases:
       - { text: counts releases, status: banned, scope: [prose], suggest: counts publications, note: "Release means only a specification release." }
-    source: [component v2 §4, blueprint v2 §3]
+    source: [component v2 §4, blueprint v2 §3, core v2 §6.1, ADR 0046]
     stability: stable
     status: approved
     tags: [catalog, publication]
@@ -830,7 +860,7 @@ terms:
     context: component
     definition: >-
       The ordered sequence of every published revision of one component, which
-      the catalog holds and an offline validator never sees.
+      the platform holds and an offline validator never sees.
     shortDefinition: Every published revision of one component, in order.
     source: [component v2 §4]
     stability: stable
@@ -1859,10 +1889,12 @@ terms:
     shortDefinition: A UUID and a revision naming a published component.
     kind_of: [blueprint.document-reference]
     associated:
+      - { relation: resolves-in, term: catalog.library }
       - { relation: resolves-in, term: catalog.catalog }
+    confusables: ["A reference into the catalog alone: the name is the form, and the platform resolves one against the deploying organization's library and the catalog."]
     aliases:
       - { text: published reference, status: discouraged, scope: [prose], suggest: catalog reference }
-    source: [blueprint v2 §1.1, blueprint v2 §4.1, ADR 0038]
+    source: [blueprint v2 §1.1, blueprint v2 §4.1, ADR 0038, ADR 0046]
     stability: stable
     status: approved
     tags: [composition, catalog]
@@ -2058,13 +2090,13 @@ terms:
       allocation.
     shortDefinition: A value from a catalog-versioned vocabulary.
     example: "local-nvme is a storage class catalog value."
-    confusables: ["A credential token, such as a probe's bearer token or a JWT: 'token' means only that.", "A term record, which is what 'term' now means."]
+    confusables: ["A credential token, such as a probe's bearer token or a JWT: 'token' means only that.", "A term record, which is what 'term' now means.", "A value from the catalog of listed items: the name is the form, a value of the platform's versioned compute or storage vocabulary."]
     aliases:
       - { text: storage class term, status: banned, scope: [prose], suggest: storage class catalog value }
       - { text: placement term, status: banned, scope: [prose], suggest: placement catalog value }
       - { text: storage class token, status: banned, scope: [prose], suggest: storage class catalog value }
       - { text: placement token, status: banned, scope: [prose], suggest: placement catalog value }
-    source: [blueprint v2 §1.1, blueprint v2 §4.3, blueprint v2 §4.4, ADR 0038]
+    source: [blueprint v2 §1.1, blueprint v2 §4.3, blueprint v2 §4.4, ADR 0038, ADR 0046]
     stability: stable
     status: approved
     tags: [compute, catalog]

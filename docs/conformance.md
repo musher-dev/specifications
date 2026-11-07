@@ -281,7 +281,7 @@ validation phases:
 | `parser` | The Musher YAML profile: [core v2 §6.2](../specifications/core/v2/spec.md#yaml-profile) | Never | Document cases |
 | `structural` | The family's JSON Schema 2020-12 bundle | Never | Document cases |
 | `semantic` | Placeholder grammar and namespaces, path containment, cross-document agreement | Never | Document cases, and behavioural cases |
-| `admission` | Account, region and quota checks, and catalog and publication obligations | Server only | Document cases, and behavioural cases |
+| `admission` | Account, region and quota checks, and publication obligations | Server only | Document cases, and behavioural cases |
 | `resolution` | Turning an admitted blueprint revision into one deployment's values | Server only | Behavioural cases only |
 
 An implementation MUST apply the phases in order and MUST NOT report a
@@ -315,7 +315,7 @@ validation result, and each scope names the cases it must pass every one of:
 | `parser` | `parser` | None | A linter or formatter that reads documents but does not validate them |
 | `structural` | `parser`, `structural` | None | An editor integration binding the published schema |
 | `document` | `parser`, `structural`, `semantic` | None | A CLI validating a working tree, with no network |
-| `publication` | all four | None | A catalog publisher |
+| `publication` | all four | None | A publisher, to a library or to the catalog |
 | `deployment` | all four | `resolution` | A control plane deploying blueprints |
 
 The scopes are cumulative: `document` includes everything `structural`
@@ -408,7 +408,7 @@ that was not acquired, which defers the obligations that need it.
 
 | Key | Shape | Stage |
 |---|---|---|
-| `componentDocuments` | `identity@revision` → `{source, digest}`: the catalog component documents a blueprint references | Before resolution, for the `document` scope |
+| `componentDocuments` | `identity@revision` → `{source, digest}`: the component documents a blueprint's catalog references name, from the deploying organization's library or the catalog | Before resolution, for the `document` scope |
 | `sources` | node → `{gitCommit?, uploadDigest?, builderDigest?, imageDigest?}` | `sources` |
 | `parameters` | parameter name → `{value, sensitive}`: submitted values | `parameters` |
 | `variables` | exact dotted path → `{value, sensitive, identity, version, authorized}` | `parameters` |
@@ -531,7 +531,7 @@ it, so the result is `INCOMPLETE`, never `VALID`.
 
 A profile is available in the region when one of its hosts is in it, and a
 node's placement is satisfiable when one such host meets every constraint at
-once. Every value is synthetic: a fixture describes a catalog, never a real
+once. Every value is synthetic: a fixture describes a platform, never a real
 one.
 
 ### Resolution observations
@@ -581,7 +581,7 @@ no deployment-validity claim.
 
 A `publication` or `deployment` result MUST complete every obligation of its
 scope ([`CORE-ADMISSION-001`](../specifications/core/v2/spec.md#CORE-ADMISSION-001)).
-The local adapter reports unresolved catalog and policy admission rather than
+The local adapter reports unresolved publication and policy admission rather than
 inventing an authorization result. Its value-resolution and credential adapters
 are test implementations, not a production deployment engine.
 
@@ -599,7 +599,7 @@ cases against v2.
 The coverage gate requires every declared diagnostic and requirement to have
 a fixture in its family or a consuming family's reachable corpus, or a reviewed
 exception. Publication revision fixtures supply a synthetic lineage snapshot;
-implementations acquire and verify the real catalog context before applying
+implementations acquire and verify the real lineage before applying
 that rule.
 
 ## Adding a case

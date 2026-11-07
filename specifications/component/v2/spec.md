@@ -225,18 +225,19 @@ component. Admission: `ERR_REVISION_NOT_INCREASING` at `/metadata/revision`.
 
 Gaps are permitted: publishing 1 and then 7 is not an error. Reuse is the case
 the rule exists for. `revision: 3` on a catalog reference selects that
-component revision, and a catalog that let 3 mean two different documents would
-make the pin name nothing. The item-local form has the same problem one step
-removed: a blueprint that deployed revision 3 last month and revision 3 today,
-with different bytes behind it, has no way to say so. The rule is `admission`
-because deciding it needs the catalog's lineage, which
+component revision, and a platform that let 3 mean two different documents
+would make the pin name nothing. The item-local form has the same problem one
+step removed: a blueprint that deployed revision 3 last month and revision 3
+today, with different bytes behind it, has no way to say so. The rule is
+`admission` because deciding it needs the component's lineage, which the
+platform holds and which
 [core v2 §6](../../core/v2/spec.md#validation-phases) forbids the earlier
 phases to require. A client validating a file it has just written cannot see
 the lineage and MUST NOT report this rule.
 
-Whether the catalog treats an identical re-submission as a no-op rather than as
-a publication is outside this specification. It orders publications; it does
-not define when two YAML files are the same document.
+Whether the platform treats an identical re-submission as a no-op rather than
+as a publication is outside this specification. This specification orders
+publications; it does not define when two YAML files are the same document.
 
 **The revision is not the item's revision.** The item's is the blueprint's
 ([blueprint §3](../../blueprint/v2/spec.md#identity)), and it is pinned to no
@@ -1526,7 +1527,7 @@ Core's phases and validation scopes apply
 structurally validated before semantic checks, and the `document` scope runs
 both. Publication requires the `publication` scope, which adds the `admission`
 rules of this document: [`COMP-ID-001`](#COMP-ID-001), because the lineage is a
-fact the catalog holds, and [`COMP-DESC-003`](#COMP-DESC-003),
+fact the platform holds, and [`COMP-DESC-003`](#COMP-DESC-003),
 [`COMP-DESC-004`](#COMP-DESC-004) and the obligations
 [§5](#publication-obligations) lists, because an unwritten field is only a
 defect in a component someone is trying to publish. One `admission` rule reads

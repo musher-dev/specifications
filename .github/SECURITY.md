@@ -77,7 +77,8 @@ curl -s https://specifications.musher.dev/component/v2.0.0/component.schema.json
 ```
 
 A pinned URL whose bytes do not match the release asset, or the `bundleSha256`
-that `published.json` records, is a supply-chain report, not a bug — see below.
+that `published.json` records, is a supply-chain report, not a bug: report it as
+[Reporting a vulnerability](#reporting-a-vulnerability) says.
 
 ## Supported versions
 
