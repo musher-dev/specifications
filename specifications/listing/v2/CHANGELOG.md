@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.1.0](https://github.com/musher-dev/specifications/compare/listing/v2.0.0...listing/v2.1.0) (2026-11-07)
+
+
+### Additions
+
+* **core:** publish the registries, define the validation result, and add messaging protocols ([#224](https://github.com/musher-dev/specifications/issues/224)) ([0531775](https://github.com/musher-dev/specifications/commit/05317757ac84e43ab9fcd6497d4140ae8ec69bca))
+
+
+### Specification prose
+
+* **repo:** correct stale v2 wording, and clean up tooling, CI and docs ([#207](https://github.com/musher-dev/specifications/issues/207)) ([af0725d](https://github.com/musher-dev/specifications/commit/af0725da7304205bc0f07bf2df8ea7356bf8bd22))
+
 ## 2.0.0 (2026-10-24)
 
 
