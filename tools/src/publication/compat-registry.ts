@@ -20,9 +20,11 @@
  * - **Terms.** Every released record survives, and claims every identifier it
  *   claimed.
  * - **Protocols.** Every released protocol and category survives, each
- *   released member is unchanged, and a new member is never required.
+ *   released capability survives, each released member is unchanged, a new
+ *   member is never required, and a category's conventions never change.
  * - **Interface schemas.** Every released subschema with properties keeps them,
- *   `required` never grows, and an enum keeps every released value. The
+ *   `required` never grows, an enum keeps every released value, and no
+ *   `type`, `pattern`, bound, `const` or `additionalProperties` narrows. The
  *   validation result's enums are frozen outright: a consumer switches on its
  *   status and severity, so a new value is a break.
  *
@@ -187,25 +189,45 @@ export function compareTerms(released: Json, current: Json): string[] {
 }
 
 /**
- * One protocol record: every released member is unchanged, and a new member
- * is never required. A category list, which has no `members`, keeps every
- * released category.
+ * `categories.json`: every released category survives, and its conventions,
+ * the names its protocols give their credential and locator, are unchanged.
+ */
+function compareCategories(released: Json, current: Json): string[] {
+  const now = byKey(asObject(current).categories, 'id')
+  const problems: string[] = []
+  const lost: string[] = []
+  for (const [id, was] of byKey(asObject(released).categories, 'id')) {
+    const is = now.get(id)
+    if (is === undefined) {
+      lost.push(id)
+      continue
+    }
+    if (was.conventions === undefined) continue
+    if (is.conventions === undefined) problems.push(`category ${id} lost its conventions`)
+    else if (JSON.stringify(is.conventions) !== JSON.stringify(was.conventions)) {
+      problems.push(`category ${id} changed its conventions`)
+    }
+  }
+  return lost.length > 0 ? [`categories ${lost.join(', ')} were removed`, ...problems] : problems
+}
+
+/**
+ * One protocol record: every released capability and member survives, each
+ * member unchanged, and a new member is never required. The category list,
+ * which has no `members`, is compared by `compareCategories`.
  */
 export function compareProtocol(released: Json, current: Json): string[] {
   const was = asObject(released)
   const is = asObject(current)
-  if (was.members === undefined) {
-    const ids = (value: Json) =>
-      asList(Array.isArray(value) ? value : Object.values(asObject(value)).find(Array.isArray)).map(
-        (item) => (isObject(item) ? String(item.id) : String(item)),
-      )
-    const lost = missing(ids(released), ids(current))
-    return lost.length > 0 ? [`categories ${lost.join(', ')} were removed`] : []
-  }
+  if (was.members === undefined) return compareCategories(released, current)
   const problems: string[] = []
   const id = String(was.id)
   if (is.id !== was.id) problems.push(`protocol ${id} is now ${String(is.id)}`)
   if (is.category !== was.category) problems.push(`protocol ${id} changed category`)
+  const lostCapabilities = missing(strings(was.capabilities), strings(is.capabilities))
+  if (lostCapabilities.length > 0) {
+    problems.push(`protocol ${id} lost capabilities ${lostCapabilities.join(', ')}`)
+  }
   const before = byKey(was.members, 'name')
   const after = byKey(is.members, 'name')
   for (const [name, member] of before) {
@@ -235,9 +257,65 @@ function atPointer(root: Json, pointer: string): Json | undefined {
   return node
 }
 
+/** The keywords whose larger value narrows what a schema accepts. */
+const LOWER_BOUNDS = ['minLength', 'minimum', 'minItems', 'minProperties'] as const
+/** The keywords whose smaller value narrows what a schema accepts. */
+const UPPER_BOUNDS = ['maxLength', 'maximum', 'maxItems'] as const
+
+function typesOf(value: Json | undefined): string[] | undefined {
+  if (typeof value === 'string') return [value]
+  return Array.isArray(value) ? strings(value) : undefined
+}
+
+/**
+ * The narrowing changes to one subschema's own constraints: a `type` that
+ * drops a type or appears, a `pattern` that changes or appears, a bound that
+ * tightens or appears, a `const` that changes or appears, an `enum` that
+ * appears, and `additionalProperties` that becomes `false`.
+ */
+function narrowedConstraints(where: string, node: Obj, now: Obj): string[] {
+  const problems: string[] = []
+  const before = typesOf(node.type)
+  const after = typesOf(now.type)
+  if (after !== undefined) {
+    if (before === undefined) problems.push(`${where} gained type ${after.join(', ')}`)
+    else {
+      const lost = missing(before, after)
+      if (lost.length > 0) problems.push(`${where} type lost ${lost.join(', ')}`)
+    }
+  }
+  if (now.pattern !== undefined && now.pattern !== node.pattern) {
+    problems.push(
+      node.pattern === undefined ? `${where} gained a pattern` : `${where} pattern changed`,
+    )
+  }
+  for (const key of LOWER_BOUNDS) {
+    const is = now[key]
+    if (typeof is !== 'number') continue
+    const was = node[key]
+    if (typeof was !== 'number') problems.push(`${where} gained ${key} ${is}`)
+    else if (is > was) problems.push(`${where} ${key} rose from ${was} to ${is}`)
+  }
+  for (const key of UPPER_BOUNDS) {
+    const is = now[key]
+    if (typeof is !== 'number') continue
+    const was = node[key]
+    if (typeof was !== 'number') problems.push(`${where} gained ${key} ${is}`)
+    else if (is < was) problems.push(`${where} ${key} fell from ${was} to ${is}`)
+  }
+  if (now.const !== undefined && node.const === undefined) problems.push(`${where} gained a const`)
+  if (Array.isArray(now.enum) && node.enum === undefined) problems.push(`${where} gained an enum`)
+  if (now.additionalProperties === false && node.additionalProperties !== false) {
+    problems.push(`${where} closed additionalProperties`)
+  }
+  return problems
+}
+
 /**
  * An interface schema: released properties survive, `required` never grows,
- * enums keep every value and, with `frozenEnums`, gain none.
+ * enums keep every value and, with `frozenEnums`, gain none, and no keyword
+ * narrows what a subschema accepts (`narrowedConstraints`). Adding a property
+ * or an enum value is the change that stays allowed.
  */
 export function compareInterfaceSchema(
   released: Json,
@@ -276,6 +354,7 @@ export function compareInterfaceSchema(
     if (node.const !== undefined && JSON.stringify(now.const) !== JSON.stringify(node.const)) {
       problems.push(`${where} const changed`)
     }
+    problems.push(...narrowedConstraints(where, node, now))
   }
   return problems
 }

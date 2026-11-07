@@ -121,6 +121,46 @@ describe('the comparisons', () => {
     ).toEqual(['categories CACHE, DATABASE were removed'])
   })
 
+  test('a protocol keeps its capabilities', () => {
+    const released = {
+      id: 'OPENAI_CHAT_COMPLETIONS',
+      category: 'LANGUAGE_MODEL',
+      capabilities: ['STREAMING', 'TOOL_CALLS'],
+      members: [],
+    }
+    expect(
+      compareProtocol(released, { ...released, capabilities: ['STREAMING', 'TOOL_CALLS', 'X'] }),
+    ).toEqual([])
+    expect(compareProtocol(released, { ...released, capabilities: ['STREAMING'] })).toEqual([
+      'protocol OPENAI_CHAT_COMPLETIONS lost capabilities TOOL_CALLS',
+    ])
+    const { capabilities: _capabilities, ...withoutCapabilities } = released
+    expect(compareProtocol(released, withoutCapabilities)).toEqual([
+      'protocol OPENAI_CHAT_COMPLETIONS lost capabilities STREAMING, TOOL_CALLS',
+    ])
+  })
+
+  test("a category's conventions never change or disappear", () => {
+    const categories = (conventions?: Json): Json => ({
+      categories: [
+        {
+          id: 'MESSAGING',
+          protocols: ['TELEGRAM_BOT'],
+          ...(conventions === undefined ? {} : { conventions }),
+        },
+      ],
+    })
+    const released = categories({ locator: 'baseURL', credential: 'botToken' })
+    expect(compareProtocol(released, released)).toEqual([])
+    expect(
+      compareProtocol(released, categories({ locator: 'baseURL', credential: 'token' })),
+    ).toEqual(['category MESSAGING changed its conventions'])
+    expect(compareProtocol(released, categories())).toEqual([
+      'category MESSAGING lost its conventions',
+    ])
+    expect(compareProtocol(categories(), released)).toEqual([])
+  })
+
   test('an interface schema adds optional members only, and a frozen enum gains nothing', () => {
     const schema = (extra: Json = {}, severities = ['ERROR', 'WARNING']): Json => ({
       type: 'object',
@@ -145,6 +185,77 @@ describe('the comparisons', () => {
     expect(
       compareInterfaceSchema(schema(), schema({}, ['ERROR', 'WARNING', 'INFO']), true),
     ).toEqual(['/properties/severity enum gained "INFO", and this schema\'s enums are frozen'])
+  })
+
+  test('an interface schema fails every narrowing keyword, and passes every widening one', () => {
+    const base: Json = {
+      type: 'object',
+      properties: {
+        name: { type: 'string', minLength: 1, maxLength: 64, pattern: '^[a-z]+$' },
+        count: { type: 'integer', minimum: 0, maximum: 10 },
+        list: { type: 'array', minItems: 1, maxItems: 4 },
+        map: { type: 'object', minProperties: 1 },
+        kind: { const: 'A' },
+        free: { type: ['string', 'null'] },
+      },
+    }
+    const props = (overrides: Record<string, Json>): Json => ({
+      ...(base as object),
+      properties: { ...((base as { properties: object }).properties as object), ...overrides },
+    })
+    expect(compareInterfaceSchema(base, base)).toEqual([])
+    // Widening, and adding a property, passes.
+    expect(
+      compareInterfaceSchema(
+        base,
+        props({
+          name: { type: 'string', maxLength: 128 },
+          count: { type: ['integer', 'null'], minimum: -1 },
+          list: { type: 'array' },
+          map: { type: 'object' },
+          free: {},
+          added: { type: 'string', pattern: 'x' },
+        }),
+      ),
+    ).toEqual([])
+    expect(
+      compareInterfaceSchema(
+        base,
+        props({
+          name: { type: 'string', minLength: 2, maxLength: 32, pattern: '^[a-z]*$' },
+          count: { type: 'number', minimum: 1, maximum: 9 },
+          list: { type: 'array', minItems: 2, maxItems: 3 },
+          map: { type: 'object', minProperties: 2, additionalProperties: false },
+          kind: { const: 'B' },
+          free: { type: 'string', enum: ['a'] },
+        }),
+      ),
+    ).toEqual([
+      '/properties/name pattern changed',
+      '/properties/name minLength rose from 1 to 2',
+      '/properties/name maxLength fell from 64 to 32',
+      '/properties/count type lost integer',
+      '/properties/count minimum rose from 0 to 1',
+      '/properties/count maximum fell from 10 to 9',
+      '/properties/list minItems rose from 1 to 2',
+      '/properties/list maxItems fell from 4 to 3',
+      '/properties/map minProperties rose from 1 to 2',
+      '/properties/map closed additionalProperties',
+      '/properties/kind const changed',
+      '/properties/free type lost null',
+      '/properties/free gained an enum',
+    ])
+    // A constraint that appears where there was none narrows too.
+    expect(
+      compareInterfaceSchema(
+        { type: 'object', properties: { a: {} } },
+        { type: 'object', properties: { a: { type: 'string', pattern: 'x', const: 'x' } } },
+      ),
+    ).toEqual([
+      '/properties/a gained type string',
+      '/properties/a gained a pattern',
+      '/properties/a gained a const',
+    ])
   })
 })
 
