@@ -166,7 +166,7 @@ Every family releases `2.1.0`, in the same order. No document that validated at 
 stops validating. What a consumer adopts:
 
 - **Vendor core's release record and registries** (#217). Core now ships data
-  interfaces: its `release.json`, the registry schemas and the registries of
+  interfaces: its `release.json`, the schemas registries follow, and registries of
   requirements, diagnostics, vocabulary and term records. Each family ships its
   own requirement and diagnostic registries. Read them instead of copying
   `spec.md` tables or regular expressions
