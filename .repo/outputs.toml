@@ -159,3 +159,24 @@ compatibility = "gated"
 audience = "public"
 generated = true
 docs = "docs/using-schemas.md#registries"
+
+[[interfaces]]
+id = "component-protocols"
+format = "data"
+description = "The connection protocol registry: one JSON record per protocol, with its members, their types, presence, defaults, sensitivity and roles, and the protocol categories."
+definitions = ["specifications/component/v2/protocols/"]
+delivered_by = "component-release"
+compatibility = "gated"
+audience = "public"
+docs = "docs/using-schemas.md#registries"
+
+[[interfaces]]
+id = "blueprint-connection-evidence"
+format = "json-schema"
+description = "The JSON Schema of the connection evidence a resolver records for each connection selection."
+definitions = ["specifications/blueprint/v2/interfaces/connection-evidence.schema.json"]
+delivered_by = "blueprint-release"
+compatibility = "gated"
+audience = "public"
+generated = true
+docs = "docs/using-schemas.md#registries"
