@@ -121,6 +121,7 @@ tasks:
       - task: check:published
       - task: check:editions
       - task: check:compat
+      - task: check:compat:registry
       - task: check:test
       - task: check:commits
       - task: check:docs
