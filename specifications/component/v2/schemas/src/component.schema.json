@@ -187,7 +187,7 @@
             "SLACK_APP",
             "DISCORD_BOT"
           ],
-          "description": "The wire contract a client speaks, independent of vendor. It fixes the members."
+          "description": "The wire contract a client speaks, named for that contract rather than for whoever serves it. It fixes the members."
         },
         "capabilities": {
           "type": "array",
