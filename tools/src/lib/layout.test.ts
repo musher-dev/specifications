@@ -21,6 +21,7 @@ import {
   isRetiredMajor,
   LayoutError,
   LEDGER_FILE,
+  PART_SINCE,
   parseManifestKey,
   parseSpecPath,
   REPO_ROOT,
@@ -177,10 +178,37 @@ describe('hasPart', () => {
     expect(hasPart(CORE_FAMILY, 'v2', 'examples')).toBe(false)
   })
 
-  test('a kind family carries every part', () => {
+  test('a kind family carries every document part', () => {
     for (const part of ['spec', 'schema', 'examples', 'conformance'] as const) {
       expect(hasPart('component', 'v1', part)).toBe(true)
     }
+  })
+
+  test('every family carries a registry; interfaces and protocols only where named', () => {
+    for (const family of [CORE_FAMILY, 'component', 'blueprint', 'listing']) {
+      expect(hasPart(family, 'v2', 'registry')).toBe(true)
+    }
+    expect(hasPart(CORE_FAMILY, 'v2', 'interfaces')).toBe(true)
+    expect(hasPart('blueprint', 'v2', 'interfaces')).toBe(true)
+    expect(hasPart('component', 'v2', 'interfaces')).toBe(false)
+    expect(hasPart('listing', 'v2', 'interfaces')).toBe(false)
+    expect(hasPart('component', 'v2', 'protocols')).toBe(true)
+    expect(hasPart(CORE_FAMILY, 'v2', 'protocols')).toBe(false)
+  })
+
+  test('a release older than a part’s floor does not carry it, and one at the floor does', () => {
+    expect(PART_SINCE.registry).toBe('2.1.0')
+    for (const part of ['registry', 'interfaces'] as const) {
+      expect(hasPart(CORE_FAMILY, 'v2', part, '2.0.0')).toBe(false)
+      expect(hasPart(CORE_FAMILY, 'v2', part, '2.0.9')).toBe(false)
+      expect(hasPart(CORE_FAMILY, 'v2', part, '2.1.0')).toBe(true)
+      expect(hasPart(CORE_FAMILY, 'v2', part, '3.0.0')).toBe(true)
+      expect(hasPart(CORE_FAMILY, 'v2', part, '10.0.0')).toBe(true)
+    }
+    expect(hasPart('component', 'v2', 'protocols', '2.0.0')).toBe(false)
+    expect(hasPart('component', 'v2', 'protocols', '2.1.0')).toBe(true)
+    // A part with no floor is unaffected by the version.
+    expect(hasPart('component', 'v2', 'conformance', '2.0.0')).toBe(true)
   })
 })
 

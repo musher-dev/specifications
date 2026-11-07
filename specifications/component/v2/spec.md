@@ -225,18 +225,19 @@ component. Admission: `ERR_REVISION_NOT_INCREASING` at `/metadata/revision`.
 
 Gaps are permitted: publishing 1 and then 7 is not an error. Reuse is the case
 the rule exists for. `revision: 3` on a catalog reference selects that
-component revision, and a catalog that let 3 mean two different documents would
-make the pin name nothing. The item-local form has the same problem one step
-removed: a blueprint that deployed revision 3 last month and revision 3 today,
-with different bytes behind it, has no way to say so. The rule is `admission`
-because deciding it needs the catalog's lineage, which
+component revision, and a platform that let 3 mean two different documents
+would make the pin name nothing. The item-local form has the same problem one
+step removed: a blueprint that deployed revision 3 last month and revision 3
+today, with different bytes behind it, has no way to say so. The rule is
+`admission` because deciding it needs the component's lineage, which the
+platform holds and which
 [core v2 §6](../../core/v2/spec.md#validation-phases) forbids the earlier
 phases to require. A client validating a file it has just written cannot see
 the lineage and MUST NOT report this rule.
 
-Whether the catalog treats an identical re-submission as a no-op rather than as
-a publication is outside this specification. It orders publications; it does
-not define when two YAML files are the same document.
+Whether the platform treats an identical re-submission as a no-op rather than
+as a publication is outside this specification. This specification orders
+publications; it does not define when two YAML files are the same document.
 
 **The revision is not the item's revision.** The item's is the blueprint's
 ([blueprint §3](../../blueprint/v2/spec.md#identity)), and it is pinned to no
@@ -818,7 +819,10 @@ private address with clients of their own. The server name is `serverName` when
 present, and is what the network connection sends in SNI. Without one, the
 certificate MUST be valid for the host the platform connects to, which this
 specification does not fix, so an endpoint that verifies SHOULD name its
-`serverName`. The server name never changes the address connected to or the
+`serverName`. A validator reports one that does not, `SYSTEM` being the only
+verifying mode that lets it be absent, with `WARN_ENDPOINT_SERVER_NAME` at the
+endpoint in the `semantic` phase ([§8.1](#warnings)). The document is still
+valid. The server name never changes the address connected to or the
 HTTP `Host` header. Under `NONE`, `serverName` sets SNI only. A policy an
 implementation cannot honour is a configuration error, reported as one, and
 never a failed probe.
@@ -1610,7 +1614,7 @@ Core's phases and validation scopes apply
 structurally validated before semantic checks, and the `document` scope runs
 both. Publication requires the `publication` scope, which adds the `admission`
 rules of this document: [`COMP-ID-001`](#COMP-ID-001), because the lineage is a
-fact the catalog holds, and [`COMP-DESC-003`](#COMP-DESC-003),
+fact the platform holds, and [`COMP-DESC-003`](#COMP-DESC-003),
 [`COMP-DESC-004`](#COMP-DESC-004) and the obligations
 [§5](#publication-obligations) lists, because an unwritten field is only a
 defect in a component someone is trying to publish. One `admission` rule reads
@@ -1662,6 +1666,16 @@ Core diagnostics also apply.
 | `ERR_COMMAND_REQUIRED` | `admission` | Publication requires a command of a `JOB`. |
 | `ERR_OUTPUT_REQUIRED` | `admission` | Publication requires an output of an `EXTERNAL` component. |
 | `ERR_ENV_ENCODING` | `resolution` | A value cannot be encoded into an environment variable. |
+
+### <a id="warnings"></a>8.1 Warnings
+
+These codes are reported at `WARNING` ([core v2 §7](../../core/v2/spec.md#diagnostics)).
+Each reports a SHOULD the document does not meet. A warning never changes a
+result's status, so no document is rejected for one.
+
+| Code | Requirement | Meaning |
+|---|---|---|
+| `WARN_ENDPOINT_SERVER_NAME` | [`COMP-EP-007`](#COMP-EP-007) | An `HTTPS` endpoint whose trust policy verifies does not name its `serverName`. Reported in the `semantic` phase, at the endpoint. |
 
 ## <a id="conformance"></a>9. Conformance
 

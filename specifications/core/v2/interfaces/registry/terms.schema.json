@@ -1,7 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://specifications.musher.dev/core/v2/registry/terms",
   "title": "Term records",
-  "description": "The shape of docs/terminology.yaml: one record per concept per context. Field names follow musher-dev/engineering-conventions' terminology schema wherever the two overlap (id, display_name, definition or authority, tags, stability, aliases, deprecated); the rest extend it with the concept relations and identifier claims this repository checks. Informative: tools/src/policy/terms.ts is what enforces the rules a schema cannot state.",
+  "description": "The shape of the term records: docs/terminology.yaml, where they are written, and registry/terms.json, the projection a core release carries. One record per concept per context. Field names follow musher-dev/engineering-conventions' terminology schema wherever the two overlap (id, display_name, definition or authority, tags, stability, aliases, deprecated); the rest extend it with the concept relations and identifier claims this repository checks. Informative: tools/src/policy/terms.ts is what enforces the rules a schema cannot state.",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_version", "description", "terms"],
@@ -154,7 +155,7 @@
               "type": "array",
               "minItems": 1,
               "uniqueItems": true,
-              "items": { "type": "string", "pattern": "^ERR_[A-Z0-9_]+$" }
+              "items": { "type": "string", "pattern": "^(ERR|WARN)_[A-Z0-9_]+$" }
             },
             "requirement_prefixes": {
               "description": "Requirement ID prefixes, the ID without its number: COMP-EP.",
@@ -221,7 +222,10 @@
           }
         }
       },
-      "oneOf": [{ "required": ["definition"] }, { "required": ["authority"] }]
+      "oneOf": [
+        { "properties": { "definition": true }, "required": ["definition"] },
+        { "properties": { "authority": true }, "required": ["authority"] }
+      ]
     },
     "alias": {
       "description": "A word to avoid in favour of the term. banned aliases fail; discouraged ones warn. scope says where: prose (checked by the generated MusherSpecifications Vale style) or identifier (schema property names, enum values, $defs keys, diagnostic codes, requirement ID prefixes, reserved namespaces and grammar names, checked by check:terms within the record's context).",

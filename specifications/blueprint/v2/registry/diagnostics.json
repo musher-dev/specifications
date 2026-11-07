@@ -1,0 +1,884 @@
+{
+  "family": "blueprint",
+  "major": "v2",
+  "diagnostics": [
+    {
+      "code": "ERR_INVALID_YAML",
+      "phases": [
+        "parser",
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "core"
+    },
+    {
+      "code": "ERR_INVALID_UTF8",
+      "phases": [
+        "parser"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "core"
+    },
+    {
+      "code": "ERR_INVALID_NUMBER",
+      "phases": [
+        "parser"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "core"
+    },
+    {
+      "code": "ERR_DUPLICATE_KEY",
+      "phases": [
+        "parser"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "core"
+    },
+    {
+      "code": "ERR_ANCHOR_OR_ALIAS",
+      "phases": [
+        "parser"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "core"
+    },
+    {
+      "code": "ERR_MULTIPLE_DOCUMENTS",
+      "phases": [
+        "parser"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "core"
+    },
+    {
+      "code": "ERR_NON_STRING_KEY",
+      "phases": [
+        "parser"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "core"
+    },
+    {
+      "code": "ERR_MERGE_KEY",
+      "phases": [
+        "parser"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "core"
+    },
+    {
+      "code": "ERR_EXPLICIT_TAG",
+      "phases": [
+        "parser"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "core"
+    },
+    {
+      "code": "ERR_DOCUMENT_TOO_LARGE",
+      "phases": [
+        "parser"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "core"
+    },
+    {
+      "code": "ERR_DEPTH_EXCEEDED",
+      "phases": [
+        "parser"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "core"
+    },
+    {
+      "code": "ERR_SCALAR_TOO_LONG",
+      "phases": [
+        "parser"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "core"
+    },
+    {
+      "code": "ERR_UNSUPPORTED_SPEC_VERSION",
+      "phases": [
+        "structural"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "core"
+    },
+    {
+      "code": "ERR_WRONG_KIND",
+      "phases": [
+        "structural"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "core"
+    },
+    {
+      "code": "ERR_UNKNOWN_FIELD",
+      "phases": [
+        "structural"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "core"
+    },
+    {
+      "code": "ERR_MISSING_FIELD",
+      "phases": [
+        "structural"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "core"
+    },
+    {
+      "code": "ERR_INVALID_TYPE",
+      "phases": [
+        "structural"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "core"
+    },
+    {
+      "code": "ERR_INVALID_VALUE",
+      "phases": [
+        "structural"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "core"
+    },
+    {
+      "code": "ERR_SLUG_MISMATCH",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "core"
+    },
+    {
+      "code": "ERR_MALFORMED_PLACEHOLDER",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "core"
+    },
+    {
+      "code": "ERR_UNKNOWN_PLACEHOLDER_NAMESPACE",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "core"
+    },
+    {
+      "code": "ERR_NAMESPACE_NOT_PERMITTED",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "core"
+    },
+    {
+      "code": "ERR_CONFLICTING_ENV_VAR",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "component"
+    },
+    {
+      "code": "ERR_UNKNOWN_ENDPOINT",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "component"
+    },
+    {
+      "code": "ERR_ENDPOINT_NOT_URL_ADDRESSED",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "component"
+    },
+    {
+      "code": "ERR_ENDPOINT_NOT_PORT_ADDRESSED",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "component"
+    },
+    {
+      "code": "ERR_ENDPOINT_NOT_HTTP",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "component"
+    },
+    {
+      "code": "ERR_UNKNOWN_ENDPOINT_PROPERTY",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "component"
+    },
+    {
+      "code": "ERR_ENDPOINT_NOT_EXPOSABLE",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "component"
+    },
+    {
+      "code": "ERR_ENDPOINT_NOT_OIDC_CLIENT",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "component"
+    },
+    {
+      "code": "ERR_INVALID_SCHEDULE",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "component"
+    },
+    {
+      "code": "ERR_UNKNOWN_INPUT",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "component"
+    },
+    {
+      "code": "ERR_UNKNOWN_CONNECTION_MEMBER",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "component"
+    },
+    {
+      "code": "ERR_INPUT_NOT_GUARANTEED",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "component"
+    },
+    {
+      "code": "ERR_UNUSED_INPUT",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "component"
+    },
+    {
+      "code": "ERR_INVALID_MOUNT",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "component"
+    },
+    {
+      "code": "ERR_INVALID_VALUE_SCHEMA",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "component"
+    },
+    {
+      "code": "ERR_VALUE_CONSTRAINT",
+      "phases": [
+        "semantic",
+        "resolution"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "component"
+    },
+    {
+      "code": "ERR_SENSITIVE_LITERAL",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "component"
+    },
+    {
+      "code": "ERR_REVISION_NOT_INCREASING",
+      "phases": [
+        "admission"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "component"
+    },
+    {
+      "code": "ERR_PRIVILEGED_PORT",
+      "phases": [
+        "admission"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "component"
+    },
+    {
+      "code": "ERR_DESCRIPTION_REQUIRED",
+      "phases": [
+        "admission"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "component"
+    },
+    {
+      "code": "ERR_WORKLOAD_REQUIRED",
+      "phases": [
+        "admission"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "component"
+    },
+    {
+      "code": "ERR_SOURCE_REQUIRED",
+      "phases": [
+        "admission"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "component"
+    },
+    {
+      "code": "ERR_ENDPOINT_REQUIRED",
+      "phases": [
+        "admission"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "component"
+    },
+    {
+      "code": "ERR_COMMAND_REQUIRED",
+      "phases": [
+        "admission"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "component"
+    },
+    {
+      "code": "ERR_OUTPUT_REQUIRED",
+      "phases": [
+        "admission"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "component"
+    },
+    {
+      "code": "ERR_ENV_ENCODING",
+      "phases": [
+        "resolution"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "component"
+    },
+    {
+      "code": "WARN_ENDPOINT_SERVER_NAME",
+      "phases": [
+        "parser",
+        "structural",
+        "semantic",
+        "admission",
+        "resolution"
+      ],
+      "severities": [
+        "WARNING"
+      ],
+      "declaredBy": "component",
+      "requirement": "COMP-EP-007"
+    },
+    {
+      "code": "ERR_COMPONENT_NOT_FOUND",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_REFERENCE_ESCAPE",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_INVALID_DEPENDENCY",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_COMPUTE_REQUIRED",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_COMPUTE_FORBIDDEN",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_UNKNOWN_NODE",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_NODE_REQUIRED",
+      "phases": [
+        "admission"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_COMPUTE_PROFILE_UNAVAILABLE",
+      "phases": [
+        "admission"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_PLACEMENT_UNSATISFIABLE",
+      "phases": [
+        "admission"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_STORAGE_UNAVAILABLE",
+      "phases": [
+        "admission"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_VOLUME_TOO_LARGE",
+      "phases": [
+        "admission"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_UNKNOWN_OUTPUT",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_UNKNOWN_PARAMETER",
+      "phases": [
+        "semantic",
+        "resolution"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_INCOMPATIBLE_TYPE",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_UNREFERENCED_COMPONENT",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_CONFLICTING_INPUT_SCHEMA",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_UNBOUND_PARAMETER",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_UNSATISFIED_REQUIRED_INPUT",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_ENDPOINT_NOT_PUBLIC",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_VIEWER_IDENTITY_NOT_FORWARDED",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_EXEMPTION_NOT_DECLARED",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_UNKNOWN_ENUM_MEMBER",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_PARAMETER_NOT_OFFERED",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_INVALID_PARAMETER_ORIGIN",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_UNKNOWN_DEPLOYMENT_FACT",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_INVALID_HASHED_PARAMETER",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_INVALID_VOLUME_ALLOCATION",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_READINESS_REQUIRED",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_VALUE_CYCLE",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_INVALID_CONNECTION_BINDING",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_PARAMETER_NOT_SUBMITTABLE",
+      "phases": [
+        "resolution"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_MISSING_PARAMETER_VALUE",
+      "phases": [
+        "resolution"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_VARIABLE_NOT_AUTHORIZED",
+      "phases": [
+        "resolution"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_DEPLOYMENT_FACT_UNAVAILABLE",
+      "phases": [
+        "resolution"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_INVALID_RESOLUTION_CONTEXT",
+      "phases": [
+        "resolution"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_CONNECTION_NOT_FOUND",
+      "phases": [
+        "resolution"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_CONNECTION_DENIED",
+      "phases": [
+        "resolution"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_CONNECTION_INCOMPATIBLE",
+      "phases": [
+        "resolution"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    }
+  ]
+}

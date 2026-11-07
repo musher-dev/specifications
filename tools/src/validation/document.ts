@@ -27,14 +27,38 @@ export const RESOLUTION_STAGES = [
   'record',
 ] as const
 export type ResolutionStage = (typeof RESOLUTION_STAGES)[number]
+/**
+ * A diagnostic's severity (core v2 §7). An ERROR makes a result INVALID; a
+ * WARNING is advisory and never changes the status.
+ */
+export type Severity = 'ERROR' | 'WARNING'
 export interface Diagnostic {
   readonly code: string
   readonly path: string
   readonly message: string
+  /** Absent while a phase is still collecting; `reported` makes it ERROR. */
+  readonly severity?: Severity
   readonly phase?: Phase
+  /** Present exactly on a `resolution` diagnostic, and never null (core v2 §7). */
   readonly stage?: ResolutionStage
+  /** The other document of the item that holds the primary location (core v2 §7). */
+  readonly artifact?: string
   readonly related?: readonly { readonly artifact: string; readonly path: string }[]
 }
+/**
+ * A diagnostic as a result reports it: with its phase, and with a severity,
+ * ERROR unless the check that raised it said WARNING. Every diagnostic leaves
+ * the runner through here, so none is reported without either.
+ */
+export function reported(diagnostic: Diagnostic, phase: Phase): Diagnostic {
+  return {
+    ...diagnostic,
+    severity: diagnostic.severity ?? 'ERROR',
+    phase: diagnostic.phase ?? phase,
+  }
+}
+/** Whether a diagnostic fails the document: an ERROR, or one no check has marked WARNING. */
+export const isError = (diagnostic: Diagnostic): boolean => diagnostic.severity !== 'WARNING'
 export const MAX_DOCUMENT_BYTES = 1024 * 1024
 export const MAX_SCALAR_BYTES = 64 * 1024
 export const MAX_DEPTH = 64

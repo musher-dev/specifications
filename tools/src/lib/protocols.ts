@@ -9,8 +9,8 @@
  *
  * NON-NORMATIVE, like everything under tools/. The records are normative.
  */
-import { existsSync, readdirSync } from 'node:fs'
-import { join } from 'node:path'
+import { existsSync } from 'node:fs'
+import { basename, join } from 'node:path'
 import { strictAjv } from '../schema/lint.ts'
 import {
   CORE_FAMILY,
@@ -21,6 +21,7 @@ import {
   type Json,
   PROTOCOL_CATEGORIES_FILE,
   PROTOCOL_SCHEMA_FILE,
+  protocolFiles,
   REPO_ROOT,
   readJson,
 } from './layout.ts'
@@ -114,9 +115,12 @@ export function loadProtocolRegistry(
   const { categories } = categoriesFile as unknown as { categories: ProtocolCategory[] }
 
   const records = new Map<string, ProtocolRecord>()
-  for (const file of readdirSync(dir).sort()) {
-    if (file === PROTOCOL_CATEGORIES_FILE || !file.endsWith('.json')) continue
-    const value = readJson(join(dir, file))
+  const family = discoverKinds(repoRoot).find((f) => f.name === 'component' && f.major === major)
+  if (!family) throw new Error(`no component family version ${major}`)
+  for (const path of protocolFiles(family)) {
+    const file = basename(path)
+    if (file === PROTOCOL_CATEGORIES_FILE) continue
+    const value = readJson(path)
     if (!validRecord(value)) throw new Error(`${file}: ${pointer(validRecord.errors)}`)
     const record = value as unknown as ProtocolRecord
     if (protocolFileName(record.id) !== file)

@@ -58,8 +58,10 @@ deployment.
   ([§4](#node-graph)).
 - A **document reference** is a node's `componentRef`: an **item-local
   reference**, a relative path to a component document in the same catalog
-  item, or a **catalog reference**, a component's UUID with a revision
-  ([§4.1](#component-reference)).
+  item, or a **catalog reference**, a component's UUID with a revision, which
+  resolves against the deploying organization's library and the catalog
+  ([§4.1](#component-reference)). The name is the reference's form: the
+  component it names need not be listed.
 - A **binding** supplies one input of one node from an origin
   ([§4.2](#bindings)).
 - An **origin** is where a value comes from. A binding's origin is a deployment
@@ -259,8 +261,10 @@ not in it.
 **What v2 does not constrain.** An item holding a `blueprint.yaml` and no
 `listing.yaml` is not rejected. Nothing in
 [core v2 §4.2](../../core/v2/spec.md#item-identity) requires the sibling listing
-[§3.1](#item-directory) shows, and an item with no catalog entry is one that is
-deployable and not browsable rather than one that is malformed. Nothing orders
+[§3.1](#item-directory) shows: an item with no listing is one published to a
+library and not listed in the catalog
+([core v2 §1.3](../../core/v2/spec.md#terms)), deployable and not browsable,
+rather than one that is malformed. Nothing orders
 one item's revisions against another's either, and nothing checks a blueprint
 revision against the lineage it extends: `minimum: 1` is the whole of the rule
 before admission. Component §4 carries an admission rule for a component's
@@ -278,7 +282,7 @@ A blueprint and its sibling listing are the item documents of one
 ```
 <slug>/
   blueprint.yaml        this document
-  listing.yaml          the sibling catalog entry
+  listing.yaml          the sibling listing, once the item is in the catalog
   components/           the component documents the nodes reference
   media/                icon and screenshots
 ```
@@ -352,6 +356,14 @@ nodes:
   positive integer `revision`. An uppercase UUID is no reference:
   `ERR_INVALID_VALUE` at `componentRef`, structural.
 
+Which published components a catalog reference can name is platform policy,
+not a rule of this document: the platform resolves one against the deploying
+organization's library and the catalog
+([core v2 §1.3](../../core/v2/spec.md#terms)), and never against another
+organization's library. A component need not be listed to be referenced, and
+the validation phases see only the components the context supplies
+([`BP-REF-002`](#BP-REF-002)).
+
 <a id="BP-REF-002"></a>**`BP-REF-002`**: Item-local and catalog components
 undergo the same structural and semantic checks. Acquisition is separate: the
 semantic phase MUST NOT fetch a dependency. Supplied catalog components are
@@ -377,7 +389,7 @@ escape too ([core v2 §11](../../core/v2/spec.md#security)). Semantic:
 <a id="BP-REF-003"></a>**`BP-REF-003`**: The component a node deploys MUST meet
 component's publication obligations
 ([component §5](../../component/v2/spec.md#publication-obligations)), whether it
-is item-local or in the catalog. A component may be stored unfinished, but a
+is item-local or named by a catalog reference. A component may be stored unfinished, but a
 node deploys it as it will run: one with no workload, source, endpoint, command
 or output has nothing to run, and an input with no description gives the
 deployer nothing to read ([§5.4](#deploy-form)). Semantic, in every validation
@@ -1433,9 +1445,9 @@ Core's phases, validation scopes and statuses apply
 ([core v2 §6](../../core/v2/spec.md#validation-phases)). Structural-only success
 does not claim publication or deployment validity. Item-local and catalog
 components share the semantic checks; acquisition is a separate authorized
-operation. The `publication` scope completes the component and catalog
-obligations, [`BP-ID-005`](#BP-ID-005), [`BP-GRAPH-001`](#BP-GRAPH-001) and the
-compute, placement and storage checks [`BP-NODE-009`](#BP-NODE-009) to
+operation. The `publication` scope completes the publication obligations of
+the blueprint and its components, [`BP-ID-005`](#BP-ID-005),
+[`BP-GRAPH-001`](#BP-GRAPH-001) and the compute, placement and storage checks [`BP-NODE-009`](#BP-NODE-009) to
 [`BP-NODE-012`](#BP-NODE-012) among them. The `deployment` scope decides those
 checks again, for the region the deployment runs in, and additionally completes
 resolution ([§5.2](#origins)) and authorization.

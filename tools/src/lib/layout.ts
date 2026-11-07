@@ -254,6 +254,44 @@ export function familyPaths(name: string, major: string): FamilyPaths {
   }
 }
 
+// -----------------------------------------------------------------------------
+// Registries (docs/adr/0043). Each family version's `registry/` holds committed
+// projections `task docs` writes from its spec.md, and for core from the term
+// records; core's `interfaces/registry/` holds the schemas each is valid
+// against.
+// -----------------------------------------------------------------------------
+
+/** The requirement IDs a family version declares. Every family. */
+export const REQUIREMENTS_REGISTRY_FILE = 'requirements.json'
+/** Every diagnostic code a family version's documents may report. Every family. */
+export const DIAGNOSTICS_REGISTRY_FILE = 'diagnostics.json'
+/** Core's ordered lists: phases, scopes, statuses, severities, stages and namespaces. */
+export const VOCABULARY_REGISTRY_FILE = 'vocabulary.json'
+/** Every term record, projected from `docs/terminology.yaml`. Core only. */
+export const TERMS_REGISTRY_FILE = 'terms.json'
+
+/** The registry files a family version carries, in the order `task docs` writes them. */
+export function registryFiles(name: string): readonly string[] {
+  return name === CORE_FAMILY
+    ? [
+        REQUIREMENTS_REGISTRY_FILE,
+        DIAGNOSTICS_REGISTRY_FILE,
+        VOCABULARY_REGISTRY_FILE,
+        TERMS_REGISTRY_FILE,
+      ]
+    : [REQUIREMENTS_REGISTRY_FILE, DIAGNOSTICS_REGISTRY_FILE]
+}
+
+/** Where a core major keeps the schemas of the registries, repo-relative. */
+export function registrySchemaDir(major: string): string {
+  return `${familyPaths(CORE_FAMILY, major).interfaces}/registry`
+}
+
+/** The schema a registry file is valid against: `diagnostics.json` → `diagnostics.schema.json`. */
+export function registrySchemaFile(major: string, registryFile: string): string {
+  return `${registrySchemaDir(major)}/${registryFile.replace(/\.json$/, '.schema.json')}`
+}
+
 const FAMILY_SEGMENT = '[a-z][a-z0-9-]*'
 const MANIFEST_KEY = new RegExp(`^${SPECIFICATIONS_ROOT}/(${FAMILY_SEGMENT})/(v\\d+)$`)
 const SPEC_PATH = new RegExp(`^${SPECIFICATIONS_ROOT}/(${FAMILY_SEGMENT})/(v\\d+)/spec\\.md$`)
@@ -290,16 +328,51 @@ export function conformanceLink(
 }
 
 /** The parts of a family version a released ref is expected to carry. */
-export type FamilyPart = 'spec' | 'schema' | 'examples' | 'conformance'
+export type FamilyPart =
+  | 'spec'
+  | 'schema'
+  | 'examples'
+  | 'conformance'
+  | 'registry'
+  | 'interfaces'
+  | 'protocols'
 
 /**
- * Parts a family *role* never carries. Core ships no schema and no examples
- * (docs/adr/0022): its subjects are parser-phase fixtures, not documents of a
- * kind, so there is nothing a bundle could validate or an example illustrate.
+ * Parts a family *role* never carries. Core ships no document schema and no
+ * examples (docs/adr/0022): its subjects are parser-phase fixtures, not
+ * documents of a kind, so there is nothing a bundle could validate or an
+ * example illustrate. What core does ship as JSON Schema is the schemas of its
+ * interfaces, which are not documents (`interfaces`, docs/adr/0043).
  */
 const ABSENT_BY_ROLE: { readonly [role in FamilyRole]: readonly FamilyPart[] } = {
   core: ['schema', 'examples'],
   kind: [],
+}
+
+/**
+ * Parts only some families carry, with the families that do. A part not named
+ * here is carried by every family its role allows. `interfaces/` holds the
+ * schemas of what is not an authored document: core's registry and result
+ * schemas and blueprint's connection evidence. `protocols/` is component's
+ * connection protocol registry (docs/adr/0043, docs/adr/0045).
+ */
+const PART_FAMILIES: { readonly [part in FamilyPart]?: readonly string[] } = {
+  interfaces: [CORE_FAMILY, 'blueprint'],
+  protocols: ['component'],
+}
+
+/**
+ * The first release that carries a part, for the parts added after a family's
+ * first release. A release older than its part's floor legitimately lacks it:
+ * the 2.0.0 tags were cut before registries existed, and `check:published`,
+ * `task site:fetch`, `task check:compat:registry` and `task release:stage`
+ * still read them. At or after the floor the part is as required as `spec.md`
+ * (docs/adr/0043 §6).
+ */
+export const PART_SINCE: { readonly [part in FamilyPart]?: string } = {
+  registry: '2.1.0',
+  interfaces: '2.1.0',
+  protocols: '2.1.0',
 }
 
 /**
@@ -338,9 +411,30 @@ export function isRetiredMajor(name: string, major: string): boolean {
   return (RETIRED_MAJORS[name] ?? []).includes(major)
 }
 
-/** Whether the layout says this family version carries `part`. */
-export function hasPart(name: string, major: string, part: FamilyPart): boolean {
+/** Numeric `X.Y.Z` ordering, for the part floors. */
+function versionAtLeast(version: string, floor: string): boolean {
+  const left = version.split('.').map(Number)
+  const right = floor.split('.').map(Number)
+  for (let i = 0; i < 3; i += 1) {
+    const diff = (left[i] ?? 0) - (right[i] ?? 0)
+    if (diff !== 0) return diff > 0
+  }
+  return true
+}
+
+/**
+ * Whether the layout says this family version carries `part`.
+ *
+ * With `version`, the answer is for that release: a part younger than the
+ * release is not carried (`PART_SINCE`). Without it, the answer is for the
+ * working tree, where every floor has been reached.
+ */
+export function hasPart(name: string, major: string, part: FamilyPart, version?: string): boolean {
   if (ABSENT_BY_ROLE[familyRole(name)].includes(part)) return false
+  const carriers = PART_FAMILIES[part]
+  if (carriers !== undefined && !carriers.includes(name)) return false
+  const since = PART_SINCE[part]
+  if (version !== undefined && since !== undefined && !versionAtLeast(version, since)) return false
   return !(ABSENT_PARTS[`${name}/${major}`] ?? []).includes(part)
 }
 
@@ -601,6 +695,46 @@ export function sourceModules(family: Family): string[] {
     .map((e) => join(family.srcDir, e))
 }
 
+/** Every file under `dir`, recursively, absolute and in name order; empty when it is absent. */
+function filesUnder(dir: string): string[] {
+  let entries: string[]
+  try {
+    entries = readdirSync(dir).sort()
+  } catch {
+    return []
+  }
+  return entries.flatMap((entry) => {
+    const path = join(dir, entry)
+    return statSync(path).isDirectory() ? filesUnder(path) : [path]
+  })
+}
+
+/**
+ * Absolute paths of every `*.schema.json` under a family version's
+ * `interfaces/`, at any depth, in name order: the schemas of what is not an
+ * authored document (docs/adr/0043).
+ */
+export function interfaceSchemaFiles(family: Family): string[] {
+  const dir = inRepo(family.repoRoot, familyPaths(family.name, family.major).interfaces)
+  return filesUnder(dir).filter((path) => path.endsWith('.schema.json'))
+}
+
+/**
+ * Whether an interface schema describes repository metadata, which is what
+ * core's `interfaces/registry/` holds: the shapes of the registries and of the
+ * term records, not of anything a document or a result carries.
+ */
+export function isRegistrySchema(family: Family, path: string): boolean {
+  if (family.name !== CORE_FAMILY) return false
+  return path.startsWith(`${inRepo(family.repoRoot, registrySchemaDir(family.major))}/`)
+}
+
+/** Absolute paths of every `*.json` file in a family version's `protocols/`, in name order. */
+export function protocolFiles(family: Family): string[] {
+  const dir = inRepo(family.repoRoot, familyPaths(family.name, family.major).protocols)
+  return filesUnder(dir).filter((path) => path.endsWith('.json'))
+}
+
 /** Whether a file is an example document, which is YAML: `.yaml` or `.yml`. */
 export function isExampleFile(path: string): boolean {
   return /\.ya?ml$/.test(path)
@@ -743,8 +877,16 @@ export class Failures {
 
 /** The term records: the hand-edited source of the document vocabulary. */
 export const TERMINOLOGY_FILE = 'docs/terminology.yaml'
-/** The JSON Schema the term records are validated against. */
-export const TERMINOLOGY_SCHEMA_FILE = 'docs/terminology.schema.json'
+/**
+ * The core major whose release carries the term records, as
+ * `registry/terms.json`, and their schema (docs/adr/0043 §3).
+ */
+export const TERMINOLOGY_CORE_MAJOR = 'v2'
+/**
+ * The JSON Schema the term records are validated against: a released core
+ * interface, which `docs/terminology.yaml` names for editors.
+ */
+export const TERMINOLOGY_SCHEMA_FILE = `${registrySchemaDir(TERMINOLOGY_CORE_MAJOR)}/terms.schema.json`
 /** The generated glossary page, committed; `task check:docs` fails when it is stale. */
 export const TERMINOLOGY_DOC_FILE = 'docs/terminology.md'
 /**
@@ -759,3 +901,17 @@ export const VALE_TERMS_FILE = `${VALE_STYLE_DIR}/Terms.yml`
 /** Discouraged prose aliases, as a Vale substitution rule at level warning. */
 export const VALE_DISCOURAGED_FILE = `${VALE_STYLE_DIR}/Discouraged.yml`
 // --- end of term records block -----------------------------------------------
+
+// -----------------------------------------------------------------------------
+// The validation result: core's schema for what one validation reports, and
+// the subset a conformance fixture declares (docs/adr/0044). Read by the
+// conformance runner and its tests.
+// -----------------------------------------------------------------------------
+
+/** The validation result schema's file name, under core's `interfaces/`. */
+export const VALIDATION_RESULT_SCHEMA_FILE = 'validation-result.schema.json'
+
+/** Absolute path of core `<major>`'s validation result schema in `repoRoot`. */
+export function validationResultSchemaPath(repoRoot: string, major: string): string {
+  return join(repoRoot, familyPaths(CORE_FAMILY, major).interfaces, VALIDATION_RESULT_SCHEMA_FILE)
+}

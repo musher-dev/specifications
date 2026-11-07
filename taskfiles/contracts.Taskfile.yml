@@ -5,25 +5,33 @@
 # names, so a reader or a workflow can check, compare and bundle any producer's
 # interfaces without reading its Taskfile. Here each one runs the checks this
 # repository already had, which keep their own names: `task check` still runs
-# them all. The interfaces are the kind families' schemas, which are authored,
-# not generated, so there is no `contracts:generate`.
+# them all. The kind families' schemas are authored. The registries are
+# generated from spec.md and the term records by `task docs`, which
+# `contracts:generate` runs and `check:docs` holds them to (docs/adr/0043).
 #
 # Included flattened, as every fragment is, so each reference names a task
 # exactly as its fragment writes it.
 version: '3'
 
 tasks:
+  contracts:generate:
+    desc: Regenerate every generated interface definition, the registries among them
+    cmds:
+      - task: docs
+
   contracts:check:
-    desc: Check every interface's schema sources, build output and examples
+    desc: Check every interface's schema sources, build output, examples and generated registries
     deps:
       - task: check:schema
       - task: check:generated
       - task: check:examples
+      - task: check:docs
 
   contracts:breaking:
     desc: Fail a change that breaks a released interface inside its major version
     deps:
       - task: check:compat
+      - task: check:compat:registry
 
   contracts:bundle:
     desc: Stage a tagged release's bundle, archive and release record (TAG=<family>/vX.Y.Z)

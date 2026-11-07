@@ -7,7 +7,8 @@ container, it goes in here.
 Policy and rationale:
 [`docs/adr/0011-tooling-configuration-layout.md`](../docs/adr/0011-tooling-configuration-layout.md).
 Enforcement: `task check:conventions` holds this directory to the engineering
-conventions' CONF-01..CONF-09, which retired this repository's CFG-01..CFG-08
+conventions' CONF-* rules. At 0.7.0, CONF-01..CONF-09 retired this
+repository's CFG-01..CFG-08
 ([ADR 0037](../docs/adr/0037-the-repository-adopts-engineering-conventions-0-7-0.md)).
 `task check:config`, implemented in
 [`tools/src/policy/config.ts`](../tools/src/policy/config.ts), is CFG-09 alone:

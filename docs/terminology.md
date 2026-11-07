@@ -10,7 +10,7 @@ it. `task check:terms` holds the records, the schemas and the prose together,
 and the words to avoid are enforced in prose by the generated
 `MusherSpecifications` Vale style.
 
-214 record(s). A record marked *proposed* is an open item, not yet a decision.
+219 record(s). A record marked *proposed* is an open item, not yet a decision.
 
 ## Index
 
@@ -21,20 +21,20 @@ and the words to avoid are enforced in prose by the generated
 | [access policy](#blueprint-access-policy) | blueprint | Which viewers a RESTRICTED endpoint admits. |
 | [acquisition](#deployment-acquisition) | deployment | Obtaining external context, with authority. |
 | [acquisition status](#blueprint-acquisition-status) | blueprint | NOT_ACQUIRED, NOT_FOUND, DENIED, INCOMPATIBLE or SELECTED. |
-| [admission phase](#core-admission-phase) | core | Publisher and platform checks that need the catalog or policy. |
+| [admission phase](#core-admission-phase) | core | Publisher and platform checks that need published documents or policy. |
 | [allocation](#deployment-allocation) | deployment | A concrete resource assigned to a deployment. |
 | [allocation stage](#deployment-allocation-stage) | deployment | Selects compute and allocates addresses. |
 | [artifact digest](#deployment-artifact-digest) | deployment | SHA-256 of a resolved component document. |
 | [behaviour suite](#repository-behaviour-suite) | repository | A claimable group of behavioural cases. |
 | [binding](#blueprint-binding) | blueprint | Supplies one input of one node from one origin. |
 | [blueprint](#blueprint-blueprint) | blueprint | The unit of deployment. |
-| [blueprint item](#catalog-blueprint-item) | catalog | blueprint.yaml, listing.yaml and the components they use. |
+| [blueprint item](#catalog-blueprint-item) | catalog | blueprint.yaml and the components it uses, and listing.yaml once listed. |
 | [build argument](#component-build-argument) | component | A build-time literal. |
 | [build context](#component-build-context) | component | The directory a build may read. |
 | [build recipe](#component-build-recipe) | component | How a source becomes an image. |
 | [build secret](#component-build-secret) | component | A sensitive input mounted into the build only. |
 | [build stage](#deployment-build-stage) | deployment | Builds pinned source content into images. |
-| [catalog](#catalog-catalog) | catalog | The published collection of items. |
+| [catalog](#catalog-catalog) | catalog | The curated, public collection of listed items. |
 | [catalog item](#catalog-catalog-item) | catalog | A directory published as one unit. |
 | [catalog reference](#blueprint-catalog-reference) | blueprint | A UUID and a revision naming a published component. |
 | [catalog value](#blueprint-catalog-value) | blueprint | A value from a catalog-versioned vocabulary. |
@@ -72,8 +72,8 @@ and the words to avoid are enforced in prose by the generated
 | [deployment parameter](#blueprint-deployment-parameter) | blueprint | A named value from outside the documents. |
 | [deployment snapshot](#deployment-deployment-snapshot) | deployment | The private state behind a resolution record. |
 | [deployment-fact parameter](#blueprint-deployment-fact-parameter) | blueprint | One deployment fact, `${{ deployment.creator.x }}`. |
-| [diagnostic](#core-diagnostic) | core | Code, phase and path of one failure. |
-| [diagnostic code](#core-diagnostic-code) | core | The ERR_ name of one condition. |
+| [diagnostic](#core-diagnostic) | core | Code, severity, phase and path of one condition. |
+| [diagnostic code](#core-diagnostic-code) | core | The stable name of one condition. |
 | [diagnostic registry](#core-diagnostic-registry) | core | Every code a family may report, with its phases. |
 | [display name](#listing-display-name) | listing | The item's storefront title. |
 | [DNS-label grammar](#core-dns-label-grammar) | core | The lowercase DNS label, 2 to 63 characters. |
@@ -86,6 +86,7 @@ and the words to avoid are enforced in prose by the generated
 | [environment stage](#deployment-environment-stage) | deployment | Encodes values into environment variables. |
 | [environment variable](#component-environment-variable) | component | Where an input's encoded value is written. |
 | [exemptible requests](#component-exemptible-requests) | component | The requests an endpoint can take without a viewer. |
+| [expected diagnostic](#repository-expected-diagnostic) | repository | A diagnostic a fixture expects. |
 | [exposure](#blueprint-exposure) | blueprint | Who reaches an endpoint, and how. |
 | [EXTERNAL](#component-external) | component | Runs nothing; stands in for something outside the graph. |
 | [family](#core-family) | core | One specification, released under its own tag prefix. |
@@ -107,6 +108,7 @@ and the words to avoid are enforced in prose by the generated
 | [item-local reference](#blueprint-item-local-reference) | blueprint | A path to a component inside the same item. |
 | [JOB](#component-job) | component | Runs to completion. |
 | [kind](#core-kind) | core | Which family's format a document is. |
+| [library](#catalog-library) | catalog | What one organization has published for its own use. |
 | [license](#listing-license) | listing | An SPDX licence expression. |
 | [lifecycle stage](#listing-lifecycle-stage) | listing | EXPERIMENTAL, BETA, STABLE or SUNSET. |
 | [lineage](#component-lineage) | component | Every published revision of one component, in order. |
@@ -158,11 +160,12 @@ and the words to avoid are enforced in prose by the generated
 | [provisioned](#blueprint-provisioned) | blueprint | Created on first acquisition, released at deletion. |
 | [public address](#component-public-address) | component | The allocated host:port of a TCP or UDP endpoint. |
 | [public port](#component-public-port) | component | The allocated publicPort of a TCP or UDP endpoint. |
-| [publication](#catalog-publication) | catalog | Admitting a document into the catalog. |
+| [publication](#catalog-publication) | catalog | Admitting a document into a library or the catalog. |
 | [publication obligation](#catalog-publication-obligation) | catalog | Required to publish, never offline. |
 | [published media set](#listing-published-media-set) | listing | Media path to served location, after ingest. |
 | [readiness probe](#component-readiness-probe) | component | Gates traffic, without restart. |
 | [record stage](#deployment-record-stage) | deployment | Persists the snapshot, writes the record. |
+| [registry](#repository-registry) | repository | A released JSON projection of a family version's IDs, codes or lists. |
 | [release](#repository-release) | repository | One tagged, immutable version of a family. |
 | [replica](#deployment-replica) | deployment | One running copy of a workload. |
 | [requirement ID](#repository-requirement-id) | repository | The stable name of one rule, such as COMP-EP-004. |
@@ -183,6 +186,7 @@ and the words to avoid are enforced in prose by the generated
 | [semantic phase](#core-semantic-phase) | core | Offline rules no schema can express. |
 | [sensitive](#component-sensitive) | component | Never authored as a literal, never disclosed. |
 | [SERVICE](#component-service) | component | Long-running, request-driven. |
+| [severity](#core-severity) | core | ERROR or WARNING. |
 | [slug](#core-slug) | core | An item's name, equal to its directory name. |
 | [source](#component-source) | component | image, git or upload. |
 | [source content key](#component-source-content-key) | component | The commit or upload digest a build reads. |
@@ -208,6 +212,7 @@ and the words to avoid are enforced in prose by the generated
 | [URL-addressed](#component-url-addressed) | component | HTTP, HTTPS, WS, GRPC. |
 | [USER selection](#blueprint-user-selection) | blueprint | A complete set the deployer supplies. |
 | [validation phase](#core-validation-phase) | core | parser, structural, semantic, admission, resolution. |
+| [validation result](#core-validation-result) | core | Status, scope, phase, diagnostics and deferred obligations. |
 | [validation scope](#core-validation-scope) | core | parser ⊂ structural ⊂ document ⊂ publication ⊂ deployment. |
 | [validation status](#core-validation-status) | core | VALID, INVALID or INCOMPLETE. |
 | [value binding](#blueprint-value-binding) | blueprint | Binds { value }. |
@@ -262,26 +267,25 @@ blueprint [blueprint.blueprint] (a kind of core.musher-document)
   - node graph [blueprint.node-graph]
     - value dependency [blueprint.value-dependency]
 
-catalog [catalog.catalog]
-  - catalog item [catalog.catalog-item]
-    - item document [core.item-document] (a kind of core.musher-document)
-    - item root [core.item-root]
-    - listing [listing.listing] (a kind of core.musher-document)
-      - category [listing.category]
-      - display name [listing.display-name]
-      - getting started [listing.getting-started]
-      - icon [listing.icon]
-      - item type [listing.item-type]
-      - license [listing.license]
-      - lifecycle stage [listing.lifecycle-stage]
-      - listing URL [listing.listing-url]
-      - media path [listing.media-path]
-      - overview [listing.overview]
-        - overview Markdown profile [listing.overview-markdown-profile]
-      - published media set [listing.published-media-set]
-      - screenshot [listing.screenshot]
-      - summary [listing.summary]
-      - tag [listing.tag]
+catalog item [catalog.catalog-item]
+  - item document [core.item-document] (a kind of core.musher-document)
+  - item root [core.item-root]
+  - listing [listing.listing] (a kind of core.musher-document)
+    - category [listing.category]
+    - display name [listing.display-name]
+    - getting started [listing.getting-started]
+    - icon [listing.icon]
+    - item type [listing.item-type]
+    - license [listing.license]
+    - lifecycle stage [listing.lifecycle-stage]
+    - listing URL [listing.listing-url]
+    - media path [listing.media-path]
+    - overview [listing.overview]
+      - overview Markdown profile [listing.overview-markdown-profile]
+    - published media set [listing.published-media-set]
+    - screenshot [listing.screenshot]
+    - summary [listing.summary]
+    - tag [listing.tag]
 
 component [component.component] (a kind of core.musher-document)
   - component contract [component.component-contract]
@@ -313,6 +317,7 @@ component [component.component] (a kind of core.musher-document)
 conformance corpus [repository.conformance-corpus]
   - behaviour suite [repository.behaviour-suite]
   - conformance case [repository.conformance-case]
+    - expected diagnostic [repository.expected-diagnostic]
 
 connection [blueprint.connection]
   - connection member [component.connection-member]
@@ -342,9 +347,6 @@ deployment [deployment.deployment]
     - stage [deployment.resolution-stage]
   - rollout [deployment.rollout]
 
-diagnostic [core.diagnostic]
-  - diagnostic code [core.diagnostic-code]
-
 Musher document [core.musher-document] (a kind of core.yaml-document)
   - envelope [core.envelope]
     - kind [core.kind]
@@ -364,8 +366,11 @@ protocol registry [component.protocol-registry]
 publication [catalog.publication]
   - publication obligation [catalog.publication-obligation]
 
-validation scope [core.validation-scope]
+validation result [core.validation-result]
   - deferred obligation [core.deferred-obligation]
+  - diagnostic [core.diagnostic]
+    - diagnostic code [core.diagnostic-code]
+    - severity [core.severity]
   - validation status [core.validation-status]
 
 value input [component.value-input] (a kind of component.input)
@@ -379,8 +384,8 @@ value input [component.value-input] (a kind of component.input)
 #### <a id="core-admission-phase"></a>admission phase
 
 The validation phase run by the publisher or the platform, for obligations that
-need the catalog, an account or a policy, such as a revision that increases or a
-description present at publication.
+need published documents, an account or a policy, such as a revision that
+increases or a description present at publication.
 
 - **Kind of:** [validation phase](#core-validation-phase)
 - **Avoid:** "capability" (banned, identifier): write "admission". The phase
@@ -428,17 +433,23 @@ A rule a validator could not decide for lack of context, reported with its
 requirement, its document pointer and the missing context, and making the result
 INCOMPLETE.
 
-- **Part of:** [validation scope](#core-validation-scope)
+- **Part of:** [validation result](#core-validation-result)
+- **Identifiers:** fields: `deferred`, `rule`, `missing`; defs:
+  `DeferredObligation`
 - **Source:** [core v2 §1.3](../specifications/core/v2/spec.md#terms), [core v2
   §6.1](../specifications/core/v2/spec.md#coverage)
 - **Status:** approved, stable. Tags: validation.
 
 #### <a id="core-diagnostic"></a>diagnostic
 
-One reported failure of a document: a normative code, the phase that found it, a
-JSON Pointer path into the submitted document, and non-normative message text.
+One reported condition of a document: a normative code, its severity, the phase
+that found it, a JSON Pointer path into the submitted document or another
+document of its item, and non-normative message text.
 
-- **Identifiers:** codes: `ERR_UNKNOWN_FIELD`
+- **Part of:** [validation result](#core-validation-result)
+- **Identifiers:** fields: `diagnostics`, `path`, `artifact`, `related`,
+  `message`; codes: `ERR_UNKNOWN_FIELD`; defs: `Diagnostic`, `DocumentPointer`,
+  `RelatedLocation`
 - **Verbs:** a diagnostic anchors at a path; an implementation reports a
   diagnostic
 - **Source:** [core v2 §1.3](../specifications/core/v2/spec.md#terms), [core v2
@@ -447,10 +458,13 @@ JSON Pointer path into the submitted document, and non-normative message text.
 
 #### <a id="core-diagnostic-code"></a>diagnostic code
 
-The stable ERR_ name of one condition a document can fail, declared in exactly
-one diagnostics table with every phase it may be reported in.
+The stable name of one condition a diagnostic reports: an error code, prefixed
+ERR, declared in exactly one diagnostics table with every phase it may be
+reported in, or a warning code, prefixed WARN, declared in a Warnings table with
+the requirement it reports.
 
 - **Part of:** [diagnostic](#core-diagnostic)
+- **Identifiers:** fields: `code`; defs: `DiagnosticCode`
 - **Source:** [core v2 §7](../specifications/core/v2/spec.md#diagnostics)
 - **Status:** approved, stable. Tags: validation.
 
@@ -787,6 +801,24 @@ uniqueness across collections and agreement between documents, decided offline.
 - **Source:** [core v2 §6](../specifications/core/v2/spec.md#validation-layers)
 - **Status:** approved, stable. Tags: validation.
 
+#### <a id="core-severity"></a>severity
+
+The class of a diagnostic: ERROR, a failure of the document that makes the
+result INVALID, or WARNING, an advisory report of a SHOULD the document does not
+meet, which never changes the result's status.
+
+- **Part of:** [diagnostic](#core-diagnostic)
+- **Identifiers:** fields: `severity`; values: `ERROR`, `WARNING`; defs:
+  `Severity`
+- **Example:** A VALID result may carry WARNING diagnostics.
+- **Not to be confused with:** The validation status: a severity classifies one
+  diagnostic, a status the whole result.
+- **Source:** [core v2 §1.3](../specifications/core/v2/spec.md#terms), [core v2
+  §6.1](../specifications/core/v2/spec.md#coverage), [core v2
+  §7](../specifications/core/v2/spec.md#diagnostics), [ADR
+  0044](adr/0044-the-validation-result-is-a-released-schema.md)
+- **Status:** approved, stable. Tags: validation.
+
 #### <a id="core-slug"></a>slug
 
 The identity field of an item document, a DNS label that MUST equal the name of
@@ -840,6 +872,8 @@ One of the five ordered steps an implementation applies to a document, parser,
 structural, semantic, admission and resolution, each of which reports only once
 the earlier ones pass.
 
+- **Identifiers:** fields: `phase`; values: `parser`, `structural`, `semantic`,
+  `admission`, `resolution`; defs: `ValidationPhase`
 - **Verbs:** a rule is decided in a phase; a diagnostic reports its phase
 - **Avoid:** "validation layer" (banned, prose): write "validation phase".
 - **Avoid:** "validation layers" (banned, prose): write "validation phases".
@@ -849,13 +883,30 @@ the earlier ones pass.
   0038](adr/0038-v2-one-vocabulary-and-v1-retires.md)
 - **Status:** approved, stable. Tags: validation.
 
+#### <a id="core-validation-result"></a>validation result
+
+What one validation of one document reports: its status, its validation scope,
+the phase it reached, its diagnostics and its deferred obligations, in the shape
+a released core schema states.
+
+- **Identifiers:** fields: `status`, `validationScope`, `phase`, `diagnostics`,
+  `deferred`
+- **Not to be confused with:** A conformance result, which reports how many
+  corpus cases an implementation passed, not one document's validation.
+- **Source:** [core v2 §1.3](../specifications/core/v2/spec.md#terms), [core v2
+  §6.1](../specifications/core/v2/spec.md#coverage), [ADR
+  0044](adr/0044-the-validation-result-is-a-released-schema.md)
+- **Status:** approved, stable. Tags: validation.
+
 #### <a id="core-validation-scope"></a>validation scope
 
 The set of obligations a validation result claims to have completed, from the
 lattice parser ⊂ structural ⊂ document ⊂ publication ⊂ deployment, and the level
 an implementation declares it conforms at.
 
-- **Identifiers:** requirement prefixes: `CORE-ADMISSION`
+- **Identifiers:** fields: `validationScope`; values: `parser`, `structural`,
+  `document`, `publication`, `deployment`; requirement prefixes:
+  `CORE-ADMISSION`; defs: `ValidationScope`
 - **Example:** An editor integration conforms at structural validation scope.
 - **Avoid:** "validationProfile" (banned, identifier): write "validationScope".
 - **Avoid:** "validation profile" (banned, prose): write "validation scope".
@@ -871,10 +922,11 @@ an implementation declares it conforms at.
 #### <a id="core-validation-status"></a>validation status
 
 The verdict of a validation result: VALID when every obligation of the claimed
-scope completed, INVALID on a known failure, and INCOMPLETE when context was
+scope completed, INVALID on an ERROR diagnostic, and INCOMPLETE when context was
 missing and an obligation was deferred.
 
-- **Part of:** [validation scope](#core-validation-scope)
+- **Part of:** [validation result](#core-validation-result)
+- **Identifiers:** fields: `status`; values: `VALID`, `INVALID`, `INCOMPLETE`
 - **Example:** No caller may read INCOMPLETE as approval.
 - **Source:** [core v2 §6.1](../specifications/core/v2/spec.md#coverage)
 - **Status:** approved, stable. Tags: validation.
@@ -1103,12 +1155,16 @@ optional without one, or derived, as the url resolution composes is, and
 forwarded through an output's member.
 
 - **Part of:** [connection](#blueprint-connection)
-- **Identifiers:** fields: `member`; values: `baseURL`, `apiKey`, `model`,
-  `host`, `port`, `database`, `username`, `password`, `sslMode`, `url`, `tls`,
+- **Identifiers:** fields: `member`, `baseURL`, `apiKey`, `model`, `host`,
+  `port`, `database`, `username`, `password`, `sslMode`, `url`, `tls`,
   `endpointURL`, `region`, `bucket`, `accessKeyID`, `secretAccessKey`,
   `pathStyle`, `botToken`, `appToken`, `signingSecret`, `applicationID`,
-  `publicKey`, `disable`, `allow`, `prefer`, `require`, `verify-ca`,
-  `verify-full`; codes: `ERR_UNKNOWN_CONNECTION_MEMBER`
+  `publicKey`; values: `baseURL`, `apiKey`, `model`, `host`, `port`, `database`,
+  `username`, `password`, `sslMode`, `url`, `tls`, `endpointURL`, `region`,
+  `bucket`, `accessKeyID`, `secretAccessKey`, `pathStyle`, `botToken`,
+  `appToken`, `signingSecret`, `applicationID`, `publicKey`, `disable`, `allow`,
+  `prefer`, `require`, `verify-ca`, `verify-full`; codes:
+  `ERR_UNKNOWN_CONNECTION_MEMBER`
 - **Not to be confused with:** endpointURL is AWS's term for an S3 API address
   without the bucket, not a component endpoint.
 - **Not to be confused with:** A url member is never stored: resolution composes
@@ -1329,7 +1385,7 @@ a schedule, and serves and declares nothing to probe.
 #### <a id="component-lineage"></a>lineage
 
 The ordered sequence of every published revision of one component, which the
-catalog holds and an offline validator never sees.
+platform holds and an offline validator never sees.
 
 - **Source:** [component v2 §4](../specifications/component/v2/spec.md#metadata)
 - **Status:** approved, stable. Tags: component, versioning.
@@ -1470,9 +1526,11 @@ The wire contract a client speaks, independent of vendor: for an endpoint one of
 HTTP, HTTPS, WS, GRPC, TCP and UDP, and for a connection input one of the
 connection protocols, which fixes its members.
 
-- **Identifiers:** fields: `protocol`; values: `HTTP`, `HTTPS`, `WS`, `GRPC`,
-  `TCP`, `UDP`, `OPENAI_CHAT_COMPLETIONS`, `ANTHROPIC_MESSAGES`, `POSTGRES`,
-  `REDIS`, `S3`, `TELEGRAM_BOT`, `SLACK_APP`, `DISCORD_BOT`
+- **Identifiers:** fields: `protocol`, `OPENAI_CHAT_COMPLETIONS`,
+  `ANTHROPIC_MESSAGES`, `POSTGRES`, `REDIS`, `S3`, `TELEGRAM_BOT`, `SLACK_APP`,
+  `DISCORD_BOT`; values: `HTTP`, `HTTPS`, `WS`, `GRPC`, `TCP`, `UDP`,
+  `OPENAI_CHAT_COMPLETIONS`, `ANTHROPIC_MESSAGES`, `POSTGRES`, `REDIS`, `S3`,
+  `TELEGRAM_BOT`, `SLACK_APP`, `DISCORD_BOT`
 - **Example:** A connection input with protocol POSTGRES receives host, port,
   database, username, password and sslMode, and a url composed from them.
 - **Source:** [component v2
@@ -1684,7 +1742,8 @@ optional server name.
 
 - **Part of:** [endpoint](#component-endpoint)
 - **Identifiers:** fields: `tls`, `verify`, `serverName`, `trustBundle`; values:
-  `SYSTEM`, `BUNDLE`, `NONE`; defs: `ComponentEndpointTls`
+  `SYSTEM`, `BUNDLE`, `NONE`; codes: `WARN_ENDPOINT_SERVER_NAME`; defs:
+  `ComponentEndpointTls`
 - **Source:** [component v2
   §5.2](../specifications/component/v2/spec.md#endpoints)
 - **Status:** approved, stable. Tags: networking, security.
@@ -1907,13 +1966,18 @@ A component reference written as the UUID of a published component, beside a
 revision on the node that selects which publication.
 
 - **Kind of:** [document reference](#blueprint-document-reference)
+- **resolves in:** [library](#catalog-library)
 - **resolves in:** [catalog](#catalog-catalog)
+- **Not to be confused with:** A reference into the catalog alone: the name is
+  the form, and the platform resolves one against the deploying organization's
+  library and the catalog.
 - **Avoid:** "published reference" (discouraged, prose): write "catalog
   reference".
 - **Source:** [blueprint v2 §1.1](../specifications/blueprint/v2/spec.md#terms),
   [blueprint v2
   §4.1](../specifications/blueprint/v2/spec.md#component-reference), [ADR
-  0038](adr/0038-v2-one-vocabulary-and-v1-retires.md)
+  0038](adr/0038-v2-one-vocabulary-and-v1-retires.md), [ADR
+  0046](adr/0046-the-catalog-is-curated-and-an-organization-publishes-to-its-library.md)
 - **Status:** approved, stable. Tags: composition, catalog.
 
 #### <a id="blueprint-catalog-value"></a>catalog value
@@ -1925,6 +1989,9 @@ or a network class, written in a placement constraint or a volume allocation.
 - **Not to be confused with:** A credential token, such as a probe's bearer
   token or a JWT: 'token' means only that.
 - **Not to be confused with:** A term record, which is what 'term' now means.
+- **Not to be confused with:** A value from the catalog of listed items: the
+  name is the form, a value of the platform's versioned compute or storage
+  vocabulary.
 - **Avoid:** "storage class term" (banned, prose): write "storage class catalog
   value".
 - **Avoid:** "placement term" (banned, prose): write "placement catalog value".
@@ -1935,7 +2002,8 @@ or a network class, written in a placement constraint or a volume allocation.
   [blueprint v2 §4.3](../specifications/blueprint/v2/spec.md#node-compute),
   [blueprint v2
   §4.4](../specifications/blueprint/v2/spec.md#placement-constraints), [ADR
-  0038](adr/0038-v2-one-vocabulary-and-v1-retires.md)
+  0038](adr/0038-v2-one-vocabulary-and-v1-retires.md), [ADR
+  0046](adr/0046-the-catalog-is-curated-and-an-organization-publishes-to-its-library.md)
 - **Status:** approved, stable. Tags: compute, catalog.
 
 #### <a id="blueprint-compute"></a>compute
@@ -2831,8 +2899,8 @@ whose vocabulary stays open.
 
 #### <a id="catalog-blueprint-item"></a>blueprint item
 
-A catalog item whose root holds blueprint.yaml and listing.yaml, and every
-component document the blueprint's nodes reference.
+A catalog item whose root holds blueprint.yaml, every component document the
+blueprint's nodes reference, and listing.yaml once it is listed in the catalog.
 
 - **Kind of:** [catalog item](#catalog-catalog-item)
 - **Identifiers:** codes: `ERR_UNREFERENCED_COMPONENT`
@@ -2843,34 +2911,44 @@ component document the blueprint's nodes reference.
 
 #### <a id="catalog-catalog"></a>catalog
 
-The published collection of items, keyed by identity and revision, that a
-component reference by UUID resolves against and a storefront browses.
+The curated, public collection of published items, each with a listing, that a
+storefront offers.
 
-- **Verbs:** publish to the catalog; the catalog holds an item
+- **complements:** [library](#catalog-library)
+- **Verbs:** list an item in the catalog; the catalog offers an item
 - **Not to be confused with:** An OCI registry, which holds images; a registry
   is never the catalog, and 'registry' stays legitimate for an OCI registry or a
   model registry.
+- **Not to be confused with:** An organization's library, which holds what it
+  published for its own use, listed or not.
+- **Not to be confused with:** The platform's compute or storage catalog, which
+  holds what the platform offers to run on, not items.
 - **Avoid:** "component registry" (discouraged, prose): write "catalog".
 - **Avoid:** "the registry" (discouraged, prose): write "the catalog". Say
   catalog for the published collection; an OCI registry stays a registry.
-- **Source:** [listing v2 §1.1](../specifications/listing/v2/spec.md#terms),
-  [core v2 §4.1](../specifications/core/v2/spec.md#item-directory), [ADR
-  0038](adr/0038-v2-one-vocabulary-and-v1-retires.md)
+- **Source:** [core v2 §1.3](../specifications/core/v2/spec.md#terms), [listing
+  v2 §1.1](../specifications/listing/v2/spec.md#terms), [core v2
+  §4.1](../specifications/core/v2/spec.md#item-directory), [ADR
+  0038](adr/0038-v2-one-vocabulary-and-v1-retires.md), [ADR
+  0046](adr/0046-the-catalog-is-curated-and-an-organization-publishes-to-its-library.md)
 - **Status:** approved, stable. Tags: catalog.
 
 #### <a id="catalog-catalog-item"></a>catalog item
 
-A directory the catalog publishes as one unit, holding its item documents and
-component documents at one item root: a blueprint item or a component item.
+A directory published as one unit, to a library or to the catalog, holding its
+item documents and component documents at one item root: a blueprint item or a
+component item.
 
-- **Part of:** [catalog](#catalog-catalog)
 - **Identifiers:** requirement prefixes: `CORE-ITEM`
+- **Not to be confused with:** Membership of the catalog: the name is the item's
+  form, and an item in a library is one too.
 - **Avoid:** "deployable thing" (banned, prose): write "catalog item".
 - **Source:** [listing v2 §1.1](../specifications/listing/v2/spec.md#terms),
   [core v2 §1.3](../specifications/core/v2/spec.md#terms), [core v2
   §4.1](../specifications/core/v2/spec.md#item-directory), [core v2
   §4.2](../specifications/core/v2/spec.md#item-identity), [ADR
-  0038](adr/0038-v2-one-vocabulary-and-v1-retires.md)
+  0038](adr/0038-v2-one-vocabulary-and-v1-retires.md), [ADR
+  0046](adr/0046-the-catalog-is-curated-and-an-organization-publishes-to-its-library.md)
 - **Status:** approved, stable. Tags: catalog.
 
 #### <a id="catalog-component-item"></a>component item
@@ -2885,18 +2963,42 @@ one component document, and no blueprint.
   0038](adr/0038-v2-one-vocabulary-and-v1-retires.md)
 - **Status:** approved, stable. Tags: catalog.
 
+#### <a id="catalog-library"></a>library
+
+The documents and items one organization has published for its own use, which no
+storefront offers and which need no listing.
+
+- **complements:** [catalog](#catalog-catalog)
+- **Verbs:** publish to its library; the library holds a component
+- **Example:** A component an organization publishes for its own blueprints sits
+  in its library, and its catalog references resolve to it.
+- **Not to be confused with:** A software library a validator links, the sense
+  core v2 §6.3 uses.
+- **Not to be confused with:** The catalog, which is curated and public; an item
+  in a library is listed in the catalog only by publishing a listing there.
+- **Avoid:** "private catalog" (discouraged, prose): write "library".
+- **Avoid:** "organization catalog" (discouraged, prose): write "library".
+- **Source:** [core v2 §1.3](../specifications/core/v2/spec.md#terms), [ADR
+  0046](adr/0046-the-catalog-is-curated-and-an-organization-publishes-to-its-library.md)
+- **Status:** approved, stable. Tags: catalog.
+
 #### <a id="catalog-publication"></a>publication
 
-The act of admitting a document or an item into the catalog, after every
-admission-phase obligation it carries has completed.
+The act of admitting a document or an item into an organization's library or
+into the catalog, after every admission-phase obligation it carries has
+completed.
 
 - **completes:** [admission phase](#core-admission-phase)
+- **admits into:** [library](#catalog-library)
+- **admits into:** [catalog](#catalog-catalog)
 - **Verbs:** publish a component; a revision counts publications
 - **Avoid:** "counts releases" (banned, prose): write "counts publications".
   Release means only a specification release.
 - **Source:** [component v2
   §4](../specifications/component/v2/spec.md#metadata), [blueprint v2
-  §3](../specifications/blueprint/v2/spec.md#identity)
+  §3](../specifications/blueprint/v2/spec.md#identity), [core v2
+  §6.1](../specifications/core/v2/spec.md#coverage), [ADR
+  0046](adr/0046-the-catalog-is-curated-and-an-organization-publishes-to-its-library.md)
 - **Status:** approved, stable. Tags: catalog, publication.
 
 #### <a id="catalog-publication-obligation"></a>publication obligation
@@ -3198,6 +3300,9 @@ One step of resolution, in order sources, parameters, allocation, connections,
 values, build, environment and record, that a resolution-phase diagnostic names.
 
 - **Part of:** [resolution](#deployment-resolution)
+- **Identifiers:** fields: `stage`; values: `sources`, `parameters`,
+  `allocation`, `connections`, `values`, `build`, `environment`, `record`; defs:
+  `ResolutionStage`
 - **Not to be confused with:** A validation phase; stage means only a resolution
   step, and is written 'resolution stage' where the context does not say so.
 - **Source:** [core v2 §1.3](../specifications/core/v2/spec.md#terms), [core v2
@@ -3262,6 +3367,18 @@ the core release it records.
   [docs/conformance.md](conformance.md)
 - **Status:** approved, stable. Tags: conformance.
 
+#### <a id="repository-expected-diagnostic"></a>expected diagnostic
+
+A diagnostic a conformance case declares: a code, optionally its path, phase,
+stage, related locations and severity, matched against a produced diagnostic of
+the same severity, ERROR when none is named.
+
+- **Part of:** [conformance case](#repository-conformance-case)
+- **Identifiers:** defs: `ExpectedDiagnostic`
+- **Source:** [docs/conformance.md](conformance.md), [ADR
+  0044](adr/0044-the-validation-result-is-a-released-schema.md)
+- **Status:** approved, stable. Tags: conformance.
+
 #### <a id="repository-not-supported"></a>not supported in v2
 
 The table closing each specification that lists what a document cannot yet
@@ -3283,6 +3400,21 @@ port below 1024, which admission may refuse.
   §5.2](../specifications/component/v2/spec.md#endpoints), [ADR
   0038](adr/0038-v2-one-vocabulary-and-v1-retires.md)
 - **Status:** approved, stable. Tags: security.
+
+#### <a id="repository-registry"></a>registry
+
+A JSON projection, committed beside a family version's spec.md and released with
+it, of facts that spec.md or the term records state: requirement IDs, diagnostic
+codes, and for core the ordered lists and every term record.
+
+- **projects:** [specification](#repository-specification)
+- **Not to be confused with:** The diagnostics table in a spec.md, which stays
+  normative.
+- **Not to be confused with:** The connection protocol registry, whose records
+  are their own source.
+- **Source:** [docs/using-schemas.md#registries](using-schemas.md#registries),
+  [ADR 0043](adr/0043-registries-are-released-data-interfaces.md)
+- **Status:** approved, provisional. Tags: publication.
 
 #### <a id="repository-release"></a>release
 
@@ -3412,12 +3544,14 @@ the diagnostics tables of the families its record belongs to.
 | major line | banned | prose | major version | [major version](#core-major-version) |
 | malformed reference | banned | prose | malformed placeholder | [placeholder](#core-placeholder) |
 | managed database | banned | prose | a database an external node stands for | [managed](#blueprint-managed) |
+| organization catalog | discouraged | prose | library | [library](#catalog-library) |
 | output | banned | identifier | nodes | [namespace](#core-placeholder-namespace) |
 | placement pin | banned | prose | placement constraint | [placement constraint](#blueprint-placement-constraint) |
 | placement pins | banned | prose | placement constraints | [placement constraint](#blueprint-placement-constraint) |
 | placement term | banned | prose | placement catalog value | [catalog value](#blueprint-catalog-value) |
 | placement token | banned | prose | placement catalog value | [catalog value](#blueprint-catalog-value) |
 | primary endpoint | banned | prose | the named endpoint | [endpoint](#component-endpoint) |
+| private catalog | discouraged | prose | library | [library](#catalog-library) |
 | protocol table | discouraged | prose | protocol registry | [protocol registry](#component-protocol-registry) |
 | published reference | discouraged | prose | catalog reference | [catalog reference](#blueprint-catalog-reference) |
 | reference grammar | banned | prose | placeholder grammar | [placeholder grammar](#core-placeholder-grammar) |

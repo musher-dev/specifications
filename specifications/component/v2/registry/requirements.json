@@ -1,0 +1,391 @@
+{
+  "family": "component",
+  "major": "v2",
+  "requirements": [
+    {
+      "id": "COMP-DESC-002",
+      "anchor": "COMP-DESC-002",
+      "section": "metadata"
+    },
+    {
+      "id": "COMP-DESC-003",
+      "anchor": "COMP-DESC-003",
+      "section": "metadata"
+    },
+    {
+      "id": "COMP-ID-001",
+      "anchor": "COMP-ID-001",
+      "section": "metadata"
+    },
+    {
+      "id": "COMP-TYPE-001",
+      "anchor": "COMP-TYPE-001",
+      "section": "workload"
+    },
+    {
+      "id": "COMP-EXT-001",
+      "anchor": "COMP-EXT-001",
+      "section": "workload"
+    },
+    {
+      "id": "COMP-TYPE-006",
+      "anchor": "COMP-TYPE-006",
+      "section": "workload"
+    },
+    {
+      "id": "COMP-TYPE-002",
+      "anchor": "COMP-TYPE-002",
+      "section": "workload"
+    },
+    {
+      "id": "COMP-TYPE-003",
+      "anchor": "COMP-TYPE-003",
+      "section": "workload"
+    },
+    {
+      "id": "COMP-TYPE-004",
+      "anchor": "COMP-TYPE-004",
+      "section": "workload"
+    },
+    {
+      "id": "COMP-TYPE-007",
+      "anchor": "COMP-TYPE-007",
+      "section": "workload"
+    },
+    {
+      "id": "COMP-TYPE-005",
+      "anchor": "COMP-TYPE-005",
+      "section": "workload"
+    },
+    {
+      "id": "COMP-CMD-001",
+      "anchor": "COMP-CMD-001",
+      "section": "workload"
+    },
+    {
+      "id": "COMP-SRC-001",
+      "anchor": "COMP-SRC-001",
+      "section": "source"
+    },
+    {
+      "id": "COMP-SRC-004",
+      "anchor": "COMP-SRC-004",
+      "section": "source"
+    },
+    {
+      "id": "COMP-SRC-002",
+      "anchor": "COMP-SRC-002",
+      "section": "source"
+    },
+    {
+      "id": "COMP-SRC-006",
+      "anchor": "COMP-SRC-006",
+      "section": "source"
+    },
+    {
+      "id": "COMP-SRC-005",
+      "anchor": "COMP-SRC-005",
+      "section": "source"
+    },
+    {
+      "id": "COMP-SRC-007",
+      "anchor": "COMP-SRC-007",
+      "section": "source"
+    },
+    {
+      "id": "COMP-BUILD-001",
+      "anchor": "COMP-BUILD-001",
+      "section": "source"
+    },
+    {
+      "id": "COMP-BUILD-002",
+      "anchor": "COMP-BUILD-002",
+      "section": "source"
+    },
+    {
+      "id": "COMP-BUILD-003",
+      "anchor": "COMP-BUILD-003",
+      "section": "source"
+    },
+    {
+      "id": "COMP-BUILD-004",
+      "anchor": "COMP-BUILD-004",
+      "section": "source"
+    },
+    {
+      "id": "COMP-BUILD-005",
+      "anchor": "COMP-BUILD-005",
+      "section": "source"
+    },
+    {
+      "id": "COMP-BUILD-006",
+      "anchor": "COMP-BUILD-006",
+      "section": "source"
+    },
+    {
+      "id": "COMP-BUILD-007",
+      "anchor": "COMP-BUILD-007",
+      "section": "source"
+    },
+    {
+      "id": "COMP-EP-018",
+      "anchor": "COMP-EP-018",
+      "section": "endpoints"
+    },
+    {
+      "id": "COMP-EP-019",
+      "anchor": "COMP-EP-019",
+      "section": "endpoints"
+    },
+    {
+      "id": "COMP-EP-001",
+      "anchor": "COMP-EP-001",
+      "section": "endpoints"
+    },
+    {
+      "id": "COMP-EP-004",
+      "anchor": "COMP-EP-004",
+      "section": "endpoints"
+    },
+    {
+      "id": "COMP-EP-012",
+      "anchor": "COMP-EP-012",
+      "section": "endpoints"
+    },
+    {
+      "id": "COMP-EP-013",
+      "anchor": "COMP-EP-013",
+      "section": "endpoints"
+    },
+    {
+      "id": "COMP-EP-014",
+      "anchor": "COMP-EP-014",
+      "section": "endpoints"
+    },
+    {
+      "id": "COMP-EP-015",
+      "anchor": "COMP-EP-015",
+      "section": "endpoints"
+    },
+    {
+      "id": "COMP-EP-016",
+      "anchor": "COMP-EP-016",
+      "section": "endpoints"
+    },
+    {
+      "id": "COMP-EP-005",
+      "anchor": "COMP-EP-005",
+      "section": "endpoints"
+    },
+    {
+      "id": "COMP-EP-006",
+      "anchor": "COMP-EP-006",
+      "section": "endpoints"
+    },
+    {
+      "id": "COMP-EP-007",
+      "anchor": "COMP-EP-007",
+      "section": "endpoints"
+    },
+    {
+      "id": "COMP-ENVVAR-004",
+      "anchor": "COMP-ENVVAR-004",
+      "section": "env-vars"
+    },
+    {
+      "id": "COMP-ENVVAR-002",
+      "anchor": "COMP-ENVVAR-002",
+      "section": "env-vars"
+    },
+    {
+      "id": "COMP-ENVVAR-003",
+      "anchor": "COMP-ENVVAR-003",
+      "section": "env-vars"
+    },
+    {
+      "id": "COMP-EP-002",
+      "anchor": "COMP-EP-002",
+      "section": "health"
+    },
+    {
+      "id": "COMP-EP-017",
+      "anchor": "COMP-EP-017",
+      "section": "health"
+    },
+    {
+      "id": "COMP-EP-008",
+      "anchor": "COMP-EP-008",
+      "section": "health"
+    },
+    {
+      "id": "COMP-EP-009",
+      "anchor": "COMP-EP-009",
+      "section": "health"
+    },
+    {
+      "id": "COMP-EP-010",
+      "anchor": "COMP-EP-010",
+      "section": "health"
+    },
+    {
+      "id": "COMP-EP-011",
+      "anchor": "COMP-EP-011",
+      "section": "health"
+    },
+    {
+      "id": "COMP-EP-003",
+      "anchor": "COMP-EP-003",
+      "section": "health"
+    },
+    {
+      "id": "COMP-VOL-002",
+      "anchor": "COMP-VOL-002",
+      "section": "volumes"
+    },
+    {
+      "id": "COMP-VOL-001",
+      "anchor": "COMP-VOL-001",
+      "section": "volumes"
+    },
+    {
+      "id": "COMP-EXT-002",
+      "anchor": "COMP-EXT-002",
+      "section": "external"
+    },
+    {
+      "id": "COMP-EXT-003",
+      "anchor": "COMP-EXT-003",
+      "section": "external"
+    },
+    {
+      "id": "COMP-EXT-004",
+      "anchor": "COMP-EXT-004",
+      "section": "external"
+    },
+    {
+      "id": "COMP-JOB-001",
+      "anchor": "COMP-JOB-001",
+      "section": "jobs"
+    },
+    {
+      "id": "COMP-JOB-002",
+      "anchor": "COMP-JOB-002",
+      "section": "jobs"
+    },
+    {
+      "id": "COMP-JOB-003",
+      "anchor": "COMP-JOB-003",
+      "section": "jobs"
+    },
+    {
+      "id": "COMP-JOB-004",
+      "anchor": "COMP-JOB-004",
+      "section": "jobs"
+    },
+    {
+      "id": "COMP-CONTRACT-001",
+      "anchor": "COMP-CONTRACT-001",
+      "section": "contract"
+    },
+    {
+      "id": "COMP-DESC-001",
+      "anchor": "COMP-DESC-001",
+      "section": "contract"
+    },
+    {
+      "id": "COMP-DESC-004",
+      "anchor": "COMP-DESC-004",
+      "section": "contract"
+    },
+    {
+      "id": "COMP-INPUT-001",
+      "anchor": "COMP-INPUT-001",
+      "section": "inputs"
+    },
+    {
+      "id": "COMP-OUT-001",
+      "anchor": "COMP-OUT-001",
+      "section": "outputs"
+    },
+    {
+      "id": "COMP-OUT-002",
+      "anchor": "COMP-OUT-002",
+      "section": "outputs"
+    },
+    {
+      "id": "COMP-OUT-003",
+      "anchor": "COMP-OUT-003",
+      "section": "outputs"
+    },
+    {
+      "id": "COMP-OUT-004",
+      "anchor": "COMP-OUT-004",
+      "section": "outputs"
+    },
+    {
+      "id": "COMP-PLACEHOLDER-001",
+      "anchor": "COMP-PLACEHOLDER-001",
+      "section": "outputs"
+    },
+    {
+      "id": "COMP-VAL-001",
+      "anchor": "COMP-VAL-001",
+      "section": "value-schema"
+    },
+    {
+      "id": "COMP-VAL-002",
+      "anchor": "COMP-VAL-002",
+      "section": "value-schema"
+    },
+    {
+      "id": "COMP-VAL-003",
+      "anchor": "COMP-VAL-003",
+      "section": "value-schema"
+    },
+    {
+      "id": "COMP-VAL-004",
+      "anchor": "COMP-VAL-004",
+      "section": "value-schema"
+    },
+    {
+      "id": "COMP-VAL-005",
+      "anchor": "COMP-VAL-005",
+      "section": "value-schema"
+    },
+    {
+      "id": "COMP-VAL-006",
+      "anchor": "COMP-VAL-006",
+      "section": "value-schema"
+    },
+    {
+      "id": "COMP-VAL-007",
+      "anchor": "COMP-VAL-007",
+      "section": "value-schema"
+    },
+    {
+      "id": "COMP-CONNECTION-002",
+      "anchor": "COMP-CONNECTION-002",
+      "section": "connection-requirements"
+    },
+    {
+      "id": "COMP-CONNECTION-003",
+      "anchor": "COMP-CONNECTION-003",
+      "section": "connection-requirements"
+    },
+    {
+      "id": "COMP-SEC-003",
+      "anchor": "COMP-SEC-003",
+      "section": "security"
+    },
+    {
+      "id": "COMP-SEC-001",
+      "anchor": "COMP-SEC-001",
+      "section": "security"
+    },
+    {
+      "id": "COMP-SEC-002",
+      "anchor": "COMP-SEC-002",
+      "section": "security"
+    }
+  ]
+}

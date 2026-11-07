@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://specifications.musher.dev/core/v2/registry/requirements",
+  "title": "Requirement registry",
+  "description": "The requirement IDs one family version's spec.md declares, as registry/requirements.json projects them. spec.md is normative: the file is generated from it by task docs, and a file that disagrees with it fails task check:docs. Within a major version an ID is never removed and its anchor never changes.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["family", "major", "requirements"],
+  "properties": {
+    "family": {
+      "description": "The family that declares these requirements, as its directory under specifications/ names it.",
+      "$ref": "#/$defs/FamilyName"
+    },
+    "major": {
+      "description": "The major version directory, such as v2.",
+      "$ref": "#/$defs/Major"
+    },
+    "requirements": {
+      "description": "Every requirement the family version declares, in the order its spec.md states them.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/Requirement" }
+    }
+  },
+  "$defs": {
+    "FamilyName": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "Major": {
+      "type": "string",
+      "pattern": "^v[1-9][0-9]*$"
+    },
+    "Anchor": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9-]*$"
+    },
+    "Requirement": {
+      "description": "One requirement: a single rule a document or an implementation can be held to.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "anchor", "section"],
+      "properties": {
+        "id": {
+          "description": "The stable requirement ID, such as CORE-ENV-001.",
+          "type": "string",
+          "pattern": "^[A-Z]{2,6}-[A-Z0-9]{2,12}-[0-9]{3}$"
+        },
+        "anchor": {
+          "description": "The fragment that locates the requirement in the family version's spec.md.",
+          "$ref": "#/$defs/Anchor"
+        },
+        "section": {
+          "description": "The anchor of the section that states the requirement. Informative: a requirement may move between sections without changing its ID.",
+          "$ref": "#/$defs/Anchor"
+        }
+      }
+    }
+  }
+}

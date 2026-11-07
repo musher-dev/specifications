@@ -49,11 +49,13 @@ import {
 import { enclosingSections, type Outline, REQUIREMENT_ID, readOutline } from '../lib/outline.ts'
 import { familyBundle } from '../schema/bundle.ts'
 import { effectiveValue, pointerSegments } from '../validation/effective.ts'
+import { resultSchema, schemaErrors } from '../validation/result-schema.ts'
 import {
   type Diagnostic,
   type Phase,
   parseDocument,
   parseDocumentBytes,
+  type Severity,
   type ValidationScope,
   validateDocument,
 } from '../validation/validator.ts'
@@ -106,6 +108,8 @@ export interface CaseMetadata {
 interface DeclaredDiagnostic {
   readonly code: string
   readonly path: string
+  /** ERROR unless the fixture says WARNING; it matches only a diagnostic of the same severity. */
+  readonly severity: Severity
 }
 
 /**
@@ -175,7 +179,16 @@ export function scopeFor(
 }
 
 /** A row of a `| Code | Phase | Meaning |` table in a spec.md. */
-const DIAGNOSTIC_ROW = /^\|\s*`(ERR_[A-Z0-9_]+)`\s*\|\s*((?:`[a-z]+`(?:\s*,\s*)?)+)\s*\|/
+const DIAGNOSTIC_ROW = /^\|\s*`(ERR_[A-Z0-9_]+)`\s*\|\s*((?:`[a-z]+`(?:\s*,\s*)?)+)\s*\|(?:(.*)\|)?/
+/**
+ * A row of a `| Code | Requirement | Meaning |` table under a heading naming
+ * "Warnings" (core v2 §7): a WARN_ code and the requirement-ID link of the
+ * SHOULD it reports.
+ */
+const WARNING_ROW =
+  /^\|\s*`(WARN_[A-Z0-9_]+)`\s*\|\s*\[`?([A-Z]{2,6}-[A-Z0-9]{2,12}-\d{3})`?\]\([^)]*\)\s*\|(?:(.*)\|)?/
+/** The heading text a Warnings table sits under. */
+const WARNINGS_HEADING = /\bWarnings\b/
 /** A stable heading anchor, `## <a id="envelope"></a>2. Document envelope`. */
 const SPEC_ANCHOR = /<a id="([^"]+)"><\/a>/g
 /**
@@ -185,15 +198,73 @@ const SPEC_ANCHOR = /<a id="([^"]+)"><\/a>/g
  * code named in a sentence is the same promise to an implementer and was
  * matched by nothing — see `checkProseCodes`.
  */
-const PROSE_CODE = /`(ERR_[A-Z0-9_]+)`/g
+const PROSE_CODE = /`((?:ERR|WARN)_[A-Z0-9_]+)`/g
 /** An ATX heading: its marks, and its text. */
 const MARKDOWN_HEADING = /^(#{1,6})\s+(.*)$/
 /** A heading whose section maps a previous major version's names onto this one's. */
 const MIGRATION_HEADING = /\bMigration from v\d+\s*$/
 
+/** A row of a diagnostics table: an ERROR code and every phase that may report it. */
+export interface ErrorCodeRow {
+  readonly code: string
+  readonly phases: readonly Phase[]
+  readonly meaning: string
+}
+/** A row of a Warnings table: a WARN_ code and the requirement it reports. */
+export interface WarningCodeRow {
+  readonly code: string
+  readonly requirement: string
+  readonly meaning: string
+}
+
+/**
+ * Read the diagnostic registry tables of one spec.md (core v2 §7).
+ *
+ * `| Code | Phase | Meaning |` rows declare ERR_ codes wherever they appear.
+ * `| Code | Requirement | Meaning |` rows declare WARN_ codes, and count only
+ * under a heading whose text contains "Warnings". Both patterns are anchored to
+ * `^|`, so a code named in a sentence is never a declaration.
+ */
+export function readDiagnosticTables(source: string): {
+  readonly errors: ErrorCodeRow[]
+  readonly warnings: WarningCodeRow[]
+} {
+  const errors: ErrorCodeRow[] = []
+  const warnings: WarningCodeRow[] = []
+  let underWarnings = false
+  for (const line of source.split('\n')) {
+    const heading = MARKDOWN_HEADING.exec(line)
+    if (heading !== null) {
+      underWarnings = WARNINGS_HEADING.test(heading[2] ?? '')
+      continue
+    }
+    const row = DIAGNOSTIC_ROW.exec(line)
+    if (row?.[1] !== undefined && row[2] !== undefined) {
+      errors.push({
+        code: row[1],
+        phases: [...row[2].matchAll(/`([a-z]+)`/g)]
+          .map((m) => m[1] as Phase)
+          .filter((phase) => REGISTRY_PHASES.includes(phase)),
+        meaning: (row[3] ?? '').trim(),
+      })
+      continue
+    }
+    const warning = underWarnings ? WARNING_ROW.exec(line) : null
+    if (warning?.[1] !== undefined && warning[2] !== undefined)
+      warnings.push({
+        code: warning[1],
+        requirement: warning[2],
+        meaning: (warning[3] ?? '').trim(),
+      })
+  }
+  return { errors, warnings }
+}
+
 interface SpecIndex {
   /** Diagnostic code to the phase the prose assigns it. */
   readonly codes: ReadonlyMap<string, readonly Phase[]>
+  /** WARN_ code to the requirement its Warnings table names. */
+  readonly warnings: ReadonlyMap<string, string>
   readonly anchors: ReadonlySet<string>
   /** Sections and the section each requirement is declared under. */
   readonly outline: Outline
@@ -209,22 +280,14 @@ function specIndex(path: string): SpecIndex | undefined {
   let index: SpecIndex | undefined
   if (existsSync(path)) {
     const source = readFileSync(path, 'utf8')
-    const codes = new Map<string, readonly Phase[]>()
-    for (const line of source.split('\n')) {
-      const row = DIAGNOSTIC_ROW.exec(line)
-      if (row?.[1] !== undefined && row[2] !== undefined)
-        codes.set(
-          row[1],
-          [...row[2].matchAll(/`([a-z]+)`/g)]
-            .map((m) => m[1] as Phase)
-            .filter((phase) => REGISTRY_PHASES.includes(phase)),
-        )
-    }
+    const tables = readDiagnosticTables(source)
+    const codes = new Map<string, readonly Phase[]>(tables.errors.map((r) => [r.code, r.phases]))
+    const warnings = new Map(tables.warnings.map((r) => [r.code, r.requirement]))
     const anchors = new Set<string>()
     for (const match of source.matchAll(SPEC_ANCHOR)) {
       if (match[1] !== undefined) anchors.add(match[1])
     }
-    index = { codes, anchors, outline: readOutline(source) }
+    index = { codes, warnings, anchors, outline: readOutline(source) }
   }
   specIndexCache.set(path, index)
   return index
@@ -233,6 +296,11 @@ function specIndex(path: string): SpecIndex | undefined {
 /** The codes one spec.md's diagnostics table declares; empty when it has none. */
 function codesOf(specPath: string): ReadonlyMap<string, readonly Phase[]> {
   return specIndex(specPath)?.codes ?? new Map()
+}
+
+/** The WARN_ codes one spec.md's Warnings tables declare; empty when it has none. */
+function warningsOf(specPath: string): ReadonlyMap<string, string> {
+  return specIndex(specPath)?.warnings ?? new Map()
 }
 
 /**
@@ -267,6 +335,8 @@ function requirementIndex(families: readonly Family[]): Map<string, string> {
 export interface Reach {
   /** Every diagnostic code a case in this corpus may declare, with its phase. */
   readonly registry: ReadonlyMap<string, readonly Phase[]>
+  /** Every WARN_ code a case may expect at WARNING, with the requirement it reports. */
+  readonly warnings: ReadonlyMap<string, string>
   /**
    * Absolute paths of every spec.md a case in this corpus may cite: the
    * family's own, core's, and each normative dependency its §2 declares.
@@ -310,7 +380,11 @@ export function resolveReach(
   failures: Failures,
 ): Reach {
   const own = codesOf(family.specPath)
-  const ownOnly: Reach = { registry: own, specs: new Set([family.specPath]) }
+  const ownOnly: Reach = {
+    registry: own,
+    warnings: warningsOf(family.specPath),
+    specs: new Set([family.specPath]),
+  }
   if (family.role === 'core') return ownOnly
 
   const where = `${familyKey(family)} spec.md §2`
@@ -375,9 +449,13 @@ export function resolveReach(
     for (const [code, phase] of codesOf(dependency.specPath)) registry.set(code, phase)
   }
   for (const [code, phase] of own) if (!registry.has(code)) registry.set(code, phase)
+  const warnings = new Map<string, string>()
+  for (const specPath of [...ordered.map((d) => d.specPath), family.specPath])
+    for (const [code, requirement] of warningsOf(specPath)) warnings.set(code, requirement)
 
   return {
     registry,
+    warnings,
     specs: new Set([family.specPath, ...dependencies.map((d) => d.specPath)]),
   }
 }
@@ -400,6 +478,7 @@ function reachOf(context: Context, family: Family): Reach {
   return (
     context.reach.get(familyKey(family)) ?? {
       registry: codesOf(family.specPath),
+      warnings: warningsOf(family.specPath),
       specs: new Set([family.specPath]),
     }
   )
@@ -418,6 +497,7 @@ function declaredCodes(families: readonly Family[]): ReadonlySet<string> {
   const codes = new Set<string>()
   for (const family of families) {
     for (const code of codesOf(family.specPath).keys()) codes.add(code)
+    for (const code of warningsOf(family.specPath).keys()) codes.add(code)
   }
   return codes
 }
@@ -795,15 +875,31 @@ function checkCaseShape(
     return null
   }
 
-  const { registry } = reachOf(context, family)
+  const { registry, warnings } = reachOf(context, family)
+  const { expectedDiagnostic } = resultSchema(context.repoRoot, family.major)
   const diagnostics: DeclaredDiagnostic[] = []
   for (const item of declared as Json[]) {
     if (!isObject(item) || typeof item.code !== 'string' || typeof item.path !== 'string') {
       failures.add(`${label}: every diagnostic needs string "code" and "path"`)
       return null
     }
+    // The fixture subset of core's validation result schema (docs/conformance.md).
+    if (!(expectedDiagnostic(item) as boolean)) {
+      failures.add(
+        `${label}: ${item.code} is not an expected diagnostic: ${schemaErrors(expectedDiagnostic)}`,
+      )
+      return null
+    }
+    const severity: Severity = item.severity === 'WARNING' ? 'WARNING' : 'ERROR'
     const declaredPhase = registry.get(item.code)
-    if (declaredPhase === undefined) {
+    if (warnings.has(item.code)) {
+      if (severity !== 'WARNING') {
+        failures.add(
+          `${label}: ${item.code} is a warning code and is only ever expected at WARNING`,
+        )
+        ok = false
+      }
+    } else if (declaredPhase === undefined) {
       failures.add(
         `${label}: ${item.code} is declared by no diagnostics table reachable from ` +
           `${relativeToRepo(family.specPath)}`,
@@ -816,7 +912,7 @@ function checkCaseShape(
       )
       ok = false
     }
-    diagnostics.push({ code: item.code, path: item.path })
+    diagnostics.push({ code: item.code, path: item.path, severity })
   }
 
   return ok ? diagnostics : null
@@ -898,7 +994,7 @@ function scopeOfCase(metadata: CaseMetadata): ValidationScope {
  * arriving without a directory has no item root, and the rules measured against
  * one MUST NOT be reported for it.
  */
-function runValidation(family: Family, caseDir: string, metadata: CaseMetadata) {
+export function runValidation(family: Family, caseDir: string, metadata: CaseMetadata) {
   if (metadata.document === undefined) {
     return validateDocument(family, readFileSync(join(caseDir, 'case.yaml')), {
       validationScope: scopeOfCase(metadata),
@@ -1030,9 +1126,12 @@ export function runCase(
   }
 
   // Diagnostic codes and the failing phase are normative; message text is not.
-  const produced = new Set(result.diagnostics.map((d) => `${d.code}@${d.path}`))
+  // An expectation matches a produced diagnostic of its own severity only, so
+  // a warning beside the declared errors neither satisfies nor upsets one.
+  const severityOf = (d: Diagnostic): Severity => (d.severity === 'WARNING' ? 'WARNING' : 'ERROR')
+  const produced = new Set(result.diagnostics.map((d) => `${severityOf(d)}:${d.code}@${d.path}`))
   for (const item of declared) {
-    if (!produced.has(`${item.code}@${item.path}`)) {
+    if (!produced.has(`${item.severity}:${item.code}@${item.path}`)) {
       failures.add(
         `${label}: declared diagnostic ${item.code} at ${item.path || '/'} was not produced.\n` +
           `      produced: ${[...produced].join(', ') || '(none)'}`,
@@ -1070,7 +1169,7 @@ const UNCOVERED: ReadonlyMap<string, string> = new Map()
  */
 function checkCoverage(family: Family, exercised: ReadonlySet<string>, failures: Failures): void {
   const where = family.role === 'core' ? 'no indexed case in any corpus' : 'no indexed case'
-  for (const code of codesOf(family.specPath).keys()) {
+  for (const code of [...codesOf(family.specPath).keys(), ...warningsOf(family.specPath).keys()]) {
     if (exercised.has(code) || UNCOVERED.has(code)) continue
     failures.add(
       `${familyKey(family)}: ${code} is declared in ${relativeToRepo(family.specPath)} ` +
@@ -1094,13 +1193,6 @@ const UNPINNED: ReadonlyMap<string, string> = new Map([
       'outcome is recorded, that it is not retried and that its failure blocks no other ' +
       "node's rollout are runtime obligations of the platform; no document phase or " +
       'behavioural operation observes a rollout',
-  ],
-  [
-    'COMP-EP-007',
-    "How the platform verifies an endpoint's certificate, that forwarded traffic and " +
-      'probes share one policy and that it never falls back to a weaker one are runtime ' +
-      'obligations of the proxy and the prober; no document phase or behavioural operation ' +
-      'opens a connection',
   ],
   [
     'COMP-EP-011',
@@ -1375,15 +1467,26 @@ export function runConformance(
         failures.add(`unknown behavioural requirement ${requirement}`)
       cited.add(requirement)
     }
+    const { registry, warnings } = reachOf(context, family)
     for (const code of behavior.codes) {
-      if (!reachOf(context, family).registry.has(code))
+      if (!registry.has(code) && !warnings.has(code))
         failures.add(`unknown behavioural diagnostic ${code}`)
       exercised.add(code)
     }
     // A behavioural diagnostic's phase is checked against the registry exactly
-    // as a document case's is: one code, the phases its table lists.
-    for (const { code, phase } of behavior.phases) {
-      const phases = reachOf(context, family).registry.get(code)
+    // as a document case's is: one code, the phases its table lists. A WARN_
+    // code is declared with a requirement, not a phase, and is only ever
+    // expected at WARNING.
+    for (const { code, severity, phase } of behavior.phases) {
+      if (warnings.has(code)) {
+        if (severity !== 'WARNING')
+          failures.add(
+            `${familyKey(family)} behavior.json: ${code} is a warning code and is only ever ` +
+              'expected at WARNING',
+          )
+        continue
+      }
+      const phases = registry.get(code)
       if (phases !== undefined && !phases.includes(phase))
         failures.add(
           `${familyKey(family)} behavior.json: ${code} is a ${phases.join(', ')}-phase code but ` +

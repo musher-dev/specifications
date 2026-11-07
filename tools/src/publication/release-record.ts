@@ -1,13 +1,15 @@
 /**
- * The release record a kind family's archive carries as `release.json`, in the
+ * The release record a family's archive carries as `release.json`, in the
  * shape musher-dev/engineering-conventions defines (EC-0031,
- * `release-record.schema.json`; docs/adr/0037).
+ * `release-record.schema.json`; docs/adr/0037, docs/adr/0043).
  *
  * It lists every interface `.repo/outputs.toml` says the family's bundle output
- * delivers, each with the archive member that holds it and that member's
+ * delivers, each with every archive member that holds it and that member's
  * SHA-256, so a repository that vendors the archive can prove its copy offline
- * (DEPS-05). The declarations are read at the tag being staged, like every
- * other byte of a release.
+ * (DEPS-05). A kind family's schema is one member, the bundle; a registry is
+ * one member per file. Core's archive carries a record from the release that
+ * first delivers an interface. The declarations are read at the tag being
+ * staged, like every other byte of a release.
  *
  * This repository's own record, with the dependency closure, sits beside it as
  * `specification.json` (docs/adr/0023 §6).
@@ -23,6 +25,8 @@ export interface DeclaredInterface {
   readonly format: string
   readonly compatibility: string
   readonly deliveredBy: string
+  /** Repo-relative files, directories ending in `/`, or globs, as EC-0030 defines them. */
+  readonly definitions: readonly string[]
 }
 
 export interface Declarations {
@@ -51,6 +55,11 @@ function text(value: unknown, where: string): string {
   return value
 }
 
+function definitionList(value: unknown, where: string): string[] {
+  if (!Array.isArray(value) || value.length === 0) throw new Error(`${where} is not a list`)
+  return value.map((entry, i) => text(entry, `${where} ${i + 1}`))
+}
+
 /** The repository name and every declared interface, read at `ref`. */
 export function readDeclarations(repoRoot: string, ref: string): Declarations {
   const repository = text(
@@ -69,9 +78,45 @@ export function readDeclarations(repoRoot: string, ref: string): Declarations {
       format: text(entry.format, `${where} format`),
       compatibility: text(entry.compatibility, `${where} compatibility`),
       deliveredBy: text(entry.delivered_by, `${where} delivered_by`),
+      definitions: definitionList(entry.definitions, `${where} definitions`),
     }
   })
   return { repository, interfaces }
+}
+
+/** The interfaces a family's bundle output delivers, in declaration order. */
+export function deliveredInterfaces(
+  declarations: Declarations,
+  family: string,
+): DeclaredInterface[] {
+  const output = releaseOutputId(family)
+  return declarations.interfaces.filter((i) => i.deliveredBy === output)
+}
+
+/**
+ * Whether a repo-relative file is one a definitions entry names: the file
+ * itself, a file under a directory entry ending in `/`, or a match of a glob in
+ * which `*` stays within one path segment and `**` crosses them (EC-0030).
+ */
+export function matchesDefinition(definition: string, file: string): boolean {
+  if (definition.endsWith('/')) return file.startsWith(definition)
+  if (!definition.includes('*')) return file === definition
+  const pattern = definition
+    .split('**')
+    .map((part) =>
+      part
+        .split('*')
+        .map((piece) => piece.replace(/[.+?^${}()|[\]\\]/g, '\\$&'))
+        .join('[^/]*'),
+    )
+    .join('.*')
+  return new RegExp(`^${pattern}$`).test(file)
+}
+
+/** One archive member of an interface. */
+export interface RecordFile {
+  readonly path: string
+  readonly sha256: string
 }
 
 export interface ReleaseRecordInput {
@@ -80,18 +125,23 @@ export interface ReleaseRecordInput {
   readonly version: string
   readonly tag: string
   readonly commit: string
-  /** The archive member each interface is delivered as, relative to the archive's root. */
-  readonly file: { readonly path: string; readonly sha256: string }
+  /**
+   * The archive members that deliver one interface, relative to the archive's
+   * root. An interface that resolves to none is refused: the record would
+   * promise a file the archive does not hold.
+   */
+  readonly filesOf: (declared: DeclaredInterface) => readonly RecordFile[]
 }
 
 /**
- * The record for one kind family release. Throws when the declarations name no
- * interface the family's bundle delivers: an archive without one would ship a
- * record the conventions' schema rejects (`interfaces` has `minItems: 1`).
+ * The record for one family release. Throws when the declarations name no
+ * interface the family's bundle delivers, or when one resolves to no file:
+ * either would ship a record the conventions' schema rejects (`interfaces` and
+ * each `files` have `minItems: 1`).
  */
 export function releaseRecord(input: ReleaseRecordInput): Json {
   const output = releaseOutputId(input.family)
-  const delivered = input.declarations.interfaces.filter((i) => i.deliveredBy === output)
+  const delivered = deliveredInterfaces(input.declarations, input.family)
   if (delivered.length === 0) {
     throw new Error(
       `${input.tag}: ${OUTPUTS_DECLARATION_FILE} declares no interface delivered by "${output}"`,
@@ -104,11 +154,22 @@ export function releaseRecord(input: ReleaseRecordInput): Json {
     version: input.version,
     tag: input.tag,
     commit: input.commit,
-    interfaces: delivered.map((i) => ({
-      id: i.id,
-      format: i.format,
-      compatibility: i.compatibility,
-      files: [{ path: input.file.path, sha256: input.file.sha256 }],
-    })),
+    interfaces: delivered.map((i) => {
+      const files = [...input.filesOf(i)].sort((a, b) =>
+        a.path < b.path ? -1 : a.path > b.path ? 1 : 0,
+      )
+      if (files.length === 0) {
+        throw new Error(
+          `${input.tag}: interface "${i.id}" matches no file the archive carries ` +
+            `(definitions: ${i.definitions.join(', ')})`,
+        )
+      }
+      return {
+        id: i.id,
+        format: i.format,
+        compatibility: i.compatibility,
+        files: files.map((f) => ({ path: f.path, sha256: f.sha256 })),
+      }
+    }),
   }
 }

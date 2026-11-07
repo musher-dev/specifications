@@ -1,0 +1,81 @@
+{
+  "family": "listing",
+  "major": "v2",
+  "requirements": [
+    {
+      "id": "LIST-ITEM-001",
+      "anchor": "LIST-ITEM-001",
+      "section": "identity"
+    },
+    {
+      "id": "LIST-ITEM-002",
+      "anchor": "LIST-ITEM-002",
+      "section": "identity"
+    },
+    {
+      "id": "LIST-URL-001",
+      "anchor": "LIST-URL-001",
+      "section": "presentation"
+    },
+    {
+      "id": "LIST-TAG-001",
+      "anchor": "LIST-TAG-001",
+      "section": "presentation"
+    },
+    {
+      "id": "LIST-TAG-002",
+      "anchor": "LIST-TAG-002",
+      "section": "presentation"
+    },
+    {
+      "id": "LIST-LICENSE-001",
+      "anchor": "LIST-LICENSE-001",
+      "section": "presentation"
+    },
+    {
+      "id": "LIST-LICENSE-002",
+      "anchor": "LIST-LICENSE-002",
+      "section": "presentation"
+    },
+    {
+      "id": "LIST-MD-001",
+      "anchor": "LIST-MD-001",
+      "section": "overview-markdown"
+    },
+    {
+      "id": "LIST-MD-002",
+      "anchor": "LIST-MD-002",
+      "section": "overview-markdown"
+    },
+    {
+      "id": "LIST-MD-003",
+      "anchor": "LIST-MD-003",
+      "section": "overview-markdown"
+    },
+    {
+      "id": "LIST-MEDIA-001",
+      "anchor": "LIST-MEDIA-001",
+      "section": "media"
+    },
+    {
+      "id": "LIST-MEDIA-002",
+      "anchor": "LIST-MEDIA-002",
+      "section": "media"
+    },
+    {
+      "id": "LIST-MEDIA-003",
+      "anchor": "LIST-MEDIA-003",
+      "section": "media"
+    },
+    {
+      "id": "LIST-MEDIA-004",
+      "anchor": "LIST-MEDIA-004",
+      "section": "media"
+    },
+    {
+      "id": "LIST-MEDIA-005",
+      "anchor": "LIST-MEDIA-005",
+      "section": "media"
+    }
+  ]
+}

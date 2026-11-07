@@ -8,7 +8,7 @@ import { tmpdir } from 'node:os'
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path'
 import { canonicalJson, discoverKinds, type Family, isObject, type Json } from '../lib/layout.ts'
 import { familyBundle } from '../schema/bundle.ts'
-import { type Phase, parseDocumentBytes, RESOLUTION_STAGES } from '../validation/document.ts'
+import { type Phase, parseDocumentBytes, type Severity } from '../validation/document.ts'
 import { normalizeDocument } from '../validation/normalization.ts'
 import { formControls, renderListing } from '../validation/presentation.ts'
 import {
@@ -21,6 +21,7 @@ import {
   resolutionRecord,
   resolveDeployment,
 } from '../validation/resolution.ts'
+import { resultSchema, schemaErrors } from '../validation/result-schema.ts'
 import { at, record, semanticReport } from '../validation/semantic.ts'
 import { validateDocument } from '../validation/validator.ts'
 import { observeConnectionLifecycle } from './connection-lifecycle.ts'
@@ -33,15 +34,6 @@ export const SUITES = {
   lifecycle: ['credential', 'revision', 'connection'],
 } as const
 export type Suite = keyof typeof SUITES
-
-/** Phases a behavioural diagnostic may declare: every document phase, and `resolution`. */
-const BEHAVIOUR_PHASES: readonly Phase[] = [
-  'parser',
-  'structural',
-  'semantic',
-  'admission',
-  'resolution',
-]
 
 export interface BehaviorCase {
   id: string
@@ -62,7 +54,30 @@ export interface BehaviorCase {
   input?: Json
   context?: Json
   expect: Record<string, Json>
-  diagnostics?: { code: string; path?: string; phase?: string; stage?: string; related?: Json }[]
+  /** Each an `ExpectedDiagnostic` of core's validation result schema. */
+  diagnostics?: {
+    code: string
+    path?: string
+    severity?: Severity
+    phase?: string
+    stage?: string
+    related?: Json
+  }[]
+}
+
+/** A produced diagnostic's severity: ERROR unless it says WARNING (core v2 §7). */
+const severityOf = (diagnostic: Json): Severity =>
+  at(diagnostic, 'severity') === 'WARNING' ? 'WARNING' : 'ERROR'
+
+/**
+ * The observation `expect` reads (docs/conformance.md, Behavioural cases): a
+ * `diagnostics` array keeps its ERROR diagnostics only, so a pointer into
+ * `/diagnostics` means the same thing whether or not the producer reports
+ * warnings beside them.
+ */
+function errorsOnly(observed: Json): Json {
+  if (!isObject(observed) || !Array.isArray(observed.diagnostics)) return observed
+  return { ...observed, diagnostics: observed.diagnostics.filter((d) => severityOf(d) === 'ERROR') }
 }
 export function observe(family: Family, c: BehaviorCase): Json {
   const scratch = mkdtempSync(join(tmpdir(), 'musher-behavior-'))
@@ -105,7 +120,14 @@ export function observe(family: Family, c: BehaviorCase): Json {
         ? { status: 'VALID', diagnostics: [] }
         : {
             status: 'INVALID',
-            diagnostics: [{ code: 'ERR_REVISION_NOT_INCREASING', path: '/metadata/revision' }],
+            diagnostics: [
+              {
+                code: 'ERR_REVISION_NOT_INCREASING',
+                path: '/metadata/revision',
+                severity: 'ERROR',
+                phase: 'admission',
+              },
+            ],
           }
     }
     if (c.operation === 'record') {
@@ -129,6 +151,7 @@ export function observe(family: Family, c: BehaviorCase): Json {
             {
               code: 'ERR_INVALID_RESOLUTION_CONTEXT',
               path: '',
+              severity: 'ERROR',
               phase: 'resolution',
               stage: 'record',
             },
@@ -221,8 +244,8 @@ export function runBehaviorCases(family: Family, log: (line: string) => void) {
     ran: 0,
     requirements: new Set<string>(),
     codes: new Set<string>(),
-    /** Each declared diagnostic's code and phase, for the registry check. */
-    phases: [] as { code: string; phase: Phase }[],
+    /** Each declared diagnostic's code, severity and phase, for the registry check. */
+    phases: [] as { code: string; severity: Severity; phase: Phase }[],
     failures: [] as string[],
   }
   if (!existsSync(path)) return result
@@ -241,34 +264,28 @@ export function runBehaviorCases(family: Family, log: (line: string) => void) {
       seen.add(c.id)
       if (!(SUITES[c.suite] as readonly string[]).includes(c.operation))
         throw new Error(`operation ${c.operation} does not belong to suite ${c.suite}`)
-      for (const expected of c.diagnostics ?? []) {
-        // A resolution diagnostic names its stage, and only a resolution
-        // diagnostic has one (core v2 §6.4).
-        if (expected.phase !== undefined && !BEHAVIOUR_PHASES.includes(expected.phase as Phase))
-          throw new Error(`diagnostic phase "${expected.phase}" is not a validation phase`)
-        if (expected.phase === 'resolution' && expected.stage === undefined)
-          throw new Error(`resolution diagnostic ${expected.code} declares no stage`)
-        if (
-          expected.stage !== undefined &&
-          expected.phase !== undefined &&
-          expected.phase !== 'resolution'
-        )
+      // Each expected diagnostic is an ExpectedDiagnostic of core's result
+      // schema: a known phase, a resolution stage exactly on a resolution
+      // diagnostic (core v2 §6.4), and no member the schema does not define.
+      const { expectedDiagnostic } = resultSchema(family.repoRoot, family.major)
+      if (!Array.isArray(c.diagnostics ?? [])) throw new Error('diagnostics must be an array')
+      for (const expected of c.diagnostics ?? [])
+        if (!(expectedDiagnostic(expected) as boolean))
           throw new Error(
-            `diagnostic ${expected.code} declares a stage outside the resolution phase`,
+            `diagnostic ${String(at(expected as Json, 'code'))} is not an expected diagnostic: ` +
+              schemaErrors(expectedDiagnostic),
           )
-        if (
-          expected.stage !== undefined &&
-          !(RESOLUTION_STAGES as readonly string[]).includes(expected.stage)
-        )
-          throw new Error(`diagnostic stage "${expected.stage}" is not a resolution stage`)
-      }
       const observed = observe(family, c)
       for (const expected of c.diagnostics ?? []) {
+        // An expectation matches a produced diagnostic of its own severity,
+        // ERROR when it names none, so a warning never satisfies one.
+        const severity = expected.severity ?? 'ERROR'
         const produced = at(observed, 'diagnostics')
         if (
           !Array.isArray(produced) ||
           !produced.some(
             (d) =>
+              severityOf(d) === severity &&
               at(d, 'code') === expected.code &&
               (expected.path === undefined || at(d, 'path') === expected.path) &&
               (expected.phase === undefined || at(d, 'phase') === expected.phase) &&
@@ -280,10 +297,11 @@ export function runBehaviorCases(family: Family, log: (line: string) => void) {
           throw new Error('declared behavioural diagnostic was not produced')
         result.codes.add(expected.code)
         if (expected.phase !== undefined)
-          result.phases.push({ code: expected.code, phase: expected.phase as Phase })
+          result.phases.push({ code: expected.code, severity, phase: expected.phase as Phase })
       }
+      const expectable = errorsOnly(observed)
       for (const [path, expected] of Object.entries(c.expect)) {
-        const value = pointer(observed, path)
+        const value = pointer(expectable, path)
         if (value === undefined || canonicalJson(value) !== canonicalJson(expected))
           throw new Error(`observation differs at ${path}`)
         if (path.endsWith('/code') && typeof expected === 'string') result.codes.add(expected)

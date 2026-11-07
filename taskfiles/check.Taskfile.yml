@@ -136,6 +136,15 @@ tasks:
     cmds:
       - bun run src/publication/compat.ts
 
+  check:compat:registry:
+    desc: Fail a registry, protocol or interface schema change that drops or narrows what its last release delivered
+    dir: '{{.ROOT_DIR}}/{{.TOOLS_DIR}}'
+    cmds:
+      # Offline: each family version's registry/, interfaces/ and protocols/
+      # against its newest tag (docs/adr/0043 §7). A release before 2.1.0
+      # carries none, so there is nothing to compare.
+      - bun run src/publication/compat-registry.ts
+
   # --- Prose, workflows, and shell -------------------------------------------
 
   check:commits:
@@ -153,7 +162,7 @@ tasks:
       - bun run src/policy/title.ts
 
   check:docs:
-    desc: Fail if docs/traceability.md, the ADR index, or docs/terminology.md and its Vale styles differ from a fresh generation
+    desc: Fail if docs/traceability.md, the ADR index, docs/terminology.md and its Vale styles, or a registry differ from a fresh generation
     dir: '{{.ROOT_DIR}}/{{.TOOLS_DIR}}'
     cmds:
       # Regenerates each in memory and writes nothing; `task docs` is the fix.
