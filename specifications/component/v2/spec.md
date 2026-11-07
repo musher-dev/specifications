@@ -1064,8 +1064,8 @@ spec:
 
 There is no `resourceType` at node or value scope; what an external component
 stands for does not select how it is supplied. A database, a cache, an object
-store or a language model reached through a connection is an external
-component with one connection input ([§6.4](#connection-requirements)), whose
+store, a language model or a messaging service reached through a connection is
+an external component with one connection input ([§6.4](#connection-requirements)), whose
 outputs hand the members to the nodes that use them.
 
 ### <a id="jobs"></a>5.7 Jobs and schedules
@@ -1373,11 +1373,14 @@ connection parameter of one deployment: all of them or none
 ([ADR 0030](../../../docs/adr/0030-atomic-named-connections.md),
 [ADR 0039](../../../docs/adr/0039-provenance-is-chosen-at-deployment.md)). A
 connection input declares `description` and `connection`, which requires
-`protocol`. The protocol is the wire contract a client speaks, independent of
-vendor, and it fixes the members, their types, their sensitivity and which of
-them every connection holds. The
-component that declares one is an external node standing for the database,
-cache, object store or model API, and its outputs hand the members on:
+`protocol`. The protocol is the wire contract a client speaks, and it fixes
+the members, their types, their sensitivity and which of them every connection
+holds. A protocol names a contract, not whoever serves it: `S3` is spoken by
+many object stores, and `SLACK_APP` by Slack alone, because no other service
+speaks it. The component that declares one is an external node standing for
+the database, cache, object store, model API or messaging service, and its
+outputs
+hand the members on:
 
 ```yaml
 spec:
@@ -1405,6 +1408,38 @@ Musher-managed offering or with a service the organization runs, and a deployer
 may supply a complete set of members instead
 ([blueprint §5.3](../../blueprint/v2/spec.md#connections)). The
 component document is the same in every case.
+
+<a id="protocol-registry"></a>**The protocol registry.** The
+**protocol registry** is the set of protocol records in this family version's
+`protocols/` directory: one JSON file per protocol, named after it in lower
+case with hyphens, such as `openai-chat-completions.json`, each valid against
+core's
+[protocol record schema](../../core/v2/interfaces/registry/protocol.schema.json)
+([ADR 0045](../../../docs/adr/0045-connection-protocols-are-a-registry.md)).
+The protocol registry is normative for the facts it tabulates: each protocol's
+identifier and members, and each member's name, logical type, presence,
+default, sensitivity, role and value constraints. This specification is
+normative for what those facts mean and how they compose. The member table
+below, the type sentence in [`COMP-OUT-004`](#COMP-OUT-004), the schema's
+protocol and member enums, and blueprint's view table and connection-evidence
+schema are generated from the protocol registry, between `BEGIN GENERATED` and
+`END GENERATED` comments in this file, and never edited by hand.
+
+A member's **member role** says what it is for:
+
+| Role | Member |
+|---|---|
+| `credential` | The one secret the selection's credential supplies, such as `apiKey` or `password`. Every protocol has exactly one |
+| `secret` | A further secret the same credential carries, such as the `SLACK_APP` `signingSecret`. Always required |
+| `locator` | The HTTPS URL a client sends requests to, such as `baseURL`. A protocol with a locator is **HTTP-based** |
+| `parameter` | Any other member a view carries, such as `model`, `host` or `bucket` |
+| `derived` | A member resolution composes from the others, never supplied |
+
+A **protocol category** groups protocols that reach the same kind of service
+and name their members alike: `LANGUAGE_MODEL`, `DATABASE`, `CACHE`,
+`OBJECT_STORAGE` and `MESSAGING`. The protocol registry's `categories.json` lists each
+category's protocols and the name it gives its credential and its locator. A
+category is registry metadata: no document names one.
 
 <a id="members"></a>**Members.** Each protocol fixes its members. A **required**
 member is present in every connection and non-empty. An **optional** member may
@@ -1439,6 +1474,16 @@ others ([derived URLs](#derived-urls)). Sensitive members are in bold.
 | | `accessKeyID` | string | required |
 | | **`secretAccessKey`** | string | required |
 | | `pathStyle` | boolean | optional, default `false` |
+| `TELEGRAM_BOT` | `baseURL` | string | optional, default `https://api.telegram.org` |
+| | **`botToken`** | string | required |
+| `SLACK_APP` | `baseURL` | string | optional, default `https://slack.com/api` |
+| | **`botToken`** | string | required |
+| | **`appToken`** | string | required |
+| | **`signingSecret`** | string | required |
+| `DISCORD_BOT` | `baseURL` | string | optional, default `https://discord.com/api` |
+| | **`botToken`** | string | required |
+| | `applicationID` | string | required |
+| | `publicKey` | string | required |
 
 <!-- END GENERATED protocol-members -->
 
@@ -1458,7 +1503,14 @@ others ([derived URLs](#derived-urls)). Sensitive members are in bold.
   first path segment when it is true. `endpointURL` is not a component
   endpoint.
 - `baseURL` and `endpointURL` are HTTPS URLs; blueprint holds a connection to
-  that ([blueprint §5.3](../../blueprint/v2/spec.md#connections)).
+  that ([blueprint §5.3](../../blueprint/v2/spec.md#connections)). A messaging
+  protocol's `baseURL` is optional, and defaults to its service's public API.
+- `botToken` is the token of a bot or app, in its service's format, which this
+  specification does not validate. The `SLACK_APP` `appToken` is the app-level
+  token a Socket Mode connection opens with, and its `signingSecret` verifies
+  the requests Slack sends to an HTTP endpoint. The `DISCORD_BOT`
+  `applicationID` names the application, and its `publicKey` verifies the
+  interactions Discord sends to an HTTP endpoint; neither is sensitive.
 
 TLS is fixed by members and never left to a client default: by the HTTPS
 scheme of `baseURL` and `endpointURL`, by `sslMode` for `POSTGRES` and by `tls`
@@ -1468,7 +1520,27 @@ An output reads only a member every connection holds: a required, derived or
 defaulted one ([`COMP-OUT-003`](#COMP-OUT-003)). Adding an optional member with
 a default to a protocol is therefore a relaxation: every existing connection
 still resolves, taking the default, and no existing output reads the new
-member.
+member. Adding a protocol to the protocol registry is a relaxation too: an input naming
+it was rejected before, and every document accepted before keeps its meaning
+([ADR 0045](../../../docs/adr/0045-connection-protocols-are-a-registry.md)).
+
+<a id="event-delivery"></a>**Event delivery.** A messaging protocol serves
+both of its service's ways of delivering events, and every connection of it
+holds the members of both. The workload chooses which it uses:
+
+| Mode | `TELEGRAM_BOT` | `SLACK_APP` | `DISCORD_BOT` |
+|---|---|---|---|
+| Outbound: the workload opens the connection | Polling for updates | Socket Mode, with `appToken` | The gateway |
+| Webhook: the service sends each event to the workload | A webhook, verified by the secret token the bot chose when it registered it | Events and interactions, verified with `signingSecret` | Interactions, verified with `publicKey` |
+
+In webhook mode the endpoint the service calls is the consuming `SERVICE`
+node's own `PUBLIC` endpoint. Its component offers the event path in
+[`exemptibleRequests.paths`](#exemptible-requests), and the blueprint grants it
+with `accessExemptions: [PATHS]`
+([blueprint §4.5](../../blueprint/v2/spec.md#access)), so the service reaches
+it without signing in. Registering that URL with the service happens outside
+the documents, and so does any rule that a bot token has one consumer at a
+time: that is platform policy. This paragraph and its table are informative.
 
 <a id="derived-urls"></a>**Derived URLs.** Resolution composes the `url` of a
 `POSTGRES` or `REDIS` connection from its other members, the credential
@@ -1499,16 +1571,18 @@ and a `REDIS` connection with `tls` true, no `password` and no `database`, at
 
 <a id="COMP-CONNECTION-002"></a>**`COMP-CONNECTION-002`**: A connection input
 declares only `description` and `connection`, is always required, and is
-declared only by an `EXTERNAL` component; its `protocol` is one of the five
-above, and its members are exactly those the table fixes for that protocol.
-Structural: `ERR_INVALID_VALUE` at `schema`, `default`, `required`,
-`sensitive`, `presentationHint` or `target` on a connection input, at the
-`connection` of one on a `SERVICE`, `WORKER` or `JOB`, and at a `protocol`
-outside the five; `ERR_MISSING_FIELD` at `connection` without `protocol`.
+declared only by an `EXTERNAL` component; its `protocol` is one of the
+protocols the protocol registry defines, and its members are exactly those it
+fixes for that protocol. Structural: `ERR_INVALID_VALUE` at `schema`,
+`default`, `required`, `sensitive`, `presentationHint` or `target` on a
+connection input, at the `connection` of one on a `SERVICE`, `WORKER` or `JOB`,
+and at a `protocol` the protocol registry does not define; `ERR_MISSING_FIELD` at
+`connection` without `protocol`.
 
 <a id="COMP-CONNECTION-003"></a>**`COMP-CONNECTION-003`**: `capabilities`, a
-unique list of `STREAMING` and `TOOL_CALLS`, is permitted only on the
-language-model protocols, `OPENAI_CHAT_COMPLETIONS` and `ANTHROPIC_MESSAGES`.
+unique list of `STREAMING` and `TOOL_CALLS`, is permitted only on a protocol
+whose record lists capabilities: the language-model protocols,
+`OPENAI_CHAT_COMPLETIONS` and `ANTHROPIC_MESSAGES`.
 Structural: `ERR_INVALID_VALUE` at `connection/capabilities` on another
 protocol, and at an unknown or repeated capability.
 
@@ -1618,6 +1692,8 @@ evidence.
 | Ordering a job against other nodes | A new optional field |
 | `capabilities` for a protocol other than a language model's | Permit `capabilities` on that protocol, with new values |
 | A connection member its protocol does not define | A new optional member with a default ([§6.4](#members)): every existing connection takes the default |
+| A connection protocol the protocol registry does not define | A new protocol record, in a minor release ([ADR 0045](../../../docs/adr/0045-connection-protocols-are-a-registry.md)) |
+| A messaging connection holding the members of only one delivery mode ([§6.4](#event-delivery)) | A new protocol for that mode |
 | Choosing a plan or size for a provisioned connection | A new optional field on the connection parameter, in blueprint |
 | Swapping a self-hosted `SERVICE` for a connection at deployment | Conditional topology ([ADR 0019](../../../docs/adr/0019-external-component-node.md)) |
 | Watch paths outside `context`, a Dockerfile target stage, a build platform or architecture | A new optional field on `build` |

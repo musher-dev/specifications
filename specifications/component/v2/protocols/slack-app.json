@@ -1,0 +1,71 @@
+{
+  "id": "SLACK_APP",
+  "title": "Slack app",
+  "category": "MESSAGING",
+  "description": "Slack's Web API, for one app installed in one workspace, whether it receives events over Socket Mode or at an HTTP endpoint.",
+  "status": "stable",
+  "introduced": "2.1.0",
+  "references": [
+    {
+      "title": "Slack Web API",
+      "url": "https://api.slack.com/web"
+    },
+    {
+      "title": "Slack Socket Mode",
+      "url": "https://api.slack.com/apis/socket-mode"
+    },
+    {
+      "title": "Verifying requests from Slack",
+      "url": "https://api.slack.com/authentication/verifying-requests-from-slack"
+    }
+  ],
+  "capabilities": [],
+  "members": [
+    {
+      "name": "baseURL",
+      "role": "locator",
+      "presence": "optional",
+      "default": "https://slack.com/api",
+      "sensitive": false,
+      "schema": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^[Hh][Tt][Tt][Pp][Ss]://"
+      },
+      "description": "HTTPS base URL of the Slack Web API; without it, the vendor's public one."
+    },
+    {
+      "name": "botToken",
+      "role": "credential",
+      "presence": "required",
+      "sensitive": true,
+      "schema": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "The app's bot token, in the vendor's format, which is not validated."
+    },
+    {
+      "name": "appToken",
+      "role": "secret",
+      "presence": "required",
+      "sensitive": true,
+      "schema": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "The app-level token a Socket Mode connection opens with."
+    },
+    {
+      "name": "signingSecret",
+      "role": "secret",
+      "presence": "required",
+      "sensitive": true,
+      "schema": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "The secret that verifies each request Slack sends to an HTTP events endpoint."
+    }
+  ]
+}

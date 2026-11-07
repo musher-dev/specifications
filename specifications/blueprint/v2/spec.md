@@ -1217,7 +1217,13 @@ nodes:
 
 A language-model connection is wired the same way: an `EXTERNAL` node with an
 `OPENAI_CHAT_COMPLETIONS` or `ANTHROPIC_MESSAGES` input, whose `baseURL`,
-`apiKey` and `model` outputs the calling node binds.
+`apiKey` and `model` outputs the calling node binds. So is a messaging
+connection: an `EXTERNAL` node with a `TELEGRAM_BOT`, `SLACK_APP` or
+`DISCORD_BOT` input, whose outputs hand the bot's members to the node that
+runs it. A bot that receives events at a webhook does so at that node's own
+`PUBLIC` endpoint, exempted with `accessExemptions: [PATHS]`
+([§4.5](#access),
+[component v2 §6.4](../../component/v2/spec.md#event-delivery)).
 
 <a id="BP-CONNECTION-001"></a>**`BP-CONNECTION-001`**: A connection input MUST be
 bound only by a `parameter` binding naming a connection parameter, and a
@@ -1243,17 +1249,22 @@ separate variables cannot assemble a connection.
 immutable, authorized selection per deployment identity and connection
 parameter. Every consumer of that parameter uses a protocol view of that same
 selection. Resolution, in the `connections` stage, at
-`/spec/parameters/<name>` or, for a view, at the binding:
+`/spec/parameters/<name>` or, for a view, at the binding. Each acquisition has
+one **acquisition status**, the `status` of its evidence:
 
-| Acquisition outcome | Result |
-|---|---|
-| Not acquired | INCOMPLETE |
-| Authoritatively not found | `ERR_CONNECTION_NOT_FOUND` |
-| Denied | `ERR_CONNECTION_DENIED` |
-| A selection with no view of the input's protocol, or lacking a capability the input requires | `ERR_CONNECTION_INCOMPATIBLE` |
-| A `USER` selection missing a required member of its protocol, or the credential that supplies one | `ERR_CONNECTION_INCOMPATIBLE`; it is never completed from a managed selection |
-| A member that does not satisfy the receiving input | `ERR_VALUE_CONSTRAINT` |
-| Malformed evidence, below | `ERR_INVALID_RESOLUTION_CONTEXT` |
+| Acquisition outcome | Status | Result |
+|---|---|---|
+| Not acquired | `NOT_ACQUIRED`, or no evidence | INCOMPLETE |
+| Authoritatively not found | `NOT_FOUND` | `ERR_CONNECTION_NOT_FOUND` |
+| Denied | `DENIED` | `ERR_CONNECTION_DENIED` |
+| Nothing configured is compatible with the parameter | `INCOMPATIBLE` | `ERR_CONNECTION_INCOMPATIBLE` |
+| A selection with no view of the input's protocol, or lacking a capability the input requires | `SELECTED` | `ERR_CONNECTION_INCOMPATIBLE` |
+| A `USER` selection missing a required member of its protocol, or the credential that supplies one | `SELECTED` | `ERR_CONNECTION_INCOMPATIBLE`; it is never completed from a managed selection |
+| A member that does not satisfy the receiving input | `SELECTED` | `ERR_VALUE_CONSTRAINT` |
+| Malformed evidence, below | Any | `ERR_INVALID_RESOLUTION_CONTEXT` |
+
+Only a `SELECTED` acquisition carries a selection, and it is persisted
+([`BP-CONNECTION-003`](#BP-CONNECTION-003)).
 
 No other provider is ever selected as a fallback. Values enter the ordinary
 input and environment pipeline, and no input, output or environment value is
@@ -1265,10 +1276,15 @@ answers, the acquisition request it answers, its selection kind and, for a
 managed one, whether it is granted or provisioned, its cost owner, one scoped
 credential with an identity and a rotation generation, and a view per protocol.
 A `REDIS` server that requires no authentication has no credential, so a
-selection of one carries none. A view carries the members its protocol defines
-([component v2 §6.4](../../component/v2/spec.md#members)), except the
-credential member, which the credential supplies, and the derived `url`, which
-is never carried. It omits an optional member it does not hold. A
+selection of one carries none. The credential's `value` supplies each view's
+credential member, and its **credential secrets**, `credential.secrets`, hold
+exactly the secret members of its views' protocols, such as the `SLACK_APP`
+`appToken` and `signingSecret`, by member; a selection whose protocols define
+none carries no `secrets`. A view carries the locator and parameter
+members of its protocol
+([component v2 §6.4](../../component/v2/spec.md#protocol-registry)), never the
+credential member or a secret member, which the credential supplies, and never
+a derived member such as `url`. It omits an optional member it does not hold. A
 language-model view also carries its capabilities:
 
 <!-- BEGIN GENERATED protocol-views: `task docs` writes this table from component's protocol registry -->
@@ -1279,12 +1295,16 @@ language-model view also carries its capabilities:
 | `POSTGRES` | `password` | `host`, `port`, `database`, `username`, `sslMode` | none |
 | `REDIS` | `password`, when the server requires authentication | `host`, `port`, `tls` | `database`, `username` |
 | `S3` | `secretAccessKey` | `endpointURL`, `region`, `bucket`, `accessKeyID` | `pathStyle` |
+| `TELEGRAM_BOT` | `botToken` | none | `baseURL` |
+| `SLACK_APP` | `botToken`, and `appToken` and `signingSecret` in `secrets` | none | `baseURL` |
+| `DISCORD_BOT` | `botToken` | `applicationID`, `publicKey` | `baseURL` |
 
 <!-- END GENERATED protocol-views -->
 
 The input a view fills receives every member its protocol defines: the view's
 own, the default of each optional member the view omits, the credential member,
-and, for `POSTGRES` and `REDIS`, the `url` that resolution composes from them
+the secret members, and, for `POSTGRES` and `REDIS`, the `url` that resolution
+composes from them
 ([component v2 §6.4](../../component/v2/spec.md#derived-urls)). An optional
 member without a default that the view omits is absent.
 
@@ -1296,25 +1316,34 @@ fails:
   request, not the provider selected.
 - A managed credential identity is not reused across distinct connection
   parameters.
-- Every required member is present in a managed selection. Every member a view
-  carries is non-empty and of the type, range and value set its protocol fixes
+- Every required member, a secret member included, is present in a managed
+  selection. Every member a view or the credential's `secrets` carries is
+  non-empty and of the type, range and value set its protocol fixes
   ([component v2 §6.4](../../component/v2/spec.md#members)): `host` a host name
   or address without a port, `port` an integer from 1 to 65535, the `REDIS`
   `database` a non-negative integer, `tls` and `pathStyle` booleans, and
   `sslMode` one of PostgreSQL's `sslmode` values. A view carries no member its
-  protocol does not define, no credential member and no `url`.
-- A selection without a credential has only `REDIS` views, and none of them
-  carries `username`.
-- The `OPENAI_CHAT_COMPLETIONS`, `ANTHROPIC_MESSAGES` and `S3` views are
-  HTTP-based: their `baseURL` or `endpointURL` is an absolute HTTPS URL without
-  user information, query or fragment, and is one of the credential's
-  `permittedBaseURLs`, which a selection with an HTTP-based view always
-  carries.
+  protocol does not define, and no credential, secret or derived member. The
+  credential's `secrets` holds no member that is not a secret member of one of
+  its views' protocols; a `USER` selection whose `secrets` lacks one is
+  `ERR_CONNECTION_INCOMPATIBLE`, as one missing a required member is.
+- A selection without a credential has only views of protocols whose
+  credential member is optional, `REDIS` alone, and none of them carries
+  `username`.
+- A view of an HTTP-based protocol, one with a locator such as `baseURL` or the
+  `S3` `endpointURL`, carries a locator that is an absolute HTTPS URL without
+  user information, query or fragment. The URL the input receives, which is the
+  view's locator or, when the view omits an optional one, its default, is one
+  of the credential's `permittedBaseURLs`, which a selection with an HTTP-based
+  view always carries.
 
 Context is trusted acquisition evidence, not an authored mechanism for granting
 permission. Offline evaluation performs no network access and issues no
-credential. How a behavioural fixture spells a selection, and the evidence of
-every other stage, is the fixture format's
+credential. The evidence of this stage has the shape of the
+[connection-evidence schema](interfaces/connection-evidence.schema.json), which
+is generated from component's protocol registry, and evidence that schema
+rejects is malformed. How a behavioural fixture spells a selection, and the
+evidence of every other stage, is the fixture format's
 ([conformance](../../../docs/conformance.md#behavioural-cases)).
 
 <a id="BP-CONNECTION-003"></a>**`BP-CONNECTION-003`**: The complete selection and
@@ -1486,6 +1515,7 @@ evidence.
 | `deployment` facts beyond the creator's | A new path in the `deployment` namespace |
 | Choosing a plan or size for a provisioned connection | A new optional field on the connection parameter |
 | `capabilities` for a protocol other than a language model's | Permit `capabilities` on that protocol, in component |
+| Registering an endpoint's URL with a messaging service, such as a Telegram webhook or a Slack request URL | A new optional member of the exposure object |
 
 ## <a id="security"></a>10. Security considerations
 

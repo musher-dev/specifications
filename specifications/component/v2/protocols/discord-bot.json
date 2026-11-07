@@ -1,0 +1,67 @@
+{
+  "id": "DISCORD_BOT",
+  "title": "Discord bot",
+  "category": "MESSAGING",
+  "description": "Discord's HTTP API, for one application's bot, whether it receives events over the gateway or interactions at an HTTP endpoint.",
+  "status": "stable",
+  "introduced": "2.1.0",
+  "references": [
+    {
+      "title": "Discord API reference",
+      "url": "https://discord.com/developers/docs/reference"
+    },
+    {
+      "title": "Discord interactions",
+      "url": "https://discord.com/developers/docs/interactions/overview"
+    }
+  ],
+  "capabilities": [],
+  "members": [
+    {
+      "name": "baseURL",
+      "role": "locator",
+      "presence": "optional",
+      "default": "https://discord.com/api",
+      "sensitive": false,
+      "schema": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^[Hh][Tt][Tt][Pp][Ss]://"
+      },
+      "description": "HTTPS base URL of the Discord API; without it, the vendor's public one."
+    },
+    {
+      "name": "botToken",
+      "role": "credential",
+      "presence": "required",
+      "sensitive": true,
+      "schema": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "The bot's token, in the vendor's format, which is not validated."
+    },
+    {
+      "name": "applicationID",
+      "role": "parameter",
+      "presence": "required",
+      "sensitive": false,
+      "schema": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "Identifier of the Discord application the bot belongs to."
+    },
+    {
+      "name": "publicKey",
+      "role": "parameter",
+      "presence": "required",
+      "sensitive": false,
+      "schema": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "The application's public key, which verifies each interaction Discord sends to an HTTP endpoint."
+    }
+  ]
+}

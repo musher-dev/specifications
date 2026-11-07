@@ -450,11 +450,15 @@ platform knows it lacks.
 facts of the endpoint's mode. `oidcClient` is `{identity, version, issuerURL,
 clientID, secret}`, beside `public` and never inside it.
 
-**`connections`.** `deployment` is the deployment's identity. Each parameter
-maps to an acquisition: `{status}`, where `status` is `NOT_ACQUIRED`,
-`NOT_FOUND`, `DENIED`, `INCOMPATIBLE` or `SELECTED`. A `SELECTED` acquisition
-also carries `persisted: true` and the persisted `selection` of
-[blueprint §5.3](../specifications/blueprint/v2/spec.md#connections),
+**`connections`.** A `connections` entry validates against blueprint's
+[connection-evidence schema](../specifications/blueprint/v2/interfaces/connection-evidence.schema.json),
+which `task docs` generates from component's protocol registry
+([component v2 §6.4](../specifications/component/v2/spec.md#protocol-registry)).
+`deployment` is the deployment's identity. Each parameter maps to an
+acquisition, `{status}`, whose status is one of the acquisition statuses of
+[blueprint `BP-CONNECTION-002`](../specifications/blueprint/v2/spec.md#BP-CONNECTION-002).
+A `SELECTED` acquisition also carries `persisted: true` and the persisted
+`selection` of [blueprint §5.3](../specifications/blueprint/v2/spec.md#connections),
 represented as:
 
 ```json
@@ -490,28 +494,21 @@ represented as:
   the policy that answered it.
 - `selectionKind` is `MANAGED` or `USER`. `provisioning` is `GRANTED` or
   `PROVISIONED`, and only a `MANAGED` selection carries it.
-- `credential.value` supplies the protocol's credential member (`apiKey` for
-  `OPENAI_CHAT_COMPLETIONS` and `ANTHROPIC_MESSAGES`, `password` for `POSTGRES`
-  and `REDIS`, `secretAccessKey` for `S3`). `permittedBaseURLs` is required
-  when a view is of an HTTP-based protocol (the two LLM protocols and `S3`),
-  and lists the URLs its URL member may take (`baseURL`, or the `S3`
-  `endpointURL`). A selection of a `REDIS` server that requires no
-  authentication carries no `credential`.
-- `views` is keyed by protocol. Each view holds the members of that protocol
-  ([component §6.4](../specifications/component/v2/spec.md#members)) except
-  its credential member and the derived `url`, which resolution composes
-  ([component §6.4](../specifications/component/v2/spec.md#derived-urls)) and
-  the `resolve` observation shows in the input's value. A view omits an
-  optional member it does not hold, and an LLM view also carries
-  `capabilities`.
+- `credential.value` supplies the credential member of each view's protocol.
+- `views` is keyed by protocol. Which members a view of each protocol holds,
+  and their value constraints, is the schema's, and the `resolve` observation
+  shows the input's whole value: the view's members, the defaults it omits,
+  the credential member and any derived member resolution composes
+  ([component §6.4](../specifications/component/v2/spec.md#derived-urls)).
 
 The context is trusted acquisition evidence, not an authored mechanism for
-granting permission. Malformed evidence is `ERR_INVALID_RESOLUTION_CONTEXT`. An
-unavailable entry is absent, never a fabricated empty value. The rules a
-selection must satisfy (that `request.from` equals the parameter's `from`, that
+granting permission. Evidence the schema rejects is malformed,
+`ERR_INVALID_RESOLUTION_CONTEXT`. An unavailable entry is absent, never a
+fabricated empty value. The schema fixes only the shape: the rules a selection
+must also satisfy (that `request.from` equals the parameter's `from`, that
 managed credential identities are not reused across connection parameters, the
-URL rules) are blueprint's; this section only fixes how a fixture writes the
-evidence down.
+URL rules) are blueprint's, and this section only fixes how a fixture writes
+the evidence down.
 
 ### <a id="admission-context"></a>Admission context
 

@@ -155,6 +155,15 @@
             },
             "S3": {
               "$ref": "#/$defs/S3View"
+            },
+            "TELEGRAM_BOT": {
+              "$ref": "#/$defs/TelegramBotView"
+            },
+            "SLACK_APP": {
+              "$ref": "#/$defs/SlackAppView"
+            },
+            "DISCORD_BOT": {
+              "$ref": "#/$defs/DiscordBotView"
             }
           }
         }
@@ -220,14 +229,32 @@
         },
         "value": {
           "$ref": "#/$defs/Text",
-          "description": "The value of each view's credential member: apiKey for OPENAI_CHAT_COMPLETIONS, apiKey for ANTHROPIC_MESSAGES, password for POSTGRES, password for REDIS, secretAccessKey for S3."
+          "description": "The value of each view's credential member: apiKey for OPENAI_CHAT_COMPLETIONS, apiKey for ANTHROPIC_MESSAGES, password for POSTGRES, password for REDIS, secretAccessKey for S3, botToken for TELEGRAM_BOT, botToken for SLACK_APP, botToken for DISCORD_BOT."
+        },
+        "secrets": {
+          "type": "object",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "description": "The secret members of the views’ protocols, by member: exactly those, and absent when they define none (blueprint §5.3).",
+          "properties": {
+            "appToken": {
+              "type": "string",
+              "minLength": 1,
+              "description": "The app-level token a Socket Mode connection opens with."
+            },
+            "signingSecret": {
+              "type": "string",
+              "minLength": 1,
+              "description": "The secret that verifies each request Slack sends to an HTTP events endpoint."
+            }
+          }
         },
         "permittedBaseURLs": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "description": "The URLs the locator of an HTTP-based view may take. Required by blueprint §5.3 when a view is of an HTTP-based protocol."
+          "description": "The URLs an HTTP-based view’s input may receive as its locator, a defaulted one included. Required by blueprint §5.3 when a view is of an HTTP-based protocol."
         }
       }
     },
@@ -402,6 +429,55 @@
         "pathStyle": {
           "type": "boolean",
           "description": "Whether the client puts the bucket in the path rather than the hostname."
+        }
+      }
+    },
+    "TelegramBotView": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "A TELEGRAM_BOT view: the members a view of the protocol carries (telegram-bot.json). It never carries the credential, a secret or a derived member.",
+      "properties": {
+        "baseURL": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[Hh][Tt][Tt][Pp][Ss]://",
+          "description": "HTTPS base URL of the Telegram Bot API; without it, the vendor's public one."
+        }
+      }
+    },
+    "SlackAppView": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "A SLACK_APP view: the members a view of the protocol carries (slack-app.json). It never carries the credential, a secret or a derived member.",
+      "properties": {
+        "baseURL": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[Hh][Tt][Tt][Pp][Ss]://",
+          "description": "HTTPS base URL of the Slack Web API; without it, the vendor's public one."
+        }
+      }
+    },
+    "DiscordBotView": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "A DISCORD_BOT view: the members a view of the protocol carries (discord-bot.json). It never carries the credential, a secret or a derived member.",
+      "properties": {
+        "baseURL": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[Hh][Tt][Tt][Pp][Ss]://",
+          "description": "HTTPS base URL of the Discord API; without it, the vendor's public one."
+        },
+        "applicationID": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Identifier of the Discord application the bot belongs to."
+        },
+        "publicKey": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The application's public key, which verifies each interaction Discord sends to an HTTP endpoint."
         }
       }
     },

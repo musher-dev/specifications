@@ -295,7 +295,8 @@
         "LANGUAGE_MODEL",
         "DATABASE",
         "CACHE",
-        "OBJECT_STORAGE"
+        "OBJECT_STORAGE",
+        "MESSAGING"
       ],
       "description": "A protocol category. A new category needs a decision record (docs/adr/0045)."
     },

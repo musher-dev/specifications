@@ -46,6 +46,20 @@
       "protocols": [
         "S3"
       ]
+    },
+    {
+      "id": "MESSAGING",
+      "title": "Messaging",
+      "description": "Chat services a bot or app sends and receives messages through over HTTPS.",
+      "conventions": {
+        "locator": "baseURL",
+        "credential": "botToken"
+      },
+      "protocols": [
+        "TELEGRAM_BOT",
+        "SLACK_APP",
+        "DISCORD_BOT"
+      ]
     }
   ]
 }

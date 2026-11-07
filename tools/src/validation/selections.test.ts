@@ -10,6 +10,7 @@ import {
   parameterOriginDiagnostics,
   resolveConnections,
   selectConnection,
+  selectionProblem,
 } from './selections.ts'
 
 /** `T` with its members writable, so that a test can replace or remove one. */
@@ -592,5 +593,62 @@ describe('connections for any protocol', () => {
     expect(run('https://s3.synthetic.invalid', []).diagnostics[0]?.code).toBe(
       'ERR_INVALID_RESOLUTION_CONTEXT',
     )
+  })
+})
+
+describe('credential secrets and defaulted locators (docs/adr/0045)', () => {
+  const slack = (credential: Record<string, Json>, views: Record<string, Json>) => ({
+    identity: 'connection-1',
+    version: '1',
+    deployment: 'deploy-1',
+    parameter: 'slack',
+    request: { from: '${{ connections.slack.default }}', identity: 'policy', version: '1' },
+    selectionKind: 'USER',
+    costOwner: 'org-1',
+    credential: {
+      identity: 'credential-1',
+      rotation: 0,
+      value: 'synthetic',
+      permittedBaseURLs: ['https://slack.com/api'],
+      ...credential,
+    },
+    views,
+  })
+  const secrets = { appToken: 'a', signingSecret: 's' }
+
+  test('a selection carries exactly its protocols’ secret members', () => {
+    expect(selectionProblem(slack({ secrets }, { SLACK_APP: {} }), 'deploy-1', 'slack')).toBe(
+      undefined,
+    )
+    expect(
+      selectionProblem(
+        slack({ secrets: { appToken: 'a' } }, { SLACK_APP: {} }),
+        'deploy-1',
+        'slack',
+      ),
+    ).toBe('incomplete')
+    expect(
+      selectionProblem(
+        slack({ secrets: { ...secrets, other: 'x' } }, { SLACK_APP: {} }),
+        'deploy-1',
+        'slack',
+      ),
+    ).toBe('invalid')
+    expect(selectionProblem(slack({ secrets }, { TELEGRAM_BOT: {} }), 'deploy-1', 'slack')).toBe(
+      'invalid',
+    )
+  })
+
+  test('a view never carries a secret, and a defaulted locator must be permitted', () => {
+    expect(
+      selectionProblem(slack({ secrets }, { SLACK_APP: { appToken: 'a' } }), 'deploy-1', 'slack'),
+    ).toBe('invalid')
+    expect(
+      selectionProblem(
+        slack({ secrets, permittedBaseURLs: ['https://gateway.example'] }, { SLACK_APP: {} }),
+        'deploy-1',
+        'slack',
+      ),
+    ).toBe('invalid')
   })
 })

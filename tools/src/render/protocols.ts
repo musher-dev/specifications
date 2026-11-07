@@ -35,6 +35,7 @@ import {
   type ProtocolRegistry,
   protocolFileName,
   registryFamily,
+  secretsOf,
   viewMembersOf,
 } from '../lib/protocols.ts'
 
@@ -43,10 +44,10 @@ const WRAP = 80
 
 const code = (text: string) => `\`${text}\``
 
-/** "a", "a or b", "a, b or c". */
-function either(items: readonly string[]): string {
+/** "a", "a or b", "a, b or c", or with another conjunction. */
+function either(items: readonly string[], conjunction = 'or'): string {
   if (items.length <= 1) return items.join('')
-  return `${items.slice(0, -1).join(', ')} or ${items.at(-1)}`
+  return `${items.slice(0, -1).join(', ')} ${conjunction} ${items.at(-1)}`
 }
 
 /** Greedy word wrap at `WRAP` columns. */
@@ -172,10 +173,13 @@ export function viewTable(registry: ProtocolRegistry): string {
       ...(p.capabilities.length ? [code('capabilities')] : []),
     ]
     const optional = view.filter((m) => m.presence === 'optional').map((m) => code(m.name))
+    const secrets = secretsOf(p).map((m) => code(m.name))
     const credentialCell =
       credential.presence === 'optional'
         ? `${code(credential.name)}, when the server requires authentication`
-        : code(credential.name)
+        : secrets.length
+          ? `${code(credential.name)}, and ${either(secrets, 'and')} in ${code('secrets')}`
+          : code(credential.name)
     rows.push(
       `| ${protocolsCell(group)} | ${credentialCell} | ${carried.join(', ') || 'none'} | ${optional.join(', ') || 'none'} |`,
     )
@@ -238,7 +242,7 @@ const end = (name: string) => `<!-- END GENERATED ${name} -->`
 export function replaceBlock(text: string, name: string, content: string, file: string): string {
   const lines = text.split('\n')
   const first = lines.findIndex((l) => l.startsWith(begin(name)))
-  const last = lines.findIndex((l) => l === end(name))
+  const last = lines.indexOf(end(name))
   if (first < 0 || last < first)
     throw new Error(`${file}: no ${begin(name)} ... ${end(name)} block`)
   return [...lines.slice(0, first + 1), '', content, '', ...lines.slice(last)].join('\n')
@@ -279,6 +283,24 @@ function viewSchema(p: ProtocolRecord): JsonObject {
  */
 const conditional = (when: JsonObject, then: JsonObject, otherwise?: JsonObject): JsonObject =>
   Object.fromEntries([['if', when], ['then', then], ...(otherwise ? [['else', otherwise]] : [])])
+
+/** `credential.secrets`, when any protocol has a secret member. */
+function secretsSchema(registry: ProtocolRegistry): JsonObject {
+  const properties: JsonObject = {}
+  for (const p of registry.protocols)
+    for (const m of secretsOf(p)) properties[m.name] ??= { ...m.schema, description: m.description }
+  if (!Object.keys(properties).length) return {}
+  return {
+    secrets: {
+      type: 'object',
+      additionalProperties: false,
+      minProperties: 1,
+      description:
+        'The secret members of the views’ protocols, by member: exactly those, and absent when they define none (blueprint §5.3).',
+      properties,
+    },
+  }
+}
 
 /** Blueprint's connection-evidence schema, generated from the registry. */
 export function evidenceSchema(registry: ProtocolRegistry): string {
@@ -394,11 +416,12 @@ export function evidenceSchema(registry: ProtocolRegistry): string {
           $ref: '#/$defs/Text',
           description: `The value of each view's credential member: ${registry.protocols.map((p) => `${credentialOf(p).name} for ${p.id}`).join(', ')}.`,
         },
+        ...secretsSchema(registry),
         permittedBaseURLs: {
           type: 'array',
           items: { type: 'string' },
           description:
-            'The URLs the locator of an HTTP-based view may take. Required by blueprint §5.3 when a view is of an HTTP-based protocol.',
+            'The URLs an HTTP-based view’s input may receive as its locator, a defaulted one included. Required by blueprint §5.3 when a view is of an HTTP-based protocol.',
         },
       },
     },
