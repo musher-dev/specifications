@@ -1,0 +1,374 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://specifications.musher.dev/core/v2/validation-result",
+  "title": "Musher Validation Result",
+  "description": "What one validation of one document reports: its status, the validation scope it reaches, the phase it reached, its diagnostics and its deferred obligations. Core v2 §6.1 and §7 are normative; this schema states their shape.",
+  "$comment": "Not a document schema: no author writes one, and it rejects no Musher document. Every object is closed. ExpectedDiagnostic is the subset a conformance fixture declares (docs/conformance.md).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "status",
+    "validationScope",
+    "phase",
+    "diagnostics",
+    "deferred"
+  ],
+  "properties": {
+    "status": {
+      "description": "INVALID when an ERROR diagnostic is reported; otherwise INCOMPLETE when an obligation was deferred; otherwise VALID. No caller reads INCOMPLETE as approval.",
+      "type": "string",
+      "enum": [
+        "VALID",
+        "INVALID",
+        "INCOMPLETE"
+      ]
+    },
+    "validationScope": {
+      "$ref": "#/$defs/ValidationScope"
+    },
+    "phase": {
+      "$ref": "#/$defs/ValidationPhase",
+      "description": "For INVALID, the phase that rejected the document. For INCOMPLETE, the last phase entered. For VALID, the last phase of the validation scope."
+    },
+    "diagnostics": {
+      "description": "Every condition reported, ERROR and WARNING alike, in no normative order.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Diagnostic"
+      }
+    },
+    "deferred": {
+      "description": "The obligations of the validation scope that could not be decided with the context supplied.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/DeferredObligation"
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "INVALID"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "diagnostics": {
+            "contains": {
+              "type": "object",
+              "properties": {
+                "severity": {
+                  "const": "ERROR"
+                }
+              },
+              "required": [
+                "severity"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "INCOMPLETE"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "diagnostics": {
+            "items": {
+              "type": "object",
+              "properties": {
+                "severity": {
+                  "const": "WARNING"
+                }
+              }
+            }
+          },
+          "deferred": {
+            "minItems": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "VALID"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "diagnostics": {
+            "items": {
+              "type": "object",
+              "properties": {
+                "severity": {
+                  "const": "WARNING"
+                }
+              }
+            }
+          },
+          "deferred": {
+            "maxItems": 0
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "ValidationPhase": {
+      "description": "A validation phase, in order (core v2 §6).",
+      "type": "string",
+      "enum": [
+        "parser",
+        "structural",
+        "semantic",
+        "admission",
+        "resolution"
+      ]
+    },
+    "ValidationScope": {
+      "description": "How far a validation result reaches, on the lattice of core v2 §6.1, smallest first.",
+      "type": "string",
+      "enum": [
+        "parser",
+        "structural",
+        "document",
+        "publication",
+        "deployment"
+      ]
+    },
+    "ResolutionStage": {
+      "description": "A stage of the resolution phase, in order (core v2 §6.4).",
+      "type": "string",
+      "enum": [
+        "sources",
+        "parameters",
+        "allocation",
+        "connections",
+        "values",
+        "build",
+        "environment",
+        "record"
+      ]
+    },
+    "Severity": {
+      "description": "ERROR is a failure of the document and makes a result INVALID. WARNING is advisory: it never changes a result's status, and no consumer reads it as approval (core v2 §7).",
+      "type": "string",
+      "enum": [
+        "ERROR",
+        "WARNING"
+      ]
+    },
+    "DiagnosticCode": {
+      "description": "A code from the diagnostic registry of the document's family: ERR_ for a code its diagnostics tables declare, WARN_ for one its Warnings tables declare (core v2 §7).",
+      "type": "string",
+      "pattern": "^(ERR|WARN)_[A-Z0-9_]+$"
+    },
+    "DocumentPointer": {
+      "description": "An RFC 6901 JSON Pointer into a document. The empty string is its root.",
+      "type": "string",
+      "pattern": "^(/([^~/]|~[01])*)*$"
+    },
+    "RelatedLocation": {
+      "description": "A location in another document a cross-document diagnostic also concerns.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact",
+        "path"
+      ],
+      "properties": {
+        "artifact": {
+          "description": "The other document, by the reference that names it, such as a componentRef. It never carries a sensitive value.",
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "$ref": "#/$defs/DocumentPointer",
+          "description": "Where in that document."
+        }
+      }
+    },
+    "Diagnostic": {
+      "description": "One reported condition (core v2 §7). code, severity, phase, path and a resolution diagnostic's stage are normative; message is not.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "severity",
+        "phase",
+        "path"
+      ],
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/DiagnosticCode"
+        },
+        "severity": {
+          "$ref": "#/$defs/Severity"
+        },
+        "phase": {
+          "$ref": "#/$defs/ValidationPhase"
+        },
+        "path": {
+          "$ref": "#/$defs/DocumentPointer",
+          "description": "The primary location: a pointer into the submitted document, or into artifact when that is present."
+        },
+        "stage": {
+          "$ref": "#/$defs/ResolutionStage",
+          "description": "The resolution stage that found the condition. Present exactly when phase is resolution, and never null."
+        },
+        "artifact": {
+          "description": "Present when the primary location is in another document of the same item, which it names by its item-relative path. Absent means the submitted document.",
+          "type": "string",
+          "minLength": 1
+        },
+        "related": {
+          "description": "Other locations the condition concerns.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RelatedLocation"
+          }
+        },
+        "message": {
+          "description": "Human-readable text. Not normative, and never a sensitive value.",
+          "type": "string"
+        }
+      },
+      "if": {
+        "properties": {
+          "phase": {
+            "const": "resolution"
+          }
+        },
+        "required": [
+          "phase"
+        ]
+      },
+      "then": {
+        "properties": {
+          "stage": true
+        },
+        "required": [
+          "stage"
+        ]
+      },
+      "else": {
+        "not": {
+          "properties": {
+            "stage": true
+          },
+          "required": [
+            "stage"
+          ]
+        }
+      }
+    },
+    "DeferredObligation": {
+      "description": "A rule the validation scope requires that could not be decided with the context supplied (core v2 §6.1).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rule",
+        "path",
+        "missing"
+      ],
+      "properties": {
+        "rule": {
+          "description": "The requirement ID of the rule left undecided.",
+          "type": "string",
+          "pattern": "^[A-Z]{2,6}-[A-Z0-9]{2,12}-\\d{3}$"
+        },
+        "path": {
+          "$ref": "#/$defs/DocumentPointer",
+          "description": "Where in the submitted document the rule applies."
+        },
+        "missing": {
+          "description": "The context that is missing. Free text in v2; core v2 §6.1 recommends <context>:<key>.",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "ExpectedDiagnostic": {
+      "description": "A diagnostic a conformance fixture expects (docs/conformance.md). It matches a produced diagnostic of the same severity, ERROR when severity is absent, on every member it carries. A diagnostics.json entry also carries path.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code"
+      ],
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/DiagnosticCode"
+        },
+        "path": {
+          "$ref": "#/$defs/DocumentPointer"
+        },
+        "severity": {
+          "$ref": "#/$defs/Severity",
+          "default": "ERROR"
+        },
+        "phase": {
+          "$ref": "#/$defs/ValidationPhase"
+        },
+        "stage": {
+          "$ref": "#/$defs/ResolutionStage"
+        },
+        "related": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RelatedLocation"
+          }
+        }
+      },
+      "if": {
+        "properties": {
+          "phase": {
+            "const": "resolution"
+          }
+        },
+        "required": [
+          "phase"
+        ]
+      },
+      "then": {
+        "properties": {
+          "stage": true
+        },
+        "required": [
+          "stage"
+        ]
+      },
+      "else": {
+        "if": {
+          "properties": {
+            "phase": true
+          },
+          "required": [
+            "phase"
+          ]
+        },
+        "then": {
+          "not": {
+            "properties": {
+              "stage": true
+            },
+            "required": [
+              "stage"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

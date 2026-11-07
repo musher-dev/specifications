@@ -10,7 +10,7 @@ it. `task check:terms` holds the records, the schemas and the prose together,
 and the words to avoid are enforced in prose by the generated
 `MusherSpecifications` Vale style.
 
-206 record(s). A record marked *proposed* is an open item, not yet a decision.
+209 record(s). A record marked *proposed* is an open item, not yet a decision.
 
 ## Index
 
@@ -69,8 +69,8 @@ and the words to avoid are enforced in prose by the generated
 | [deployment parameter](#blueprint-deployment-parameter) | blueprint | A named value from outside the documents. |
 | [deployment snapshot](#deployment-deployment-snapshot) | deployment | The private state behind a resolution record. |
 | [deployment-fact parameter](#blueprint-deployment-fact-parameter) | blueprint | One deployment fact, `${{ deployment.creator.x }}`. |
-| [diagnostic](#core-diagnostic) | core | Code, phase and path of one failure. |
-| [diagnostic code](#core-diagnostic-code) | core | The ERR_ name of one condition. |
+| [diagnostic](#core-diagnostic) | core | Code, severity, phase and path of one condition. |
+| [diagnostic code](#core-diagnostic-code) | core | The stable name of one condition. |
 | [diagnostic registry](#core-diagnostic-registry) | core | Every code a family may report, with its phases. |
 | [display name](#listing-display-name) | listing | The item's storefront title. |
 | [DNS-label grammar](#core-dns-label-grammar) | core | The lowercase DNS label, 2 to 63 characters. |
@@ -83,6 +83,7 @@ and the words to avoid are enforced in prose by the generated
 | [environment stage](#deployment-environment-stage) | deployment | Encodes values into environment variables. |
 | [environment variable](#component-environment-variable) | component | Where an input's encoded value is written. |
 | [exemptible requests](#component-exemptible-requests) | component | The requests an endpoint can take without a viewer. |
+| [expected diagnostic](#repository-expected-diagnostic) | repository | A diagnostic a fixture expects. |
 | [exposure](#blueprint-exposure) | blueprint | Who reaches an endpoint, and how. |
 | [EXTERNAL](#component-external) | component | Runs nothing; stands in for something outside the graph. |
 | [family](#core-family) | core | One specification, released under its own tag prefix. |
@@ -175,6 +176,7 @@ and the words to avoid are enforced in prose by the generated
 | [semantic phase](#core-semantic-phase) | core | Offline rules no schema can express. |
 | [sensitive](#component-sensitive) | component | Never authored as a literal, never disclosed. |
 | [SERVICE](#component-service) | component | Long-running, request-driven. |
+| [severity](#core-severity) | core | ERROR or WARNING. |
 | [slug](#core-slug) | core | An item's name, equal to its directory name. |
 | [source](#component-source) | component | image, git or upload. |
 | [source content key](#component-source-content-key) | component | The commit or upload digest a build reads. |
@@ -200,6 +202,7 @@ and the words to avoid are enforced in prose by the generated
 | [URL-addressed](#component-url-addressed) | component | HTTP, HTTPS, WS, GRPC. |
 | [USER selection](#blueprint-user-selection) | blueprint | A complete set the deployer supplies. |
 | [validation phase](#core-validation-phase) | core | parser, structural, semantic, admission, resolution. |
+| [validation result](#core-validation-result) | core | Status, scope, phase, diagnostics and deferred obligations. |
 | [validation scope](#core-validation-scope) | core | parser ⊂ structural ⊂ document ⊂ publication ⊂ deployment. |
 | [validation status](#core-validation-status) | core | VALID, INVALID or INCOMPLETE. |
 | [value binding](#blueprint-value-binding) | blueprint | Binds { value }. |
@@ -305,6 +308,7 @@ component [component.component] (a kind of core.musher-document)
 conformance corpus [repository.conformance-corpus]
   - behaviour suite [repository.behaviour-suite]
   - conformance case [repository.conformance-case]
+    - expected diagnostic [repository.expected-diagnostic]
 
 connection [blueprint.connection]
   - connection member [component.connection-member]
@@ -331,9 +335,6 @@ deployment [deployment.deployment]
     - stage [deployment.resolution-stage]
   - rollout [deployment.rollout]
 
-diagnostic [core.diagnostic]
-  - diagnostic code [core.diagnostic-code]
-
 Musher document [core.musher-document] (a kind of core.yaml-document)
   - envelope [core.envelope]
     - kind [core.kind]
@@ -350,8 +351,11 @@ placeholder [core.placeholder]
 publication [catalog.publication]
   - publication obligation [catalog.publication-obligation]
 
-validation scope [core.validation-scope]
+validation result [core.validation-result]
   - deferred obligation [core.deferred-obligation]
+  - diagnostic [core.diagnostic]
+    - diagnostic code [core.diagnostic-code]
+    - severity [core.severity]
   - validation status [core.validation-status]
 
 value input [component.value-input] (a kind of component.input)
@@ -414,17 +418,23 @@ A rule a validator could not decide for lack of context, reported with its
 requirement, its document pointer and the missing context, and making the result
 INCOMPLETE.
 
-- **Part of:** [validation scope](#core-validation-scope)
+- **Part of:** [validation result](#core-validation-result)
+- **Identifiers:** fields: `deferred`, `rule`, `missing`; defs:
+  `DeferredObligation`
 - **Source:** [core v2 §1.3](../specifications/core/v2/spec.md#terms), [core v2
   §6.1](../specifications/core/v2/spec.md#coverage)
 - **Status:** approved, stable. Tags: validation.
 
 #### <a id="core-diagnostic"></a>diagnostic
 
-One reported failure of a document: a normative code, the phase that found it, a
-JSON Pointer path into the submitted document, and non-normative message text.
+One reported condition of a document: a normative code, its severity, the phase
+that found it, a JSON Pointer path into the submitted document or another
+document of its item, and non-normative message text.
 
-- **Identifiers:** codes: `ERR_UNKNOWN_FIELD`
+- **Part of:** [validation result](#core-validation-result)
+- **Identifiers:** fields: `diagnostics`, `path`, `artifact`, `related`,
+  `message`; codes: `ERR_UNKNOWN_FIELD`; defs: `Diagnostic`, `DocumentPointer`,
+  `RelatedLocation`
 - **Verbs:** a diagnostic anchors at a path; an implementation reports a
   diagnostic
 - **Source:** [core v2 §1.3](../specifications/core/v2/spec.md#terms), [core v2
@@ -433,10 +443,13 @@ JSON Pointer path into the submitted document, and non-normative message text.
 
 #### <a id="core-diagnostic-code"></a>diagnostic code
 
-The stable ERR_ name of one condition a document can fail, declared in exactly
-one diagnostics table with every phase it may be reported in.
+The stable name of one condition a diagnostic reports: an error code, prefixed
+ERR, declared in exactly one diagnostics table with every phase it may be
+reported in, or a warning code, prefixed WARN, declared in a Warnings table with
+the requirement it reports.
 
 - **Part of:** [diagnostic](#core-diagnostic)
+- **Identifiers:** fields: `code`; defs: `DiagnosticCode`
 - **Source:** [core v2 §7](../specifications/core/v2/spec.md#diagnostics)
 - **Status:** approved, stable. Tags: validation.
 
@@ -773,6 +786,24 @@ uniqueness across collections and agreement between documents, decided offline.
 - **Source:** [core v2 §6](../specifications/core/v2/spec.md#validation-layers)
 - **Status:** approved, stable. Tags: validation.
 
+#### <a id="core-severity"></a>severity
+
+The class of a diagnostic: ERROR, a failure of the document that makes the
+result INVALID, or WARNING, an advisory report of a SHOULD the document does not
+meet, which never changes the result's status.
+
+- **Part of:** [diagnostic](#core-diagnostic)
+- **Identifiers:** fields: `severity`; values: `ERROR`, `WARNING`; defs:
+  `Severity`
+- **Example:** A VALID result may carry WARNING diagnostics.
+- **Not to be confused with:** The validation status: a severity classifies one
+  diagnostic, a status the whole result.
+- **Source:** [core v2 §1.3](../specifications/core/v2/spec.md#terms), [core v2
+  §6.1](../specifications/core/v2/spec.md#coverage), [core v2
+  §7](../specifications/core/v2/spec.md#diagnostics), [ADR
+  0044](adr/0044-the-validation-result-is-a-released-schema.md)
+- **Status:** approved, stable. Tags: validation.
+
 #### <a id="core-slug"></a>slug
 
 The identity field of an item document, a DNS label that MUST equal the name of
@@ -826,6 +857,8 @@ One of the five ordered steps an implementation applies to a document, parser,
 structural, semantic, admission and resolution, each of which reports only once
 the earlier ones pass.
 
+- **Identifiers:** fields: `phase`; values: `parser`, `structural`, `semantic`,
+  `admission`, `resolution`; defs: `ValidationPhase`
 - **Verbs:** a rule is decided in a phase; a diagnostic reports its phase
 - **Avoid:** "validation layer" (banned, prose): write "validation phase".
 - **Avoid:** "validation layers" (banned, prose): write "validation phases".
@@ -835,13 +868,30 @@ the earlier ones pass.
   0038](adr/0038-v2-one-vocabulary-and-v1-retires.md)
 - **Status:** approved, stable. Tags: validation.
 
+#### <a id="core-validation-result"></a>validation result
+
+What one validation of one document reports: its status, its validation scope,
+the phase it reached, its diagnostics and its deferred obligations, in the shape
+a released core schema states.
+
+- **Identifiers:** fields: `status`, `validationScope`, `phase`, `diagnostics`,
+  `deferred`
+- **Not to be confused with:** A conformance result, which reports how many
+  corpus cases an implementation passed, not one document's validation.
+- **Source:** [core v2 §1.3](../specifications/core/v2/spec.md#terms), [core v2
+  §6.1](../specifications/core/v2/spec.md#coverage), [ADR
+  0044](adr/0044-the-validation-result-is-a-released-schema.md)
+- **Status:** approved, stable. Tags: validation.
+
 #### <a id="core-validation-scope"></a>validation scope
 
 The set of obligations a validation result claims to have completed, from the
 lattice parser ⊂ structural ⊂ document ⊂ publication ⊂ deployment, and the level
 an implementation declares it conforms at.
 
-- **Identifiers:** requirement prefixes: `CORE-ADMISSION`
+- **Identifiers:** fields: `validationScope`; values: `parser`, `structural`,
+  `document`, `publication`, `deployment`; requirement prefixes:
+  `CORE-ADMISSION`; defs: `ValidationScope`
 - **Example:** An editor integration conforms at structural validation scope.
 - **Avoid:** "validationProfile" (banned, identifier): write "validationScope".
 - **Avoid:** "validation profile" (banned, prose): write "validation scope".
@@ -857,10 +907,11 @@ an implementation declares it conforms at.
 #### <a id="core-validation-status"></a>validation status
 
 The verdict of a validation result: VALID when every obligation of the claimed
-scope completed, INVALID on a known failure, and INCOMPLETE when context was
+scope completed, INVALID on an ERROR diagnostic, and INCOMPLETE when context was
 missing and an obligation was deferred.
 
-- **Part of:** [validation scope](#core-validation-scope)
+- **Part of:** [validation result](#core-validation-result)
+- **Identifiers:** fields: `status`; values: `VALID`, `INVALID`, `INCOMPLETE`
 - **Example:** No caller may read INCOMPLETE as approval.
 - **Source:** [core v2 §6.1](../specifications/core/v2/spec.md#coverage)
 - **Status:** approved, stable. Tags: validation.
@@ -1605,7 +1656,8 @@ optional server name.
 
 - **Part of:** [endpoint](#component-endpoint)
 - **Identifiers:** fields: `tls`, `verify`, `serverName`, `trustBundle`; values:
-  `SYSTEM`, `BUNDLE`, `NONE`; defs: `ComponentEndpointTls`
+  `SYSTEM`, `BUNDLE`, `NONE`; codes: `WARN_ENDPOINT_SERVER_NAME`; defs:
+  `ComponentEndpointTls`
 - **Source:** [component v2
   §5.2](../specifications/component/v2/spec.md#endpoints)
 - **Status:** approved, stable. Tags: networking, security.
@@ -3049,6 +3101,9 @@ One step of resolution, in order sources, parameters, allocation, connections,
 values, build, environment and record, that a resolution-phase diagnostic names.
 
 - **Part of:** [resolution](#deployment-resolution)
+- **Identifiers:** fields: `stage`; values: `sources`, `parameters`,
+  `allocation`, `connections`, `values`, `build`, `environment`, `record`; defs:
+  `ResolutionStage`
 - **Not to be confused with:** A validation phase; stage means only a resolution
   step, and is written 'resolution stage' where the context does not say so.
 - **Source:** [core v2 §1.3](../specifications/core/v2/spec.md#terms), [core v2
@@ -3111,6 +3166,18 @@ the core release it records.
 
 - **Source:** [core v2 §8](../specifications/core/v2/spec.md#conformance),
   [docs/conformance.md](conformance.md)
+- **Status:** approved, stable. Tags: conformance.
+
+#### <a id="repository-expected-diagnostic"></a>expected diagnostic
+
+A diagnostic a conformance case declares: a code, optionally its path, phase,
+stage, related locations and severity, matched against a produced diagnostic of
+the same severity, ERROR when none is named.
+
+- **Part of:** [conformance case](#repository-conformance-case)
+- **Identifiers:** defs: `ExpectedDiagnostic`
+- **Source:** [docs/conformance.md](conformance.md), [ADR
+  0044](adr/0044-the-validation-result-is-a-released-schema.md)
 - **Status:** approved, stable. Tags: conformance.
 
 #### <a id="repository-not-supported"></a>not supported in v2
