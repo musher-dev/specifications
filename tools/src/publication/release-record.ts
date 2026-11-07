@@ -96,20 +96,23 @@ export function deliveredInterfaces(
 /**
  * Whether a repo-relative file is one a definitions entry names: the file
  * itself, a file under a directory entry ending in `/`, or a match of a glob in
- * which `*` stays within one path segment and `**` crosses them (EC-0030).
+ * which `*` stays within one path segment, `**` crosses them, and `**` before
+ * a `/` matches zero or more whole directories, none included, so a file
+ * directly under the glob's base matches as well as one nested below it
+ * (EC-0030).
  */
 export function matchesDefinition(definition: string, file: string): boolean {
   if (definition.endsWith('/')) return file.startsWith(definition)
   if (!definition.includes('*')) return file === definition
+  const segment = (part: string) =>
+    part
+      .split('*')
+      .map((piece) => piece.replace(/[.+?^${}()|[\]\\]/g, '\\$&'))
+      .join('[^/]*')
   const pattern = definition
-    .split('**')
-    .map((part) =>
-      part
-        .split('*')
-        .map((piece) => piece.replace(/[.+?^${}()|[\]\\]/g, '\\$&'))
-        .join('[^/]*'),
-    )
-    .join('.*')
+    .split('**/')
+    .map((part) => part.split('**').map(segment).join('.*'))
+    .join('(?:.*/)?')
   return new RegExp(`^${pattern}$`).test(file)
 }
 
