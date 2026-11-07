@@ -1151,9 +1151,9 @@ terms:
     shortDefinition: The vendor-neutral wire contract a client speaks.
     identifiers:
       fields: [protocol]
-      values: [HTTP, HTTPS, WS, GRPC, TCP, UDP, OPENAI_CHAT_COMPLETIONS, ANTHROPIC_MESSAGES, POSTGRES, REDIS, S3]
+      values: [HTTP, HTTPS, WS, GRPC, TCP, UDP, OPENAI_CHAT_COMPLETIONS, ANTHROPIC_MESSAGES, POSTGRES, REDIS, S3, TELEGRAM_BOT, SLACK_APP, DISCORD_BOT]
     example: "A connection input with protocol POSTGRES receives host, port, database, username, password and sslMode, and a url composed from them."
-    source: [component v2 §5.2, component v2 §6.4, ADR 0039]
+    source: [component v2 §5.2, component v2 §6.4, ADR 0039, ADR 0045]
     stability: stable
     status: approved
     tags: [networking, connections]
@@ -1568,12 +1568,81 @@ terms:
     part_of: [blueprint.connection]
     identifiers:
       fields: [member]
-      values: [baseURL, apiKey, model, host, port, database, username, password, sslMode, url, tls, endpointURL, region, bucket, accessKeyID, secretAccessKey, pathStyle]
+      values: [baseURL, apiKey, model, host, port, database, username, password, sslMode, url, tls, endpointURL, region, bucket, accessKeyID, secretAccessKey, pathStyle, botToken, appToken, signingSecret, applicationID, publicKey, disable, allow, prefer, require, verify-ca, verify-full]
       codes: [ERR_UNKNOWN_CONNECTION_MEMBER]
     confusables:
       - "endpointURL is AWS's term for an S3 API address without the bucket, not a component endpoint."
       - "A url member is never stored: resolution composes it from the other members and the credential."
-    source: [component v2 §6.4, ADR 0039]
+      - "botToken is the token of a Telegram bot, a Slack app or a Discord bot, whatever its vendor calls it; its format is not validated."
+    source: [component v2 §6.4, ADR 0039, ADR 0045]
+    stability: provisional
+    status: approved
+    tags: [connections]
+
+  - id: component.protocol-registry
+    display_name: protocol registry
+    context: component
+    definition: >-
+      The set of JSON records, one per connection protocol, in component's
+      protocols directory, normative for each protocol's members, their types,
+      presence, defaults, sensitivity, roles and value constraints, from which
+      the schema enums and the member and view tables are generated.
+    shortDefinition: One normative JSON record per connection protocol.
+    associated:
+      - { relation: defines, term: component.protocol }
+      - { relation: defines, term: component.connection-member }
+    aliases:
+      - { text: protocol table, status: discouraged, scope: [prose], suggest: protocol registry }
+    source: [component v2 §6.4, ADR 0045]
+    stability: provisional
+    status: approved
+    tags: [connections, registry]
+
+  - id: component.protocol-category
+    display_name: protocol category
+    context: component
+    definition: >-
+      A registry-only grouping of connection protocols that reach the same
+      kind of service and name their credential and locator alike, never
+      written in a document.
+    shortDefinition: LANGUAGE_MODEL, DATABASE, CACHE, OBJECT_STORAGE or MESSAGING.
+    part_of: [component.protocol-registry]
+    identifiers:
+      values: [LANGUAGE_MODEL, DATABASE, CACHE, OBJECT_STORAGE, MESSAGING]
+    source: [component v2 §6.4, ADR 0045]
+    stability: provisional
+    status: approved
+    tags: [connections, registry]
+
+  - id: component.member-role
+    display_name: member role
+    context: component
+    definition: >-
+      What a connection member is for, as its protocol record states it:
+      credential, secret, locator, parameter or derived, which decides whether
+      the credential or a view supplies it.
+    shortDefinition: credential, secret, locator, parameter or derived.
+    part_of: [component.connection-member]
+    identifiers:
+      fields: [role]
+      values: [credential, secret, locator, parameter, derived]
+    confusables:
+      - "A parameter member is carried by a view; it is not a blueprint deployment parameter."
+    source: [component v2 §6.4, ADR 0045]
+    stability: provisional
+    status: approved
+    tags: [connections, registry]
+
+  - id: component.http-based
+    display_name: HTTP-based
+    context: component
+    definition: >-
+      Said of a connection protocol with a locator member, the HTTPS URL a
+      client sends requests to, which blueprint holds to the credential's
+      permitted base URLs.
+    shortDefinition: A connection protocol with a locator.
+    kind_of: [component.protocol]
+    source: [component v2 §6.4, ADR 0039, ADR 0045]
     stability: provisional
     status: approved
     tags: [connections]
@@ -2462,7 +2531,9 @@ terms:
     part_of: [deployment.deployment-snapshot]
     associated:
       - { relation: chooses, term: blueprint.connection }
-    identifiers: { codes: [ERR_CONNECTION_NOT_FOUND, ERR_CONNECTION_DENIED, ERR_CONNECTION_INCOMPATIBLE] }
+    identifiers:
+      fields: [selection, request, costOwner]
+      codes: [ERR_CONNECTION_NOT_FOUND, ERR_CONNECTION_DENIED, ERR_CONNECTION_INCOMPATIBLE]
     aliases:
       - { text: source reference, status: banned, scope: [prose], suggest: requested path }
     source: [blueprint v2 §1.1, blueprint v2 §5.3]
@@ -2478,6 +2549,7 @@ terms:
       Musher, or USER, a complete set the deployer supplies.
     shortDefinition: MANAGED or USER.
     part_of: [blueprint.selection]
+    identifiers: { fields: [selectionKind], values: [MANAGED, USER] }
     source: [blueprint v2 §1.1, blueprint v2 §5.3, ADR 0039]
     stability: stable
     status: approved
@@ -2491,6 +2563,7 @@ terms:
       offering decides whether the connection is granted or provisioned.
     shortDefinition: Supplied and operated by Musher.
     kind_of: [blueprint.selection-kind]
+    identifiers: { fields: [provisioning] }
     aliases:
       - { text: managed database, status: banned, scope: [prose], suggest: a database an external node stands for, note: "Managed means only supplied and operated by Musher." }
     source: [blueprint v2 §5.3, ADR 0039]
@@ -2519,6 +2592,7 @@ terms:
       deployment, connection parameter and permitted service on acquisition.
     shortDefinition: An existing managed connection, scoped on acquisition.
     kind_of: [blueprint.managed]
+    identifiers: { values: [GRANTED] }
     source: [blueprint v2 §1.1, blueprint v2 §5.3, ADR 0039]
     stability: provisional
     status: approved
@@ -2533,6 +2607,7 @@ terms:
       when the deployment is deleted.
     shortDefinition: Created on first acquisition, released at deletion.
     kind_of: [blueprint.managed]
+    identifiers: { values: [PROVISIONED] }
     source: [blueprint v2 §1.1, blueprint v2 §5.3, ADR 0039]
     stability: provisional
     status: approved
@@ -2547,10 +2622,86 @@ terms:
       schemas.
     shortDefinition: One protocol's members of a selection, for one consumer.
     part_of: [blueprint.selection]
-    source: [blueprint v2 §5.3]
+    identifiers:
+      fields: [views]
+      defs: [OpenaiChatCompletionsView, AnthropicMessagesView, PostgresView, RedisView, S3View, TelegramBotView, SlackAppView, DiscordBotView]
+    source: [blueprint v2 §5.3, ADR 0045]
     stability: stable
     status: approved
     tags: [connections]
+
+  - id: blueprint.scoped-credential
+    display_name: scoped credential
+    context: blueprint
+    definition: >-
+      The one credential of a selection, scoped to the deployment, the
+      connection parameter and the service permitted, with an identity, a
+      rotation generation, the value of each view's credential member, and the
+      base URLs an HTTP-based view may reach.
+    shortDefinition: A selection's one credential, scoped to its deployment.
+    part_of: [blueprint.selection]
+    identifiers: { fields: [credential, permittedBaseURLs], defs: [ConnectionCredential] }
+    source: [blueprint v2 §5.3, ADR 0030]
+    stability: stable
+    status: approved
+    tags: [connections, security]
+
+  - id: blueprint.credential-secret
+    display_name: credential secret
+    context: blueprint
+    definition: >-
+      A secret member of a selection's protocol, such as the SLACK_APP appToken
+      or signingSecret, carried by the scoped credential beside its value and
+      never by a view.
+    shortDefinition: A secret member the credential carries, never a view.
+    part_of: [blueprint.scoped-credential]
+    associated:
+      - { relation: supplies, term: component.member-role }
+    identifiers: { fields: [secrets] }
+    source: [blueprint v2 §5.3, ADR 0045]
+    stability: provisional
+    status: approved
+    tags: [connections, security]
+
+  - id: blueprint.acquisition-status
+    display_name: acquisition status
+    context: blueprint
+    definition: >-
+      The outcome acquisition reached for one connection parameter, one of
+      NOT_ACQUIRED, NOT_FOUND, DENIED, INCOMPATIBLE and SELECTED, which decides
+      whether resolution defers, rejects or reads a persisted selection.
+    shortDefinition: NOT_ACQUIRED, NOT_FOUND, DENIED, INCOMPATIBLE or SELECTED.
+    associated:
+      - { relation: precedes, term: blueprint.selection }
+    identifiers:
+      fields: [status, persisted]
+      values: [NOT_ACQUIRED, NOT_FOUND, DENIED, INCOMPATIBLE, SELECTED]
+    confusables:
+      - "A validation result's status, VALID, INVALID or INCOMPLETE, which is core's."
+    source: [blueprint v2 §5.3, ADR 0045]
+    stability: provisional
+    status: approved
+    tags: [connections]
+
+  - id: blueprint.connection-evidence
+    display_name: connection evidence
+    context: blueprint
+    definition: >-
+      The trusted record of what acquisition reached for each connection
+      parameter of one deployment, supplied to resolution in the connections
+      stage and shaped by a schema generated from the protocol registry.
+    shortDefinition: What acquisition reached, per connection parameter.
+    associated:
+      - { relation: carries, term: blueprint.acquisition-status }
+      - { relation: carries, term: blueprint.selection }
+    identifiers:
+      fields: [deployment]
+      defs: [ConnectionAcquisition, ConnectionSelection, ConnectionRequest, Text]
+      codes: [ERR_INVALID_RESOLUTION_CONTEXT]
+    source: [blueprint v2 §5.3, ADR 0045]
+    stability: provisional
+    status: approved
+    tags: [connections, conformance]
 
   - id: blueprint.deploy-form
     display_name: deploy form

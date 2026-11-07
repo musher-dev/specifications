@@ -10,7 +10,7 @@ it. `task check:terms` holds the records, the schemas and the prose together,
 and the words to avoid are enforced in prose by the generated
 `MusherSpecifications` Vale style.
 
-206 record(s). A record marked *proposed* is an open item, not yet a decision.
+214 record(s). A record marked *proposed* is an open item, not yet a decision.
 
 ## Index
 
@@ -20,6 +20,7 @@ and the words to avoid are enforced in prose by the generated
 | [access exemption](#blueprint-access-exemption) | blueprint | The grant of an endpoint's exemptible requests. |
 | [access policy](#blueprint-access-policy) | blueprint | Which viewers a RESTRICTED endpoint admits. |
 | [acquisition](#deployment-acquisition) | deployment | Obtaining external context, with authority. |
+| [acquisition status](#blueprint-acquisition-status) | blueprint | NOT_ACQUIRED, NOT_FOUND, DENIED, INCOMPATIBLE or SELECTED. |
 | [admission phase](#core-admission-phase) | core | Publisher and platform checks that need the catalog or policy. |
 | [allocation](#deployment-allocation) | deployment | A concrete resource assigned to a deployment. |
 | [allocation stage](#deployment-allocation-stage) | deployment | Selects compute and allocates addresses. |
@@ -54,6 +55,7 @@ and the words to avoid are enforced in prose by the generated
 | [conformance corpus](#repository-conformance-corpus) | repository | Every case one family version ships. |
 | [connection](#blueprint-connection) | blueprint | The members of one protocol, acquired together. |
 | [connection capability](#component-connection-capability) | component | STREAMING or TOOL_CALLS, LLM protocols only. |
+| [connection evidence](#blueprint-connection-evidence) | blueprint | What acquisition reached, per connection parameter. |
 | [connection input](#component-connection-input) | component | An input filled by a whole connection. |
 | [connection member](#component-connection-member) | component | One value a protocol fixes, such as host or apiKey. |
 | [connection parameter](#blueprint-connection-parameter) | blueprint | One connection, `${{ connections.x }}`. |
@@ -61,6 +63,7 @@ and the words to avoid are enforced in prose by the generated
 | [core](#core-core) | core | The family with no kind, which every family applies. |
 | [core release](#core-core-release) | core | One release of core, recorded by every dependent release. |
 | [creator](#deployment-creator) | deployment | The deployer who created the deployment. |
+| [credential secret](#blueprint-credential-secret) | blueprint | A secret member the credential carries, never a view. |
 | [deferred obligation](#core-deferred-obligation) | core | A rule left undecided for lack of context. |
 | [deploy form](#blueprint-deploy-form) | blueprint | The form a deployer fills in. |
 | [deployer](#deployment-deployer) | deployment | Who creates or changes a deployment. |
@@ -92,6 +95,7 @@ and the words to avoid are enforced in prose by the generated
 | [granted](#blueprint-granted) | blueprint | An existing managed connection, scoped on acquisition. |
 | [guaranteed input](#component-guaranteed-input) | component | Required, or with a default. |
 | [hash parameter](#blueprint-hash-parameter) | blueprint | A persisted hash of a generated parameter. |
+| [HTTP-based](#component-http-based) | component | A connection protocol with a locator. |
 | [HTTP-routed](#component-http-routed) | component | HTTP, HTTPS, WS. |
 | [icon](#listing-icon) | listing | The item's square image. |
 | [image source](#component-image-source) | component | An existing OCI image. |
@@ -114,6 +118,7 @@ and the words to avoid are enforced in prose by the generated
 | [managed](#blueprint-managed) | blueprint | Supplied and operated by Musher. |
 | [materialization](#deployment-materialization) | deployment | Handing resolved values to the workload. |
 | [media path](#listing-media-path) | listing | A path to an image under media/. |
+| [member role](#component-member-role) | component | credential, secret, locator, parameter or derived. |
 | [metadata](#core-metadata) | core | Identity and description. |
 | [Musher document](#core-musher-document) | core | A document of one family, in the shared envelope. |
 | [Musher YAML profile](#core-yaml-profile) | core | The restricted YAML 1.2.2 every document is written in. |
@@ -148,6 +153,8 @@ and the words to avoid are enforced in prose by the generated
 | [probe](#component-probe) | component | A periodic HTTP check of a named endpoint. |
 | [probe credential](#component-probe-credential) | component | Basic or bearer credentials sent on the probe only. |
 | [protocol](#component-protocol) | component | The vendor-neutral wire contract a client speaks. |
+| [protocol category](#component-protocol-category) | component | LANGUAGE_MODEL, DATABASE, CACHE, OBJECT_STORAGE or MESSAGING. |
+| [protocol registry](#component-protocol-registry) | component | One normative JSON record per connection protocol. |
 | [provisioned](#blueprint-provisioned) | blueprint | Created on first acquisition, released at deletion. |
 | [public address](#component-public-address) | component | The allocated host:port of a TCP or UDP endpoint. |
 | [public port](#component-public-port) | component | The allocated publicPort of a TCP or UDP endpoint. |
@@ -167,6 +174,7 @@ and the words to avoid are enforced in prose by the generated
 | [retired major](#core-retired-major) | core | A recorded, tagged major with no directory. |
 | [rollout](#deployment-rollout) | deployment | One applied generation of a deployment. |
 | [schedule](#component-schedule) | component | A UTC cron expression for a recurring JOB. |
+| [scoped credential](#blueprint-scoped-credential) | blueprint | A selection's one credential, scoped to its deployment. |
 | [screenshot](#listing-screenshot) | listing | One gallery image. |
 | [secret](#component-secret) | component | A sensitive credential. |
 | [selection](#blueprint-selection) | blueprint | Which connection a deployment uses for one parameter. |
@@ -308,6 +316,7 @@ conformance corpus [repository.conformance-corpus]
 
 connection [blueprint.connection]
   - connection member [component.connection-member]
+    - member role [component.member-role]
 
 connection input [component.connection-input] (a kind of component.input)
   - connection capability [component.connection-capability]
@@ -321,6 +330,8 @@ deployment [deployment.deployment]
     - allocation [deployment.allocation]
     - deployment fact [deployment.deployment-fact]
     - selection [blueprint.selection]
+      - scoped credential [blueprint.scoped-credential]
+        - credential secret [blueprint.credential-secret]
       - selection kind [blueprint.selection-kind]
       - view [blueprint.view]
   - replica [deployment.replica]
@@ -346,6 +357,9 @@ Musher document [core.musher-document] (a kind of core.yaml-document)
 placeholder [core.placeholder]
   - namespace [core.placeholder-namespace]
   - placeholder grammar [core.placeholder-grammar]
+
+protocol registry [component.protocol-registry]
+  - protocol category [component.protocol-category]
 
 publication [catalog.publication]
   - publication obligation [catalog.publication-obligation]
@@ -1092,14 +1106,20 @@ forwarded through an output's member.
 - **Identifiers:** fields: `member`; values: `baseURL`, `apiKey`, `model`,
   `host`, `port`, `database`, `username`, `password`, `sslMode`, `url`, `tls`,
   `endpointURL`, `region`, `bucket`, `accessKeyID`, `secretAccessKey`,
-  `pathStyle`; codes: `ERR_UNKNOWN_CONNECTION_MEMBER`
+  `pathStyle`, `botToken`, `appToken`, `signingSecret`, `applicationID`,
+  `publicKey`, `disable`, `allow`, `prefer`, `require`, `verify-ca`,
+  `verify-full`; codes: `ERR_UNKNOWN_CONNECTION_MEMBER`
 - **Not to be confused with:** endpointURL is AWS's term for an S3 API address
   without the bucket, not a component endpoint.
 - **Not to be confused with:** A url member is never stored: resolution composes
   it from the other members and the credential.
+- **Not to be confused with:** botToken is the token of a Telegram bot, a Slack
+  app or a Discord bot, whatever its vendor calls it; its format is not
+  validated.
 - **Source:** [component v2
   §6.4](../specifications/component/v2/spec.md#connection-requirements), [ADR
-  0039](adr/0039-provenance-is-chosen-at-deployment.md)
+  0039](adr/0039-provenance-is-chosen-at-deployment.md), [ADR
+  0045](adr/0045-connection-protocols-are-a-registry.md)
 - **Status:** approved, provisional. Tags: connections.
 
 #### <a id="component-endpoint"></a>endpoint
@@ -1235,6 +1255,19 @@ that carries a default.
   §6.2](../specifications/component/v2/spec.md#outputs)
 - **Status:** approved, stable. Tags: values.
 
+#### <a id="component-http-based"></a>HTTP-based
+
+Said of a connection protocol with a locator member, the HTTPS URL a client
+sends requests to, which blueprint holds to the credential's permitted base
+URLs.
+
+- **Kind of:** [protocol](#component-protocol)
+- **Source:** [component v2
+  §6.4](../specifications/component/v2/spec.md#connection-requirements), [ADR
+  0039](adr/0039-provenance-is-chosen-at-deployment.md), [ADR
+  0045](adr/0045-connection-protocols-are-a-registry.md)
+- **Status:** approved, provisional. Tags: connections.
+
 #### <a id="component-http-routed"></a>HTTP-routed
 
 Said of an endpoint protocol the platform's proxy routes per request: HTTP,
@@ -1309,6 +1342,22 @@ The probe whose consecutive failures restart the workload.
 - **Identifiers:** fields: `liveness`
 - **Source:** [component v2 §5.4](../specifications/component/v2/spec.md#health)
 - **Status:** approved, stable. Tags: health.
+
+#### <a id="component-member-role"></a>member role
+
+What a connection member is for, as its protocol record states it: credential,
+secret, locator, parameter or derived, which decides whether the credential or a
+view supplies it.
+
+- **Part of:** [connection member](#component-connection-member)
+- **Identifiers:** fields: `role`; values: `credential`, `secret`, `locator`,
+  `parameter`, `derived`
+- **Not to be confused with:** A parameter member is carried by a view; it is
+  not a blueprint deployment parameter.
+- **Source:** [component v2
+  §6.4](../specifications/component/v2/spec.md#connection-requirements), [ADR
+  0045](adr/0045-connection-protocols-are-a-registry.md)
+- **Status:** approved, provisional. Tags: connections, registry.
 
 #### <a id="component-oidc-client"></a>OIDC client
 
@@ -1423,14 +1472,44 @@ connection protocols, which fixes its members.
 
 - **Identifiers:** fields: `protocol`; values: `HTTP`, `HTTPS`, `WS`, `GRPC`,
   `TCP`, `UDP`, `OPENAI_CHAT_COMPLETIONS`, `ANTHROPIC_MESSAGES`, `POSTGRES`,
-  `REDIS`, `S3`
+  `REDIS`, `S3`, `TELEGRAM_BOT`, `SLACK_APP`, `DISCORD_BOT`
 - **Example:** A connection input with protocol POSTGRES receives host, port,
   database, username, password and sslMode, and a url composed from them.
 - **Source:** [component v2
   §5.2](../specifications/component/v2/spec.md#endpoints), [component v2
   §6.4](../specifications/component/v2/spec.md#connection-requirements), [ADR
-  0039](adr/0039-provenance-is-chosen-at-deployment.md)
+  0039](adr/0039-provenance-is-chosen-at-deployment.md), [ADR
+  0045](adr/0045-connection-protocols-are-a-registry.md)
 - **Status:** approved, stable. Tags: networking, connections.
+
+#### <a id="component-protocol-category"></a>protocol category
+
+A registry-only grouping of connection protocols that reach the same kind of
+service and name their credential and locator alike, never written in a
+document.
+
+- **Part of:** [protocol registry](#component-protocol-registry)
+- **Identifiers:** values: `LANGUAGE_MODEL`, `DATABASE`, `CACHE`,
+  `OBJECT_STORAGE`, `MESSAGING`
+- **Source:** [component v2
+  §6.4](../specifications/component/v2/spec.md#connection-requirements), [ADR
+  0045](adr/0045-connection-protocols-are-a-registry.md)
+- **Status:** approved, provisional. Tags: connections, registry.
+
+#### <a id="component-protocol-registry"></a>protocol registry
+
+The set of JSON records, one per connection protocol, in component's protocols
+directory, normative for each protocol's members, their types, presence,
+defaults, sensitivity, roles and value constraints, from which the schema enums
+and the member and view tables are generated.
+
+- **defines:** [protocol](#component-protocol)
+- **defines:** [connection member](#component-connection-member)
+- **Avoid:** "protocol table" (discouraged, prose): write "protocol registry".
+- **Source:** [component v2
+  §6.4](../specifications/component/v2/spec.md#connection-requirements), [ADR
+  0045](adr/0045-connection-protocols-are-a-registry.md)
+- **Status:** approved, provisional. Tags: connections, registry.
 
 #### <a id="component-public-address"></a>public address
 
@@ -1757,6 +1836,22 @@ by no document, deciding which signed-in viewers a RESTRICTED endpoint admits.
 - **Source:** [blueprint v2 §4.5](../specifications/blueprint/v2/spec.md#access)
 - **Status:** approved, provisional. Tags: access.
 
+#### <a id="blueprint-acquisition-status"></a>acquisition status
+
+The outcome acquisition reached for one connection parameter, one of
+NOT_ACQUIRED, NOT_FOUND, DENIED, INCOMPATIBLE and SELECTED, which decides
+whether resolution defers, rejects or reads a persisted selection.
+
+- **precedes:** [selection](#blueprint-selection)
+- **Identifiers:** fields: `status`, `persisted`; values: `NOT_ACQUIRED`,
+  `NOT_FOUND`, `DENIED`, `INCOMPATIBLE`, `SELECTED`
+- **Not to be confused with:** A validation result's status, VALID, INVALID or
+  INCOMPLETE, which is core's.
+- **Source:** [blueprint v2
+  §5.3](../specifications/blueprint/v2/spec.md#connections), [ADR
+  0045](adr/0045-connection-protocols-are-a-registry.md)
+- **Status:** approved, provisional. Tags: connections.
+
 #### <a id="blueprint-binding"></a>binding
 
 The authored edge that supplies one input of one node from exactly one origin: a
@@ -1932,6 +2027,22 @@ platform supplies, reached through a parameter in the connections namespace.
   0039](adr/0039-provenance-is-chosen-at-deployment.md)
 - **Status:** approved, stable. Tags: connections.
 
+#### <a id="blueprint-connection-evidence"></a>connection evidence
+
+The trusted record of what acquisition reached for each connection parameter of
+one deployment, supplied to resolution in the connections stage and shaped by a
+schema generated from the protocol registry.
+
+- **carries:** [acquisition status](#blueprint-acquisition-status)
+- **carries:** [selection](#blueprint-selection)
+- **Identifiers:** fields: `deployment`; codes:
+  `ERR_INVALID_RESOLUTION_CONTEXT`; defs: `ConnectionAcquisition`,
+  `ConnectionSelection`, `ConnectionRequest`, `Text`
+- **Source:** [blueprint v2
+  §5.3](../specifications/blueprint/v2/spec.md#connections), [ADR
+  0045](adr/0045-connection-protocols-are-a-registry.md)
+- **Status:** approved, provisional. Tags: connections, conformance.
+
 #### <a id="blueprint-connection-parameter"></a>connection parameter
 
 A deployment parameter whose from is `${{ connections.<path> }}`, naming one
@@ -1944,6 +2055,20 @@ connection the organization has configured, which binds only connection inputs.
   §5.3](../specifications/blueprint/v2/spec.md#connections), [ADR
   0030](adr/0030-atomic-named-connections.md)
 - **Status:** approved, stable. Tags: parameters, connections.
+
+#### <a id="blueprint-credential-secret"></a>credential secret
+
+A secret member of a selection's protocol, such as the SLACK_APP appToken or
+signingSecret, carried by the scoped credential beside its value and never by a
+view.
+
+- **Part of:** [scoped credential](#blueprint-scoped-credential)
+- **supplies:** [member role](#component-member-role)
+- **Identifiers:** fields: `secrets`
+- **Source:** [blueprint v2
+  §5.3](../specifications/blueprint/v2/spec.md#connections), [ADR
+  0045](adr/0045-connection-protocols-are-a-registry.md)
+- **Status:** approved, provisional. Tags: connections, security.
 
 #### <a id="blueprint-deploy-form"></a>deploy form
 
@@ -2049,6 +2174,7 @@ Said of a managed connection that already exists and is scoped to the
 deployment, connection parameter and permitted service on acquisition.
 
 - **Kind of:** [managed](#blueprint-managed)
+- **Identifiers:** values: `GRANTED`
 - **Source:** [blueprint v2 §1.1](../specifications/blueprint/v2/spec.md#terms),
   [blueprint v2 §5.3](../specifications/blueprint/v2/spec.md#connections), [ADR
   0039](adr/0039-provenance-is-chosen-at-deployment.md)
@@ -2100,6 +2226,7 @@ Supplied and operated by Musher, as one selection kind is, whose offering
 decides whether the connection is granted or provisioned.
 
 - **Kind of:** [selection kind](#blueprint-selection-kind)
+- **Identifiers:** fields: `provisioning`
 - **Avoid:** "managed database" (banned, prose): write "a database an external
   node stands for". Managed means only supplied and operated by Musher.
 - **Source:** [blueprint v2
@@ -2267,6 +2394,7 @@ deployment, reused across retry, redeploy and update, and released only when the
 deployment is deleted.
 
 - **Kind of:** [managed](#blueprint-managed)
+- **Identifiers:** values: `PROVISIONED`
 - **Source:** [blueprint v2 §1.1](../specifications/blueprint/v2/spec.md#terms),
   [blueprint v2 §5.3](../specifications/blueprint/v2/spec.md#connections), [ADR
   0039](adr/0039-provenance-is-chosen-at-deployment.md)
@@ -2284,6 +2412,21 @@ access policy admits reach the endpoint.
   0038](adr/0038-v2-one-vocabulary-and-v1-retires.md)
 - **Status:** approved, stable. Tags: access.
 
+#### <a id="blueprint-scoped-credential"></a>scoped credential
+
+The one credential of a selection, scoped to the deployment, the connection
+parameter and the service permitted, with an identity, a rotation generation,
+the value of each view's credential member, and the base URLs an HTTP-based view
+may reach.
+
+- **Part of:** [selection](#blueprint-selection)
+- **Identifiers:** fields: `credential`, `permittedBaseURLs`; defs:
+  `ConnectionCredential`
+- **Source:** [blueprint v2
+  §5.3](../specifications/blueprint/v2/spec.md#connections), [ADR
+  0030](adr/0030-atomic-named-connections.md)
+- **Status:** approved, stable. Tags: connections, security.
+
 #### <a id="blueprint-selection"></a>selection
 
 The immutable, authorized record of which connection one deployment uses for one
@@ -2292,7 +2435,8 @@ views.
 
 - **Part of:** [deployment snapshot](#deployment-deployment-snapshot)
 - **chooses:** [connection](#blueprint-connection)
-- **Identifiers:** codes: `ERR_CONNECTION_NOT_FOUND`, `ERR_CONNECTION_DENIED`,
+- **Identifiers:** fields: `selection`, `request`, `costOwner`; codes:
+  `ERR_CONNECTION_NOT_FOUND`, `ERR_CONNECTION_DENIED`,
   `ERR_CONNECTION_INCOMPATIBLE`
 - **Avoid:** "source reference" (banned, prose): write "requested path".
 - **Source:** [blueprint v2 §1.1](../specifications/blueprint/v2/spec.md#terms),
@@ -2305,6 +2449,7 @@ Who supplies a selected connection: MANAGED, supplied and operated by Musher, or
 USER, a complete set the deployer supplies.
 
 - **Part of:** [selection](#blueprint-selection)
+- **Identifiers:** fields: `selectionKind`; values: `MANAGED`, `USER`
 - **Source:** [blueprint v2 §1.1](../specifications/blueprint/v2/spec.md#terms),
   [blueprint v2 §5.3](../specifications/blueprint/v2/spec.md#connections), [ADR
   0039](adr/0039-provenance-is-chosen-at-deployment.md)
@@ -2388,8 +2533,12 @@ The members of one protocol taken from a selection for one consumer, which MUST
 satisfy the requested protocol, capabilities and input schemas.
 
 - **Part of:** [selection](#blueprint-selection)
+- **Identifiers:** fields: `views`; defs: `OpenaiChatCompletionsView`,
+  `AnthropicMessagesView`, `PostgresView`, `RedisView`, `S3View`,
+  `TelegramBotView`, `SlackAppView`, `DiscordBotView`
 - **Source:** [blueprint v2
-  §5.3](../specifications/blueprint/v2/spec.md#connections)
+  §5.3](../specifications/blueprint/v2/spec.md#connections), [ADR
+  0045](adr/0045-connection-protocols-are-a-registry.md)
 - **Status:** approved, stable. Tags: connections.
 
 #### <a id="blueprint-viewer"></a>viewer
@@ -3269,6 +3418,7 @@ the diagnostics tables of the families its record belongs to.
 | placement term | banned | prose | placement catalog value | [catalog value](#blueprint-catalog-value) |
 | placement token | banned | prose | placement catalog value | [catalog value](#blueprint-catalog-value) |
 | primary endpoint | banned | prose | the named endpoint | [endpoint](#component-endpoint) |
+| protocol table | discouraged | prose | protocol registry | [protocol registry](#component-protocol-registry) |
 | published reference | discouraged | prose | catalog reference | [catalog reference](#blueprint-catalog-reference) |
 | reference grammar | banned | prose | placeholder grammar | [placeholder grammar](#core-placeholder-grammar) |
 | reference namespace | banned | prose | placeholder namespace | [namespace](#core-placeholder-namespace) |

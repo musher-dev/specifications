@@ -13,6 +13,7 @@ swap:
   "connector": "external component"
   "explicit binding": "binding"
   "graph node": "component"
+  "protocol table": "protocol registry"
   "published reference": "catalog reference"
   "the registry": "the catalog"
   "this contract": "this specification"
