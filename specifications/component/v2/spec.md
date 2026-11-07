@@ -818,14 +818,17 @@ The policy does not bind other nodes, which reach the endpoint through its
 private address with clients of their own. The server name is `serverName` when
 present, and is what the network connection sends in SNI. Without one, the
 certificate MUST be valid for the host the platform connects to, which this
-specification does not fix, so an endpoint that verifies SHOULD name its
-`serverName`. A validator reports one that does not, `SYSTEM` being the only
-verifying mode that lets it be absent, with `WARN_ENDPOINT_SERVER_NAME` at the
-endpoint in the `semantic` phase ([§8.1](#warnings)). The document is still
-valid. The server name never changes the address connected to or the
-HTTP `Host` header. Under `NONE`, `serverName` sets SNI only. A policy an
-implementation cannot honour is a configuration error, reported as one, and
-never a failed probe.
+specification does not fix. The server name never changes the address
+connected to or the HTTP `Host` header. Under `NONE`, `serverName` sets SNI
+only. A policy an implementation cannot honour is a configuration error,
+reported as one, and never a failed probe.
+
+<a id="COMP-EP-020"></a>**`COMP-EP-020`**: Because the host the platform
+connects to is not fixed, an `HTTPS` endpoint whose trust policy verifies
+SHOULD name its `serverName`. A validator reports one that does
+not, `SYSTEM` being the only verifying mode that lets it be absent, with
+`WARN_ENDPOINT_SERVER_NAME` at the endpoint in the `semantic` phase
+([§8.1](#warnings)). The document is still valid.
 
 ### <a id="env-vars"></a>5.3 Environment variables
 
@@ -1673,9 +1676,9 @@ These codes are reported at `WARNING` ([core v2 §7](../../core/v2/spec.md#diagn
 Each reports a SHOULD the document does not meet. A warning never changes a
 result's status, so no document is rejected for one.
 
-| Code | Requirement | Meaning |
-|---|---|---|
-| `WARN_ENDPOINT_SERVER_NAME` | [`COMP-EP-007`](#COMP-EP-007) | An `HTTPS` endpoint whose trust policy verifies does not name its `serverName`. Reported in the `semantic` phase, at the endpoint. |
+| Code | Requirement | Phase | Meaning |
+|---|---|---|---|
+| `WARN_ENDPOINT_SERVER_NAME` | [`COMP-EP-020`](#COMP-EP-020) | `semantic` | An `HTTPS` endpoint whose trust policy verifies does not name its `serverName`. Reported at the endpoint. |
 
 ## <a id="conformance"></a>9. Conformance
 

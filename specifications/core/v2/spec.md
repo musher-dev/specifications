@@ -782,15 +782,19 @@ member: it is absent, never `null`. The members of a diagnostic are those of
 Every diagnostic carries its `severity`, `ERROR` or `WARNING`. A code beginning
 `ERR_` is declared in a diagnostics table and is reported at `ERROR`. A code
 beginning `WARN_` is declared in a family's Warnings table, a
-`| Code | Requirement | Meaning |` table under a heading naming warnings, and
-is reported at `WARNING`: each one names the SHOULD it reports, by its
-requirement ID. An implementation MAY report an `ERR_` code at `WARNING` only
-to preview a phase outside the result's validation scope, such as an
-`admission` rule in a `document` result. The preview reports the phase it
-previews and, like any later-phase diagnostic, is reported only once the
-earlier phases pass ([§6](#validation-phases)). It is not that phase's
-decision: a result in a scope that runs the phase reports the code at `ERROR`
-if the condition holds.
+`| Code | Requirement | Phase | Meaning |` table under a heading naming
+warnings, and is reported at `WARNING`: each one names the SHOULD it reports,
+by its requirement ID, and every phase that may report it. An implementation
+MAY report an `ERR_` code at `WARNING` only to preview a phase outside the
+result's validation scope, such as an `admission` rule in a `document` result.
+The preview reports the phase it previews and, like any later-phase
+diagnostic, is reported only once the earlier phases pass
+([§6](#validation-phases)). It is not that phase's decision: a result in a
+scope that runs the phase reports the code at `ERROR` if the condition holds.
+A code's registry entry lists the severities its table declares, `ERROR` for an
+`ERR_` code and `WARNING` for a `WARN_` code, and never lists the preview: any
+`ERR_` code may also be reported at `WARNING` as a preview of a phase outside
+the result's scope.
 
 A diagnostic's primary `path` is a JSON Pointer into the submitted document,
 unless the diagnostic carries `artifact`. That optional member names another

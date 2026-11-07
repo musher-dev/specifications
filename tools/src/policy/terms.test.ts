@@ -296,9 +296,9 @@ describe('identifier collection', () => {
     const markdown = [
       '### Warnings',
       '',
-      '| Code | Requirement | Meaning |',
-      '|---|---|---|',
-      '| `WARN_ENDPOINT_SERVER_NAME` | [`COMP-EP-007`](#COMP-EP-007) | Advice. |',
+      '| Code | Requirement | Phase | Meaning |',
+      '|---|---|---|---|',
+      '| `WARN_ENDPOINT_SERVER_NAME` | [`COMP-EP-020`](#COMP-EP-020) | `semantic` | Advice. |',
     ].join('\n')
     expect(proseIdentifiers(markdown, 'component', 'spec.md').map((f) => f.name)).toEqual([
       'WARN_ENDPOINT_SERVER_NAME',

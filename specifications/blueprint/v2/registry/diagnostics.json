@@ -487,17 +487,13 @@
     {
       "code": "WARN_ENDPOINT_SERVER_NAME",
       "phases": [
-        "parser",
-        "structural",
-        "semantic",
-        "admission",
-        "resolution"
+        "semantic"
       ],
       "severities": [
         "WARNING"
       ],
       "declaredBy": "component",
-      "requirement": "COMP-EP-007"
+      "requirement": "COMP-EP-020"
     },
     {
       "code": "ERR_COMPONENT_NOT_FOUND",

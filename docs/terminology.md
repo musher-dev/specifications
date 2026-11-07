@@ -461,7 +461,7 @@ document of its item, and non-normative message text.
 The stable name of one condition a diagnostic reports: an error code, prefixed
 ERR, declared in exactly one diagnostics table with every phase it may be
 reported in, or a warning code, prefixed WARN, declared in a Warnings table with
-the requirement it reports.
+the requirement it reports and every phase it may be reported in.
 
 - **Part of:** [diagnostic](#core-diagnostic)
 - **Identifiers:** fields: `code`; defs: `DiagnosticCode`

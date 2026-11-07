@@ -188,6 +188,11 @@
       "section": "endpoints"
     },
     {
+      "id": "COMP-EP-020",
+      "anchor": "COMP-EP-020",
+      "section": "endpoints"
+    },
+    {
       "id": "COMP-ENVVAR-004",
       "anchor": "COMP-ENVVAR-004",
       "section": "env-vars"

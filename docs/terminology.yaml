@@ -637,7 +637,8 @@ terms:
       The stable name of one condition a diagnostic reports: an error code,
       prefixed ERR, declared in exactly one diagnostics table with every phase
       it may be reported in, or a warning code, prefixed WARN, declared in a
-      Warnings table with the requirement it reports.
+      Warnings table with the requirement it reports and every phase it may be
+      reported in.
     shortDefinition: The stable name of one condition.
     part_of: [core.diagnostic]
     identifiers: { fields: [code], defs: [DiagnosticCode] }

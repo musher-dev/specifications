@@ -54,8 +54,10 @@ Each family version directory gains `registry/`, released with it:
 lets a corpus declare, so an implementation reads one file rather than
 resolving §2 itself. A diagnostics table row gives `severities: ["ERROR"]` and
 its phases. A warnings table row ([ADR 0044](0044-the-validation-result-is-a-released-schema.md))
-gives `severities: ["WARNING"]` and every phase, because a warning is reported
-by whichever phase checks the requirement it names.
+gives `severities: ["WARNING"]` and the phases its Phase column declares.
+`severities` lists declared severities only: any `ERR_` code may also be
+reported at `WARNING` as a preview of a phase outside the result's scope, and
+no entry lists that.
 
 Each file's schema is in core, under `interfaces/registry/`:
 `requirements.schema.json`, `diagnostics.schema.json`,

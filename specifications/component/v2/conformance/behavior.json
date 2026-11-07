@@ -899,7 +899,7 @@
     "suite": "resolution",
     "operation": "validate",
     "requirements": [
-      "COMP-EP-007"
+      "COMP-EP-020"
     ],
     "input": {
       "specVersion": "v2",
@@ -947,7 +947,7 @@
     "operation": "validate",
     "requirements": [
       "COMP-EP-005",
-      "COMP-EP-007"
+      "COMP-EP-020"
     ],
     "input": {
       "specVersion": "v2",

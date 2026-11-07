@@ -543,17 +543,18 @@ describe('the diagnostic registry tables', () => {
     '| Code | Phase | Meaning |',
     '|---|---|---|',
     '| `ERR_A` | `semantic`, `resolution` | One condition. |',
-    '| `WARN_OUTSIDE` | [`COMP-EP-007`](#COMP-EP-007) | Not under a Warnings heading. |',
+    '| `WARN_OUTSIDE` | [`COMP-EP-020`](#COMP-EP-020) | `semantic` | Not under a Warnings heading. |',
     '',
     '### 8.1 Warnings',
     '',
-    '| Code | Requirement | Meaning |',
-    '|---|---|---|',
-    '| `WARN_B` | [`COMP-EP-007`](#COMP-EP-007) | An advisory condition. |',
+    '| Code | Requirement | Phase | Meaning |',
+    '|---|---|---|---|',
+    '| `WARN_B` | [`COMP-EP-020`](#COMP-EP-020) | `semantic`, `admission` | An advisory condition. |',
+    '| `WARN_NO_PHASE` | [`COMP-EP-020`](#COMP-EP-020) | An old three-column row. |',
     '',
     '## 9. Conformance',
     '',
-    '| `WARN_AFTER` | [`COMP-EP-007`](#COMP-EP-007) | After the Warnings section. |',
+    '| `WARN_AFTER` | [`COMP-EP-020`](#COMP-EP-020) | `semantic` | After the Warnings section. |',
   ].join('\n')
 
   test('declare ERR_ codes with their phases, and WARN_ codes under a Warnings heading', () => {
@@ -562,7 +563,12 @@ describe('the diagnostic registry tables', () => {
       { code: 'ERR_A', phases: ['semantic', 'resolution'], meaning: 'One condition.' },
     ])
     expect(tables.warnings).toEqual([
-      { code: 'WARN_B', requirement: 'COMP-EP-007', meaning: 'An advisory condition.' },
+      {
+        code: 'WARN_B',
+        requirement: 'COMP-EP-020',
+        phases: ['semantic', 'admission'],
+        meaning: 'An advisory condition.',
+      },
     ])
   })
 })

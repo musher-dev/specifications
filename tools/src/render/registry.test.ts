@@ -26,7 +26,7 @@ afterEach(() => {
 })
 
 describe('declaredCodes', () => {
-  test('reads error rows with their phases and warning rows with their requirement', () => {
+  test('reads error rows with their phases and warning rows with their requirement and phases', () => {
     const markdown = [
       '## <a id="diagnostics"></a>9. Diagnostics',
       '',
@@ -37,9 +37,9 @@ describe('declaredCodes', () => {
       '',
       '### Warnings',
       '',
-      '| Code | Requirement | Meaning |',
-      '|---|---|---|',
-      '| `WARN_C` | [`COMP-EP-007`](#COMP-EP-007) | C. |',
+      '| Code | Requirement | Phase | Meaning |',
+      '|---|---|---|---|',
+      '| `WARN_C` | [`COMP-EP-020`](#COMP-EP-020) | `semantic` | C. |',
       '',
       '## <a id="migration"></a>10. Migration',
       '',
@@ -50,9 +50,9 @@ describe('declaredCodes', () => {
       { code: 'ERR_B', phases: ['resolution'], severities: ['ERROR'] },
       {
         code: 'WARN_C',
-        phases: ['parser', 'structural', 'semantic', 'admission', 'resolution'],
+        phases: ['semantic'],
         severities: ['WARNING'],
-        requirement: 'COMP-EP-007',
+        requirement: 'COMP-EP-020',
       },
     ])
   })

@@ -291,7 +291,7 @@ function inputReferenceDiagnostics(
 }
 /**
  * The advisory checks of a component's semantic phase, reported at WARNING
- * (core v2 §7). Component §5.2 COMP-EP-007: an `HTTPS` endpoint whose trust
+ * (core v2 §7). Component §5.2 COMP-EP-020: an `HTTPS` endpoint whose trust
  * policy verifies, `SYSTEM` (the default) or `BUNDLE`, SHOULD name its
  * `serverName`. `BUNDLE` already requires one structurally, so in practice this
  * is a `SYSTEM` endpoint without one.

@@ -20,8 +20,8 @@ Every consumer ported the shape by hand, and each port drifted
 
 - platform-api reports a `pointer` where the specification says `path`, writes
   phases and scopes in upper case, and invented a `severity` the specification
-  does not define, so that it could report the `serverName` recommendation of
-  component `COMP-EP-007` without failing the document.
+  does not define, so that it could report component §5.2's `serverName`
+  recommendation without failing the document.
 - The reference runner in `tools/` reports `phase: semantic` on an
   `INCOMPLETE` `publication` result that entered `admission`.
 - Nothing says whether a `stage` that does not apply is absent or `null`.
@@ -107,18 +107,23 @@ Every diagnostic carries `severity`, `ERROR` or `WARNING`.
 - A `WARNING` is advisory. It reports a SHOULD the document does not meet,
   never changes the result's status, and is not approval of what it reports.
 - A `WARN_` code is declared in a family's Warnings table,
-  `| Code | Requirement | Meaning |`, under a heading naming warnings. Each row
-  names the SHOULD it reports by its requirement ID. The existing
+  `| Code | Requirement | Phase | Meaning |`, under a heading naming warnings.
+  Each row names the SHOULD it reports by its requirement ID, and every phase
+  that may report it, as a diagnostics table's row does. The existing
   `| Code | Phase | Meaning |` tables keep declaring `ERR_` codes.
 - An `ERR_` code may be reported at `WARNING` only to preview a phase outside
   the result's validation scope, such as an `admission` rule in a `document`
   result. The preview reports the phase it previews, is reported only once the
-  earlier phases pass, and is not that phase's decision.
+  earlier phases pass, and is not that phase's decision. A registry entry's
+  `severities` lists only the severities its table declares, never the
+  preview, which any `ERR_` code may be.
 
 The first warning is component's `WARN_ENDPOINT_SERVER_NAME`: an `HTTPS`
 endpoint whose trust policy verifies and that names no `serverName`, which
-`COMP-EP-007` says SHOULD be named. It is reported in the `semantic` phase at
-the endpoint. platform-api's `ENDPOINT_SERVER_NAME_REQUIRED` maps to it.
+`COMP-EP-020` says SHOULD be named. Its row declares the `semantic` phase, and
+it is reported at the endpoint. `COMP-EP-007`, the trust policy's MUSTs, stays
+a platform obligation that no document breaks. platform-api's
+`ENDPOINT_SERVER_NAME_REQUIRED` maps to `WARN_ENDPOINT_SERVER_NAME`.
 
 ### 5. What `phase` means on each status
 

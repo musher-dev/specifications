@@ -75,9 +75,8 @@ function inPhaseOrder(phases: Iterable<string>): string[] {
 
 /**
  * Every code one spec.md declares: its diagnostics tables' rows, then its
- * warnings tables' rows, read as the conformance runner reads them. A warnings
- * table has no phase column, so a warning may be reported in any phase: the one
- * that checks the requirement it names.
+ * warnings tables' rows, read as the conformance runner reads them. Each row,
+ * of either table, declares the phases that may report its code.
  */
 export function declaredCodes(markdown: string): DeclaredCode[] {
   const tables = readDiagnosticTables(markdown)
@@ -101,7 +100,7 @@ export function declaredCodes(markdown: string): DeclaredCode[] {
   for (const row of tables.warnings) {
     const held = entry(row.code)
     held.severities.add('WARNING')
-    for (const phase of PHASE_ORDER) held.phases.add(phase)
+    for (const phase of row.phases) held.phases.add(phase)
     held.requirement = row.requirement
   }
   return [...byCode].map(([code, held]) => ({

@@ -396,8 +396,8 @@ diagnostic of the entry's severity, `ERROR` when it names none, without
 imposing diagnostic order or forbidding additional diagnostics. A declared
 `phase` must be one the code's registry lists, exactly as for a document case,
 and a `resolution` diagnostic declares its `stage` ([Phases](#phases)). A
-`WARN_` code's registry names a requirement rather than a phase, so its
-`phase` is not checked against one.
+`WARN_` code's Warnings table names the requirement it reports and the phases
+that report it, and its `phase` is checked against those phases in the same way.
 
 `expect` reads the observation with its `diagnostics` reduced to the `ERROR`
 ones. A pointer into `/diagnostics`, such as `"/diagnostics": []`, therefore

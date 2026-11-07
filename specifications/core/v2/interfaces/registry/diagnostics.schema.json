@@ -42,14 +42,14 @@
           "pattern": "^(ERR|WARN)_[A-Z0-9_]+$"
         },
         "phases": {
-          "description": "Every phase that may report the code, in phase order. A warnings table assigns no phase, so a warning lists every phase: it is reported in the phase that checks the requirement it names.",
+          "description": "Every phase that may report the code, in phase order, as the Phase column of its diagnostics or warnings table declares them.",
           "type": "array",
           "minItems": 1,
           "uniqueItems": true,
           "items": { "enum": ["parser", "structural", "semantic", "admission", "resolution"] }
         },
         "severities": {
-          "description": "The severities the code's table declares it at: ERROR for a diagnostics table, WARNING for a warnings table.",
+          "description": "The severities the code's table declares it at: ERROR for a diagnostics table, WARNING for a warnings table. These are the declared severities only: any ERR_ code may also be reported at WARNING as a preview of a phase outside the result's validation scope (core v2 §7), which no entry lists.",
           "type": "array",
           "minItems": 1,
           "uniqueItems": true,
