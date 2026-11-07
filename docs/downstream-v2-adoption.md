@@ -27,8 +27,10 @@ v2 form. Generate renames from those tables rather than from this page.
 
 ## Pin the v2 releases
 
-Pin exact releases: `core/v2.0.0`, `component/v2.0.0`, `blueprint/v2.0.0` and
-`listing/v2.0.0`, which released in that order. Every core release re-releases
+Pin an exact release of each family: the latest one, as recorded in
+[`published.json`](../published.json). v2 first released at `2.0.0`, in the
+order core, component, blueprint and listing, and later releases follow the
+same order. Every core release re-releases
 every dependent family in the same release set
 ([Publication → The dependency gate](publication.md#core-release-alignment)),
 so all four always sit on one core release. Vendor each release archive, which
@@ -74,7 +76,7 @@ dependency closure, and verify it as
 - **Vocabulary.** A blueprint is deployed, not installed: the v1 nouns
   `installation`, `installer` and `install form` are **deployment**,
   **deployer** and **deploy form**. A value's provenance is its **origin**.
-  Catalog references are **item-local** or **catalog** references. The glossary
+  Component references are **item-local** or **catalog** references. The glossary
   is the term records in `docs/terminology.yaml`; link to it rather than
   restating it.
 
@@ -153,8 +155,42 @@ dependency closure, and verify it as
   ([listing v2 §5](../specifications/listing/v2/spec.md#media)).
 - **SPDX licences** are checked at admission against the SPDX list release the
   platform pins (`ERR_UNKNOWN_LICENSE`).
-- **Storefront and catalog.** The catalog is the published collection; the
-  storefront is the browsing UI.
+- **Storefront, catalog and library.** The catalog is the curated, public
+  collection of listed items, and the storefront is the browsing UI. What an
+  organization publishes for its own use is its library, which needs no
+  listing ([2.1.0](#adopting-210)).
+
+## <a id="adopting-210"></a>Adopting 2.1.0
+
+Every family releases `2.1.0`, in the same order. No document that validated at `2.0.0`
+stops validating. What a consumer adopts:
+
+- **Vendor core's release record and registries** (#217). Core now ships data
+  interfaces: its `release.json`, the registry schemas and the registries of
+  requirements, diagnostics, vocabulary and term records. Each family ships its
+  own requirement and diagnostic registries. Read them instead of copying
+  `spec.md` tables or regular expressions
+  ([ADR 0043](adr/0043-registries-are-released-data-interfaces.md)).
+- **The validation result schema** (#218). A result validates against core's
+  `validation-result` schema: every diagnostic carries a required `severity`
+  (`ERROR` or `WARNING`) and a `path`, and phases, scopes and stages keep the
+  specification's lower case. Only an `ERROR` makes a result `INVALID`. Map any
+  platform field names onto these
+  ([ADR 0044](adr/0044-the-validation-result-is-a-released-schema.md)).
+- **The protocol registry and the connection-evidence schema** (#219).
+  Connection protocols are records in component's `protocols/`, and blueprint
+  ships a `connection-evidence` schema. Generate member tables and enums from
+  them rather than hand-porting
+  ([ADR 0045](adr/0045-connection-protocols-are-a-registry.md)).
+- **Three messaging protocols and `credential.secrets`** (#220).
+  `TELEGRAM_BOT`, `SLACK_APP` and `DISCORD_BOT` join the connection protocols.
+  A selection carries a protocol's extra secret members in `credential.secrets`
+  ([ADR 0045](adr/0045-connection-protocols-are-a-registry.md)).
+- **Catalog and library** (#221). The catalog is curated and public, and an
+  organization publishes to its library, which needs no listing. A catalog
+  reference resolves against the deploying organization's library and the
+  catalog. Glossaries adopt both terms; validation does not change
+  ([ADR 0046](adr/0046-the-catalog-is-curated-and-an-organization-publishes-to-its-library.md)).
 
 ## musher-cli
 
