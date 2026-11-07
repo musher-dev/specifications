@@ -1,0 +1,22 @@
+specVersion: v2
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: EXTERNAL
+  contract:
+    inputs:
+      telegram:
+        description: Connection this node stands for
+        connection:
+          protocol: TELEGRAM_BOT
+    outputs:
+      appToken:
+        description: Forwarded appToken
+        schema:
+          type: string
+        sensitive: true
+        from:
+          input: telegram
+          member: appToken

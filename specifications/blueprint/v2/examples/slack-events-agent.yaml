@@ -1,0 +1,38 @@
+specVersion: v2
+kind: BLUEPRINT
+metadata:
+  slug: slack-events-agent
+  revision: 1
+  description: A Slack agent that receives events at its own public endpoint, verified with the app's signing secret, behind sign-in for everything else.
+spec:
+  parameters:
+    slack:
+      from: "${{ connections.slack.default }}"
+      ui:
+        label: Slack app
+  nodes:
+    slack:
+      componentRef: ./components/slack-app.yaml
+      bindings:
+        slack:
+          parameter: slack
+    agent:
+      # A SERVICE whose web endpoint offers /slack/events in
+      # exemptibleRequests.paths. Slack calls that path without signing in;
+      # every other route keeps sign-in. Registering the URL with Slack happens
+      # outside the documents.
+      componentRef: ./components/slack-events-agent.yaml
+      compute:
+        profile: general.standard.small
+      exposure:
+        web:
+          visibility: PUBLIC
+          access: RESTRICTED
+          accessExemptions: [PATHS]
+      bindings:
+        slackBotToken:
+          node: slack
+          output: botToken
+        slackSigningSecret:
+          node: slack
+          output: signingSecret

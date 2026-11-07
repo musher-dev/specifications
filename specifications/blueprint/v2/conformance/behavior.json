@@ -6583,6 +6583,407 @@
     ]
   },
   {
+    "id": "connection-telegram-default-base-url",
+    "suite": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-CONNECTION-002"
+    ],
+    "tree": {
+      "telegram-app/blueprint.yaml": "{\"specVersion\":\"v2\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"telegram-app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"bot\":{\"from\":\"${{ connections.telegram.default }}\",\"ui\":{\"label\":\"Telegram bot\"}}},\"nodes\":{\"bot\":{\"componentRef\":\"./telegram.yaml\",\"bindings\":{\"telegram\":{\"parameter\":\"bot\"}}},\"app\":{\"componentRef\":\"./app.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"telegramBaseURL\":{\"node\":\"bot\",\"output\":\"baseURL\"},\"telegramBotToken\":{\"node\":\"bot\",\"output\":\"botToken\"}}}}}}",
+      "telegram-app/telegram.yaml": "{\"specVersion\":\"v2\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture external messaging service.\"},\"spec\":{\"type\":\"EXTERNAL\",\"contract\":{\"inputs\":{\"telegram\":{\"description\":\"Messaging service this node stands for.\",\"connection\":{\"protocol\":\"TELEGRAM_BOT\"}}},\"outputs\":{\"baseURL\":{\"description\":\"Bot API base URL.\",\"schema\":{\"type\":\"string\"},\"from\":{\"input\":\"telegram\",\"member\":\"baseURL\"}},\"botToken\":{\"description\":\"Bot token.\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"from\":{\"input\":\"telegram\",\"member\":\"botToken\"}}}}}}",
+      "telegram-app/app.yaml": "{\"specVersion\":\"v2\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}},\"contract\":{\"inputs\":{\"telegramBaseURL\":{\"description\":\"Telegram Bot API base URL\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVar\":\"TELEGRAM_API_URL\"}},\"telegramBotToken\":{\"description\":\"Telegram bot token\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVar\":\"TELEGRAM_BOT_TOKEN\"}}},\"outputs\":{}}}}"
+    },
+    "document": "telegram-app/blueprint.yaml",
+    "context": {
+      "connections": {
+        "deployment": "deploy-1",
+        "parameters": {
+          "bot": {
+            "status": "SELECTED",
+            "persisted": true,
+            "selection": {
+              "identity": "connection-bot",
+              "version": "1",
+              "deployment": "deploy-1",
+              "parameter": "bot",
+              "request": {
+                "from": "${{ connections.telegram.default }}",
+                "identity": "default-policy",
+                "version": "1"
+              },
+              "selectionKind": "MANAGED",
+              "provisioning": "GRANTED",
+              "costOwner": "org-1",
+              "credential": {
+                "identity": "credential-bot",
+                "rotation": 0,
+                "value": "synthetic-only",
+                "permittedBaseURLs": [
+                  "https://api.telegram.org"
+                ]
+              },
+              "views": {
+                "TELEGRAM_BOT": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "VALID",
+      "/inputs/bot:in:telegram/value": {
+        "baseURL": "https://api.telegram.org",
+        "botToken": "synthetic-only"
+      },
+      "/environment/app/TELEGRAM_API_URL/value": "https://api.telegram.org",
+      "/inspection/app:in:telegramBotToken": {
+        "sensitive": true,
+        "redacted": true
+      }
+    }
+  },
+  {
+    "id": "connection-default-base-url-not-permitted",
+    "suite": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-CONNECTION-002"
+    ],
+    "tree": {
+      "telegram-app/blueprint.yaml": "{\"specVersion\":\"v2\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"telegram-app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"bot\":{\"from\":\"${{ connections.telegram.default }}\",\"ui\":{\"label\":\"Telegram bot\"}}},\"nodes\":{\"bot\":{\"componentRef\":\"./telegram.yaml\",\"bindings\":{\"telegram\":{\"parameter\":\"bot\"}}},\"app\":{\"componentRef\":\"./app.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"telegramBaseURL\":{\"node\":\"bot\",\"output\":\"baseURL\"},\"telegramBotToken\":{\"node\":\"bot\",\"output\":\"botToken\"}}}}}}",
+      "telegram-app/telegram.yaml": "{\"specVersion\":\"v2\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture external messaging service.\"},\"spec\":{\"type\":\"EXTERNAL\",\"contract\":{\"inputs\":{\"telegram\":{\"description\":\"Messaging service this node stands for.\",\"connection\":{\"protocol\":\"TELEGRAM_BOT\"}}},\"outputs\":{\"baseURL\":{\"description\":\"Bot API base URL.\",\"schema\":{\"type\":\"string\"},\"from\":{\"input\":\"telegram\",\"member\":\"baseURL\"}},\"botToken\":{\"description\":\"Bot token.\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"from\":{\"input\":\"telegram\",\"member\":\"botToken\"}}}}}}",
+      "telegram-app/app.yaml": "{\"specVersion\":\"v2\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}},\"contract\":{\"inputs\":{\"telegramBaseURL\":{\"description\":\"Telegram Bot API base URL\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVar\":\"TELEGRAM_API_URL\"}},\"telegramBotToken\":{\"description\":\"Telegram bot token\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVar\":\"TELEGRAM_BOT_TOKEN\"}}},\"outputs\":{}}}}"
+    },
+    "document": "telegram-app/blueprint.yaml",
+    "context": {
+      "connections": {
+        "deployment": "deploy-1",
+        "parameters": {
+          "bot": {
+            "status": "SELECTED",
+            "persisted": true,
+            "selection": {
+              "identity": "connection-bot",
+              "version": "1",
+              "deployment": "deploy-1",
+              "parameter": "bot",
+              "request": {
+                "from": "${{ connections.telegram.default }}",
+                "identity": "default-policy",
+                "version": "1"
+              },
+              "selectionKind": "MANAGED",
+              "provisioning": "GRANTED",
+              "costOwner": "org-1",
+              "credential": {
+                "identity": "credential-bot",
+                "rotation": 0,
+                "value": "synthetic-only",
+                "permittedBaseURLs": [
+                  "https://gateway.example/telegram"
+                ]
+              },
+              "views": {
+                "TELEGRAM_BOT": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID",
+      "/inputs": {}
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_INVALID_RESOLUTION_CONTEXT",
+        "path": "/spec/parameters/bot",
+        "phase": "resolution",
+        "stage": "connections"
+      }
+    ]
+  },
+  {
+    "id": "connection-slack-secrets-selected",
+    "suite": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-CONNECTION-002"
+    ],
+    "tree": {
+      "slack-app/blueprint.yaml": "{\"specVersion\":\"v2\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"slack-app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"slack\":{\"from\":\"${{ connections.slack.default }}\",\"ui\":{\"label\":\"Slack app\"}}},\"nodes\":{\"bot\":{\"componentRef\":\"./slack.yaml\",\"bindings\":{\"slack\":{\"parameter\":\"slack\"}}},\"app\":{\"componentRef\":\"./app.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"slackBotToken\":{\"node\":\"bot\",\"output\":\"botToken\"},\"slackAppToken\":{\"node\":\"bot\",\"output\":\"appToken\"}}}}}}",
+      "slack-app/slack.yaml": "{\"specVersion\":\"v2\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture external messaging service.\"},\"spec\":{\"type\":\"EXTERNAL\",\"contract\":{\"inputs\":{\"slack\":{\"description\":\"Messaging service this node stands for.\",\"connection\":{\"protocol\":\"SLACK_APP\"}}},\"outputs\":{\"botToken\":{\"description\":\"Bot token.\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"from\":{\"input\":\"slack\",\"member\":\"botToken\"}},\"appToken\":{\"description\":\"App-level token.\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"from\":{\"input\":\"slack\",\"member\":\"appToken\"}},\"signingSecret\":{\"description\":\"Signing secret.\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"from\":{\"input\":\"slack\",\"member\":\"signingSecret\"}}}}}}",
+      "slack-app/app.yaml": "{\"specVersion\":\"v2\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}},\"contract\":{\"inputs\":{\"slackBotToken\":{\"description\":\"Slack bot token\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVar\":\"SLACK_BOT_TOKEN\"}},\"slackAppToken\":{\"description\":\"Slack app-level token\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVar\":\"SLACK_APP_TOKEN\"}}},\"outputs\":{}}}}"
+    },
+    "document": "slack-app/blueprint.yaml",
+    "context": {
+      "connections": {
+        "deployment": "deploy-1",
+        "parameters": {
+          "slack": {
+            "status": "SELECTED",
+            "persisted": true,
+            "selection": {
+              "identity": "connection-bot",
+              "version": "1",
+              "deployment": "deploy-1",
+              "parameter": "slack",
+              "request": {
+                "from": "${{ connections.slack.default }}",
+                "identity": "default-policy",
+                "version": "1"
+              },
+              "selectionKind": "MANAGED",
+              "provisioning": "GRANTED",
+              "costOwner": "org-1",
+              "credential": {
+                "identity": "credential-slack",
+                "rotation": 0,
+                "value": "synthetic-only",
+                "secrets": {
+                  "appToken": "synthetic-app-token",
+                  "signingSecret": "synthetic-signing-secret"
+                },
+                "permittedBaseURLs": [
+                  "https://slack.com/api"
+                ]
+              },
+              "views": {
+                "SLACK_APP": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "VALID",
+      "/inputs/bot:in:slack/value": {
+        "baseURL": "https://slack.com/api",
+        "botToken": "synthetic-only",
+        "appToken": "synthetic-app-token",
+        "signingSecret": "synthetic-signing-secret"
+      },
+      "/inspection/app:in:slackAppToken": {
+        "sensitive": true,
+        "redacted": true
+      }
+    }
+  },
+  {
+    "id": "connection-slack-user-selection-missing-secret",
+    "suite": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-CONNECTION-002",
+      "BP-CONNECTION-003"
+    ],
+    "tree": {
+      "slack-app/blueprint.yaml": "{\"specVersion\":\"v2\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"slack-app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"slack\":{\"from\":\"${{ connections.slack.default }}\",\"ui\":{\"label\":\"Slack app\"}}},\"nodes\":{\"bot\":{\"componentRef\":\"./slack.yaml\",\"bindings\":{\"slack\":{\"parameter\":\"slack\"}}},\"app\":{\"componentRef\":\"./app.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"slackBotToken\":{\"node\":\"bot\",\"output\":\"botToken\"},\"slackAppToken\":{\"node\":\"bot\",\"output\":\"appToken\"}}}}}}",
+      "slack-app/slack.yaml": "{\"specVersion\":\"v2\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture external messaging service.\"},\"spec\":{\"type\":\"EXTERNAL\",\"contract\":{\"inputs\":{\"slack\":{\"description\":\"Messaging service this node stands for.\",\"connection\":{\"protocol\":\"SLACK_APP\"}}},\"outputs\":{\"botToken\":{\"description\":\"Bot token.\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"from\":{\"input\":\"slack\",\"member\":\"botToken\"}},\"appToken\":{\"description\":\"App-level token.\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"from\":{\"input\":\"slack\",\"member\":\"appToken\"}},\"signingSecret\":{\"description\":\"Signing secret.\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"from\":{\"input\":\"slack\",\"member\":\"signingSecret\"}}}}}}",
+      "slack-app/app.yaml": "{\"specVersion\":\"v2\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}},\"contract\":{\"inputs\":{\"slackBotToken\":{\"description\":\"Slack bot token\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVar\":\"SLACK_BOT_TOKEN\"}},\"slackAppToken\":{\"description\":\"Slack app-level token\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVar\":\"SLACK_APP_TOKEN\"}}},\"outputs\":{}}}}"
+    },
+    "document": "slack-app/blueprint.yaml",
+    "context": {
+      "connections": {
+        "deployment": "deploy-1",
+        "parameters": {
+          "slack": {
+            "status": "SELECTED",
+            "persisted": true,
+            "selection": {
+              "identity": "connection-bot",
+              "version": "1",
+              "deployment": "deploy-1",
+              "parameter": "slack",
+              "request": {
+                "from": "${{ connections.slack.default }}",
+                "identity": "default-policy",
+                "version": "1"
+              },
+              "selectionKind": "USER",
+              "costOwner": "org-1",
+              "credential": {
+                "identity": "credential-slack",
+                "rotation": 0,
+                "value": "synthetic-only",
+                "secrets": {
+                  "appToken": "synthetic-app-token"
+                },
+                "permittedBaseURLs": [
+                  "https://slack.com/api"
+                ]
+              },
+              "views": {
+                "SLACK_APP": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID",
+      "/inputs": {}
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_CONNECTION_INCOMPATIBLE",
+        "path": "/spec/parameters/slack",
+        "phase": "resolution",
+        "stage": "connections"
+      }
+    ]
+  },
+  {
+    "id": "connection-view-carries-secret",
+    "suite": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-CONNECTION-002"
+    ],
+    "tree": {
+      "slack-app/blueprint.yaml": "{\"specVersion\":\"v2\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"slack-app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"slack\":{\"from\":\"${{ connections.slack.default }}\",\"ui\":{\"label\":\"Slack app\"}}},\"nodes\":{\"bot\":{\"componentRef\":\"./slack.yaml\",\"bindings\":{\"slack\":{\"parameter\":\"slack\"}}},\"app\":{\"componentRef\":\"./app.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"slackBotToken\":{\"node\":\"bot\",\"output\":\"botToken\"},\"slackAppToken\":{\"node\":\"bot\",\"output\":\"appToken\"}}}}}}",
+      "slack-app/slack.yaml": "{\"specVersion\":\"v2\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture external messaging service.\"},\"spec\":{\"type\":\"EXTERNAL\",\"contract\":{\"inputs\":{\"slack\":{\"description\":\"Messaging service this node stands for.\",\"connection\":{\"protocol\":\"SLACK_APP\"}}},\"outputs\":{\"botToken\":{\"description\":\"Bot token.\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"from\":{\"input\":\"slack\",\"member\":\"botToken\"}},\"appToken\":{\"description\":\"App-level token.\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"from\":{\"input\":\"slack\",\"member\":\"appToken\"}},\"signingSecret\":{\"description\":\"Signing secret.\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"from\":{\"input\":\"slack\",\"member\":\"signingSecret\"}}}}}}",
+      "slack-app/app.yaml": "{\"specVersion\":\"v2\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}},\"contract\":{\"inputs\":{\"slackBotToken\":{\"description\":\"Slack bot token\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVar\":\"SLACK_BOT_TOKEN\"}},\"slackAppToken\":{\"description\":\"Slack app-level token\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVar\":\"SLACK_APP_TOKEN\"}}},\"outputs\":{}}}}"
+    },
+    "document": "slack-app/blueprint.yaml",
+    "context": {
+      "connections": {
+        "deployment": "deploy-1",
+        "parameters": {
+          "slack": {
+            "status": "SELECTED",
+            "persisted": true,
+            "selection": {
+              "identity": "connection-bot",
+              "version": "1",
+              "deployment": "deploy-1",
+              "parameter": "slack",
+              "request": {
+                "from": "${{ connections.slack.default }}",
+                "identity": "default-policy",
+                "version": "1"
+              },
+              "selectionKind": "MANAGED",
+              "provisioning": "GRANTED",
+              "costOwner": "org-1",
+              "credential": {
+                "identity": "credential-slack",
+                "rotation": 0,
+                "value": "synthetic-only",
+                "secrets": {
+                  "appToken": "synthetic-app-token",
+                  "signingSecret": "synthetic-signing-secret"
+                },
+                "permittedBaseURLs": [
+                  "https://slack.com/api"
+                ]
+              },
+              "views": {
+                "SLACK_APP": {
+                  "appToken": "synthetic-app-token"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID",
+      "/inputs": {}
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_INVALID_RESOLUTION_CONTEXT",
+        "path": "/spec/parameters/slack",
+        "phase": "resolution",
+        "stage": "connections"
+      }
+    ]
+  },
+  {
+    "id": "connection-slack-events-endpoint",
+    "suite": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-CONNECTION-002",
+      "BP-NODE-008"
+    ],
+    "tree": {
+      "slack-events/blueprint.yaml": "{\"specVersion\":\"v2\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"slack-events\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"slack\":{\"from\":\"${{ connections.slack.default }}\",\"ui\":{\"label\":\"Slack app\"}}},\"nodes\":{\"bot\":{\"componentRef\":\"./slack.yaml\",\"bindings\":{\"slack\":{\"parameter\":\"slack\"}}},\"agent\":{\"componentRef\":\"./agent.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"exposure\":{\"web\":{\"visibility\":\"PUBLIC\",\"access\":\"RESTRICTED\",\"accessExemptions\":[\"PATHS\"]}},\"bindings\":{\"slackBotToken\":{\"node\":\"bot\",\"output\":\"botToken\"},\"slackSigningSecret\":{\"node\":\"bot\",\"output\":\"signingSecret\"}}}}}}",
+      "slack-events/slack.yaml": "{\"specVersion\":\"v2\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture external messaging service.\"},\"spec\":{\"type\":\"EXTERNAL\",\"contract\":{\"inputs\":{\"slack\":{\"description\":\"Messaging service this node stands for.\",\"connection\":{\"protocol\":\"SLACK_APP\"}}},\"outputs\":{\"botToken\":{\"description\":\"Bot token.\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"from\":{\"input\":\"slack\",\"member\":\"botToken\"}},\"signingSecret\":{\"description\":\"Signing secret.\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"from\":{\"input\":\"slack\",\"member\":\"signingSecret\"}}}}}}",
+      "slack-events/agent.yaml": "{\"specVersion\":\"v2\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/worker@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"},\"endpoints\":{\"web\":{\"targetPort\":3000,\"protocol\":\"HTTP\",\"exemptibleRequests\":{\"paths\":[\"/slack/events\"]}}},\"health\":{\"readiness\":{\"http\":{\"endpoint\":\"web\",\"path\":\"/healthz\"}}}},\"contract\":{\"inputs\":{\"slackBotToken\":{\"description\":\"Slack bot token\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVar\":\"SLACK_BOT_TOKEN\"}},\"slackSigningSecret\":{\"description\":\"Slack signing secret\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVar\":\"SLACK_SIGNING_SECRET\"}}},\"outputs\":{}}}}"
+    },
+    "document": "slack-events/blueprint.yaml",
+    "context": {
+      "connections": {
+        "deployment": "deploy-1",
+        "parameters": {
+          "slack": {
+            "status": "SELECTED",
+            "persisted": true,
+            "selection": {
+              "identity": "connection-bot",
+              "version": "1",
+              "deployment": "deploy-1",
+              "parameter": "slack",
+              "request": {
+                "from": "${{ connections.slack.default }}",
+                "identity": "default-policy",
+                "version": "1"
+              },
+              "selectionKind": "MANAGED",
+              "provisioning": "GRANTED",
+              "costOwner": "org-1",
+              "credential": {
+                "identity": "credential-slack",
+                "rotation": 0,
+                "value": "synthetic-only",
+                "secrets": {
+                  "appToken": "synthetic-app-token",
+                  "signingSecret": "synthetic-signing-secret"
+                },
+                "permittedBaseURLs": [
+                  "https://slack.com/api"
+                ]
+              },
+              "views": {
+                "SLACK_APP": {}
+              }
+            }
+          }
+        }
+      },
+      "allocations": {
+        "agent": {
+          "web": {
+            "identity": "allocation-1",
+            "version": "1",
+            "public": {
+              "hostname": "slack-events.example.invalid",
+              "scheme": "https",
+              "port": 443,
+              "path": "/"
+            }
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "VALID",
+      "/environment/agent/SLACK_SIGNING_SECRET/sensitive": true,
+      "/inspection/agent:in:slackSigningSecret": {
+        "sensitive": true,
+        "redacted": true
+      }
+    }
+  },
+  {
     "id": "publication-admits-the-platform-catalog",
     "suite": "resolution",
     "operation": "validate",

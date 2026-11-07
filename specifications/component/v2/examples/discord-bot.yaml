@@ -1,0 +1,44 @@
+specVersion: v2
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Discord bot reached through a connection, handing its token, application and interactions key to the node that runs it.
+spec:
+  type: EXTERNAL
+  contract:
+    inputs:
+      discord:
+        description: Discord bot this node stands for.
+        connection:
+          protocol: DISCORD_BOT
+    outputs:
+      baseURL:
+        description: Base URL of the Discord API, the public one unless the connection names another.
+        schema:
+          type: string
+        presentationHint: ENDPOINT_URL
+        from:
+          input: discord
+          member: baseURL
+      botToken:
+        description: Token the Discord API accepts for the bot.
+        schema:
+          type: string
+        sensitive: true
+        from:
+          input: discord
+          member: botToken
+      applicationID:
+        description: Identifier of the Discord application the bot belongs to.
+        schema:
+          type: string
+        from:
+          input: discord
+          member: applicationID
+      publicKey:
+        description: Public key that verifies the interactions Discord sends to an HTTP endpoint.
+        schema:
+          type: string
+        from:
+          input: discord
+          member: publicKey

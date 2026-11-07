@@ -1,0 +1,41 @@
+specVersion: v2
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Slack agent that receives Slack's HTTP events on its own endpoint and verifies each one with the app's signing secret.
+spec:
+  type: SERVICE
+  workload:
+    source:
+      image: example/slack-agent:1.4.0
+    endpoints:
+      web:
+        targetPort: 3000
+        protocol: HTTP
+        # The route Slack sends events and interactions to. A blueprint may let
+        # it through sign-in; the workload verifies every request it receives
+        # there with the signing secret.
+        exemptibleRequests:
+          paths: [/slack/events]
+    health:
+      readiness:
+        http:
+          endpoint: web
+          path: /healthz
+  contract:
+    inputs:
+      slackBotToken:
+        description: Bot token the agent calls the Slack Web API with.
+        schema:
+          type: string
+        sensitive: true
+        target:
+          envVar: SLACK_BOT_TOKEN
+      slackSigningSecret:
+        description: Secret that verifies the requests Slack sends to /slack/events.
+        schema:
+          type: string
+        sensitive: true
+        target:
+          envVar: SLACK_SIGNING_SECRET
+    outputs: {}

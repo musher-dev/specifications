@@ -1,0 +1,10 @@
+{
+  "id": "semantic-133-bot-token-into-an-insensitive-output",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#outputs",
+  "requirements": [
+    "COMP-OUT-004"
+  ],
+  "summary": "The sensitive TELEGRAM_BOT botToken forwarded by an output not declared sensitive is rejected."
+}

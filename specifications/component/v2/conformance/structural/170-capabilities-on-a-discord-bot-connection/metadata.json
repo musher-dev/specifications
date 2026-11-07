@@ -1,0 +1,10 @@
+{
+  "id": "structural-170-capabilities-on-a-discord-bot-connection",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#connection-requirements",
+  "requirements": [
+    "COMP-CONNECTION-003"
+  ],
+  "summary": "Connection capabilities on a DISCORD_BOT input are rejected; only the language-model protocols take them."
+}

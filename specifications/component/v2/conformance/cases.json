@@ -1191,6 +1191,41 @@
       "id": "structural-231-bearer-token-false-beside-paths",
       "phase": "structural",
       "path": "structural/231-bearer-token-false-beside-paths"
+    },
+    {
+      "id": "structural-167-telegram-bot-connection",
+      "phase": "structural",
+      "path": "structural/167-telegram-bot-connection"
+    },
+    {
+      "id": "structural-168-slack-app-connection",
+      "phase": "structural",
+      "path": "structural/168-slack-app-connection"
+    },
+    {
+      "id": "structural-169-discord-bot-connection",
+      "phase": "structural",
+      "path": "structural/169-discord-bot-connection"
+    },
+    {
+      "id": "structural-170-capabilities-on-a-discord-bot-connection",
+      "phase": "structural",
+      "path": "structural/170-capabilities-on-a-discord-bot-connection"
+    },
+    {
+      "id": "semantic-132-slack-secrets-forwarded-as-sensitive",
+      "phase": "semantic",
+      "path": "semantic/132-slack-secrets-forwarded-as-sensitive"
+    },
+    {
+      "id": "semantic-133-bot-token-into-an-insensitive-output",
+      "phase": "semantic",
+      "path": "semantic/133-bot-token-into-an-insensitive-output"
+    },
+    {
+      "id": "semantic-134-slack-member-on-a-telegram-input",
+      "phase": "semantic",
+      "path": "semantic/134-slack-member-on-a-telegram-input"
     }
   ]
 }
