@@ -1,0 +1,41 @@
+{
+  "id": "TELEGRAM_BOT",
+  "title": "Telegram Bot API",
+  "category": "MESSAGING",
+  "description": "Telegram's Bot API, for one bot, whether it polls for updates or receives them at a webhook.",
+  "status": "stable",
+  "introduced": "2.1.0",
+  "references": [
+    {
+      "title": "Telegram Bot API",
+      "url": "https://core.telegram.org/bots/api"
+    }
+  ],
+  "capabilities": [],
+  "members": [
+    {
+      "name": "baseURL",
+      "role": "locator",
+      "presence": "optional",
+      "default": "https://api.telegram.org",
+      "sensitive": false,
+      "schema": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^[Hh][Tt][Tt][Pp][Ss]://"
+      },
+      "description": "HTTPS root of the Telegram Bot API, without the /bot<token> segment the client appends to it; without it, the vendor's public one. A permittedBaseURLs entry matches this root exactly."
+    },
+    {
+      "name": "botToken",
+      "role": "credential",
+      "presence": "required",
+      "sensitive": true,
+      "schema": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "The bot's token, in the vendor's format, which is not validated."
+    }
+  ]
+}

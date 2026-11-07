@@ -893,5 +893,102 @@
       "/status": "INCOMPLETE",
       "/deferred/1/rule": "COMP-EP-019"
     }
+  },
+  {
+    "id": "endpoint-that-verifies-without-a-server-name-warns",
+    "suite": "resolution",
+    "operation": "validate",
+    "requirements": [
+      "COMP-EP-020"
+    ],
+    "input": {
+      "specVersion": "v2",
+      "kind": "COMPONENT",
+      "metadata": {
+        "revision": 1,
+        "description": "Synthetic conformance fixture component."
+      },
+      "spec": {
+        "type": "SERVICE",
+        "workload": {
+          "source": {
+            "image": "example/web:1"
+          },
+          "endpoints": {
+            "web": {
+              "targetPort": 8443,
+              "protocol": "HTTPS"
+            }
+          }
+        },
+        "contract": {
+          "inputs": {},
+          "outputs": {}
+        }
+      }
+    },
+    "expect": {
+      "/status": "VALID",
+      "/phase": "semantic",
+      "/diagnostics": []
+    },
+    "diagnostics": [
+      {
+        "code": "WARN_ENDPOINT_SERVER_NAME",
+        "path": "/spec/workload/endpoints/web",
+        "severity": "WARNING",
+        "phase": "semantic"
+      }
+    ]
+  },
+  {
+    "id": "endpoint-system-verify-without-a-server-name-warns",
+    "suite": "resolution",
+    "operation": "validate",
+    "requirements": [
+      "COMP-EP-005",
+      "COMP-EP-020"
+    ],
+    "input": {
+      "specVersion": "v2",
+      "kind": "COMPONENT",
+      "metadata": {
+        "revision": 1,
+        "description": "Synthetic conformance fixture component."
+      },
+      "spec": {
+        "type": "SERVICE",
+        "workload": {
+          "source": {
+            "image": "example/web:1"
+          },
+          "endpoints": {
+            "web": {
+              "targetPort": 8443,
+              "protocol": "HTTPS",
+              "tls": {
+                "verify": "SYSTEM"
+              }
+            }
+          }
+        },
+        "contract": {
+          "inputs": {},
+          "outputs": {}
+        }
+      }
+    },
+    "expect": {
+      "/status": "VALID",
+      "/diagnostics": []
+    },
+    "diagnostics": [
+      {
+        "code": "WARN_ENDPOINT_SERVER_NAME",
+        "path": "/spec/workload/endpoints/web",
+        "severity": "WARNING",
+        "phase": "semantic"
+      }
+    ]
   }
 ]

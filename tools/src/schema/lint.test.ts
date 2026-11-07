@@ -156,7 +156,42 @@ describe('lintFamilies', () => {
     const { failures, messages } = collecting()
     lintFamilies(fx.root, failures)
     expect(messages).toHaveLength(1)
-    expect(messages[0]).toContain('core ships no schema — ADR 0022')
+    expect(messages[0]).toContain('core ships no document schema, ADR 0022')
+  })
+
+  test('lints core’s interface schemas, which are not a schemas/ directory', () => {
+    const fx = new FixtureRepo()
+    repo = fx
+    fx.writeCoreSkeleton('v1')
+    const interfaces = familyPaths(CORE_FAMILY, 'v1').interfaces
+    fx.writeFile(
+      `${interfaces}/registry/requirements.schema.json`,
+      JSON.stringify({
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        $id: 'https://specifications.musher.dev/core/v1/registry/requirements',
+        type: 'object',
+        additionalProperties: false,
+        properties: { id: { type: 'string' } },
+      }),
+    )
+    fx.writeFile(
+      `${interfaces}/Result.schema.json`,
+      JSON.stringify({
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        $id: 'https://specifications.musher.dev/component/v1/result',
+        type: 'object',
+        properties: { status: { $ref: 'https://example.com/status' } },
+      }),
+    )
+    const { failures, messages } = collecting()
+    expect(lintFamilies(fx.root, failures).moduleCount).toBe(2)
+    expect(messages.join('\n')).toContain('Result.schema.json: filename must be')
+    expect(messages.join('\n')).toContain(
+      '$id must start with https://specifications.musher.dev/core/v1/',
+    )
+    expect(messages.join('\n')).toContain('remote $ref is forbidden')
+    expect(messages.join('\n')).toContain('"additionalProperties": false')
+    expect(messages.join('\n')).not.toContain('requirements.schema.json')
   })
 
   test('lints a kind root module for its envelope', () => {

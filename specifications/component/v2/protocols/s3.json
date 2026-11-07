@@ -1,0 +1,84 @@
+{
+  "id": "S3",
+  "title": "Amazon S3",
+  "category": "OBJECT_STORAGE",
+  "description": "The S3 REST API, spoken by Amazon S3 and by every service compatible with it, for one bucket.",
+  "status": "stable",
+  "introduced": "2.0.0",
+  "references": [
+    {
+      "title": "Amazon S3 API reference",
+      "url": "https://docs.aws.amazon.com/AmazonS3/latest/API/Welcome.html"
+    }
+  ],
+  "capabilities": [],
+  "members": [
+    {
+      "name": "endpointURL",
+      "role": "locator",
+      "presence": "required",
+      "sensitive": false,
+      "schema": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^[Hh][Tt][Tt][Pp][Ss]://"
+      },
+      "description": "HTTPS service URL a client sends requests to, never including the bucket."
+    },
+    {
+      "name": "region",
+      "role": "parameter",
+      "presence": "required",
+      "sensitive": false,
+      "schema": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "Region the bucket is in."
+    },
+    {
+      "name": "bucket",
+      "role": "parameter",
+      "presence": "required",
+      "sensitive": false,
+      "schema": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "Name of the bucket."
+    },
+    {
+      "name": "accessKeyID",
+      "role": "parameter",
+      "presence": "required",
+      "sensitive": false,
+      "schema": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "Identifier of the access key."
+    },
+    {
+      "name": "secretAccessKey",
+      "role": "credential",
+      "presence": "required",
+      "sensitive": true,
+      "schema": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "Secret of the access key."
+    },
+    {
+      "name": "pathStyle",
+      "role": "parameter",
+      "presence": "optional",
+      "default": false,
+      "sensitive": false,
+      "schema": {
+        "type": "boolean"
+      },
+      "description": "Whether the client puts the bucket in the path rather than the hostname."
+    }
+  ]
+}

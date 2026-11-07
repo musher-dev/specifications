@@ -1,0 +1,104 @@
+{
+  "id": "POSTGRES",
+  "title": "PostgreSQL",
+  "category": "DATABASE",
+  "description": "The PostgreSQL frontend/backend protocol, reached at a host and port.",
+  "status": "stable",
+  "introduced": "2.0.0",
+  "references": [
+    {
+      "title": "PostgreSQL: connection strings",
+      "url": "https://www.postgresql.org/docs/current/libpq-connect.html"
+    }
+  ],
+  "capabilities": [],
+  "members": [
+    {
+      "name": "host",
+      "role": "parameter",
+      "presence": "required",
+      "sensitive": false,
+      "schema": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 253,
+        "pattern": "^(?:[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_])?|[0-9A-Fa-f:.]*:[0-9A-Fa-f:.]*)$"
+      },
+      "description": "DNS name, IPv4 address, or IPv6 address without brackets, of the server; never with a port."
+    },
+    {
+      "name": "port",
+      "role": "parameter",
+      "presence": "required",
+      "sensitive": false,
+      "schema": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 65535
+      },
+      "description": "Port the server listens on."
+    },
+    {
+      "name": "database",
+      "role": "parameter",
+      "presence": "required",
+      "sensitive": false,
+      "schema": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "Database the client connects to."
+    },
+    {
+      "name": "username",
+      "role": "parameter",
+      "presence": "required",
+      "sensitive": false,
+      "schema": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "Role the client authenticates as."
+    },
+    {
+      "name": "password",
+      "role": "credential",
+      "presence": "required",
+      "sensitive": true,
+      "schema": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "Password of the role."
+    },
+    {
+      "name": "sslMode",
+      "role": "parameter",
+      "presence": "required",
+      "sensitive": false,
+      "schema": {
+        "type": "string",
+        "enum": [
+          "disable",
+          "allow",
+          "prefer",
+          "require",
+          "verify-ca",
+          "verify-full"
+        ]
+      },
+      "description": "PostgreSQL's sslmode, which fixes how the client uses TLS."
+    },
+    {
+      "name": "url",
+      "role": "derived",
+      "presence": "derived",
+      "sensitive": true,
+      "schema": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "Connection URL resolution composes from the other members and the credential."
+    }
+  ]
+}

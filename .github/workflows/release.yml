@@ -39,7 +39,7 @@ concurrency:
 jobs:
   # ---------------------------------------------------------------------------
   # release-please opens (and on merge, tags) a release PR per family. Tags land
-  # as <family>/v<MAJOR>.<MINOR>.<PATCH> — see .github/release-please/config.json.
+  # as <family>/v<MAJOR>.<MINOR>.<PATCH>; see .github/release-please/config.json.
   #
   # It authenticates as the release GitHub App, not with GITHUB_TOKEN. A push
   # made with GITHUB_TOKEN triggers no workflow, so a release pull request
@@ -123,7 +123,7 @@ jobs:
 
   # ---------------------------------------------------------------------------
   # The matrix of releases to finish. On a push, what release-please just cut.
-  # On a dispatch, the one tag named — and because the tags endpoint cannot see
+  # On a dispatch, the one tag named. Because the tags endpoint cannot see
   # a draft, its release is found by listing releases, and recreated as a draft
   # if the failed run never got as far as creating it.
   # ---------------------------------------------------------------------------
@@ -196,7 +196,7 @@ jobs:
   # For each release: build its assets with the tag's own tooling, attach them
   # to the draft, publish it, and prove GitHub holds it immutably.
   #
-  # Data artifacts only — no binaries, no generated language bindings. See
+  # Data artifacts only: no binaries, no generated language bindings. See
   # docs/governance.md → Binary policy.
   # ---------------------------------------------------------------------------
   artifacts:
@@ -250,7 +250,7 @@ jobs:
 
       # The assets are published as a description of the tag, so the tag must
       # belong to this run. On a push it must be an ancestor of the pushed
-      # commit — not equal to it: release-please may pick up a release an
+      # commit, not equal to it: release-please may pick up a release an
       # earlier merge left untagged, on a later push. On a dispatch it must be
       # an ancestor of origin/main. Either way it must be on the default branch:
       # a tag cut from anywhere else is not a release of this repository.
@@ -363,7 +363,7 @@ jobs:
       # release is a draft its assets are still ours to correct: an asset whose
       # digest already matches is left alone, one that differs is replaced, and
       # one this run did not stage is removed. Once published nothing may change,
-      # so a published release is only compared — a mismatch there means the
+      # so a published release is only compared: a mismatch there means the
       # build stopped being deterministic, and deserves a red X. The one
       # exception is SHA256SUMS on a release published before docs/adr/0037,
       # which never carried it: that release is verified on its other assets.
@@ -532,7 +532,7 @@ jobs:
   # each succeeded or were skipped: a release that failed stops the deploy, as
   # site:fetch would refuse its unpublished tag anyway, and the red X belongs on
   # the job that can be recovered. A failed release_please job does not block
-  # it — plan is then skipped and nothing partial exists — and is reported red
+  # it (plan is then skipped and nothing partial exists), and is reported red
   # on its own. Skipped artifacts, a push that released nothing, deploy as
   # normal.
   # ---------------------------------------------------------------------------
@@ -543,7 +543,7 @@ jobs:
     permissions:
       contents: read
     # A reusable workflow inherits no secrets by default. Without this the
-    # deploy would fail on exactly the run that matters most — the one that
+    # deploy would fail on exactly the run that matters most: the one that
     # publishes a version at its own immutable URL for the first time.
     secrets: inherit
     uses: ./.github/workflows/deploy.yml

@@ -11,6 +11,7 @@ import {
   type Json,
   REPO_ROOT,
   readJson,
+  SPECIFICATIONS_ROOT,
   TERMINOLOGY_DOC_FILE,
   TERMINOLOGY_FILE,
   TERMINOLOGY_SCHEMA_FILE,
@@ -36,6 +37,7 @@ import {
   definitionProblem,
   type FoundIdentifier,
   proseIdentifiers,
+  protocolIdentifiers,
   runTerms,
   schemaIdentifiers,
   type Term,
@@ -290,6 +292,67 @@ describe('identifier collection', () => {
     expect(family).not.toContain('namespaces')
   })
 
+  test('reads a warnings table’s codes', () => {
+    const markdown = [
+      '### Warnings',
+      '',
+      '| Code | Requirement | Phase | Meaning |',
+      '|---|---|---|---|',
+      '| `WARN_ENDPOINT_SERVER_NAME` | [`COMP-EP-020`](#COMP-EP-020) | `semantic` | Advice. |',
+    ].join('\n')
+    expect(proseIdentifiers(markdown, 'component', 'spec.md').map((f) => f.name)).toEqual([
+      'WARN_ENDPOINT_SERVER_NAME',
+    ])
+  })
+
+  test('reads a protocol record’s id, category, members and roles, and a category list', () => {
+    const record = {
+      id: 'TELEGRAM_BOT',
+      category: 'MESSAGING',
+      members: [
+        { name: 'baseURL', role: 'locator' },
+        { name: 'botToken', role: 'credential' },
+      ],
+    }
+    expect(
+      protocolIdentifiers(record, 'component', 'telegram-bot.json').map(
+        (f) => `${f.kind}:${f.name}@${f.where}`,
+      ),
+    ).toEqual([
+      'values:TELEGRAM_BOT@telegram-bot.json#/id',
+      'values:MESSAGING@telegram-bot.json#/category',
+      'fields:baseURL@telegram-bot.json#/members/0/name',
+      'values:locator@telegram-bot.json#/members/0/role',
+      'fields:botToken@telegram-bot.json#/members/1/name',
+      'values:credential@telegram-bot.json#/members/1/role',
+    ])
+    expect(
+      protocolIdentifiers(
+        { categories: [{ id: 'MESSAGING' }, 'CACHE'] },
+        'component',
+        'categories.json',
+      ).map((f) => f.name),
+    ).toEqual(['MESSAGING', 'CACHE'])
+  })
+
+  test('collects interface schemas but not the registry schemas', () => {
+    const fx = new FixtureRepo()
+    repo = fx
+    fx.writeCoreSkeleton('v2')
+    fx.writeFile(
+      `${familyPaths('core', 'v2').interfaces}/result.schema.json`,
+      JSON.stringify({ type: 'object', properties: { severity: { enum: ['ERROR'] } } }),
+    )
+    fx.writeFile(
+      `${familyPaths('core', 'v2').interfaces}/registry/terms.schema.json`,
+      JSON.stringify({ type: 'object', properties: { display_name: {} } }),
+    )
+    const names = collectIdentifiers(fx.root).map((f) => f.name)
+    expect(names).toContain('severity')
+    expect(names).toContain('ERROR')
+    expect(names).not.toContain('display_name')
+  })
+
   test('a field claim is the last segment of its path', () => {
     expect(claimedField('/spec/nodes/*')).toBe('nodes')
     expect(claimedField('/spec/nodes/*/bindings')).toBe('bindings')
@@ -509,7 +572,10 @@ describe('the generator', () => {
     repo = glossaryRepo(GLOSSARY)
     for (const [path, build] of terminologyOutputs(repo.root)) repo.writeFile(path, build())
     const fresh = staleDocs(repo.root).filter(
-      (p) => !p.startsWith('docs/traceability') && !p.startsWith('docs/adr'),
+      (p) =>
+        !p.startsWith('docs/traceability') &&
+        !p.startsWith('docs/adr') &&
+        !p.startsWith(SPECIFICATIONS_ROOT),
     )
     expect(fresh).toEqual([])
     repo.writeFile(VALE_TERMS_FILE, 'hand edit\n')

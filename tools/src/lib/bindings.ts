@@ -2,9 +2,9 @@
  * Read what a kind family fixes of what core leaves to it, and the
  * specifications it depends on, out of its own §2.
  *
- * Core v2 §1.1 leaves a family four things to decide — its `kind` constant, the
+ * Core v2 §1.1 leaves a family four things to decide (its `kind` constant, the
  * section that defines its `metadata`, the fields that accept `null`, and the
- * name of its item document — and a family names the specifications it depends
+ * name of its item document), and a family names the specifications it depends
  * on. Each family's §2 states them in two tables of a fixed shape
  * (docs/adr/0022). They are tables precisely so this module can read them: the
  * schema lint compares the `kind` constant, and the conformance runner resolves
@@ -13,7 +13,7 @@
  * A spec with neither table yields `null`, as core's own does: it fixes nothing
  * for itself, and every kind family's §2 carries both. A spec with one table
  * and not the other, or a table whose rows do not have the template's shape,
- * throws — a binding that fails to parse must not read as "unbound".
+ * throws: a binding that fails to parse must not read as "unbound".
  *
  * NON-NORMATIVE. The tables in spec.md are the rule; this only reads them.
  */
@@ -78,7 +78,7 @@ const NONE = /^none\.?$/i
 const DEPENDENCY_LINK = /^\[([a-z][a-z0-9-]*)\]\(([^)\s]+)\)$/
 const LINE_VALUE = /^`?(v\d+)`?$/
 
-/** The lines of §2 — from the envelope heading to the next `##` heading. */
+/** The lines of §2, from the envelope heading to the next `##` heading. */
 function envelopeSection(markdown: string): string[] | null {
   const lines = markdown.split('\n')
   const start = lines.findIndex((line) => ENVELOPE_HEADING.test(line))

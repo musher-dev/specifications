@@ -9,14 +9,14 @@
  *
  *   pending   core's manifest must have released; `core/v<requires.core>` must
  *             exist; and no releasable commit may touch core since that tag.
- *             A non-releasable core commit warns — release-please opens no core
+ *             A non-releasable core commit warns: release-please opens no core
  *             release for it, so blocking would deadlock every kind family on
  *             the one change that alters no rule.
  *   tagged    `core/v<requires.core>` must be an ancestor of the family tag.
  *             That is all `check:published` asks of history. `release:stage`,
  *             on the tag's own tooling, also requires no releasable core commit
  *             between them and its major to be the core major version the
- *             family's §2 cites — classification is never re-run by newer
+ *             family's §2 cites. Classification is never re-run by newer
  *             tooling.
  *
  * A commit is releasable when its type is one release-please's changelog shows,
@@ -68,7 +68,7 @@ export interface ClassifiedCommit extends LogEntry {
 const DEFAULT_VISIBLE_TYPES = ['feat', 'fix', 'perf', 'revert']
 
 /**
- * The commit types whose changelog section is visible — the types that make
+ * The commit types whose changelog section is visible: the types that make
  * release-please open a release.
  */
 export function releasableTypes(repoRoot: string): ReadonlySet<string> {
@@ -109,7 +109,7 @@ const GIT_GENERATED = /^(?:Signed-off-by: |\(cherry picked from commit )/
 
 /**
  * The tokens of a body's trailer block, by git's rules: the last paragraph, in
- * which every line is a trailer or an indented continuation of one — or, when
+ * which every line is a trailer or an indented continuation of one, or, when
  * it carries a trailer git generates, at least a quarter of its lines are
  * trailers. A token mentioned anywhere else is prose.
  */
@@ -326,14 +326,14 @@ export function assertCoreGatePending(
     const other = commits.filter((c) => c.class === 'non-releasable')
     if (releasable.length > 0) {
       failures.add(
-        `${tag}: core carries ${releasable.length} releasable commit(s) since ${coreTag} — ` +
+        `${tag}: core carries ${releasable.length} releasable commit(s) since ${coreTag}: ` +
           `${describe(releasable)}. Release core first, so this release records the core release ` +
           'it is tested against.',
       )
     }
     if (other.length > 0) {
       warnings.push(
-        `${tag}: core carries ${other.length} non-releasable commit(s) since ${coreTag} — ` +
+        `${tag}: core carries ${other.length} non-releasable commit(s) since ${coreTag}: ` +
           `${describe(other)}. They change no rule, so they do not block.`,
       )
     }
@@ -343,7 +343,7 @@ export function assertCoreGatePending(
 /**
  * The gate for a tagged kind family release, as `check:published` runs it on
  * history: `core/v<requires.core>` must exist and be an ancestor of the family
- * tag. Nothing is reclassified — which commits are releasable was decided by
+ * tag. Nothing is reclassified: which commits are releasable was decided by
  * the tooling and configuration of the release itself (`release:stage`), and a
  * later change to either must not turn a published release red.
  */
@@ -365,7 +365,7 @@ export function assertCoreGateTagged(
   }
   if (!isAncestor(repoRoot, coreTag, familyTag)) {
     failures.add(
-      `${familyTag}: requires core ${coreVersion}, but ${coreTag} is not an ancestor of it — ` +
+      `${familyTag}: requires core ${coreVersion}, but ${coreTag} is not an ancestor of it; ` +
         'the release was not built on that core release.',
     )
   }
@@ -397,7 +397,7 @@ export function assertCoreGateTaggedContent(
   if (releasable.length > 0) {
     failures.add(
       `${familyTag}: core carries ${releasable.length} releasable commit(s) between ${coreTag} ` +
-        `and the release — ${describe(releasable)}.`,
+        `and the release: ${describe(releasable)}.`,
     )
   }
   const specPath = releaseDirPaths(path ?? familyPaths(release.family, release.major).dir).spec
@@ -453,7 +453,7 @@ function main(): void {
   for (const warning of warnings) console.log(`  ! ${warning}`)
   failures.report(
     pending.length === 0
-      ? 'No kind family release is pending — nothing to gate.'
+      ? 'No kind family release is pending, so there is nothing to gate.'
       : `The core gate passes for ${pending.length} pending release(s).`,
   )
 }

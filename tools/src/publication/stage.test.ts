@@ -6,9 +6,15 @@ import { afterEach, describe, expect, test } from 'bun:test'
 import { spawnSync } from 'node:child_process'
 import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname as dirnameOf, join } from 'node:path'
 import { git, readBlobAtRef, tagCommit } from '../lib/git.ts'
-import { CORE_FAMILY, familyPaths, LEDGER_FILE } from '../lib/layout.ts'
+import {
+  CORE_FAMILY,
+  familyPaths,
+  LEDGER_FILE,
+  OUTPUTS_DECLARATION_FILE,
+  registrySchemaDir,
+} from '../lib/layout.ts'
 import { pinnedBundle } from '../schema/bundle.ts'
 import { gitReader } from '../schema/sources.ts'
 import { FixtureRepo } from '../testing/fixture.ts'
@@ -57,7 +63,7 @@ function stage(fx: FixtureRepo, tag: string, out: string, baseLedgerRef = 'main'
 
 /**
  * Commit component sources, record them by hand past the pending core gate,
- * commit and tag — a release whose history `release:stage` must still judge.
+ * commit and tag: a release whose history `release:stage` must still judge.
  */
 function forge(fx: FixtureRepo, options: { coreLine?: string; examples?: boolean } = {}): void {
   fx.writeFamilySkeleton('component', 'v1')
@@ -97,6 +103,197 @@ function refusal(fn: () => unknown): string {
   }
   throw new Error('expected stageRelease to refuse')
 }
+
+const CORE2 = familyPaths(CORE_FAMILY, 'v2')
+const COMPONENT2 = familyPaths('component', 'v2')
+
+/** `.repo/outputs.toml` declaring core's two registry interfaces and component's schema and registry. */
+function declareRegistries(fx: FixtureRepo): void {
+  const iface = (id: string, format: string, definitions: string[], output: string) => [
+    '',
+    '[[interfaces]]',
+    `id = "${id}"`,
+    `format = "${format}"`,
+    `definitions = [${definitions.map((d) => `"${d}"`).join(', ')}]`,
+    `delivered_by = "${output}"`,
+    'compatibility = "gated"',
+  ]
+  fx.writeFile(
+    OUTPUTS_DECLARATION_FILE,
+    [
+      'schema_version = 2',
+      ...iface(
+        'core-registry-schemas',
+        'json-schema',
+        [`${registrySchemaDir('v2')}/`],
+        'core-release',
+      ),
+      ...iface('core-registry', 'data', [`${CORE2.registry}/`], 'core-release'),
+      ...iface('component-schema', 'json-schema', [`${COMPONENT2.src}/`], 'component-release'),
+      ...iface(
+        'component-registry',
+        'data',
+        [`${COMPONENT2.registry}/*.json`],
+        'component-release',
+      ),
+      ...iface('component-protocols', 'data', [`${COMPONENT2.protocols}/`], 'component-release'),
+      '',
+    ].join('\n'),
+  )
+}
+
+/** A core v2 tree with the parts 2.1.0 carries. */
+function writeCore2(fx: FixtureRepo, options: { registry?: boolean } = {}): void {
+  fx.writeCoreSkeleton('v2', '## <a id="scope"></a>1. Core scope\n')
+  if (options.registry !== false) {
+    fx.writeFile(`${CORE2.registry}/requirements.json`, '{"family":"core"}\n')
+    fx.writeFile(`${CORE2.registry}/terms.json`, '{"terms":[]}\n')
+  }
+  fx.writeFile(`${registrySchemaDir('v2')}/requirements.schema.json`, '{"type":"object"}\n')
+}
+
+/** Commit, record and tag a core release from the working tree. */
+function releaseCore2(fx: FixtureRepo, p: Pipeline, version: string): string {
+  fx.setManifestVersion(CORE2.manifestKey, version)
+  fx.commit(`feat(core): core ${version}`)
+  const tag = `${CORE_FAMILY}/v${version}`
+  p.recordAndTag(tag)
+  return tag
+}
+
+describe('stageRelease from 2.1.0', () => {
+  test('core carries its registry and interfaces, and a record of every file', () => {
+    const { fx, p } = fixture()
+    declareRegistries(fx)
+    writeCore2(fx)
+    const tag = releaseCore2(fx, p, '2.1.0')
+    const out = outDir()
+    expect(stage(fx, tag, out).map((f) => f.name)).toEqual(['core-v2.1.0.tar.gz'])
+    const archive = join(out, 'core-v2.1.0.tar.gz')
+    expect(members(archive)).toEqual([
+      'core-v2/',
+      'core-v2/LICENSE',
+      'core-v2/NOTICE',
+      'core-v2/conformance/',
+      'core-v2/conformance/README.md',
+      'core-v2/conformance/cases.json',
+      'core-v2/interfaces/',
+      'core-v2/interfaces/registry/',
+      'core-v2/interfaces/registry/requirements.schema.json',
+      'core-v2/registry/',
+      'core-v2/registry/requirements.json',
+      'core-v2/registry/terms.json',
+      'core-v2/release.json',
+      'core-v2/spec.md',
+      'core-v2/specification.json',
+    ])
+    const hash = (name: string) => sha256(member(archive, `core-v2/${name}`))
+    expect(JSON.parse(member(archive, 'core-v2/release.json'))).toEqual({
+      schema_version: 1,
+      repository: 'specifications',
+      output: 'core-release',
+      version: '2.1.0',
+      tag,
+      commit: tagCommit(fx.root, tag),
+      interfaces: [
+        {
+          id: 'core-registry-schemas',
+          format: 'json-schema',
+          compatibility: 'gated',
+          files: [
+            {
+              path: 'interfaces/registry/requirements.schema.json',
+              sha256: hash('interfaces/registry/requirements.schema.json'),
+            },
+          ],
+        },
+        {
+          id: 'core-registry',
+          format: 'data',
+          compatibility: 'gated',
+          files: [
+            { path: 'registry/requirements.json', sha256: hash('registry/requirements.json') },
+            { path: 'registry/terms.json', sha256: hash('registry/terms.json') },
+          ],
+        },
+      ],
+    })
+  })
+
+  test('a core release before the floor needs no registry and writes no record', () => {
+    const { fx, p } = fixture()
+    writeCore2(fx, { registry: false })
+    fx.remove(`${CORE2.dir}/interfaces`)
+    const tag = releaseCore2(fx, p, '2.0.0')
+    const archive = join(outDir(), 'core-v2.0.0.tar.gz')
+    stage(fx, tag, dirnameOf(archive))
+    expect(members(archive)).not.toContain('core-v2/release.json')
+    expect(members(archive)).not.toContain('core-v2/registry/')
+  })
+
+  test('refuses a core release at the floor that lacks its registry', () => {
+    const { fx, p } = fixture()
+    declareRegistries(fx)
+    writeCore2(fx, { registry: false })
+    const tag = releaseCore2(fx, p, '2.1.0')
+    expect(refusal(() => stage(fx, tag, outDir()))).toContain(
+      `${CORE2.registry} is empty or absent`,
+    )
+  })
+
+  test('refuses a core release at the floor whose declarations name no core interface', () => {
+    const { fx, p } = fixture()
+    writeCore2(fx)
+    const tag = releaseCore2(fx, p, '2.1.0')
+    expect(refusal(() => stage(fx, tag, outDir()))).toContain(
+      'declares no interface delivered by "core-release"',
+    )
+  })
+
+  test('a kind family records its bundle and each registry file, and carries core’s', () => {
+    const { fx, p } = fixture()
+    declareRegistries(fx)
+    writeCore2(fx)
+    releaseCore2(fx, p, '2.1.0')
+    fx.writeFile(`${COMPONENT2.registry}/requirements.json`, '{"family":"component"}\n')
+    fx.writeFile(`${COMPONENT2.registry}/diagnostics.json`, '{"family":"component"}\n')
+    fx.writeFile(`${COMPONENT2.protocols}/redis.json`, '{"id":"REDIS"}\n')
+    fx.writeFile(COMPONENT2.spec, fx.kindSpec('component', undefined, 'v2'))
+    p.releaseKind('component', 'v2', '2.1.0', fx.bundleDoc('component', 'v2'), { publish: false })
+    const out = outDir()
+    stage(fx, 'component/v2.1.0', out)
+    const archive = join(out, 'component-v2.1.0.tar.gz')
+    const listed = members(archive)
+    for (const name of [
+      'component-v2/registry/diagnostics.json',
+      'component-v2/registry/requirements.json',
+      'component-v2/protocols/redis.json',
+      'component-v2/core/registry/terms.json',
+      'component-v2/core/interfaces/registry/requirements.schema.json',
+    ]) {
+      expect(listed).toContain(name)
+    }
+    const record = JSON.parse(member(archive, 'component-v2/release.json'))
+    expect(record.interfaces.map((i: { id: string }) => i.id)).toEqual([
+      'component-schema',
+      'component-registry',
+      'component-protocols',
+    ])
+    expect(record.interfaces[1].files.map((f: { path: string }) => f.path)).toEqual([
+      'registry/diagnostics.json',
+      'registry/requirements.json',
+    ])
+    expect(record.interfaces[2].files.map((f: { path: string }) => f.path)).toEqual([
+      'protocols/redis.json',
+    ])
+    for (const iface of record.interfaces.slice(1) as {
+      files: { path: string; sha256: string }[]
+    }[])
+      for (const file of iface.files) {
+        expect(sha256(member(archive, `component-v2/${file.path}`))).toBe(file.sha256)
+      }
+  })
+})
 
 describe('stageRelease', () => {
   test('stages a kind family bundle and archive whose bundle hash is the ledger’s', () => {

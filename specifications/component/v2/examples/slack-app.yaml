@@ -1,0 +1,46 @@
+specVersion: v2
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Slack app reached through a connection, handing its tokens and signing secret to the node that runs it, for Socket Mode or HTTP events.
+spec:
+  type: EXTERNAL
+  contract:
+    inputs:
+      slack:
+        description: Slack app this node stands for.
+        connection:
+          protocol: SLACK_APP
+    outputs:
+      baseURL:
+        description: Base URL of the Slack Web API, the public one unless the connection names another.
+        schema:
+          type: string
+        presentationHint: ENDPOINT_URL
+        from:
+          input: slack
+          member: baseURL
+      botToken:
+        description: Bot token the Slack Web API accepts for the app.
+        schema:
+          type: string
+        sensitive: true
+        from:
+          input: slack
+          member: botToken
+      appToken:
+        description: App-level token a Socket Mode connection opens with.
+        schema:
+          type: string
+        sensitive: true
+        from:
+          input: slack
+          member: appToken
+      signingSecret:
+        description: Secret that verifies the requests Slack sends to an HTTP events endpoint.
+        schema:
+          type: string
+        sensitive: true
+        from:
+          input: slack
+          member: signingSecret

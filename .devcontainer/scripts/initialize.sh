@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
-# initialize.sh — Host-side bootstrap for the dev container.
+# initialize.sh: Host-side bootstrap for the dev container.
 #
 # Runs on the host (via devcontainer.json `initializeCommand`) BEFORE
 # `docker run` is invoked. Because `runArgs --env-file` is evaluated at
 # `docker run` time, the .env file must exist on the host before the
-# container starts — that's why this work lives here, not in
+# container starts; that's why this work lives here, not in
 # post-create.sh.
 #
 # Responsibilities:
 #   * Create .devcontainer/.env from .env.example on first clone.
 #   * Touch an empty .env if no example exists, so --env-file never hard-fails.
-#   * Strip CRLF from .env (Windows/WSL safety — docker --env-file
+#   * Strip CRLF from .env (Windows/WSL safety: docker --env-file
 #     rejects files with CRLF line endings).
 #
 # Idempotent: safe to run on every container start.
@@ -39,8 +39,8 @@ ensure_env_file() {
   fi
 }
 
-# `perl -i`, not `sed -i`: this runs on the HOST, and BSD sed — every macOS
-# host — reads the next argument as the backup suffix, so `sed -i 's/\r$//' f`
+# `perl -i`, not `sed -i`: this runs on the HOST, and BSD sed (every macOS
+# host) reads the next argument as the backup suffix, so `sed -i 's/\r$//' f`
 # consumes the expression and then treats f as the script. It exits non-zero,
 # which under `set -e` would take the whole initializeCommand down with it.
 # perl -i means the same thing on both host families.

@@ -115,7 +115,7 @@ export function compareVersions(a: string, b: string): number {
   return 0
 }
 
-/** Family name, then version — the order every report and page lists releases in. */
+/** Family name, then version: the order every report and page lists releases in. */
 export function compareReleases(a: Release, b: Release): number {
   return a.family.localeCompare(b.family) || compareVersions(a.version, b.version)
 }

@@ -11,6 +11,6 @@ schema_version = 1
 
 [[waivers]]
 requirement = "REPO-08"
-reason = "The repository name predates the organization's <system>-<component> naming grammar; the rename is tracked with the organization's other renames."
-tracking = "https://github.com/musher-dev/specifications/issues/149"
+reason = "The repository keeps its single-token name by decision (#149); engineering-conventions#132 proposes it as a kept name, and the waiver ends with the release that lists it."
+tracking = "https://github.com/musher-dev/engineering-conventions/issues/132"
 expires = "2027-03-27"

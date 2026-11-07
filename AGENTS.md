@@ -19,8 +19,9 @@ The CLI, the platform API and every SDK implement what is defined here.
 1. **Edit sources, never build output.** Schemas are authored in
    `specifications/<family>/v<N>/schemas/src/`. Bundles, `catalog.json` and
    `dist/` are build output, and `task check:generated` fails if any of them is
-   tracked. `site/` is build output too, but only `.gitignore` keeps it out of
-   git; no check covers it.
+   tracked. `site/` is build output too: `check:generated` does not cover it,
+   but `task check:config` fails if it is tracked, because `ROOT_ENTRIES` does
+   not name it.
    `docs/traceability.md`, the ADR index, `docs/terminology.md` and the Vale
    styles generated with it (`Terms.yml` and `Discouraged.yml` under
    `.config/prose/styles/MusherSpecifications/`) are generated but
@@ -66,7 +67,7 @@ The CLI, the platform API and every SDK implement what is defined here.
 9. **Tool configuration lives in `.config/<concern>/`, passed by path.** Never
    add a config to the repo root when the tool accepts a config flag, and never
    rely on default discovery. `task check:conventions` enforces this
-   (CONF-01..CONF-09), and `task check:config` (CFG-09) holds the repository
+   (the CONF-* rules), and `task check:config` (CFG-09) holds the repository
    root to `ROOT_ENTRIES` in `tools/src/lib/layout.ts`. See
    [ADR 0011](docs/adr/0011-tooling-configuration-layout.md),
    [ADR 0024](docs/adr/0024-the-repository-root-holds-only-what-must-be-there.md)

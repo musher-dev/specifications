@@ -7,10 +7,15 @@ the identifier grammars more than one family uses, the validation phases and
 scopes, the YAML profile, the shared diagnostic codes, and what a conformance
 claim covers.
 
-Core **defines no kind** and **ships no schema**: each
+Core **defines no kind** and **ships no document schema**: each
 [kind family](../README.md#kind-family) applies it, as
 [How the families relate](../README.md#how-the-families-relate) explains. Its
-own executable form is a parser-phase conformance corpus.
+own executable form is a parser-phase conformance corpus. From 2.1.0 a core
+release also delivers data interfaces: [`v2/registry/`](v2/registry/), the
+requirement IDs, diagnostic codes, ordered lists and term records as JSON, and
+[`v2/interfaces/`](v2/interfaces/), the schemas of the validation result and
+of the registries
+([ADR 0043](../../docs/adr/0043-registries-are-released-data-interfaces.md)).
 
 ## Versions
 

@@ -1,9 +1,9 @@
 /**
  * An in-memory stand-in for GitHub releases.
  *
- * Every property `fetch.ts` refuses on has a toggle here — a draft, a release
+ * Every property `fetch.ts` refuses on has a toggle here (a draft, a release
  * that is not immutable, a digest GitHub recorded wrongly, bytes that differ
- * from their digest, a missing asset — so each refusal is a test rather than a
+ * from their digest, a missing asset), so each refusal is a test rather than a
  * hope. `calls` records what was asked, so a test can prove a cache hit asked
  * nothing.
  */
@@ -50,7 +50,7 @@ export class FakeReleaseSource implements ReleaseSource {
     return this
   }
 
-  /** Publish every file in a directory — what `stageRelease` wrote — as the release's assets. */
+  /** Publish every file in a directory (what `stageRelease` wrote) as the release's assets. */
   publishDir(tag: string, dir: string, names?: readonly string[]): this {
     const files: { [name: string]: Buffer } = {}
     for (const name of names ?? readdirSync(dir)) files[name] = readFileSync(join(dir, name))

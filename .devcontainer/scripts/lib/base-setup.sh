@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# base-setup.sh — Reusable setup orchestrator for musher dev containers.
+# base-setup.sh: Reusable setup orchestrator for musher dev containers.
 #
 # This file is intended to be sourced, not executed directly.
 # Source it and call base_setup, or call individual functions to customize.
@@ -9,7 +9,7 @@
 #   base_setup
 set -euo pipefail
 
-# Guard against direct execution — this file must be sourced.
+# Guard against direct execution: this file must be sourced.
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   echo "Error: source this file, don't execute it" >&2
   exit 1
@@ -27,7 +27,7 @@ source "${_LIB_DIR}/common.sh"
 # Creates standard config directories for dev tools.
 #
 # Globals:
-#   _HOME — read, user home directory
+#   _HOME: read, user home directory
 # Outputs:
 #   Writes progress to stderr via log()
 base_setup_config_dirs() {
@@ -45,7 +45,7 @@ base_setup_config_dirs() {
 # tree, on the cache volume, instead of scattering across the filesystem.
 #
 # Globals:
-#   _HOME — read, user home directory
+#   _HOME: read, user home directory
 # Outputs:
 #   Writes progress to stderr via log()
 base_setup_cache_dirs() {
@@ -79,7 +79,7 @@ base_setup_github_seed() {
 # value already set. Not exported, so a child shell keeps its own file.
 #
 # Globals:
-#   _HOME — read, user home directory
+#   _HOME: read, user home directory
 # Outputs:
 #   Writes progress to stderr via log()
 base_setup_shell_history() {
@@ -124,7 +124,7 @@ readonly _MISE_SHIMS="${_HOME}/.local/share/mise/shims"
 # hooks don't always inherit devcontainer.json remoteEnv).
 #
 # Globals:
-#   PATH — modified (export)
+#   PATH: modified (export)
 base_setup_path() {
   export PATH="${_MISE_SHIMS}:${_HOME}/.local/bin:${PATH}"
 }
@@ -176,9 +176,9 @@ base_install_tools() {
   # container install, so a developer who does not use it should not pay for it
   # on every rebuild. MISE_DISABLE_TOOLS drops it from the resolved set without
   # editing the manifest, so the pin stays recorded either way and CI still
-  # sees it — set MUSHER_INSTALL_CODEX=1 in .devcontainer/.env to install it.
+  # sees it. Set MUSHER_INSTALL_CODEX=1 in .devcontainer/.env to install it.
   if ! install_wanted "${MUSHER_INSTALL_CODEX:-0}"; then
-    log "MUSHER_INSTALL_CODEX is off — leaving the Codex CLI out of this install"
+    log "MUSHER_INSTALL_CODEX is off; leaving the Codex CLI out of this install"
     export MISE_DISABLE_TOOLS="npm:@openai/codex${MISE_DISABLE_TOOLS:+,${MISE_DISABLE_TOOLS}}"
   fi
 
@@ -199,7 +199,7 @@ base_install_tools() {
 #   0 on success, non-zero on failure
 base_install_claude() {
   if ! install_wanted "${MUSHER_INSTALL_CLAUDE:-1}"; then
-    log "MUSHER_INSTALL_CLAUDE is off — skipping Claude Code"
+    log "MUSHER_INSTALL_CLAUDE is off; skipping Claude Code"
     return 0
   fi
   if has_cmd claude; then
@@ -256,7 +256,7 @@ base_setup() {
 
   # Verification reports; it no longer aborts. `set -e` used to let one missing
   # CLI end post-create.sh right here, which skipped the repo-specific setup
-  # that follows it — git hooks and `bun install` — and left the container in a
+  # that follows it (git hooks and `bun install`) and left the container in a
   # worse state than the single missing tool warranted. The status rides out on
   # the return code instead, so the failure is still loud.
   local verified=0

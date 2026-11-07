@@ -36,9 +36,10 @@ tasks:
       - task: check:shell
       - task: check:workflow
 
-  # The interface checks, check:schema, check:generated, check:examples and
-  # check:compat, run in the same job as `task contracts:check
-  # contracts:breaking`, the names the conventions look for (IFACE-12).
+  # The interface checks, check:schema, check:generated, check:examples,
+  # check:compat and check:compat:registry, run in the same job as `task
+  # contracts:check contracts:breaking`, the names the conventions look for
+  # (IFACE-12).
   ci:test:
     desc: Schema and conformance suite as run in CI, beside contracts:check and contracts:breaking
     deps:

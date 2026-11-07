@@ -1,0 +1,54 @@
+{
+  "id": "OPENAI_CHAT_COMPLETIONS",
+  "title": "OpenAI Chat Completions",
+  "category": "LANGUAGE_MODEL",
+  "description": "The Chat Completions wire protocol, spoken by OpenAI and by every service compatible with it.",
+  "status": "stable",
+  "introduced": "2.0.0",
+  "references": [
+    {
+      "title": "OpenAI API reference: Chat Completions",
+      "url": "https://platform.openai.com/docs/api-reference/chat"
+    }
+  ],
+  "capabilities": [
+    "STREAMING",
+    "TOOL_CALLS"
+  ],
+  "members": [
+    {
+      "name": "baseURL",
+      "role": "locator",
+      "presence": "required",
+      "sensitive": false,
+      "schema": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^[Hh][Tt][Tt][Pp][Ss]://"
+      },
+      "description": "HTTPS base URL a client sends Chat Completions requests to."
+    },
+    {
+      "name": "apiKey",
+      "role": "credential",
+      "presence": "required",
+      "sensitive": true,
+      "schema": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "API key the client authenticates with."
+    },
+    {
+      "name": "model",
+      "role": "parameter",
+      "presence": "required",
+      "sensitive": false,
+      "schema": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "Model the client names in each request."
+    }
+  ]
+}

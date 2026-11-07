@@ -1,5 +1,5 @@
 /**
- * Record pending releases in `published.json` — `task release:record`.
+ * Record pending releases in `published.json` (`task release:record`).
  *
  * Runs on a release-please pull request branch, before the tag exists.
  * `.github/rulesets/main-branch.json` allows only squash merges of an
@@ -10,7 +10,7 @@
  * tree id of the family version directory at HEAD), `bundleSha256` (the pinned
  * bundle built from HEAD, null for core) and, for a kind family,
  * `requires` (exact manifest versions of its declared dependencies). It inserts or updates such pending
- * entries — a branch updated from `main` is re-recorded, not left stale — and
+ * entries (a branch updated from `main` is re-recorded, not left stale) and
  * never rewrites an entry whose tag exists.
  *
  * The dependency gates run before anything is written.
@@ -155,7 +155,7 @@ function main(): void {
   for (const tag of result.updated) console.log(`  ✓ updated ${tag}`)
   for (const tag of result.dropped) {
     const release = parseReleaseTag(tag)
-    console.log(`  · dropped ${tag}${release === null ? '' : ' — its manifest moved on'}`)
+    console.log(`  · dropped ${tag}${release === null ? '' : ': its manifest moved on'}`)
   }
   for (const warning of result.warnings) console.log(`  ! ${warning}`)
   console.log(result.changed ? `${LEDGER_FILE} updated.` : `${LEDGER_FILE} already current.`)

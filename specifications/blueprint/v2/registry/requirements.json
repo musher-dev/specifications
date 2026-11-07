@@ -1,0 +1,296 @@
+{
+  "family": "blueprint",
+  "major": "v2",
+  "requirements": [
+    {
+      "id": "BP-ID-004",
+      "anchor": "BP-ID-004",
+      "section": "identity"
+    },
+    {
+      "id": "BP-ID-005",
+      "anchor": "BP-ID-005",
+      "section": "identity"
+    },
+    {
+      "id": "BP-ID-003",
+      "anchor": "BP-ID-003",
+      "section": "identity"
+    },
+    {
+      "id": "BP-GRAPH-001",
+      "anchor": "BP-GRAPH-001",
+      "section": "node-graph"
+    },
+    {
+      "id": "BP-REF-002",
+      "anchor": "BP-REF-002",
+      "section": "component-reference"
+    },
+    {
+      "id": "BP-REF-004",
+      "anchor": "BP-REF-004",
+      "section": "component-reference"
+    },
+    {
+      "id": "BP-REF-005",
+      "anchor": "BP-REF-005",
+      "section": "component-reference"
+    },
+    {
+      "id": "BP-REF-003",
+      "anchor": "BP-REF-003",
+      "section": "component-reference"
+    },
+    {
+      "id": "BP-BIND-003",
+      "anchor": "BP-BIND-003",
+      "section": "bindings"
+    },
+    {
+      "id": "BP-BIND-008",
+      "anchor": "BP-BIND-008",
+      "section": "bindings"
+    },
+    {
+      "id": "BP-BIND-002",
+      "anchor": "BP-BIND-002",
+      "section": "bindings"
+    },
+    {
+      "id": "BP-NODE-001",
+      "anchor": "BP-NODE-001",
+      "section": "node-compute"
+    },
+    {
+      "id": "BP-NODE-002",
+      "anchor": "BP-NODE-002",
+      "section": "node-compute"
+    },
+    {
+      "id": "BP-NODE-003",
+      "anchor": "BP-NODE-003",
+      "section": "node-compute"
+    },
+    {
+      "id": "BP-NODE-009",
+      "anchor": "BP-NODE-009",
+      "section": "node-compute"
+    },
+    {
+      "id": "BP-NODE-004",
+      "anchor": "BP-NODE-004",
+      "section": "node-compute"
+    },
+    {
+      "id": "BP-NODE-011",
+      "anchor": "BP-NODE-011",
+      "section": "node-compute"
+    },
+    {
+      "id": "BP-NODE-012",
+      "anchor": "BP-NODE-012",
+      "section": "node-compute"
+    },
+    {
+      "id": "BP-NODE-005",
+      "anchor": "BP-NODE-005",
+      "section": "node-compute"
+    },
+    {
+      "id": "BP-NODE-010",
+      "anchor": "BP-NODE-010",
+      "section": "placement-constraints"
+    },
+    {
+      "id": "BP-NODE-006",
+      "anchor": "BP-NODE-006",
+      "section": "access"
+    },
+    {
+      "id": "BP-NODE-007",
+      "anchor": "BP-NODE-007",
+      "section": "access"
+    },
+    {
+      "id": "BP-NODE-008",
+      "anchor": "BP-NODE-008",
+      "section": "access"
+    },
+    {
+      "id": "BP-ACCESS-001",
+      "anchor": "BP-ACCESS-001",
+      "section": "access"
+    },
+    {
+      "id": "BP-ACCESS-002",
+      "anchor": "BP-ACCESS-002",
+      "section": "access"
+    },
+    {
+      "id": "BP-ACCESS-003",
+      "anchor": "BP-ACCESS-003",
+      "section": "access"
+    },
+    {
+      "id": "BP-ACCESS-004",
+      "anchor": "BP-ACCESS-004",
+      "section": "access"
+    },
+    {
+      "id": "BP-ACCESS-005",
+      "anchor": "BP-ACCESS-005",
+      "section": "access"
+    },
+    {
+      "id": "BP-ACCESS-006",
+      "anchor": "BP-ACCESS-006",
+      "section": "access"
+    },
+    {
+      "id": "BP-ACCESS-007",
+      "anchor": "BP-ACCESS-007",
+      "section": "access"
+    },
+    {
+      "id": "BP-ACCESS-008",
+      "anchor": "BP-ACCESS-008",
+      "section": "access"
+    },
+    {
+      "id": "BP-ACCESS-009",
+      "anchor": "BP-ACCESS-009",
+      "section": "access"
+    },
+    {
+      "id": "BP-ACCESS-010",
+      "anchor": "BP-ACCESS-010",
+      "section": "access"
+    },
+    {
+      "id": "BP-ACCESS-011",
+      "anchor": "BP-ACCESS-011",
+      "section": "access"
+    },
+    {
+      "id": "BP-PARAM-010",
+      "anchor": "BP-PARAM-010",
+      "section": "parameters"
+    },
+    {
+      "id": "BP-PARAM-001",
+      "anchor": "BP-PARAM-001",
+      "section": "recipients"
+    },
+    {
+      "id": "BP-PARAM-002",
+      "anchor": "BP-PARAM-002",
+      "section": "recipients"
+    },
+    {
+      "id": "BP-PARAM-003",
+      "anchor": "BP-PARAM-003",
+      "section": "recipients"
+    },
+    {
+      "id": "BP-BIND-006",
+      "anchor": "BP-BIND-006",
+      "section": "recipients"
+    },
+    {
+      "id": "BP-BIND-007",
+      "anchor": "BP-BIND-007",
+      "section": "recipients"
+    },
+    {
+      "id": "BP-PARAM-004",
+      "anchor": "BP-PARAM-004",
+      "section": "value-sources"
+    },
+    {
+      "id": "BP-PARAM-012",
+      "anchor": "BP-PARAM-012",
+      "section": "value-sources"
+    },
+    {
+      "id": "BP-PARAM-005",
+      "anchor": "BP-PARAM-005",
+      "section": "value-sources"
+    },
+    {
+      "id": "BP-PARAM-014",
+      "anchor": "BP-PARAM-014",
+      "section": "value-sources"
+    },
+    {
+      "id": "BP-PARAM-008",
+      "anchor": "BP-PARAM-008",
+      "section": "value-sources"
+    },
+    {
+      "id": "BP-PLACEHOLDER-001",
+      "anchor": "BP-PLACEHOLDER-001",
+      "section": "value-sources"
+    },
+    {
+      "id": "BP-PARAM-009",
+      "anchor": "BP-PARAM-009",
+      "section": "value-sources"
+    },
+    {
+      "id": "BP-PARAM-013",
+      "anchor": "BP-PARAM-013",
+      "section": "value-sources"
+    },
+    {
+      "id": "BP-PARAM-011",
+      "anchor": "BP-PARAM-011",
+      "section": "value-sources"
+    },
+    {
+      "id": "BP-RESOLVE-001",
+      "anchor": "BP-RESOLVE-001",
+      "section": "value-sources"
+    },
+    {
+      "id": "BP-CONNECTION-001",
+      "anchor": "BP-CONNECTION-001",
+      "section": "connections"
+    },
+    {
+      "id": "BP-CONNECTION-002",
+      "anchor": "BP-CONNECTION-002",
+      "section": "connections"
+    },
+    {
+      "id": "BP-CONNECTION-003",
+      "anchor": "BP-CONNECTION-003",
+      "section": "connections"
+    },
+    {
+      "id": "BP-UI-001",
+      "anchor": "BP-UI-001",
+      "section": "deploy-form"
+    },
+    {
+      "id": "BP-UI-002",
+      "anchor": "BP-UI-002",
+      "section": "deploy-form"
+    },
+    {
+      "id": "BP-UI-003",
+      "anchor": "BP-UI-003",
+      "section": "deploy-form"
+    },
+    {
+      "id": "BP-UI-004",
+      "anchor": "BP-UI-004",
+      "section": "deploy-form"
+    },
+    {
+      "id": "BP-UI-005",
+      "anchor": "BP-UI-005",
+      "section": "deploy-form"
+    }
+  ]
+}

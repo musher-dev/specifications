@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# motd.sh — Renders a startup MOTD summarizing the dev container state.
+# motd.sh: Renders a startup MOTD summarizing the dev container state.
 #
 # This is a library file meant to be sourced, not executed directly.
 # Requires common.sh (has_cmd, log) to be sourced first.
@@ -36,9 +36,9 @@ _motd_header() {
 # Prints a detected runtime version, or skips if not found.
 #
 # Arguments:
-#   $1 — command name
-#   $2 — display label
-#   $3 — version extraction command (eval'd)
+#   $1: command name
+#   $2: display label
+#   $3: version extraction command (eval'd)
 _motd_runtime_entry() {
   local cmd="$1" label="$2" version_cmd="$3"
   if has_cmd "$cmd"; then
@@ -78,9 +78,9 @@ _motd_quickref() {
 # required values. Silent when env is healthy.
 #
 # Globals:
-#   _BOLD, _DIM, _YELLOW, _RESET — color codes set by _motd_setup_colors
+#   _BOLD, _DIM, _YELLOW, _RESET: color codes set by _motd_setup_colors
 # Arguments:
-#   $1 — .devcontainer directory (where .env / .env.example live)
+#   $1: .devcontainer directory (where .env / .env.example live)
 _motd_env_warnings() {
   local devcontainer_dir="${1:-}"
   [[ -d "${devcontainer_dir}" ]] || return 0
@@ -131,7 +131,7 @@ _motd_tips() {
 # Renders the full MOTD to stdout.
 #
 # Arguments:
-#   $1 — path to .devcontainer/ directory (may be empty to skip env warnings)
+#   $1: path to .devcontainer/ directory (may be empty to skip env warnings)
 # Outputs:
 #   MOTD text to stdout
 show_motd() {

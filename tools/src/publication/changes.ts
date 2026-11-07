@@ -4,7 +4,7 @@
  *
  * `check:compat` is the gate: it replays every document a released version
  * accepted against the candidate schema, and a rejection fails the build. It is
- * also, deliberately, silent about everything else — a widened enum, a new
+ * also, deliberately, silent about everything else: a widened enum, a new
  * optional field, a changed default and a renamed diagnostic all pass it, and
  * all four are things a reviewer of a *specification* wants named.
  *
@@ -20,7 +20,7 @@
  * The base bundle is built, not read: bundles are not tracked (docs/adr/0023).
  * Where the base commit carries a bundler with the `--stdout` contract, the
  * base is built by *that* bundler, so a tooling change that alters the bytes
- * shows up — and is reported apart from source changes. Otherwise the base's
+ * shows up, and is reported apart from source changes. Otherwise the base's
  * sources are built by this branch's bundler through a git reader.
  *
  * A diagnostic code or requirement ID that left a family for a specification
@@ -204,21 +204,21 @@ function diffFields(before: FieldMap, after: FieldMap): Change[] {
     if (was === undefined && now !== undefined) {
       changes.push({
         narrowing: now.required,
-        line: `\`${path}\` — **added**${now.required ? ', and it is REQUIRED' : ' (optional)'}`,
+        line: `\`${path}\`: **added**${now.required ? ', and it is REQUIRED' : ' (optional)'}`,
       })
       continue
     }
     if (was !== undefined && now === undefined) {
-      changes.push({ narrowing: true, line: `\`${path}\` — **removed**` })
+      changes.push({ narrowing: true, line: `\`${path}\`: **removed**` })
       continue
     }
     if (was === undefined || now === undefined) continue
 
     if (!was.required && now.required) {
-      changes.push({ narrowing: true, line: `\`${path}\` — became **REQUIRED**` })
+      changes.push({ narrowing: true, line: `\`${path}\`: became **REQUIRED**` })
     }
     if (was.required && !now.required) {
-      changes.push({ narrowing: false, line: `\`${path}\` — became optional` })
+      changes.push({ narrowing: false, line: `\`${path}\`: became optional` })
     }
 
     for (const key of CONSTRAINTS) {
@@ -232,13 +232,13 @@ function diffFields(before: FieldMap, after: FieldMap): Change[] {
         if (removed.length > 0) {
           changes.push({
             narrowing: true,
-            line: `\`${path}\` — enum **removed** ${removed.map((v) => `\`${String(v)}\``).join(', ')}`,
+            line: `\`${path}\`: enum **removed** ${removed.map((v) => `\`${String(v)}\``).join(', ')}`,
           })
         }
         if (added.length > 0) {
           changes.push({
             narrowing: false,
-            line: `\`${path}\` — enum added ${added.map((v) => `\`${String(v)}\``).join(', ')}`,
+            line: `\`${path}\`: enum added ${added.map((v) => `\`${String(v)}\``).join(', ')}`,
           })
         }
         continue
@@ -250,7 +250,7 @@ function diffFields(before: FieldMap, after: FieldMap): Change[] {
       const label = key === 'default' ? 'default' : key
       changes.push({
         narrowing: key === 'default' ? false : narrowing,
-        line: `\`${path}\` — ${label} ${describe(a)} → ${describe(b)}`,
+        line: `\`${path}\`: ${label} ${describe(a)} → ${describe(b)}`,
       })
     }
   }
@@ -258,7 +258,7 @@ function diffFields(before: FieldMap, after: FieldMap): Change[] {
   return changes
 }
 
-/** `| \`ERR_X\` | \`semantic\` |` — the registry tables, and only those. */
+/** `| \`ERR_X\` | \`semantic\` |`: the registry tables, and only those. */
 const DIAGNOSTIC_ROW = /^\|\s*`(ERR_[A-Z0-9_]+)`\s*\|\s*`([a-z]+)`\s*\|/
 const REQUIREMENT_ANCHOR = /<a id="([A-Z]+-[A-Z0-9]+-\d+)"><\/a>/g
 
@@ -363,8 +363,8 @@ function requirementsOfMetadata(text: string | undefined): Set<string> {
  * A diagnostic code is moved when a declared dependency declares it at head.
  * A requirement ID is moved when a dependency declares that same ID, or
  * renumbered when the family can no longer cite it but either the same
- * statement now carries another reachable ID, or the fixtures that pinned it —
- * the same case path, in the family's corpus or a dependency's — now pin one.
+ * statement now carries another reachable ID, or the fixtures that pinned it
+ * (the same case path, in the family's corpus or a dependency's) now pin one.
  * Both kinds of evidence are read from the tree, never from a list someone keeps.
  *
  * Maps each such name to the words the report uses for it.
@@ -458,14 +458,14 @@ function diffNamed(
 ): Change[] {
   const changes: Change[] = []
   for (const name of [...after].filter((n) => !before.has(n)).sort()) {
-    changes.push({ narrowing: false, line: `\`${name}\` — ${noun} added` })
+    changes.push({ narrowing: false, line: `\`${name}\`: ${noun} added` })
   }
   for (const name of [...before].filter((n) => !after.has(n)).sort()) {
     const where = moved.get(name)
     changes.push(
       where === undefined
-        ? { narrowing: true, line: `\`${name}\` — ${noun} **removed**` }
-        : { narrowing: false, moved: true, line: `\`${name}\` — ${noun} ${where}` },
+        ? { narrowing: true, line: `\`${name}\`: ${noun} **removed**` }
+        : { narrowing: false, moved: true, line: `\`${name}\`: ${noun} ${where}` },
     )
   }
   return changes
@@ -585,7 +585,7 @@ function reportAbsentAtBase(
 }
 
 /**
- * A family with no schema — core — has only prose to compare: its diagnostics
+ * A family with no schema (core) has only prose to compare: its diagnostics
  * and its requirement IDs. It is headed as affecting every family, because
  * every kind family applies core in full, so a change here is a change to each
  * of them even though no bundle moves.
@@ -596,7 +596,7 @@ function reportProseOnly(
   base: string,
   repoRoot: string,
 ): FamilyReport {
-  const heading = `### ${family.name}/${family.major} — affects every family`
+  const heading = `### ${family.name}/${family.major}, affecting every family`
   const beforeSpec = readBlobAtRef(repoRoot, base, familyPaths(family.name, family.major).spec)
   const empty = { narrowing: 0, moved: 0, before: null, after: null }
   if (beforeSpec === null) return reportAbsentAtBase(family, base, repoRoot, heading, null)
@@ -696,8 +696,8 @@ export function reportFamily(
 
 /**
  * Build base bundles with the base commit's own bundler, when it has one that
- * honours `--stdout`. Null otherwise — an older base, or one this cannot
- * extract — and the caller falls back to this branch's bundler.
+ * honours `--stdout`. Null otherwise (an older base, or one this cannot
+ * extract), and the caller falls back to this branch's bundler.
  */
 function baseTooling(
   repoRoot: string,
@@ -724,10 +724,10 @@ function baseTooling(
         { cwd: dir, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 },
       )
       if (result.status === 0) return result.stdout
-      // Exit 1 is the contract's "no schema modules authored" — a new family.
+      // Exit 1 is the contract's "no schema modules authored": a new family.
       if (result.status === 1) return null
       throw new Error(
-        `the bundler at ${base} failed for ${family.name}/${family.major} — ${result.stderr.trim()}`,
+        `the bundler at ${base} failed for ${family.name}/${family.major}: ${result.stderr.trim()}`,
       )
     },
     cleanup,
@@ -751,7 +751,7 @@ export function unifiedDiff(name: string, before: string, after: string): string
       { cwd: dir, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, env: gitEnvironment(dir) },
     )
     if (result.status === 0) return ''
-    if (result.status !== 1) throw new Error(`git diff --no-index failed — ${result.stderr.trim()}`)
+    if (result.status !== 1) throw new Error(`git diff --no-index failed: ${result.stderr.trim()}`)
     return result.stdout
   } finally {
     rmSync(dir, { recursive: true, force: true })

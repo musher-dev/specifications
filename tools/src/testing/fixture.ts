@@ -2,7 +2,7 @@
  * A throwaway git repository for exercising the publication pipeline.
  *
  * The site assembler reads releases out of tags, so proving that a published
- * version stays put needs a repository with a history — one where a bundle can
+ * version stays put needs a repository with a history: one where a bundle can
  * be tagged, then changed on the branch, and the pinned copy checked for
  * movement. Building that against the real repository is not an option, so
  * `git.ts` threads `repoRoot` through every call and this creates a real but
@@ -90,8 +90,8 @@ export class FixtureRepo {
   }
 
   /**
-   * Give a family version every part the layout says a release carries — prose,
-   * an example, a conformance index — without overwriting any a test wrote.
+   * Give a family version every part the layout says a release carries (prose,
+   * an example, a conformance index) without overwriting any a test wrote.
    *
    * A released tag missing one of them fails loudly, so a test that cuts a
    * release to exercise something else has to carry them.
@@ -109,8 +109,8 @@ export class FixtureRepo {
   }
 
   /**
-   * Give the base family every part the layout says it carries — prose and a
-   * conformance index — and nothing else: no `schemas/`, no `examples/`. Core
+   * Give the base family every part the layout says it carries (prose and a
+   * conformance index) and nothing else: no `schemas/`, no `examples/`. Core
    * ships neither (docs/adr/0022), so a fixture that wrote them would be testing
    * a tree the lint rejects.
    */
@@ -122,7 +122,7 @@ export class FixtureRepo {
     }
   }
 
-  /** A minimal but realistic bundle — alias `$id`, as the bundler emits. Also a valid root module. */
+  /** A minimal but realistic bundle: alias `$id`, as the bundler emits. Also a valid root module. */
   bundleDoc(family: string, major: string, extra: { [k: string]: Json } = {}): Json {
     return {
       $schema: 'https://json-schema.org/draft/2020-12/schema',
@@ -205,7 +205,7 @@ export class FixtureRepo {
       `| \`kind\` | \`${family.toUpperCase().replace(/-/g, '_')}\` |`,
       '| `metadata` | [§3](#metadata) |',
       '| Fields accepting `null` | none |',
-      '| Item document | No — it sits inside an item |',
+      '| Item document | No, it sits inside an item |',
       '',
       '**Normative dependencies**',
       '',
@@ -250,7 +250,7 @@ export class FixtureRepo {
     git(this.root, [...IDENTITY, 'tag', name])
   }
 
-  /** Move a tag — which the release-tags ruleset forbids, and which a test forges to prove it is caught. */
+  /** Move a tag, which the release-tags ruleset forbids, and which a test forges to prove it is caught. */
   forceTag(name: string, ref: string): void {
     git(this.root, [...IDENTITY, 'tag', '-f', name, ref])
   }

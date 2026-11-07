@@ -1,4 +1,4 @@
-# `.config/` — Tool configuration
+# `.config/`: tool configuration
 
 Every linter, formatter, and hook config lives here. One directory, one
 purpose: if a tool needs a config file and it is not provisioning the
@@ -7,7 +7,8 @@ container, it goes in here.
 Policy and rationale:
 [`docs/adr/0011-tooling-configuration-layout.md`](../docs/adr/0011-tooling-configuration-layout.md).
 Enforcement: `task check:conventions` holds this directory to the engineering
-conventions' CONF-01..CONF-09, which retired this repository's CFG-01..CFG-08
+conventions' CONF-* rules. At 0.7.0, CONF-01..CONF-09 retired this
+repository's CFG-01..CFG-08
 ([ADR 0037](../docs/adr/0037-the-repository-adopts-engineering-conventions-0-7-0.md)).
 `task check:config`, implemented in
 [`tools/src/policy/config.ts`](../tools/src/policy/config.ts), is CFG-09 alone:
@@ -52,13 +53,13 @@ pinned and can differ from the container's.
 1. **Bucket by concern.** `.config/<concern>/<tool>.<ext>`. A one-file bucket
    is fine and collects siblings over time. The single exception is
    `lefthook.yml`, which sits at the top level because lefthook's config search
-   does not descend past `.config/lefthook.*` — bucketing it would silently
+   does not descend past `.config/lefthook.*`, so bucketing it would silently
    stop every hook.
 2. **No leading dot on filenames.** The directory is already dotted; a second
    dot advertises a discovery mechanism that is deliberately not in use.
 3. **Pass the path explicitly.** Except for lefthook and mise, which find
    their configs here on their own, every caller names its config with the
-   tool's own config flag. Never rely on default discovery — that is what put these files
+   tool's own config flag. Never rely on default discovery: that is what put these files
    at the repo root in the first place.
 4. **Every file must have a caller.** A config nothing reads is dead weight
    that still reads as authoritative.
@@ -80,7 +81,7 @@ whole directory exists to prevent, and it is one command to rule out.
 | `AGENTS.md` | Repo root | The brief every coding agent reads, Claude Code included, not tool configuration. No `CLAUDE.md` is committed (docs/adr/0041); editor whitespace lives in `devcontainer.json` (docs/adr/0024) |
 | `LICENSE`, `NOTICE` | Repo root | GitHub detects a licence at the root only, and Apache-2.0 expects NOTICE to travel with the work |
 | `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md` | `.github/` | Community health files, which GitHub resolves from there |
-| `biome.json`, `tsconfig.json` | `tools/` | They belong to the `tools/` package and are resolved by it — a package's own config, not a repo-level one |
+| `biome.json`, `tsconfig.json` | `tools/` | They belong to the `tools/` package and are resolved by it: a package's own config, not a repo-level one |
 | `published.json` | Repo root | A published data artifact, not tool configuration. The catalog is build output under `dist/`, never tracked |
 | `devcontainer.json` | `.devcontainer/` | It provisions the environment rather than checking the code |
 | `dependabot.yml`, `release-please/`, `rulesets/`, `workflows/` | `.github/` | GitHub reads these from fixed locations |
@@ -90,7 +91,7 @@ whole directory exists to prevent, and it is one command to rule out.
 **shellcheck.** It runs at its default severity, style, so every finding
 fails, and its two flags, `-x --source-path=SCRIPTDIR`, are passed at the call
 site. A config file would add nothing: `.shellcheckrc` supports no `severity`
-key — the rcfile takes only directives such as `disable`, `enable`,
+key. The rcfile takes only directives such as `disable`, `enable`,
 `source-path` and `shell`, and an unrecognised key is silently ignored rather
 than rejected. A `.config/shell/shellcheckrc` holding `severity=warning` would
 look like a threshold and change nothing. If shellcheck ever gains the key,
@@ -105,7 +106,7 @@ lefthook.*  →  .lefthook.*  →  .config/lefthook.*
 ```
 
 A stray `lefthook.yml` at the repo root therefore **silently shadows** this
-directory's copy — no warning, no error, just a different set of hooks.
+directory's copy: no warning, no error, just a different set of hooks.
 `task check:conventions` (CONF-06) fails the build if one appears, and so does
 `task check:config` (CFG-09), to which it is a root entry `ROOT_ENTRIES` does
 not name.

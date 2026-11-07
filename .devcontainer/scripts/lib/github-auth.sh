@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# github-auth.sh — Library: give the container a GitHub credential for gh and git.
+# github-auth.sh (library): give the container a GitHub credential for gh and git.
 #
 # Canonical copy: musher-dev/development-container
 # .devcontainer/scripts/lib/github-auth.sh. Repositories copy it verbatim and
@@ -104,7 +104,7 @@ _gh_seed_from() {
 # window on the host, so it is tried last.
 #
 # Globals:
-#   MUSHER_HOST_GH_TOKEN — read, devcontainer.json passes ${localEnv:GH_TOKEN}
+#   MUSHER_HOST_GH_TOKEN: read, devcontainer.json passes ${localEnv:GH_TOKEN}
 # Outputs:
 #   Writes progress to stderr
 # Returns:

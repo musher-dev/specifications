@@ -53,7 +53,7 @@ function prepare(fx: FixtureRepo, version: string, extra: object = {}): void {
 }
 
 /**
- * Record a component release by hand, bypassing the core gate, then tag it —
+ * Record a component release by hand, bypassing the core gate, then tag it:
  * the forgery a rewritten ledger or a tag cut outside the flow would produce.
  */
 function forge(fx: FixtureRepo, version: string, requiresCore = '1.0.0'): void {

@@ -341,7 +341,7 @@ export async function replayConcurrently(
         try {
           done(JSON.parse(line) as Replayed)
         } catch {
-          fail(new Error(`${tag}: replay printed no result — ${output.trim()}`))
+          fail(new Error(`${tag}: replay printed no result: ${output.trim()}`))
         }
       })
     })

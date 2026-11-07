@@ -1,0 +1,45 @@
+specVersion: v2
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: EXTERNAL
+  contract:
+    inputs:
+      slack:
+        description: Connection this node stands for
+        connection:
+          protocol: SLACK_APP
+    outputs:
+      baseURL:
+        description: Forwarded baseURL
+        schema:
+          type: string
+        from:
+          input: slack
+          member: baseURL
+      botToken:
+        description: Forwarded botToken
+        schema:
+          type: string
+        sensitive: true
+        from:
+          input: slack
+          member: botToken
+      appToken:
+        description: Forwarded appToken
+        schema:
+          type: string
+        sensitive: true
+        from:
+          input: slack
+          member: appToken
+      signingSecret:
+        description: Forwarded signingSecret
+        schema:
+          type: string
+        sensitive: true
+        from:
+          input: slack
+          member: signingSecret

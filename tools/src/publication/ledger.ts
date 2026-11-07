@@ -1,5 +1,5 @@
 /**
- * `published.json` — the record of every version this repository has
+ * `published.json`: the record of every version this repository has
  * irrevocably published (docs/adr/0006, as refined by docs/adr/0023 §3).
  *
  *   {
@@ -159,7 +159,7 @@ export function parseLedger(text: string, source: string = LEDGER_FILE): Ledger 
   try {
     doc = JSON.parse(text) as Json
   } catch (error) {
-    throw new Error(`${source}: not JSON — ${(error as Error).message}`)
+    throw new Error(`${source}: not JSON: ${(error as Error).message}`)
   }
   const failures = new Failures()
   const ledger = validateLedger(doc, failures, source)
@@ -227,7 +227,7 @@ export function assertAppendOnly(base: Ledger, head: Ledger, failures: Failures)
     }
     if (!sameEntry(entry, now)) {
       failures.add(
-        `${LEDGER_FILE}: ${tag} was modified. A recorded release is immutable — ` +
+        `${LEDGER_FILE}: ${tag} was modified. A recorded release is immutable; ` +
           'supersede it with a new version instead.',
       )
     }
@@ -241,7 +241,7 @@ export interface RecordedRelease {
 
 /**
  * Every ledger entry whose tag exists, in release order. An entry with no tag is
- * pending — a release pull request mid-flight — and is not yet served.
+ * pending (a release pull request mid-flight) and is not yet served.
  */
 export function taggedEntries(repoRoot: string, ledger: Ledger): RecordedRelease[] {
   const found: RecordedRelease[] = []
@@ -261,7 +261,7 @@ function main(): void {
     if (baseRef === undefined || baseRef === '') {
       // Still parse the head ledger: a malformed file must not pass for want of a base.
       readLedger(REPO_ROOT)
-      console.log('BASE_REF not set — skipping the append-only comparison.')
+      console.log('BASE_REF not set, skipping the append-only comparison.')
       return
     }
     const failures = new Failures()
@@ -271,7 +271,7 @@ function main(): void {
   }
 
   if (command === 'has-tagged') {
-    // Exit status only, for a Taskfile `if:` — 0 when some entry is tagged.
+    // Exit status only, for a Taskfile `if:`: 0 when some entry is tagged.
     process.exit(taggedEntries(REPO_ROOT, readLedger(REPO_ROOT)).length > 0 ? 0 : 1)
   }
 

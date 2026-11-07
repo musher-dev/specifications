@@ -1,12 +1,12 @@
 /**
- * Verify every tagged release against GitHub, and cache the verified bundles —
+ * Verify every tagged release against GitHub, and cache the verified bundles:
  * `task site:fetch`, and `task check:published:online` with `--verify-only`
  * (docs/adr/0023 §4).
  *
  * For each ledger entry whose tag exists:
  *
  *   - the tags endpoint returns a published release: not a draft, immutable;
- *   - the conventional assets are present with a digest — for a kind family
+ *   - the conventional assets are present with a digest: for a kind family
  *     `<family>.schema.json` and `<family>-v<X.Y.Z>.tar.gz`, for core only the
  *     archive;
  *   - a kind family's bundle digest is `sha256:<bundleSha256>`, and the bytes
@@ -22,7 +22,7 @@
  * published it. With `ALLOW_PENDING_RELEASES=1`, a tagged entry whose release
  * is absent or still a draft is a warning, recorded as pending in
  * `.cache/releases/pending.json`, and `site.ts` leaves it out of that build.
- * Without the flag — the deploy — it fails.
+ * Without the flag (the deploy), it fails.
  *
  * A published release whose tag has the release pattern and no ledger entry
  * fails too: something was published outside the record.
@@ -147,14 +147,14 @@ export async function fetchReleases(
     if (options.allowPending === true) {
       pending.push(tag)
       warnings.push(
-        `${tag}: tagged and recorded, but its GitHub release ${state}. Pending — left out of ` +
+        `${tag}: tagged and recorded, but its GitHub release ${state}. Pending, and left out of ` +
           'this build (ALLOW_PENDING_RELEASES=1).',
       )
       return
     }
     failures.push(
       `${tag}: tagged and recorded, but its GitHub release ${state}. The release job stopped ` +
-        `between tag and publish — dispatch release.yml with tag=${tag} to recover it.`,
+        `between tag and publish. Dispatch release.yml with tag=${tag} to recover it.`,
     )
   }
 
@@ -174,7 +174,7 @@ export async function fetchReleases(
       else if (listing.draft) notPublished(tag, 'is still a draft')
       else if (!listing.immutable) {
         failures.push(
-          `${tag}: the GitHub release is not immutable — enable immutable releases before publishing`,
+          `${tag}: the GitHub release is not immutable; enable immutable releases before publishing`,
         )
       } else cached.push(tag)
       continue
@@ -192,7 +192,7 @@ export async function fetchReleases(
     const problems: string[] = []
     if (published.draft) problems.push('is still a draft')
     if (!published.immutable) {
-      problems.push('is not immutable — enable immutable releases before publishing')
+      problems.push('is not immutable; enable immutable releases before publishing')
     }
 
     const archive = published.assets.find((asset) => asset.name === names.archive)

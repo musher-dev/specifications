@@ -1,0 +1,65 @@
+{
+  "categories": [
+    {
+      "id": "LANGUAGE_MODEL",
+      "title": "Language model",
+      "description": "Model APIs a client sends conversations to over HTTPS.",
+      "conventions": {
+        "locator": "baseURL",
+        "credential": "apiKey"
+      },
+      "protocols": [
+        "OPENAI_CHAT_COMPLETIONS",
+        "ANTHROPIC_MESSAGES"
+      ]
+    },
+    {
+      "id": "DATABASE",
+      "title": "Database",
+      "description": "Relational databases a client reaches at a host and port.",
+      "conventions": {
+        "credential": "password"
+      },
+      "protocols": [
+        "POSTGRES"
+      ]
+    },
+    {
+      "id": "CACHE",
+      "title": "Cache",
+      "description": "Key-value stores a client reaches at a host and port.",
+      "conventions": {
+        "credential": "password"
+      },
+      "protocols": [
+        "REDIS"
+      ]
+    },
+    {
+      "id": "OBJECT_STORAGE",
+      "title": "Object storage",
+      "description": "Object stores a client reaches over HTTPS.",
+      "conventions": {
+        "locator": "endpointURL",
+        "credential": "secretAccessKey"
+      },
+      "protocols": [
+        "S3"
+      ]
+    },
+    {
+      "id": "MESSAGING",
+      "title": "Messaging",
+      "description": "Chat services a bot or app sends and receives messages through over HTTPS.",
+      "conventions": {
+        "locator": "baseURL",
+        "credential": "botToken"
+      },
+      "protocols": [
+        "TELEGRAM_BOT",
+        "SLACK_APP",
+        "DISCORD_BOT"
+      ]
+    }
+  ]
+}

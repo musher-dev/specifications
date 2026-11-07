@@ -1,5 +1,5 @@
 /**
- * Hold a pull request title to the Conventional Commits vocabulary —
+ * Hold a pull request title to the Conventional Commits vocabulary:
  * `task check:title`, run by the `Title / Conventional Commit` job of
  * validate-pull-request.yml, on pull requests only.
  *

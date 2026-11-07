@@ -1,0 +1,48 @@
+specVersion: v2
+kind: BLUEPRINT
+metadata:
+  slug: messaging-agent
+  revision: 1
+  description: A support agent that answers in Telegram, polling for updates with the bot the deployer chooses, and replies with a language model.
+spec:
+  parameters:
+    bot:
+      from: "${{ connections.telegram.default }}"
+      ui:
+        label: Telegram bot
+    llm:
+      from: "${{ connections.llm.default }}"
+      ui:
+        label: Language model
+  nodes:
+    bot:
+      componentRef: ./components/telegram-bot.yaml
+      bindings:
+        telegram:
+          parameter: bot
+    llm:
+      componentRef: ./components/openai-chat.yaml
+      bindings:
+        llm:
+          parameter: llm
+    agent:
+      # A WORKER: it polls Telegram for updates, so nothing calls it.
+      componentRef: ./components/telegram-agent.yaml
+      compute:
+        profile: general.standard.small
+      bindings:
+        telegramBaseURL:
+          node: bot
+          output: baseURL
+        telegramBotToken:
+          node: bot
+          output: botToken
+        llmBaseURL:
+          node: llm
+          output: baseURL
+        llmAPIKey:
+          node: llm
+          output: apiKey
+        llmModel:
+          node: llm
+          output: model

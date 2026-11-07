@@ -20,7 +20,7 @@ test('the key present says an input is a connection input', () => {
 })
 
 test('every protocol fixes its members', () => {
-  expect(Object.keys(CONNECTION_PROTOCOL_MEMBERS.POSTGRES)).toEqual([
+  expect(Object.keys(CONNECTION_PROTOCOL_MEMBERS.POSTGRES ?? {})).toEqual([
     'host',
     'port',
     'database',
@@ -37,6 +37,8 @@ test('optional members state a default or may be absent, and url is derived', ()
     sensitive: false,
     required: false,
     default: 0,
+    role: 'parameter',
+    schema: { type: 'integer', minimum: 0 },
   })
   expect(protocolMember('S3', 'pathStyle')?.default).toBe(false)
   const redis = (name: string) => {
@@ -85,12 +87,16 @@ test('members carry their protocol type and sensitivity', () => {
     type: 'integer',
     sensitive: false,
     required: true,
+    role: 'parameter',
+    schema: { type: 'integer', minimum: 1, maximum: 65535 },
   })
   expect(protocolMember('REDIS', 'url')).toEqual({
     type: 'string',
     sensitive: true,
     required: true,
     derived: true,
+    role: 'derived',
+    schema: { type: 'string', minLength: 1 },
   })
   expect(protocolMember('S3', 'secretAccessKey')?.sensitive).toBe(true)
   expect(protocolMember('POSTGRES', 'apiKey')).toBeUndefined()

@@ -3,9 +3,10 @@
 Every [kind family](../specifications/README.md#kind-family) publishes one
 JSON Schema (draft 2020-12) bundle per major version, and one per exact release.
 This page is for anyone validating Musher documents: in an editor, in
-automation, or offline. Core publishes no schema, for the reason
+automation, or offline. Core publishes no document schema, for the reason
 [How the families relate](../specifications/README.md#how-the-families-relate)
-gives.
+gives. What core and each family do publish as data, the registries and the
+interface schemas, is in [Registries](#registries).
 
 ## <a id="which-url"></a>Which URL
 
@@ -105,6 +106,36 @@ release is byte-for-byte what its exact release URL serves.
 
 To inspect the schema a checkout would publish, run `task bundle`, which writes
 it under `dist/`.
+
+## <a id="registries"></a>Registries and interface schemas
+
+From 2.1.0, every release archive carries facts a consumer used to port from
+the prose by hand, as JSON
+([ADR 0043](adr/0043-registries-are-released-data-interfaces.md)):
+
+| File | In | Holds |
+|---|---|---|
+| `registry/requirements.json` | every family | The family version's own requirement IDs, each with its anchor in `spec.md` and the section stating it. |
+| `registry/diagnostics.json` | every family | Every code a document of the family may report: core's, each dependency's and its own, with its phases, its severities and the family declaring it. |
+| `registry/vocabulary.json` | core | The ordered phases, the scopes with their phases, the result statuses, the severities, the resolution stages, and the reserved namespaces with whether each is assigned. |
+| `registry/terms.json` | core | Every term record, as `docs/terminology.yaml` holds it. |
+| `interfaces/validation-result.schema.json` | core | The shape of a validation result ([ADR 0044](adr/0044-the-validation-result-is-a-released-schema.md)). |
+| `interfaces/registry/*.schema.json` | core | The schema each registry file and the term records are valid against. |
+| `protocols/*.json` | component | One record per connection protocol, with its members, and `categories.json` ([ADR 0045](adr/0045-connection-protocols-are-a-registry.md)). |
+| `interfaces/connection-evidence.schema.json` | blueprint | The shape of the `connections` resolution context, generated from component's protocol records. |
+
+Each is part of a gated interface in `.repo/outputs.toml`: `core-registry`,
+`component-registry`, `blueprint-registry` and `listing-registry` for each
+family's `registry/`, `core-validation-result` and `core-registry-schemas` for
+core's `interfaces/`, `component-protocols` for `protocols/`, and
+`blueprint-connection-evidence` for blueprint's `interfaces/`. Each is listed
+with every file's SHA-256 in the archive's `release.json`, so a vendored copy is checked offline
+like the bundle. `spec.md` stays normative: a registry is generated from it by
+`task docs`, and `task check:docs` fails when the two disagree. Within a major
+version an ID, a code, a term or a list entry is never removed, and a list
+grows only at its end; `task check:compat:registry` holds each file to its last
+release. The site does not serve these files yet: read them from the release
+archive, or at a tag in this repository.
 
 ## <a id="verifying"></a>Verifying what you downloaded
 

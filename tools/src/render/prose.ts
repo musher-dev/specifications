@@ -11,7 +11,7 @@
  *    therefore run with `safe: false`; `safe: true` replaces every one of them
  *    with `<!-- raw HTML omitted -->`.
  * 2. **Tables survive.** CommonMark has no tables, and the three `spec.md` files
- *    carry 25 of them — the requirement registries, the diagnostics registries
+ *    carry 25 of them: the requirement registries, the diagnostics registries
  *    and the kind-by-field matrix are all tables, and they are the densest
  *    normative content in the repository. `splitTables` handles them; see its
  *    docblock for why a line-level split is sound here and what it refuses.
@@ -62,7 +62,7 @@ type Segment =
   | { readonly kind: 'markdown'; readonly text: string }
   | { readonly kind: 'table'; readonly table: Table }
 
-/** `|---|---|`, with no alignment colons — the only delimiter shape in use. */
+/** `|---|---|`, with no alignment colons, the only delimiter shape in use. */
 const DELIMITER = /^\|[\s:|-]+\|$/
 
 /**
@@ -93,7 +93,7 @@ function splitTables(markdown: string, where: string): Segment[] {
     // A fenced block is opaque. Without this, a pipe table shown *as an
     // example* inside a fence would be lifted out as a real table and its
     // closing fence would re-open a code block, swallowing the rest of the
-    // document — silently, which is the one outcome this module refuses.
+    // document, silently, which is the one outcome this module refuses.
     const opener = /^(```+|~~~+)/.exec(line.trim())
     if (fence === null && opener !== null) {
       fence = opener[1] ?? '```'
@@ -137,7 +137,7 @@ function cells(row: string, where: string, line: number): string[] {
   for (const span of row.match(/`[^`\n]*`/g) ?? []) {
     if (span.includes('|')) {
       throw new Error(
-        `${where}:${line}: a table cell holds a code span containing a pipe — ${span}. ` +
+        `${where}:${line}: a table cell holds a code span containing a pipe: ${span}. ` +
           'Tables here are split on the pipe, so this row cannot be rendered faithfully. ' +
           'Reword the cell, or teach prose.ts to parse the row properly.',
       )
@@ -157,7 +157,7 @@ const renderer = new HtmlRenderer({ safe: false })
  * Rewrite links and citations in place.
  *
  * Only `link` destinations and `text` literals are touched, so a URL inside a
- * code span stays a code span — that is the difference between walking the tree
+ * code span stays a code span; that is the difference between walking the tree
  * and running a regular expression over the rendered HTML.
  */
 function rewrite(root: Node, context: ProseContext | null): void {
@@ -167,7 +167,7 @@ function rewrite(root: Node, context: ProseContext | null): void {
    * Depth of enclosing links. A citation inside a link's own label must be
    * left alone: wrapping it makes a nested `<a>`, which HTML forbids and the
    * parser splits into siblings, and the inner href would be resolved against
-   * *this* document — so `[component §3](../../component/v1/spec.md#…)` would
+   * *this* document, so `[component §3](../../component/v1/spec.md#…)` would
    * render a "§3" pointing at this family's §3 instead of component's.
    */
   let inLink = 0

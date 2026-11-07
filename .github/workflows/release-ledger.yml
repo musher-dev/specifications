@@ -7,7 +7,7 @@ name: Release Ledger
 # only squash merges and sets strict_required_status_checks_policy, so a release
 # branch cannot merge while it is behind main. An entry written here is
 # therefore guaranteed to describe the tree in the very commit that gets
-# tagged — which is what lets check:published treat a tag with no ledger entry
+# tagged, which is what lets check:published treat a tag with no ledger entry
 # as a hard failure instead of something to tolerate after every release. See
 # docs/adr/0023-published-bytes-are-immutable-release-assets.md §3.
 
@@ -60,7 +60,7 @@ jobs:
         run: |
           set -euo pipefail
           if git diff --quiet -- published.json; then
-            echo "published.json already current — nothing to push."
+            echo "published.json already current; nothing to push."
             echo 'changed=false' >> "$GITHUB_OUTPUT"
           else
             git --no-pager diff -- published.json
@@ -78,9 +78,9 @@ jobs:
           private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
           permission-contents: write
 
-      # Authored and signed off as the App's bot user — the identity
+      # Authored and signed off as the App's bot user, the identity
       # release-please's own commits carry and .github/release-please/config.json
-      # names in `signoff` — so `Commits / Sign-off` finds a trailer equal to
+      # names in `signoff`, so `Commits / Sign-off` finds a trailer equal to
       # the author.
       - name: Commit the ledger entry
         if: steps.ledger.outputs.changed == 'true'

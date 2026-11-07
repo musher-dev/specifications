@@ -23,9 +23,9 @@ but real:
   self-contained. A remote reference turns every validator into an SSRF vector
   and a network dependency. CI rejects these; report any that reach a release.
 - **A schema that accepts a document the specification forbids**, where the gap
-  has a security consequence — for example accepting a path that escapes the
+  has a security consequence, for example accepting a path that escapes the
   project root, or an unpinned image reference.
-- **Supply chain integrity** — a mismatch between a release asset, the digest
+- **Supply chain integrity**: a mismatch between a release asset, the digest
   GitHub records for it, the `bundleSha256` in `published.json`, the bytes
   served at its pinned URL, and its SLSA provenance attestation.
 - **Vulnerabilities in `tools/`**, which run in CI with repository credentials.
@@ -77,7 +77,8 @@ curl -s https://specifications.musher.dev/component/v2.0.0/component.schema.json
 ```
 
 A pinned URL whose bytes do not match the release asset, or the `bundleSha256`
-that `published.json` records, is a supply-chain report, not a bug — see below.
+that `published.json` records, is a supply-chain report, not a bug: report it as
+[Reporting a vulnerability](#reporting-a-vulnerability) says.
 
 ## Supported versions
 

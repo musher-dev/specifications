@@ -39,7 +39,10 @@ nothing reads it to deploy anything.
 
 ### <a id="terms"></a>1.1 Terms
 
-- **Catalog**: the published collection of catalog items.
+- **Catalog**: the curated, public collection of catalog items, each with a
+  listing, that a storefront offers. It is core's term
+  ([core v2 §1.3](../../core/v2/spec.md#terms)), and so is an organization's
+  library: an item published only to its library needs no listing.
 - **Storefront**: the interface people browse the catalog in.
 - A catalog item is a blueprint item or a component item. "Catalog item" is
   core's term ([core v2 §1.3](../../core/v2/spec.md#terms)), and so is a

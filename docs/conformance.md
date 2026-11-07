@@ -205,6 +205,11 @@ Required when `expected` is `fail`. A non-empty array:
 [{ "code": "ERR_MISSING_FIELD", "path": "" }]
 ```
 
+Each entry is an `ExpectedDiagnostic` of core's
+[validation result schema](../specifications/core/v2/interfaces/validation-result.schema.json),
+and carries `path` as well as `code`. `task check:conformance` validates every
+entry against it.
+
 `path` is a JSON Pointer into the submitted document; `""` is the root.
 For a referenced component, the primary pointer identifies its authored binding
 or `componentRef`. Optional `related` locations carry the component `artifact`
@@ -218,11 +223,20 @@ declared phase** and produces **at least** the declared diagnostics. Producing
 additional diagnostics is permitted: a validator reporting every problem at
 once is more useful than one that stops at the first.
 
+**Expectations match by severity, and default to `ERROR`.** An expected
+diagnostic may carry `severity`, `ERROR` or `WARNING`; one without it is
+`ERROR`. It matches only a produced diagnostic of the same severity, so an
+implementation's warnings never satisfy, and never upset, an expectation
+written before warnings existed. Every fixture the 2.0.0 releases carry is
+unchanged by this, and is read as matching `ERROR` diagnostics alone. A
+`WARN_` code is expected only at `WARNING`
+([core v2 §7](../specifications/core/v2/spec.md#diagnostics)).
+
 ## <a id="what-is-normative"></a>What is normative
 
 | Normative | Not normative |
 |---|---|
-| The diagnostic `code` | The human-readable message |
+| The diagnostic `code`, and its `severity` | The human-readable message |
 | The `path` the diagnostic anchors to | The order diagnostics are emitted |
 | The `phase` at which validation fails, and a resolution diagnostic's `stage` | Whether extra diagnostics accompany the declared ones |
 | An `effective` value | Whether an implementation stores it or computes it on demand |
@@ -281,7 +295,7 @@ validation phases:
 | `parser` | The Musher YAML profile: [core v2 §6.2](../specifications/core/v2/spec.md#yaml-profile) | Never | Document cases |
 | `structural` | The family's JSON Schema 2020-12 bundle | Never | Document cases |
 | `semantic` | Placeholder grammar and namespaces, path containment, cross-document agreement | Never | Document cases, and behavioural cases |
-| `admission` | Account, region and quota checks, and catalog and publication obligations | Server only | Document cases, and behavioural cases |
+| `admission` | Account, region and quota checks, and publication obligations | Server only | Document cases, and behavioural cases |
 | `resolution` | Turning an admitted blueprint revision into one deployment's values | Server only | Behavioural cases only |
 
 An implementation MUST apply the phases in order and MUST NOT report a
@@ -315,7 +329,7 @@ validation result, and each scope names the cases it must pass every one of:
 | `parser` | `parser` | None | A linter or formatter that reads documents but does not validate them |
 | `structural` | `parser`, `structural` | None | An editor integration binding the published schema |
 | `document` | `parser`, `structural`, `semantic` | None | A CLI validating a working tree, with no network |
-| `publication` | all four | None | A catalog publisher |
+| `publication` | all four | None | A publisher, to a library or to the catalog |
 | `deployment` | all four | `resolution` | A control plane deploying blueprints |
 
 The scopes are cumulative: `document` includes everything `structural`
@@ -373,12 +387,23 @@ Each family's optional `behavior.json` is an array. It is an explicit index;
 adapters MUST read it alongside `cases.json`. Each entry has a unique `id`, a
 `suite`, an `operation`, `requirements`, and `expect`. The latter maps JSON
 Pointers into an operation's observation to exact JSON values. Mapping order has
-no meaning; sequence order does. Optional `diagnostics` is a list of a required
-`code` and optional `path`, `phase`, `stage` and `related` observations. Every
-supplied property must match one produced diagnostic, without imposing
-diagnostic order or forbidding additional diagnostics. A declared `phase` must
-be one the code's registry lists, exactly as for a document case, and a
-`resolution` diagnostic declares its `stage` ([Phases](#phases)).
+no meaning; sequence order does. Optional `diagnostics` is a list of
+`ExpectedDiagnostic`s of core's
+[validation result schema](../specifications/core/v2/interfaces/validation-result.schema.json):
+a required `code` and optional `path`, `severity`, `phase`, `stage` and
+`related` observations. Every supplied property must match one produced
+diagnostic of the entry's severity, `ERROR` when it names none, without
+imposing diagnostic order or forbidding additional diagnostics. A declared
+`phase` must be one the code's registry lists, exactly as for a document case,
+and a `resolution` diagnostic declares its `stage` ([Phases](#phases)). A
+`WARN_` code's Warnings table names the requirement it reports and the phases
+that report it, and its `phase` is checked against those phases in the same way.
+
+`expect` reads the observation with its `diagnostics` reduced to the `ERROR`
+ones. A pointer into `/diagnostics`, such as `"/diagnostics": []`, therefore
+means "no `ERROR` diagnostic", whether or not the implementation reports
+warnings beside them. A warning is pinned in `diagnostics`, with
+`"severity": "WARNING"`, never through `expect`.
 
 An entry supplies either logical `input`, or `tree` (item-relative path to
 UTF-8 document text) plus `document` naming the document within that tree.
@@ -391,7 +416,7 @@ testing sensitivity.
 | Suite | Operation | Observation |
 |---|---|---|
 | `normalization` | `normalize` | `value`, with effective schema defaults materialized only beneath existing ancestors; `idempotent`, true when a second normalization changes nothing |
-| `resolution` | `validate` | Core validation `status`, `validationScope`, `phase`, `diagnostics` and `deferred`, over the supplied context, at the `validationScope` the context names (default `document`) |
+| `resolution` | `validate` | A validation result ([core v2 §6.1](../specifications/core/v2/spec.md#validation-scope)): `status`, `validationScope`, `phase`, `diagnostics` and `deferred`, over the supplied context, at the `validationScope` the context names (default `document`) |
 | `resolution` | `resolve` | Pre-start value-resolution status, diagnostics, deferred obligations, private inputs/outputs/environment, and redacted public inspection |
 | `resolution` | `record` | `VALID` plus the generated resolution record, or `INVALID` with `ERR_INVALID_RESOLUTION_CONTEXT` at stage `record` |
 | `rendering` | `render` | `html` produced from `input.markdown` and the full-path `input.media` URL mapping under the listing rendering rules |
@@ -408,7 +433,7 @@ that was not acquired, which defers the obligations that need it.
 
 | Key | Shape | Stage |
 |---|---|---|
-| `componentDocuments` | `identity@revision` → `{source, digest}`: the catalog component documents a blueprint references | Before resolution, for the `document` scope |
+| `componentDocuments` | `identity@revision` → `{source, digest}`: the component documents a blueprint's catalog references name, from the deploying organization's library or the catalog | Before resolution, for the `document` scope |
 | `sources` | node → `{gitCommit?, uploadDigest?, builderDigest?, imageDigest?}` | `sources` |
 | `parameters` | parameter name → `{value, sensitive}`: submitted values | `parameters` |
 | `variables` | exact dotted path → `{value, sensitive, identity, version, authorized}` | `parameters` |
@@ -450,11 +475,16 @@ platform knows it lacks.
 facts of the endpoint's mode. `oidcClient` is `{identity, version, issuerURL,
 clientID, secret}`, beside `public` and never inside it.
 
-**`connections`.** `deployment` is the deployment's identity. Each parameter
-maps to an acquisition: `{status}`, where `status` is `NOT_ACQUIRED`,
-`NOT_FOUND`, `DENIED`, `INCOMPATIBLE` or `SELECTED`. A `SELECTED` acquisition
-also carries `persisted: true` and the persisted `selection` of
-[blueprint §5.3](../specifications/blueprint/v2/spec.md#connections),
+**`connections`.** A `connections` entry as a whole, each acquisition in it,
+and each selection validate against blueprint's
+[connection-evidence schema](../specifications/blueprint/v2/interfaces/connection-evidence.schema.json),
+which `task docs` generates from component's protocol registry
+([component v2 §6.4](../specifications/component/v2/spec.md#protocol-registry)).
+`deployment` is the deployment's identity. Each parameter maps to an
+acquisition, `{status}`, whose status is one of the acquisition statuses of
+[blueprint `BP-CONNECTION-002`](../specifications/blueprint/v2/spec.md#BP-CONNECTION-002).
+A `SELECTED` acquisition also carries `persisted: true` and the persisted
+`selection` of [blueprint §5.3](../specifications/blueprint/v2/spec.md#connections),
 represented as:
 
 ```json
@@ -490,28 +520,21 @@ represented as:
   the policy that answered it.
 - `selectionKind` is `MANAGED` or `USER`. `provisioning` is `GRANTED` or
   `PROVISIONED`, and only a `MANAGED` selection carries it.
-- `credential.value` supplies the protocol's credential member (`apiKey` for
-  `OPENAI_CHAT_COMPLETIONS` and `ANTHROPIC_MESSAGES`, `password` for `POSTGRES`
-  and `REDIS`, `secretAccessKey` for `S3`). `permittedBaseURLs` is required
-  when a view is of an HTTP-based protocol (the two LLM protocols and `S3`),
-  and lists the URLs its URL member may take (`baseURL`, or the `S3`
-  `endpointURL`). A selection of a `REDIS` server that requires no
-  authentication carries no `credential`.
-- `views` is keyed by protocol. Each view holds the members of that protocol
-  ([component §6.4](../specifications/component/v2/spec.md#members)) except
-  its credential member and the derived `url`, which resolution composes
-  ([component §6.4](../specifications/component/v2/spec.md#derived-urls)) and
-  the `resolve` observation shows in the input's value. A view omits an
-  optional member it does not hold, and an LLM view also carries
-  `capabilities`.
+- `credential.value` supplies the credential member of each view's protocol.
+- `views` is keyed by protocol. Which members a view of each protocol holds,
+  and their value constraints, is the schema's, and the `resolve` observation
+  shows the input's whole value: the view's members, the defaults it omits,
+  the credential member and any derived member resolution composes
+  ([component §6.4](../specifications/component/v2/spec.md#derived-urls)).
 
 The context is trusted acquisition evidence, not an authored mechanism for
-granting permission. Malformed evidence is `ERR_INVALID_RESOLUTION_CONTEXT`. An
-unavailable entry is absent, never a fabricated empty value. The rules a
-selection must satisfy (that `request.from` equals the parameter's `from`, that
+granting permission. Evidence the schema rejects is malformed,
+`ERR_INVALID_RESOLUTION_CONTEXT`. An unavailable entry is absent, never a
+fabricated empty value. The schema fixes only the shape: the rules a selection
+must also satisfy (that `request.from` equals the parameter's `from`, that
 managed credential identities are not reused across connection parameters, the
-URL rules) are blueprint's; this section only fixes how a fixture writes the
-evidence down.
+URL rules) are blueprint's, and this section only fixes how a fixture writes
+the evidence down.
 
 ### <a id="admission-context"></a>Admission context
 
@@ -531,7 +554,7 @@ it, so the result is `INCOMPLETE`, never `VALID`.
 
 A profile is available in the region when one of its hosts is in it, and a
 node's placement is satisfiable when one such host meets every constraint at
-once. Every value is synthetic: a fixture describes a catalog, never a real
+once. Every value is synthetic: a fixture describes a platform, never a real
 one.
 
 ### Resolution observations
@@ -581,7 +604,7 @@ no deployment-validity claim.
 
 A `publication` or `deployment` result MUST complete every obligation of its
 scope ([`CORE-ADMISSION-001`](../specifications/core/v2/spec.md#CORE-ADMISSION-001)).
-The local adapter reports unresolved catalog and policy admission rather than
+The local adapter reports unresolved publication and policy admission rather than
 inventing an authorization result. Its value-resolution and credential adapters
 are test implementations, not a production deployment engine.
 
@@ -599,7 +622,7 @@ cases against v2.
 The coverage gate requires every declared diagnostic and requirement to have
 a fixture in its family or a consuming family's reachable corpus, or a reviewed
 exception. Publication revision fixtures supply a synthetic lineage snapshot;
-implementations acquire and verify the real catalog context before applying
+implementations acquire and verify the real lineage before applying
 that rule.
 
 ## Adding a case

@@ -1,0 +1,24 @@
+specVersion: v2
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: EXTERNAL
+  contract:
+    inputs:
+      discord:
+        description: Connection this node stands for
+        connection:
+          protocol: DISCORD_BOT
+          capabilities:
+            - STREAMING
+    outputs:
+      botToken:
+        description: Forwarded botToken
+        schema:
+          type: string
+        sensitive: true
+        from:
+          input: discord
+          member: botToken

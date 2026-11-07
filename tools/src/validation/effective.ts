@@ -1,5 +1,5 @@
 /**
- * Effective values — what a document means where it does not say.
+ * Effective values: what a document means where it does not say.
  *
  * ADR 0008. A `default` in JSON Schema is an annotation: validators do not
  * insert it, and two conforming implementations may therefore hold different
@@ -13,8 +13,8 @@
  * the document effectively says there.
  *
  * It is not a general JSON Schema evaluator and does not try to be. It handles
- * the four shapes this contract actually uses to reach a value — `$ref`,
- * `properties`, `additionalProperties` for a typed mapping, and `items` — plus
+ * the four shapes this contract actually uses to reach a value (`$ref`,
+ * `properties`, `additionalProperties` for a typed mapping, and `items`), plus
  * `anyOf`'s nullable idiom, and it reports anything else as unresolvable
  * rather than guessing. A resolver that guesses is worse than one that stops,
  * because the fixture it green-lights is the one nobody re-reads.
@@ -99,7 +99,7 @@ function schemaChild(bundle: Json, schema: Json, segment: string): Json | undefi
   if (!isObject(here)) return undefined
 
   if (isObject(here.properties) && segment in here.properties) return here.properties[segment]
-  // A typed mapping — `endpoints`, `volumes`, `inputs` — keys by author-chosen
+  // A typed mapping (`endpoints`, `volumes`, `inputs`) keys by author-chosen
   // name, so any segment lands on the same value schema.
   if (isObject(here.additionalProperties)) return here.additionalProperties
   if (here.items !== undefined && /^\d+$/.test(segment)) return here.items as Json
@@ -117,7 +117,7 @@ function documentChild(value: Json, segment: string): Json | undefined {
  * What the document effectively says at `pointer`.
  *
  * `written` where the author supplied a value, `default` where the schema
- * supplies one for an absent field, and `absent` where neither does — which
+ * supplies one for an absent field, and `absent` where neither does, which
  * includes the case a fixture is most likely to get wrong: an absent ancestor
  * whose own default is null, so nothing below it exists to have a value.
  */
@@ -134,7 +134,7 @@ export function effectiveValue(bundle: Json, document: Json, pointer: string): R
 
     if (!present) {
       // Already below a field the author omitted. §3: what stands in for it is
-      // its default, and a default that is null — or any scalar — has nothing
+      // its default, and a default that is null (or any scalar) has nothing
       // beneath it. Omitting `health` does not confer a readiness probe.
       if (!isObject(value) && !Array.isArray(value)) {
         return {
@@ -179,7 +179,7 @@ export function effectiveValue(bundle: Json, document: Json, pointer: string): R
   return {
     kind: 'absent',
     reason:
-      `${pointer} is absent and neither it nor an ancestor declares a default — ` +
+      `${pointer} is absent and neither it nor an ancestor declares a default: ` +
       'an absent field with no default has no effective value to pin',
   }
 }

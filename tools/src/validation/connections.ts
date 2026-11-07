@@ -1,17 +1,23 @@
-/** Component §6.4: the per-protocol member table. Blueprint selections live in selections.ts. */
+/**
+ * Component §6.4: the per-protocol member facts, read from the protocol
+ * registry (docs/adr/0045). Blueprint selections live in selections.ts.
+ */
 import { isObject, type Json } from '../lib/layout.ts'
+import {
+  loadProtocolRegistry,
+  locatorOf,
+  type MemberRole,
+  type ProtocolRecord,
+} from '../lib/protocols.ts'
 
-export type ConnectionProtocol =
-  | 'OPENAI_CHAT_COMPLETIONS'
-  | 'ANTHROPIC_MESSAGES'
-  | 'POSTGRES'
-  | 'REDIS'
-  | 'S3'
+/** A protocol the registry defines. */
+export type ConnectionProtocol = string
 /**
  * The contract of one connection member (component §6.4): its logical type,
- * its sensitivity, and whether every view carries it. An optional member
- * states its `default`, or has none and may be absent. A `derived` member is
- * never carried by a view: resolution composes it (`composeConnectionURL`).
+ * its sensitivity, its role, its value schema, and whether every view carries
+ * it. An optional member states its `default`, or has none and may be absent.
+ * A `derived` member is never carried by a view: resolution composes it
+ * (`composeConnectionURL`).
  */
 export interface ConnectionMemberContract {
   readonly type: 'string' | 'integer' | 'boolean'
@@ -19,60 +25,38 @@ export interface ConnectionMemberContract {
   readonly required: boolean
   readonly default?: Json
   readonly derived?: true
-  /** The closed set a string member takes its value from. */
-  readonly values?: readonly string[]
+  readonly role: MemberRole
+  /** The value constraints the registry states, as a JSON Schema fragment. */
+  readonly schema: Readonly<Record<string, Json>>
 }
-type MemberOptions = Partial<Omit<ConnectionMemberContract, 'type'>>
-const member = (
-  type: ConnectionMemberContract['type'],
-  options: MemberOptions = {},
-): ConnectionMemberContract => ({ type, sensitive: false, required: true, ...options })
-const sensitive = { sensitive: true } as const
-/** The `POSTGRES` `sslMode` member: PostgreSQL's `sslmode` values (component §6.4). */
-export const SSL_MODES = ['disable', 'allow', 'prefer', 'require', 'verify-ca', 'verify-full']
-const LLM_MEMBERS = {
-  baseURL: member('string'),
-  apiKey: member('string', sensitive),
-  model: member('string'),
-}
+/** The registry, in the order component §6.4 lists its protocols. */
+export const PROTOCOL_REGISTRY = loadProtocolRegistry()
+const contractOf = (member: ProtocolRecord['members'][number]): ConnectionMemberContract => ({
+  type: member.schema.type,
+  sensitive: member.sensitive,
+  required: member.presence !== 'optional',
+  ...(member.default === undefined ? {} : { default: member.default }),
+  ...(member.presence === 'derived' ? { derived: true as const } : {}),
+  role: member.role,
+  schema: member.schema,
+})
 /**
  * Component §6.4 COMP-CONNECTION-002: each protocol fixes its members, their
  * logical types, their sensitivity and whether each is required, optional
  * with a default, optional without one, or derived. The one table every
- * check reads.
+ * check reads, keyed by protocol and then by member, in registry order.
  */
 export const CONNECTION_PROTOCOL_MEMBERS: Readonly<
   Record<ConnectionProtocol, Readonly<Record<string, ConnectionMemberContract>>>
-> = {
-  OPENAI_CHAT_COMPLETIONS: LLM_MEMBERS,
-  ANTHROPIC_MESSAGES: LLM_MEMBERS,
-  POSTGRES: {
-    host: member('string'),
-    port: member('integer'),
-    database: member('string'),
-    username: member('string'),
-    password: member('string', sensitive),
-    sslMode: member('string', { values: SSL_MODES }),
-    url: member('string', { ...sensitive, derived: true }),
-  },
-  REDIS: {
-    host: member('string'),
-    port: member('integer'),
-    tls: member('boolean'),
-    database: member('integer', { required: false, default: 0 }),
-    username: member('string', { required: false }),
-    password: member('string', { ...sensitive, required: false }),
-    url: member('string', { ...sensitive, derived: true }),
-  },
-  S3: {
-    endpointURL: member('string'),
-    region: member('string'),
-    bucket: member('string'),
-    accessKeyID: member('string'),
-    secretAccessKey: member('string', sensitive),
-    pathStyle: member('boolean', { required: false, default: false }),
-  },
-}
+> = Object.fromEntries(
+  PROTOCOL_REGISTRY.protocols.map((p) => [
+    p.id,
+    Object.fromEntries(p.members.map((m) => [m.name, contractOf(m)])),
+  ]),
+)
+/** Every protocol's record, keyed by protocol. */
+export const PROTOCOL_RECORDS: Readonly<Record<ConnectionProtocol, ProtocolRecord>> =
+  Object.fromEntries(PROTOCOL_REGISTRY.protocols.map((p) => [p.id, p]))
 /**
  * Component §6.4: a member is guaranteed when every resolved connection holds
  * it: it is required, derived, or optional with a default. Only a guaranteed
@@ -80,28 +64,29 @@ export const CONNECTION_PROTOCOL_MEMBERS: Readonly<
  */
 export const guaranteedMember = (contract: ConnectionMemberContract): boolean =>
   contract.required || contract.derived === true || contract.default !== undefined
-export const CONNECTION_PROTOCOLS = Object.keys(CONNECTION_PROTOCOL_MEMBERS) as ConnectionProtocol[]
-/** The language-model protocols: the only ones that take `capabilities` (component §6.4). */
-export const LLM_CONNECTION_PROTOCOLS: ReadonlySet<ConnectionProtocol> = new Set([
-  'OPENAI_CHAT_COMPLETIONS',
-  'ANTHROPIC_MESSAGES',
-])
+export const CONNECTION_PROTOCOLS: readonly ConnectionProtocol[] = PROTOCOL_REGISTRY.protocols.map(
+  (p) => p.id,
+)
+/** The protocols that take `capabilities`: those whose record lists any (component §6.4). */
+export const LLM_CONNECTION_PROTOCOLS: ReadonlySet<ConnectionProtocol> = new Set(
+  PROTOCOL_REGISTRY.protocols.filter((p) => p.capabilities.length > 0).map((p) => p.id),
+)
 /**
- * The HTTP-based protocols (ADR 0039 §5): their URL member, named in
- * `CONNECTION_URL_MEMBER`, is held to blueprint §5.3's HTTPS and
+ * The member of an HTTP-based protocol that carries its HTTPS URL: its
+ * locator (ADR 0039 §5, docs/adr/0045). Held to blueprint §5.3's HTTPS and
  * `permittedBaseURLs` rules.
  */
-export const HTTP_CONNECTION_PROTOCOLS: ReadonlySet<ConnectionProtocol> = new Set([
-  'OPENAI_CHAT_COMPLETIONS',
-  'ANTHROPIC_MESSAGES',
-  'S3',
-])
-/** The member of an HTTP-based protocol that carries its HTTPS URL. */
-export const CONNECTION_URL_MEMBER: Readonly<Partial<Record<ConnectionProtocol, string>>> = {
-  OPENAI_CHAT_COMPLETIONS: 'baseURL',
-  ANTHROPIC_MESSAGES: 'baseURL',
-  S3: 'endpointURL',
-}
+export const CONNECTION_URL_MEMBER: Readonly<Partial<Record<ConnectionProtocol, string>>> =
+  Object.fromEntries(
+    PROTOCOL_REGISTRY.protocols.flatMap((p) => {
+      const locator = locatorOf(p)
+      return locator ? [[p.id, locator.name]] : []
+    }),
+  )
+/** The HTTP-based protocols: those with a locator. */
+export const HTTP_CONNECTION_PROTOCOLS: ReadonlySet<ConnectionProtocol> = new Set(
+  Object.keys(CONNECTION_URL_MEMBER),
+)
 export const isConnectionProtocol = (value: unknown): value is ConnectionProtocol =>
   typeof value === 'string' && Object.hasOwn(CONNECTION_PROTOCOL_MEMBERS, value)
 /** The member contract `member` has under `protocol`, or undefined when the protocol defines none. */
@@ -110,14 +95,16 @@ export function protocolMember(
   name: string,
 ): ConnectionMemberContract | undefined {
   if (!isConnectionProtocol(protocol)) return
-  const members = CONNECTION_PROTOCOL_MEMBERS[protocol]
+  const members = CONNECTION_PROTOCOL_MEMBERS[protocol] ?? {}
   return Object.hasOwn(members, name) ? members[name] : undefined
 }
 const record = (v: unknown): Record<string, Json> =>
   isObject(v as Json) ? (v as Record<string, Json>) : {}
 /** The members a connection input holds, fixed by its protocol (component §6.4). */
 export const CONNECTION_MEMBERS: readonly string[] = [
-  ...new Set(CONNECTION_PROTOCOLS.flatMap((p) => Object.keys(CONNECTION_PROTOCOL_MEMBERS[p]))),
+  ...new Set(
+    CONNECTION_PROTOCOLS.flatMap((p) => Object.keys(CONNECTION_PROTOCOL_MEMBERS[p] ?? {})),
+  ),
 ]
 /** Component §6.1: the key present says an input is a connection input. */
 export const isConnectionInput = (input: Json | undefined): boolean =>

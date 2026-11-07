@@ -38,12 +38,12 @@ respect the privacy and security of the reporter.
 
 Maintainers will follow these guidelines in determining consequences:
 
-1. **Correction** — a private written warning and clarification of the
+1. **Correction:** a private written warning and clarification of the
    violation.
-2. **Warning** — a warning with consequences for continued behaviour, including
+2. **Warning:** a warning with consequences for continued behaviour, including
    a temporary restriction on interaction.
-3. **Temporary ban** — a temporary ban from any interaction with the project.
-4. **Permanent ban** — a permanent ban from public interaction with the project.
+3. **Temporary ban:** a temporary ban from any interaction with the project.
+4. **Permanent ban:** a permanent ban from public interaction with the project.
 
 ## Attribution
 

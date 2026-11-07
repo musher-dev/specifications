@@ -44,7 +44,7 @@ function p(): Pipeline {
 }
 
 /**
- * Release a version the way the pipeline does — record, tag, stage, publish —
+ * Release a version the way the pipeline does (record, tag, stage, publish)
  * and verify every published release into the cache the site reads.
  */
 async function release(
@@ -338,7 +338,7 @@ describe('assembleSite', () => {
       publish: false,
     })
     // release:stage now refuses a release without examples, so publish the
-    // bytes by hand — a release cut by older tooling, which the site must
+    // bytes by hand: a release cut by older tooling, which the site must
     // still refuse to render without them.
     const bundle = pinnedBundle({ name: 'component', major: 'v1', repoRoot: fx.root }, '1.0.0', {
       reader: gitReader(fx.root, tag),
@@ -356,7 +356,7 @@ describe('assembleSite', () => {
   })
 
   test('a ledger path whose tag carries no spec.md fails loudly rather than rendering no prose', async () => {
-    // A release cannot be recorded without prose — the core gate reads its §2 —
+    // A release cannot be recorded without prose (the core gate reads its §2),
     // so the only way to reach this is a ledger path the tag does not carry.
     const fx = fixture()
     await release(fx, 'component', 'v1', '1.0.0', fx.bundleDoc('component', 'v1'))
@@ -465,7 +465,7 @@ describe('assembleSite', () => {
 
     expect(alias.minProperties).toBe(1)
     expect(alias.description).toBeUndefined()
-    // The alias keeps the alias identity — only pinned copies are restamped.
+    // The alias keeps the alias identity; only pinned copies are restamped.
     expect(alias.$id).toBe('https://specifications.musher.dev/component/v1/component.schema.json')
   })
 

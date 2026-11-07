@@ -1,6 +1,6 @@
 /**
- * Check what the origin actually serves after a deploy — `task site:verify-live`
- * (docs/adr/0023 §4).
+ * Check what the origin actually serves after a deploy (`task site:verify-live`,
+ * docs/adr/0023 §4).
  *
  * For every tagged kind family release it GETs the pinned bundle and its
  * `.sha256` sidecar and compares them with the ledger's `bundleSha256`. For

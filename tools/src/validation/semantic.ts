@@ -289,6 +289,30 @@ function inputReferenceDiagnostics(
   else if (input.required === false && input.default === undefined)
     issue(out, 'ERR_INPUT_NOT_GUARANTEED', path)
 }
+/**
+ * The advisory checks of a component's semantic phase, reported at WARNING
+ * (core v2 §7). Component §5.2 COMP-EP-020: an `HTTPS` endpoint whose trust
+ * policy verifies, `SYSTEM` (the default) or `BUNDLE`, SHOULD name its
+ * `serverName`. `BUNDLE` already requires one structurally, so in practice this
+ * is a `SYSTEM` endpoint without one.
+ */
+export function componentWarnings(document: Json): Diagnostic[] {
+  const out: Diagnostic[] = []
+  const endpoints = record(at(document, 'spec', 'workload', 'endpoints'))
+  for (const [name, endpoint] of Object.entries(endpoints)) {
+    if (at(endpoint, 'protocol') !== 'HTTPS') continue
+    const verify = at(endpoint, 'tls', 'verify') ?? 'SYSTEM'
+    if (verify === 'NONE' || at(endpoint, 'tls', 'serverName') !== undefined) continue
+    out.push({
+      code: 'WARN_ENDPOINT_SERVER_NAME',
+      path: `/spec/workload/endpoints/${token(name)}`,
+      message: 'an endpoint that verifies its certificate should name its serverName',
+      severity: 'WARNING',
+      phase: 'semantic',
+    })
+  }
+  return out
+}
 export function componentDiagnostics(document: Json): Diagnostic[] {
   const out: Diagnostic[] = []
   // Every input something other than the environment reads (COMP-INPUT-001).
@@ -565,7 +589,7 @@ function summarise(value: string): string {
 
 /**
  * True when `target` lies strictly inside `root`. Both are expected to be
- * resolved already — this compares locations, and the caller is the one that
+ * resolved already: this compares locations, and the caller is the one that
  * decides what resolution means.
  */
 function contains(root: string, target: string): boolean {
@@ -575,7 +599,7 @@ function contains(root: string, target: string): boolean {
 
 /**
  * The resolved location of `path`, following symlinks. Containment is a
- * property of the resolved location rather than of the spelling — listing §5
+ * property of the resolved location rather than of the spelling; listing §5
  * and blueprint §4.1 both turn on that distinction.
  */
 function resolveReal(path: string): string {
@@ -588,7 +612,7 @@ function resolveReal(path: string): string {
     try {
       return resolve(dirname(path), readlinkSync(path))
     } catch {
-      // Not a link, or unreadable — the caller reports it as missing instead.
+      // Not a link, or unreadable; the caller reports it as missing instead.
       return resolve(path)
     }
   }
@@ -703,7 +727,7 @@ function readDocument(path: string): Json | undefined {
 }
 
 /**
- * Core §4.2 — an item document's `metadata.slug` MUST equal the item directory
+ * Core §4.2: an item document's `metadata.slug` MUST equal the item directory
  * name. Blueprint §3 and listing §3 are where each family cites it.
  */
 function checkSlug(document: Json, itemRoot: string, out: Diagnostic[]): void {
@@ -718,7 +742,7 @@ function checkSlug(document: Json, itemRoot: string, out: Diagnostic[]): void {
 }
 
 /**
- * `LIST-ITEM-001` — listing §3. `spec.itemType` is `BLUEPRINT` if and only if
+ * `LIST-ITEM-001`, listing §3. `spec.itemType` is `BLUEPRINT` if and only if
  * the item root holds `blueprint.yaml`.
  *
  * The rule reads the directory rather than the document, which is what makes it

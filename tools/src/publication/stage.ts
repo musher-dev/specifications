@@ -1,29 +1,33 @@
 /**
- * Stage the files a release attaches — `task release:stage TAG=<tag>`
+ * Stage the files a release attaches: `task release:stage TAG=<tag>`
  * (docs/adr/0023 §2, §6).
  *
  * Runs in the release job, checked out at the tag, on the tag's own tooling.
  * Before staging anything it refuses unless:
  *
  *   - the tag exists, its own ledger records it, and the default branch's
- *     ledger holds the same entry — `origin/main`, or `BASE_LEDGER_REF`;
+ *     ledger holds the same entry (`origin/main`, or `BASE_LEDGER_REF`);
  *   - `<tag>:<path>` has the recorded tree id;
  *   - a kind family passes the whole tagged core gate on this, the tag's own
  *     tooling, carries `examples/`, and the pinned bundle it builds at the tag
- *     hashes to `bundleSha256` — a determinism assertion, since `record` hashed
+ *     hashes to `bundleSha256`, a determinism assertion, since `record` hashed
  *     the same tree;
  *   - core records `bundleSha256: null` and carries no `schemas/src`.
  *
  * A kind family stages `<family>.schema.json` and `<family>-v<X.Y.Z>.tar.gz`.
  * The archive's root `<family>-v<major>/` holds the bundle, `spec.md`,
  * `examples/`, `conformance/` with the fixture format as `conformance/README.md`,
- * dependency specifications and corpora read from their exact tags, plus
- * dependency schemas read from verified published assets — never rebuilt —
- * `LICENSE`, `NOTICE`, `specification.json` (this repository's record: tag,
- * commit and dependency closure) and `release.json` (the conventions' release
- * record of the interfaces the archive delivers, docs/adr/0037). Core stages
- * only its archive, and carries `specification.json` alone: it delivers no
- * interface.
+ * the family version's `registry/`, `interfaces/` and `protocols/` where it
+ * carries them, dependency specifications, corpora and those same parts read
+ * from their exact tags, plus dependency schemas read from verified published
+ * assets (never rebuilt), `LICENSE`, `NOTICE`, `specification.json` (this
+ * repository's record: tag, commit and dependency closure) and `release.json`
+ * (the conventions' release record of the interfaces the archive delivers,
+ * docs/adr/0037). Core stages only its archive. From 2.1.0 it carries its
+ * `registry/` and `interfaces/` and a `release.json` of its own interfaces
+ * (docs/adr/0043); an older core release carries `specification.json` alone.
+ * A part younger than the release (`PART_SINCE` in the layout) is copied if
+ * present and never required.
  *
  * Every file is read out of git at a tag, never from the working tree. The
  * archive is deterministic: sorted names, owner and group 0, a fixed mtime, and
@@ -37,9 +41,11 @@
 import { spawnSync } from 'node:child_process'
 import {
   chmodSync,
+  existsSync,
   mkdirSync,
   mkdtempSync,
   readdirSync,
+  readFileSync,
   rmSync,
   statSync,
   writeFileSync,
@@ -53,6 +59,7 @@ import {
   CORE_FAMILY,
   canonicalJson,
   Failures,
+  type FamilyPart,
   failCli,
   familyPaths,
   hasPart,
@@ -74,7 +81,14 @@ import { assertCoreGateTaggedContent } from './core-gate.ts'
 import { assertDependencyContent, dependencyClosure } from './dependency-gate.ts'
 import { readCachedBundle, readPendingReleases } from './fetch.ts'
 import { type Ledger, ledgerAtRef, sameEntry } from './ledger.ts'
-import { readDeclarations, releaseRecord } from './release-record.ts'
+import {
+  type Declarations,
+  type DeclaredInterface,
+  matchesDefinition,
+  type RecordFile,
+  readDeclarations,
+  releaseRecord,
+} from './release-record.ts'
 import { assetNames, isCore, parseReleaseTag, releaseTag, sha256 } from './releases.ts'
 
 export interface StagedFile {
@@ -140,7 +154,7 @@ function writeMember(path: string, bytes: Buffer | string): void {
 
 /**
  * Fix every mode, so the archive does not carry the runner's umask. Files
- * 0644, directories 0755 — an archive of data, with nothing executable.
+ * 0644, directories 0755: an archive of data, with nothing executable.
  */
 function normalizeModes(dir: string): void {
   chmodSync(dir, 0o755)
@@ -173,20 +187,121 @@ export function deterministicArchive(parent: string, root: string): Buffer {
     ],
     { maxBuffer, env: archiveEnv() },
   )
-  if (tar.error !== undefined) throw new StageError(`tar could not be run — ${tar.error.message}`)
-  if (tar.status !== 0) throw new StageError(`tar failed (${tar.status}) — ${tar.stderr}`)
+  if (tar.error !== undefined) throw new StageError(`tar could not be run: ${tar.error.message}`)
+  if (tar.status !== 0) throw new StageError(`tar failed (${tar.status}): ${tar.stderr}`)
   const gzip = spawnSync('gzip', ['-n', '-9'], { input: tar.stdout, maxBuffer, env: archiveEnv() })
-  if (gzip.error !== undefined)
-    throw new StageError(`gzip could not be run — ${gzip.error.message}`)
-  if (gzip.status !== 0) throw new StageError(`gzip failed (${gzip.status}) — ${gzip.stderr}`)
+  if (gzip.error !== undefined) throw new StageError(`gzip could not be run: ${gzip.error.message}`)
+  if (gzip.status !== 0) throw new StageError(`gzip failed (${gzip.status}): ${gzip.stderr}`)
   return gzip.stdout
+}
+
+/** The parts a release copies verbatim beside its prose: what is not a document. */
+const DATA_PARTS = ['registry', 'interfaces', 'protocols'] as const satisfies readonly FamilyPart[]
+
+/**
+ * Copy a release's data parts from `dir` at `ref` into `to`. A part the layout
+ * says the release carries must be there; a part it does not, because the
+ * family never carries it or the release predates it, is copied only if
+ * present.
+ */
+function copyDataParts(
+  repoRoot: string,
+  ref: string,
+  release: { readonly family: string; readonly major: string; readonly version: string },
+  dir: string,
+  to: string,
+): void {
+  const paths = releaseDirPaths(dir)
+  for (const part of DATA_PARTS) {
+    if (hasPart(release.family, release.major, part, release.version)) {
+      requireTree(repoRoot, ref, paths[part], join(to, part))
+    } else {
+      extractTree(repoRoot, ref, paths[part], join(to, part))
+    }
+  }
+}
+
+/**
+ * Resolve one declared interface to the archive members that deliver it.
+ *
+ * A definition under the family version's `schemas/` is its source, and what
+ * the archive delivers for it is the bundle. Any other definition names files
+ * the archive holds at the same path below its root as below the family
+ * version directory; each must have been staged, so a declaration naming a
+ * file the archive leaves out is refused rather than recorded.
+ */
+function interfaceFiles(
+  repoRoot: string,
+  tag: string,
+  dir: string,
+  root: string,
+  declared: DeclaredInterface,
+  bundle: RecordFile | null,
+): RecordFile[] {
+  const paths = releaseDirPaths(dir)
+  const files: RecordFile[] = []
+  const tagged = listTreeFiles(repoRoot, tag, dir)
+  for (const definition of declared.definitions) {
+    if (definition === `${paths.schemas}/` || definition.startsWith(`${paths.schemas}/`)) {
+      if (bundle === null) {
+        throw new StageError(
+          `${tag}: interface "${declared.id}" names a schema, but no bundle is built`,
+        )
+      }
+      if (!files.some((f) => f.path === bundle.path)) files.push(bundle)
+      continue
+    }
+    for (const file of tagged.filter((f) => matchesDefinition(definition, f))) {
+      const member = file.slice(dir.length + 1)
+      const staged = join(root, ...member.split('/'))
+      if (!existsSync(staged)) {
+        throw new StageError(
+          `${tag}: interface "${declared.id}" names ${file}, which the archive does not carry`,
+        )
+      }
+      if (files.some((f) => f.path === member)) continue
+      files.push({ path: member, sha256: sha256(readFileSync(staged)) })
+    }
+  }
+  return files
+}
+
+/** The release record, or a `StageError` naming what the declarations got wrong. */
+function stagedRecord(
+  declarations: Declarations,
+  release: { readonly family: string; readonly version: string },
+  tag: string,
+  commit: string,
+  filesOf: (declared: DeclaredInterface) => readonly RecordFile[],
+): Json {
+  try {
+    return releaseRecord({
+      declarations,
+      family: release.family,
+      version: release.version,
+      tag,
+      commit,
+      filesOf,
+    })
+  } catch (error) {
+    if (error instanceof StageError) throw error
+    throw new StageError((error as Error).message)
+  }
+}
+
+function readDeclarationsAt(repoRoot: string, tag: string): Declarations {
+  try {
+    return readDeclarations(repoRoot, tag)
+  } catch (error) {
+    throw new StageError((error as Error).message)
+  }
 }
 
 function readLedgerAt(repoRoot: string, ref: string): Ledger {
   try {
     return ledgerAtRef(repoRoot, ref)
   } catch (error) {
-    throw new StageError(`${ref}: its ledger cannot be read — ${(error as Error).message}`)
+    throw new StageError(`${ref}: its ledger cannot be read: ${(error as Error).message}`)
   }
 }
 
@@ -242,6 +357,17 @@ export function stageRelease(
         throw new StageError(`${tag}: core publishes no schema, but ${dir.src} exists at the tag`)
       }
       writeMember(join(root, SPECIFICATION_RECORD_ARCHIVE_PATH), canonicalJson({ tag, commit }))
+      copyDataParts(repoRoot, tag, release, entry.path, root)
+      // From the release that carries a registry, core delivers interfaces and
+      // its record is required. An older core release delivered none, and
+      // carries specification.json alone, as it was published.
+      if (hasPart(release.family, release.major, 'registry', release.version)) {
+        const declarations = readDeclarationsAt(repoRoot, tag)
+        const record = stagedRecord(declarations, release, tag, commit, (declared) =>
+          interfaceFiles(repoRoot, tag, entry.path, root, declared, null),
+        )
+        writeMember(join(root, RELEASE_RECORD_ARCHIVE_PATH), canonicalJson(record))
+      }
     } else {
       const requires = entry.requires
       if (requires === undefined || entry.bundleSha256 === null) {
@@ -284,6 +410,7 @@ export function stageRelease(
       } else {
         extractTree(repoRoot, tag, dir.examples, join(root, 'examples'))
       }
+      copyDataParts(repoRoot, tag, release, entry.path, root)
       const dependencyManifest: Record<string, Json> = {}
       const pendingDependencies = readPendingReleases(inRepo(repoRoot, RELEASE_CACHE_DIR))
       for (const [family, dependency] of dependencies) {
@@ -299,6 +426,10 @@ export function stageRelease(
           join(root, family, 'conformance', 'README.md'),
         )
         extractTree(repoRoot, dependency.tag, paths.examples, join(root, family, 'examples'))
+        const released = parseReleaseTag(dependency.tag)
+        if (released === null)
+          throw new StageError(`${tag}: ${dependency.tag} is not a release tag`)
+        copyDataParts(repoRoot, dependency.tag, released, dependency.entry.path, join(root, family))
         if (dependency.entry.bundleSha256 !== null) {
           const bytes = readCachedBundle(
             inRepo(repoRoot, RELEASE_CACHE_DIR),
@@ -329,19 +460,14 @@ export function stageRelease(
         coreCommit: tagCommit(repoRoot, coreTag),
       }
       writeMember(join(root, SPECIFICATION_RECORD_ARCHIVE_PATH), canonicalJson(manifest))
-      let record: Json
-      try {
-        record = releaseRecord({
-          declarations: readDeclarations(repoRoot, tag),
-          family: release.family,
-          version: release.version,
-          tag,
-          commit,
-          file: { path: names.bundle, sha256: entry.bundleSha256 },
-        })
-      } catch (error) {
-        throw new StageError((error as Error).message)
-      }
+      const bundleFile: RecordFile = { path: names.bundle, sha256: entry.bundleSha256 }
+      const record = stagedRecord(
+        readDeclarationsAt(repoRoot, tag),
+        release,
+        tag,
+        commit,
+        (declared) => interfaceFiles(repoRoot, tag, entry.path, root, declared, bundleFile),
+      )
       writeMember(join(root, RELEASE_RECORD_ARCHIVE_PATH), canonicalJson(record))
     }
 

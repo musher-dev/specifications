@@ -182,9 +182,12 @@
             "ANTHROPIC_MESSAGES",
             "POSTGRES",
             "REDIS",
-            "S3"
+            "S3",
+            "TELEGRAM_BOT",
+            "SLACK_APP",
+            "DISCORD_BOT"
           ],
-          "description": "The wire contract a client speaks, independent of vendor. It fixes the members."
+          "description": "The wire contract a client speaks, named for that contract rather than for whoever serves it. It fixes the members."
         },
         "capabilities": {
           "type": "array",
@@ -878,7 +881,12 @@
             "bucket",
             "accessKeyID",
             "secretAccessKey",
-            "pathStyle"
+            "pathStyle",
+            "botToken",
+            "appToken",
+            "signingSecret",
+            "applicationID",
+            "publicKey"
           ],
           "description": "Member of a connection input to forward, one its protocol defines and every connection holds. Required when the input is a connection input, and forbidden otherwise."
         }

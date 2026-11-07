@@ -1,5 +1,5 @@
 /**
- * Core has no bundle to diff, so its review report is prose only — and says
+ * Core has no bundle to diff, so its review report is prose only, and says
  * that it reaches every family. A kind family's report tells a rule that moved
  * into core from one that was removed, and a tooling change from a source one.
  */
@@ -45,10 +45,10 @@ describe('reportFamily for core', () => {
     const { lines, narrowing } = reportFamily(core, 'HEAD', fx.root)
     const text = lines.join('\n')
 
-    expect(lines[0]).toBe('### core/v1 — affects every family')
-    expect(text).toContain('`ERR_PARSE` — diagnostic added')
-    expect(text).toContain('`CORE-ENV-002` — requirement added')
-    expect(text).toContain('`CORE-ENV-001` — requirement **removed**')
+    expect(lines[0]).toBe('### core/v1, affecting every family')
+    expect(text).toContain('`ERR_PARSE`: diagnostic added')
+    expect(text).toContain('`CORE-ENV-002`: requirement added')
+    expect(text).toContain('`CORE-ENV-001`: requirement **removed**')
     expect(text).not.toContain('Fields and constraints')
     expect(narrowing).toBe(1)
   })
@@ -146,16 +146,16 @@ describe('reportFamily for a kind family', () => {
 
     const { lines, narrowing, moved } = reportFamily(component(fx), 'HEAD~1', fx.root)
     const text = lines.join('\n')
-    expect(text).toContain('`ERR_DUPLICATE_KEY` — diagnostic moved to core/v1')
+    expect(text).toContain('`ERR_DUPLICATE_KEY`: diagnostic moved to core/v1')
     expect(text).toContain(
-      '`COMP-YAML-006` — requirement moved to core/v1 as `CORE-YAML-006` (same statement)',
+      '`COMP-YAML-006`: requirement moved to core/v1 as `CORE-YAML-006` (same statement)',
     )
     expect(text).toContain(
-      '`COMP-ENV-002` — requirement moved to core/v1 as `CORE-ENV-002` (its cases now cite it)',
+      '`COMP-ENV-002`: requirement moved to core/v1 as `CORE-ENV-002` (its cases now cite it)',
     )
     // What left for nowhere is still a removal.
-    expect(text).toContain('`ERR_DROPPED` — diagnostic **removed**')
-    expect(text).toContain('`COMP-GONE-001` — requirement **removed**')
+    expect(text).toContain('`ERR_DROPPED`: diagnostic **removed**')
+    expect(text).toContain('`COMP-GONE-001`: requirement **removed**')
     expect(moved).toBe(3)
     expect(narrowing).toBe(2)
   })
@@ -170,7 +170,7 @@ describe('reportFamily for a kind family', () => {
     fx.commit('feat(component): drop the rules, bind nothing')
 
     const { lines, moved } = reportFamily(component(fx), 'HEAD~1', fx.root)
-    expect(lines.join('\n')).toContain('`ERR_DUPLICATE_KEY` — diagnostic **removed**')
+    expect(lines.join('\n')).toContain('`ERR_DUPLICATE_KEY`: diagnostic **removed**')
     expect(moved).toBe(0)
   })
 
@@ -217,8 +217,8 @@ describe('reportFamily for a kind family', () => {
       }),
     )
     const text = reportFamily(component(fx), 'HEAD', fx.root).lines.join('\n')
-    expect(text).toContain('`image` — **added** (optional)')
-    expect(text).toContain('`git` — **added** (optional)')
+    expect(text).toContain('`image`: **added** (optional)')
+    expect(text).toContain('`git`: **added** (optional)')
     expect(text).not.toContain('REQUIRED')
   })
 })

@@ -8,7 +8,7 @@ The organization-level rulesets do not fully cover this repository:
 `branch-protection` applies to `~ALL` repos (it blocks deletion and
 non-fast-forward pushes), but `pr-workflow` targets a hardcoded repo list
 written in March 2026 that predates this repository. These repo-level rulesets
-close that gap and add the parts specific to a specification repository —
+close that gap and add the parts specific to a specification repository,
 notably immutable tags.
 
 ## Applying
@@ -34,7 +34,7 @@ gh api -X PUT repos/musher-dev/specifications/rulesets/<id> \
 Protects the default branch:
 
 - **Pull request required**, with **no blanket approval** and **code-owner
-  review required** — see the next section, which is the whole point of the
+  review required**. See the next section, which is the whole point of the
   file.
 - **Linear history**, squash-merge only. The specification's history should read
   as a sequence of deliberate changes.
@@ -104,7 +104,7 @@ field, and a non-empty `rules` array. RUL-07 checks the gate's two values above.
 7. **`squash_merge_commit_title` stays `PR_TITLE`.** It is a repository setting,
    not a ruleset field, so nothing in this directory can carry it. Under the
    default `COMMIT_OR_PR_TITLE`, a pull request with exactly one commit lands
-   *that commit's* subject rather than the title `task check:title` validated —
+   *that commit's* subject rather than the title `task check:title` validated,
    so a subject no CI check ever read reaches `main`. It already has: #67 was
    validated, by the title check then in use, as
    `build(deps-dev): bump the tooling group …` and landed as `Bump …`. Verify
@@ -125,7 +125,7 @@ The aggregation traps in invariants 5 and 6 are undetectable offline, so a
 change to the `pull_request` rule runs this sequence rather than just an apply:
 
 1. Reconcile any drift first (see below); do not layer a change on top of one.
-2. `gh api repos/musher-dev/specifications/branches/main/protection` — a `404` is the
+2. `gh api repos/musher-dev/specifications/branches/main/protection`: a `404` is the
    desired answer.
 3. `gh api repos/musher-dev/specifications/rules/branches/main` lists every rule that
    actually applies, whatever its source. Confirm no org-sourced `pull_request`
@@ -147,7 +147,7 @@ enabled, so a workflow could mint an App token and read the live rulesets. None
 does yet. A scheduled job holding the App's private key is the kind of
 token-holding workflow [ADR 0023](../../docs/adr/0023-published-bytes-are-immutable-release-assets.md)
 declined to add for a reconciler, and it would fail quietly in a week nobody
-looks. Until someone decides otherwise, drift detection is an operator check —
+looks. Until someone decides otherwise, drift detection is an operator check:
 run it during a security review, or whenever review behaviour surprises you:
 
 ```sh
@@ -164,8 +164,8 @@ done
 The live response also carries `dismissal_restriction`, which GitHub supplies
 and `PUT` does not require; it is the one expected difference.
 
-If they diverge, decide which side wins. **File wins** — reapply with the `PUT`
-recipe. **Live wins** — re-export into the file and open a pull request
+If they diverge, decide which side wins. **File wins**: reapply with the `PUT`
+recipe. **Live wins**: re-export into the file and open a pull request
 explaining the change. Do not leave it unresolved: a ruleset nobody can predict
 from the repository is a ruleset nobody reviews.
 
@@ -190,7 +190,7 @@ still holds. Blocking creation adds that nobody can open that window by hand.
 ## Bypass
 
 `main-branch` allows `OrganizationAdmin` bypass, matching the org-level
-convention. That is an escape hatch for incident response, not a workflow — and
+convention. That is an escape hatch for incident response, not a workflow, and
 until 2026-08-25 it was the workflow, spent on eight consecutive merges because
 the blanket approval requirement could not be satisfied by the only maintainer.
 The selective gate above exists so that a bypass in the audit log is a signal

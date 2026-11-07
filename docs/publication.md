@@ -113,9 +113,14 @@ Every archive unpacks into one top-level directory, `<family>-v<MAJOR>/`, such
 as `component-v2/`. A kind family archive's directory holds:
 
 - the bundle, `spec.md`, `examples/` and `conformance/`;
+- from 2.1.0, `registry/`, with the family's requirement IDs and every
+  diagnostic code its documents may report, and `protocols/` for component or
+  `interfaces/` for blueprint
+  ([ADR 0043](adr/0043-registries-are-released-data-interfaces.md));
 - each transitive dependency under its family name (`core/`, `component/`),
-  with specification, conformance corpus and fixture format, and examples where
-  present, all read from that dependency's exact tag;
+  with specification, conformance corpus and fixture format, and examples,
+  registries, interfaces and protocols where present, all read from that
+  dependency's exact tag;
 - each schema dependency's bundle, taken from its verified published asset,
   never rebuilt with the consuming release's tooling;
 - `LICENSE` and `NOTICE`;
@@ -125,9 +130,13 @@ as `component-v2/`. A kind family archive's directory holds:
 - `release.json`, the
   [engineering conventions' release record](https://github.com/musher-dev/engineering-conventions/blob/v0.9.3/engineering-conventions/definitions/conventions/interfaces/publishing-interfaces.md#the-release-record):
   the repository, the bundle output (`<family>-release`), the version, tag and
-  commit, and the family's schema interface (`<family>-schema`) with the
-  bundle's SHA-256. A repository that vendors the archive keeps it unchanged,
-  and checks its copy against it offline.
+  commit, and each interface the bundle delivers with the SHA-256 of each of
+  its files: the family's schema interface (`<family>-schema`) as the bundle,
+  and from 2.1.0 its registry (`<family>-registry`) as one entry per file,
+  with component's protocol records (`component-protocols`) and blueprint's
+  connection-evidence schema (`blueprint-connection-evidence`) beside it. A
+  repository that vendors the archive keeps it unchanged, and checks its copy
+  against it offline.
 
 An archive cut before
 [ADR 0037](adr/0037-the-repository-adopts-engineering-conventions-0-7-0.md)
@@ -135,8 +144,14 @@ has no conventions record, and carries `specification.json`'s content as
 `release.json`.
 
 A core archive's directory holds `spec.md`, `conformance/`, `LICENSE`, `NOTICE`
-and `specification.json`, naming the tag and commit. Core delivers no
-interface, so it carries no conventions record. In both archives, `conformance/` carries the fixture format,
+and `specification.json`, naming the tag and commit. From 2.1.0 it also holds
+`registry/` (requirement IDs, diagnostic codes, the ordered lists of
+`vocabulary.json` and every term record as `terms.json`), `interfaces/` (the
+validation result schema and, under `interfaces/registry/`, the registries'
+schemas) and `release.json`, listing core's interfaces: `core-validation-result`,
+`core-registry-schemas` and `core-registry`. A core archive before 2.1.0
+delivers no interface and carries no conventions record. In both archives,
+`conformance/` carries the fixture format,
 [docs/conformance.md](conformance.md), as `conformance/README.md` beside the corpus.
 Before staging, `task site:fetch` verifies dependency bundles into the cache.
 The release workflow permits the current tagged draft during that fetch; staging
@@ -234,8 +249,12 @@ release. CI's `Site / Build` sets `ALLOW_PENDING_RELEASES=1`: there, such an ent
 is a warning, and its release is left out of the site CI builds. The deploy sets
 no such variable, and fails on it.
 
-**Core is prose-only.** It publishes no schema, so it has index and reference
-pages but no pinned path, no alias, no `versions.json` and no `_headers` rule.
+**On the site, core is prose-only.** It publishes no document schema, so it has
+index and reference pages but no pinned path, no alias, no `versions.json` and
+no `_headers` rule. The site does not yet serve the registries or the interface
+schemas, core's or a family's: they ship in the release archives, and a
+consumer reads them from there
+([ADR 0043](adr/0043-registries-are-released-data-interfaces.md) §9).
 
 Everything under `/reference/` and every index page is informative, and is
 regenerated on every deploy. No release archive carries the HTML.

@@ -2,7 +2,7 @@
  * Each ADR rule, exercised against a throwaway repository.
  *
  * ADR-04 compares against a git ref, so the corpus is committed and then edited
- * in the working tree — the same shape as a branch under review.
+ * in the working tree, the same shape as a branch under review.
  */
 
 import { afterEach, describe, expect, test } from 'bun:test'
@@ -77,7 +77,7 @@ describe('an intact corpus', () => {
   })
 })
 
-describe('ADR-01 — filenames', () => {
+describe('ADR-01: filenames', () => {
   test('fires for a file not named NNNN-kebab.md', () => {
     const fx = intact()
     fx.writeFile('docs/adr/0003_Bad_Name.md', '# ADR 0003: Bad\n')
@@ -85,7 +85,7 @@ describe('ADR-01 — filenames', () => {
   })
 })
 
-describe('ADR-02 — numbering and titles', () => {
+describe('ADR-02: numbering and titles', () => {
   test('fires for a gap in the sequence', () => {
     const fx = intact()
     fx.writeFile('docs/adr/0004-skips-a-number.md', SECOND.replace('ADR 0002:', 'ADR 0004:'))
@@ -99,7 +99,7 @@ describe('ADR-02 — numbering and titles', () => {
   })
 })
 
-describe('ADR-03 — header and relations', () => {
+describe('ADR-03: header and relations', () => {
   test('fires for a missing status', () => {
     const fx = intact()
     fx.writeFile(
@@ -133,7 +133,7 @@ describe('ADR-03 — header and relations', () => {
   })
 })
 
-describe('ADR-04 — accepted ADRs change only link targets', () => {
+describe('ADR-04: accepted ADRs change only link targets', () => {
   test('fires for a prose edit to an accepted ADR', () => {
     const fx = intact()
     const base = fx.head()

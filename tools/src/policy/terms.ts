@@ -6,7 +6,7 @@
  * avoid in its place (docs/adr/0038). A glossary nobody checks drifts from the
  * documents it describes, so this holds the two together in three ways:
  *
- * 1. **Records.** The file matches `docs/terminology.schema.json`; ids are
+ * 1. **Records.** The file matches core's `interfaces/registry/terms.schema.json`; ids are
  *    unique and lead with their context; every relation names a record that
  *    exists; `kind_of` and `part_of` form no cycle; and no definition starts
  *    with its own term, uses it, or begins "is when". These always fail.
@@ -28,6 +28,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import Ajv2020 from 'ajv/dist/2020.js'
 import { parse } from 'yaml'
+import { readDiagnosticTables } from '../conformance/conformance.ts'
 import {
   ADR_DIR,
   CORE_FAMILY,
@@ -36,8 +37,11 @@ import {
   type Family,
   familyPaths,
   inRepo,
+  interfaceSchemaFiles,
   isObject,
+  isRegistrySchema,
   type Json,
+  protocolFiles,
   REPO_ROOT,
   readJson,
   sourceModules,
@@ -410,8 +414,8 @@ export function schemaIdentifiers(schema: Json, family: string, file: string): F
   return found
 }
 
-/** A row of a `| Code | Phase | Meaning |` table, as `check:conformance` reads one. */
-const DIAGNOSTIC_ROW = /^\|\s*`(ERR_[A-Z0-9_]+)`\s*\|\s*((?:`[a-z]+`(?:\s*,\s*)?)+)\s*\|/
+/** A table row's first cell, when it is one backticked code. */
+const CODE_CELL = /^\|\s*`((?:ERR|WARN)_[A-Z0-9_]+)`\s*\|/
 
 /** The header of core's reserved-namespace table. */
 const NAMESPACE_HEADER = /^\|\s*Namespace\s*\|/
@@ -425,11 +429,19 @@ export function proseIdentifiers(
 ): FoundIdentifier[] {
   const found: FoundIdentifier[] = []
   const lines = markdown.split('\n')
+  // The codes the diagnostics and warnings tables declare, read as
+  // check:conformance reads them; each is reported at the row declaring it.
+  const tables = readDiagnosticTables(markdown)
+  const declared = new Set([...tables.errors, ...tables.warnings].map((row) => row.code))
+  const reported = new Set<string>()
   let inNamespaces = false
   for (const [index, line] of lines.entries()) {
     const where = `${file}:${index + 1}`
-    const row = DIAGNOSTIC_ROW.exec(line)
-    if (row?.[1] !== undefined) found.push({ kind: 'codes', name: row[1], family, where })
+    const code = CODE_CELL.exec(line)?.[1]
+    if (code !== undefined && declared.has(code) && !reported.has(code)) {
+      reported.add(code)
+      found.push({ kind: 'codes', name: code, family, where })
+    }
     if (family === CORE_FAMILY) {
       if (NAMESPACE_HEADER.test(line)) inNamespaces = true
       else if (!line.startsWith('|')) inNamespaces = false
@@ -450,7 +462,51 @@ export function proseIdentifiers(
   return found
 }
 
-/** Every identifier in the current major of every family: schema sources and `spec.md`. */
+/** The entries of a list, or of an object's one list member, such as `{ "categories": [...] }`. */
+function listed(value: Json): Json[] {
+  if (Array.isArray(value)) return value
+  if (!isObject(value)) return []
+  const lists = Object.values(value).filter((member) => Array.isArray(member))
+  return lists.length === 1 ? (lists[0] as Json[]) : []
+}
+
+/**
+ * Every identifier one connection protocol record spells (docs/adr/0045): the
+ * protocol's `id` and `category`, each member's `name`, and each member's
+ * `role`. The category list, `categories.json`, spells its categories, each a
+ * string or an object with an `id`.
+ */
+export function protocolIdentifiers(record: Json, family: string, file: string): FoundIdentifier[] {
+  const found: FoundIdentifier[] = []
+  const add = (kind: IdentifierKind, name: Json | undefined, pointer: string): void => {
+    if (typeof name === 'string') found.push({ kind, name, family, where: `${file}#${pointer}` })
+  }
+  if (!isObject(record) || record.id === undefined) {
+    for (const [i, entry] of listed(record).entries()) {
+      add('values', isObject(entry) ? entry.id : entry, `/${i}`)
+    }
+    return found
+  }
+  add('values', record.id, '/id')
+  add('values', record.category, '/category')
+  if (Array.isArray(record.members)) {
+    for (const [i, member] of record.members.entries()) {
+      if (!isObject(member)) continue
+      add('fields', member.name, `/members/${i}/name`)
+      add('values', member.role, `/members/${i}/role`)
+    }
+  }
+  return found
+}
+
+/**
+ * Every identifier in the current major of every family: schema sources,
+ * interface schemas, connection protocol records and `spec.md`.
+ *
+ * The schemas in core's `interfaces/registry/` are exempt: they describe the
+ * registries and the term records, which are repository metadata rather than
+ * the document vocabulary (docs/adr/0043).
+ */
 export function collectIdentifiers(repoRoot: string = REPO_ROOT): FoundIdentifier[] {
   const found: FoundIdentifier[] = []
   for (const family of currentFamilies(repoRoot)) {
@@ -458,6 +514,17 @@ export function collectIdentifiers(repoRoot: string = REPO_ROOT): FoundIdentifie
     for (const module of sourceModules(family)) {
       const file = `${paths.src}/${module.slice(family.srcDir.length + 1)}`
       found.push(...schemaIdentifiers(readJson(module), family.name, file))
+    }
+    for (const schema of interfaceSchemaFiles(family)) {
+      if (isRegistrySchema(family, schema)) continue
+      found.push(
+        ...schemaIdentifiers(readJson(schema), family.name, schema.slice(repoRoot.length + 1)),
+      )
+    }
+    for (const record of protocolFiles(family)) {
+      found.push(
+        ...protocolIdentifiers(readJson(record), family.name, record.slice(repoRoot.length + 1)),
+      )
     }
     if (existsSync(family.specPath)) {
       found.push(

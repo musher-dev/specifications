@@ -13,6 +13,7 @@ import {
   type Context,
   checkClauseConsistency,
   loadContext,
+  readDiagnosticTables,
   runConformance,
   scopeFor,
 } from './conformance.ts'
@@ -81,7 +82,7 @@ function kindSpec(options: {
           `| \`kind\` | \`${upper}\` |`,
           '| `metadata` | [§3](#metadata) |',
           '| Fields accepting `null` | none |',
-          '| Item document | No — it sits inside an item |',
+          '| Item document | No, it sits inside an item |',
           '',
           '**Normative dependencies**',
           '',
@@ -531,6 +532,43 @@ describe('checkClauseConsistency', () => {
     expect(messages).toEqual([
       'case: a core case cites core only, but clause cites specifications/alpha/v1/spec.md',
       'case: a core case cites core only, but ALPHA-META-001 is declared in specifications/alpha/v1/spec.md',
+    ])
+  })
+})
+
+describe('the diagnostic registry tables', () => {
+  const source = [
+    '## 8. Diagnostics',
+    '',
+    '| Code | Phase | Meaning |',
+    '|---|---|---|',
+    '| `ERR_A` | `semantic`, `resolution` | One condition. |',
+    '| `WARN_OUTSIDE` | [`COMP-EP-020`](#COMP-EP-020) | `semantic` | Not under a Warnings heading. |',
+    '',
+    '### 8.1 Warnings',
+    '',
+    '| Code | Requirement | Phase | Meaning |',
+    '|---|---|---|---|',
+    '| `WARN_B` | [`COMP-EP-020`](#COMP-EP-020) | `semantic`, `admission` | An advisory condition. |',
+    '| `WARN_NO_PHASE` | [`COMP-EP-020`](#COMP-EP-020) | An old three-column row. |',
+    '',
+    '## 9. Conformance',
+    '',
+    '| `WARN_AFTER` | [`COMP-EP-020`](#COMP-EP-020) | `semantic` | After the Warnings section. |',
+  ].join('\n')
+
+  test('declare ERR_ codes with their phases, and WARN_ codes under a Warnings heading', () => {
+    const tables = readDiagnosticTables(source)
+    expect(tables.errors).toEqual([
+      { code: 'ERR_A', phases: ['semantic', 'resolution'], meaning: 'One condition.' },
+    ])
+    expect(tables.warnings).toEqual([
+      {
+        code: 'WARN_B',
+        requirement: 'COMP-EP-020',
+        phases: ['semantic', 'admission'],
+        meaning: 'An advisory condition.',
+      },
     ])
   })
 })

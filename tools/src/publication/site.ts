@@ -17,8 +17,8 @@
  *
  * The origin is Cloudflare Pages, so the cache contract is stated here rather
  * than in an edge rule this repository cannot see. `_headers` is generated from
- * the same enumeration that writes the tree — there is no second list of paths
- * to keep in step — and its rules are deliberately non-overlapping, because
+ * the same enumeration that writes the tree (there is no second list of paths
+ * to keep in step), and its rules are deliberately non-overlapping, because
  * Pages merges every matching rule and comma-joins duplicate header names
  * rather than letting the more specific one win. `assertNoOverlap` holds that
  * property over the paths actually written, not over the paths someone
@@ -122,7 +122,7 @@ const REVALIDATE = 'Cache-Control: public, max-age=300, must-revalidate'
  * is one that can be withdrawn without a commit here.
  *
  * The three overlap freely with everything below, and with each other, because
- * no rule sets a header name another rule also sets — which is the only
+ * no rule sets a header name another rule also sets, which is the only
  * property that matters when every match is merged.
  */
 const SHAPE_RULES: readonly HeaderRule[] = [
@@ -160,10 +160,10 @@ const RESERVED_PATH = 'reference'
  *
  * The bytes come from the ref the alias serves, never from the working tree,
  * so a released family's page describes its release. That bug is invisible
- * today — with no tags, a working-tree reference would pass every check and
+ * today: with no tags, a working-tree reference would pass every check and
  * start lying on the first release.
  *
- * A family that ships no schema — core — is a prose-only target: `bundle` and
+ * A family that ships no schema (core) is a prose-only target: `bundle` and
  * `schemaPath` are null, and it renders a specification page and nothing else.
  */
 interface ReferenceTarget {
@@ -179,7 +179,7 @@ interface ReferenceTarget {
   /** The family's validated example documents, at the same ref. */
   readonly examples: readonly ExampleDoc[]
   readonly ref: string
-  /** The family version directory at `ref` — the ledger's `path` for a release. */
+  /** The family version directory at `ref`: the ledger's `path` for a release. */
   readonly dir: string
   /** Null for a schema-less family: it has no schema URL to link. */
   readonly schemaPath: string | null
@@ -246,7 +246,7 @@ function headerName(header: string): string {
  *
  * Pages has no notion of specificity: it applies every matching rule and joins
  * duplicate names with a comma, so a broad pinned-path rule plus a per-alias
- * override does not override anything — it emits
+ * override does not override anything; it emits
  * `Cache-Control: public, max-age=31536000, immutable, public, max-age=300,
  * must-revalidate` and the alias is cached for a year. This is checked against
  * the paths actually written, so a new artifact cannot quietly acquire a second
@@ -315,7 +315,7 @@ export function assembleSite(options: SiteOptions): SiteResult {
   ) {
     throw new Error(
       `${LEDGER_FILE} records released versions but no tags are present and this is a ` +
-        'shallow clone. Run `git fetch --tags --unshallow` — deploying from here would ' +
+        'shallow clone. Run `git fetch --tags --unshallow`; deploying from here would ' +
         'unpublish every pinned version.',
     )
   }
@@ -360,7 +360,7 @@ export function assembleSite(options: SiteOptions): SiteResult {
   const releases = taggedEntries(repoRoot, ledger).filter(({ release }) => {
     if (!pendingReleases.has(release.tag)) return true
     console.log(
-      `  ! ${release.tag}: its GitHub release is not yet published — not served in this build ` +
+      `  ! ${release.tag}: its GitHub release is not yet published, so it is not served in this build ` +
         '(ALLOW_PENDING_RELEASES=1)',
     )
     return false
@@ -389,7 +389,7 @@ export function assembleSite(options: SiteOptions): SiteResult {
         ? readFileSync(local.specPath, 'utf8')
         : null
     }
-    // At a tag, under the ledger's `path` — where the release lived then.
+    // At a tag, under the ledger's `path`, where the release lived then.
     const path = releaseDirPaths(dir).spec
     if (hasPart(family, major, 'spec')) {
       return requireFileAtRef(repoRoot, ref, path, `${family}/${major} spec.md`).toString('utf8')
@@ -460,7 +460,7 @@ export function assembleSite(options: SiteOptions): SiteResult {
     if (pinnedBytes === null) {
       throw new Error(
         `${release.tag}: no verified release asset in ${relativeToRepo(cacheDir)}. Run ` +
-          '`task site:fetch` — a pinned path is served only from bytes verified against its ' +
+          '`task site:fetch`. A pinned path is served only from bytes verified against its ' +
           `immutable GitHub release and ${LEDGER_FILE}.`,
       )
     }
@@ -506,7 +506,7 @@ export function assembleSite(options: SiteOptions): SiteResult {
   // ---------------------------------------------------------------------------
   // Aliases. A major that has released serves its newest release; one that has
   // not serves the working tree, which is what this repository publishes before
-  // its first tag — so nothing regresses pre-release, and the alias stops
+  // its first tag, so nothing regresses pre-release, and the alias stops
   // tracking `main` automatically the moment a family is tagged.
   // ---------------------------------------------------------------------------
   const aliases: Alias[] = []
@@ -562,7 +562,7 @@ export function assembleSite(options: SiteOptions): SiteResult {
   ): void => {
     const spec = specAt(family, major, ref, dir)
     if (spec === null) {
-      console.log(`  · ${family}/${major}: no spec.md — skipped`)
+      console.log(`  · ${family}/${major}: no spec.md, skipped`)
       return
     }
     proseLines.push({ family, major, ref, dir })
@@ -598,7 +598,7 @@ export function assembleSite(options: SiteOptions): SiteResult {
     // run `task bundle` first, and no tracked bundle exists to read.
     const bundle = familyBundle(family)
     if (bundle === null) {
-      console.log(`  · ${family.name}/${family.major}: no schema modules authored — skipped`)
+      console.log(`  · ${family.name}/${family.major}: no schema modules authored, skipped`)
       continue
     }
     writeAlias(family.name, family.major, bundle, 'main', 'working tree', workingDir)
@@ -749,7 +749,7 @@ export function assembleSite(options: SiteOptions): SiteResult {
     emit(
       `${base}/index.html`,
       page(
-        `${model.title} — ${target.version}`,
+        `${model.title} (${target.version})`,
         renderReference(model, {
           schemaPath,
           prosePath,
@@ -1029,11 +1029,11 @@ function renderIndex(
       `<tbody>${rows.join('')}</tbody>`,
       '</table>',
       '<p>An alias moves within its major version as backward-compatible additions ship.',
-      'Automation must pin an exact version instead — those paths are served from verified',
+      'Automation must pin an exact version instead. Those paths are served from verified',
       'immutable release assets, carry an <code>$id</code> naming that exact URL, and never change.</p>',
       `<p>The ${link(`/${RESERVED_PATH}/`, 'reference')} explains each family field by field, ` +
         'beside its specification. It is generated from the bytes each version serves, and is ' +
-        'informative — the specification and the bundle are what govern.</p>',
+        'informative; the specification and the bundle are what govern.</p>',
       `<footer>${[
         link('/catalog.json', 'catalog.json'),
         link('/published.json', 'published.json'),
@@ -1055,7 +1055,7 @@ function renderFamilyIndex(
       '<tr>',
       `<td><code>${link(alias.path, alias.path)}</code></td>`,
       `<td>${escapeHtml(alias.major)}</td>`,
-      `<td>${alias.ref === 'main' ? '<span class="muted">unreleased — tracks main</span>' : `<code>${escapeHtml(alias.ref)}</code>`}</td>`,
+      `<td>${alias.ref === 'main' ? '<span class="muted">unreleased, tracks main</span>' : `<code>${escapeHtml(alias.ref)}</code>`}</td>`,
       `<td>${link(proseUrl(alias.dir, alias.ref), 'spec.md')}</td>`,
       '</tr>',
     ].join(''),
@@ -1094,7 +1094,7 @@ function renderFamilyIndex(
     aliasRows.length === 0
       ? [
           '<p class="muted">This family is no longer authored here. Its published versions',
-          'remain served — nothing is ever unpublished — but no alias tracks it.</p>',
+          'remain served (nothing is ever unpublished), but no alias tracks it.</p>',
         ]
       : [
           '<table>',
@@ -1120,7 +1120,7 @@ function renderFamilyIndex(
         ? []
         : [
             `<p>${link(`/${RESERVED_PATH}/${family}/${newest}/`, 'Read the reference')}` +
-              ' — every field, beside the specification.</p>',
+              ': every field, beside the specification.</p>',
             ...(references.find((r) => r.family === family && r.version === newest)?.examples.length
               ? [`<p>${link(`/reference/${family}/${newest}/examples/`, 'View examples')}</p>`]
               : []),
@@ -1161,7 +1161,7 @@ function renderProseFamilyIndex(
     [
       '<tr>',
       `<td>${link(`/${RESERVED_PATH}/${family}/${line.major}/spec/`, line.major)}</td>`,
-      `<td>${line.ref === 'main' ? '<span class="muted">unreleased — tracks main</span>' : `<code>${escapeHtml(line.ref)}</code>`}</td>`,
+      `<td>${line.ref === 'main' ? '<span class="muted">unreleased, tracks main</span>' : `<code>${escapeHtml(line.ref)}</code>`}</td>`,
       `<td>${link(proseUrl(line.dir, line.ref), 'spec.md')}</td>`,
       '</tr>',
     ].join(''),
@@ -1226,7 +1226,7 @@ function renderNotFound(): string {
     [
       '<h1>Not found</h1>',
       '<p>No schema is published at this path.</p>',
-      '<p class="muted">This host serves two schema path shapes per family —',
+      '<p class="muted">This host serves two schema path shapes per family:',
       '<code>/&lt;family&gt;/v2/&lt;family&gt;.schema.json</code> for the moving alias and',
       '<code>/&lt;family&gt;/v2.0.0/&lt;family&gt;.schema.json</code> for an exact version.',
       'A version that was never released has no URL; nothing is ever unpublished.</p>',

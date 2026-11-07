@@ -1,9 +1,12 @@
+# yaml-language-server: $schema=../specifications/core/v2/interfaces/registry/terms.schema.json
+#
 # The term records: one concept per context, for the Musher document
 # vocabulary (docs/adr/0038).
 #
-# This file is the source. `task docs` generates docs/terminology.md and the
-# MusherSpecifications Vale style (Terms.yml, Discouraged.yml) from it, and
-# `task check:terms` holds it to docs/terminology.schema.json, to the
+# This file is the source. `task docs` generates docs/terminology.md, the
+# MusherSpecifications Vale style (Terms.yml, Discouraged.yml) and core's
+# registry/terms.json from it (docs/adr/0043), and `task check:terms` holds it
+# to specifications/core/v2/interfaces/registry/terms.schema.json, to the
 # identifiers in every v2 schema source and diagnostics table, and to the terms
 # each spec.md bold-defines. spec.md is normative: a record quotes it and may
 # not disagree with it.
@@ -450,6 +453,10 @@ terms:
       reports only once the earlier ones pass.
     shortDefinition: parser, structural, semantic, admission, resolution.
     verbs: [a rule is decided in a phase, a diagnostic reports its phase]
+    identifiers:
+      fields: [phase]
+      values: [parser, structural, semantic, admission, resolution]
+      defs: [ValidationPhase]
     aliases:
       - { text: validation layer, status: banned, scope: [prose], suggest: validation phase }
       - { text: validation layers, status: banned, scope: [prose], suggest: validation phases }
@@ -504,9 +511,9 @@ terms:
     context: core
     definition: >-
       The validation phase run by the publisher or the platform, for
-      obligations that need the catalog, an account or a policy, such as a
-      revision that increases or a description present at publication.
-    shortDefinition: Publisher and platform checks that need the catalog or policy.
+      obligations that need published documents, an account or a policy, such
+      as a revision that increases or a description present at publication.
+    shortDefinition: Publisher and platform checks that need published documents or policy.
     kind_of: [core.validation-phase]
     aliases:
       - { text: capability, status: banned, scope: [identifier], suggest: admission, note: "The phase value and the case-tree directory." }
@@ -541,7 +548,11 @@ terms:
       from the lattice parser ⊂ structural ⊂ document ⊂ publication ⊂
       deployment, and the level an implementation declares it conforms at.
     shortDefinition: "parser ⊂ structural ⊂ document ⊂ publication ⊂ deployment."
-    identifiers: { requirement_prefixes: [CORE-ADMISSION] }
+    identifiers:
+      requirement_prefixes: [CORE-ADMISSION]
+      fields: [validationScope]
+      values: [parser, structural, document, publication, deployment]
+      defs: [ValidationScope]
     example: "An editor integration conforms at structural validation scope."
     aliases:
       - { text: validationProfile, status: banned, scope: [identifier], suggest: validationScope }
@@ -557,10 +568,11 @@ terms:
     context: core
     definition: >-
       The verdict of a validation result: VALID when every obligation of the
-      claimed scope completed, INVALID on a known failure, and INCOMPLETE when
-      context was missing and an obligation was deferred.
+      claimed scope completed, INVALID on an ERROR diagnostic, and INCOMPLETE
+      when context was missing and an obligation was deferred.
     shortDefinition: VALID, INVALID or INCOMPLETE.
-    part_of: [core.validation-scope]
+    part_of: [core.validation-result]
+    identifiers: { fields: [status], values: [VALID, INVALID, INCOMPLETE] }
     example: "No caller may read INCOMPLETE as approval."
     source: [core v2 §6.1]
     stability: stable
@@ -575,7 +587,8 @@ terms:
       its requirement, its document pointer and the missing context, and
       making the result INCOMPLETE.
     shortDefinition: A rule left undecided for lack of context.
-    part_of: [core.validation-scope]
+    part_of: [core.validation-result]
+    identifiers: { fields: [deferred, rule, missing], defs: [DeferredObligation] }
     source: [core v2 §1.3, core v2 §6.1]
     stability: stable
     status: approved
@@ -602,11 +615,15 @@ terms:
     display_name: diagnostic
     context: core
     definition: >-
-      One reported failure of a document: a normative code, the phase that
-      found it, a JSON Pointer path into the submitted document, and
-      non-normative message text.
-    shortDefinition: Code, phase and path of one failure.
-    identifiers: { codes: [ERR_UNKNOWN_FIELD] }
+      One reported condition of a document: a normative code, its severity,
+      the phase that found it, a JSON Pointer path into the submitted document
+      or another document of its item, and non-normative message text.
+    shortDefinition: Code, severity, phase and path of one condition.
+    part_of: [core.validation-result]
+    identifiers:
+      codes: [ERR_UNKNOWN_FIELD]
+      fields: [diagnostics, path, artifact, related, message]
+      defs: [Diagnostic, DocumentPointer, RelatedLocation]
     verbs: [a diagnostic anchors at a path, an implementation reports a diagnostic]
     source: [core v2 §1.3, core v2 §7]
     stability: stable
@@ -617,11 +634,47 @@ terms:
     display_name: diagnostic code
     context: core
     definition: >-
-      The stable ERR_ name of one condition a document can fail, declared in
-      exactly one diagnostics table with every phase it may be reported in.
-    shortDefinition: The ERR_ name of one condition.
+      The stable name of one condition a diagnostic reports: an error code,
+      prefixed ERR, declared in exactly one diagnostics table with every phase
+      it may be reported in, or a warning code, prefixed WARN, declared in a
+      Warnings table with the requirement it reports and every phase it may be
+      reported in.
+    shortDefinition: The stable name of one condition.
     part_of: [core.diagnostic]
+    identifiers: { fields: [code], defs: [DiagnosticCode] }
     source: [core v2 §7]
+    stability: stable
+    status: approved
+    tags: [validation]
+
+  - id: core.severity
+    display_name: severity
+    context: core
+    definition: >-
+      The class of a diagnostic: ERROR, a failure of the document that makes
+      the result INVALID, or WARNING, an advisory report of a SHOULD the
+      document does not meet, which never changes the result's status.
+    shortDefinition: ERROR or WARNING.
+    part_of: [core.diagnostic]
+    identifiers: { fields: [severity], values: [ERROR, WARNING], defs: [Severity] }
+    example: "A VALID result may carry WARNING diagnostics."
+    confusables: ["The validation status: a severity classifies one diagnostic, a status the whole result."]
+    source: [core v2 §1.3, core v2 §6.1, core v2 §7, ADR 0044]
+    stability: stable
+    status: approved
+    tags: [validation]
+
+  - id: core.validation-result
+    display_name: validation result
+    context: core
+    definition: >-
+      What one validation of one document reports: its status, its validation
+      scope, the phase it reached, its diagnostics and its deferred
+      obligations, in the shape a released core schema states.
+    shortDefinition: Status, scope, phase, diagnostics and deferred obligations.
+    identifiers: { fields: [status, validationScope, phase, diagnostics, deferred] }
+    confusables: ["A conformance result, which reports how many corpus cases an implementation passed, not one document's validation."]
+    source: [core v2 §1.3, core v2 §6.1, ADR 0044]
     stability: stable
     status: approved
     tags: [validation]
@@ -676,16 +729,42 @@ terms:
     display_name: catalog
     context: catalog
     definition: >-
-      The published collection of items, keyed by identity and revision, that
-      a component reference by UUID resolves against and a storefront
-      browses.
-    shortDefinition: The published collection of items.
-    verbs: [publish to the catalog, the catalog holds an item]
-    confusables: ["An OCI registry, which holds images; a registry is never the catalog, and 'registry' stays legitimate for an OCI registry or a model registry."]
+      The curated, public collection of published items, each with a listing,
+      that a storefront offers.
+    shortDefinition: The curated, public collection of listed items.
+    associated:
+      - { relation: complements, term: catalog.library }
+    verbs: [list an item in the catalog, the catalog offers an item]
+    confusables:
+      - "An OCI registry, which holds images; a registry is never the catalog, and 'registry' stays legitimate for an OCI registry or a model registry."
+      - "An organization's library, which holds what it published for its own use, listed or not."
+      - "The platform's compute or storage catalog, which holds what the platform offers to run on, not items."
     aliases:
       - { text: component registry, status: discouraged, scope: [prose], suggest: catalog }
       - { text: the registry, status: discouraged, scope: [prose], suggest: the catalog, note: "Say catalog for the published collection; an OCI registry stays a registry." }
-    source: [listing v2 §1.1, core v2 §4.1, ADR 0038]
+    source: [core v2 §1.3, listing v2 §1.1, core v2 §4.1, ADR 0038, ADR 0046]
+    stability: stable
+    status: approved
+    tags: [catalog]
+
+  - id: catalog.library
+    display_name: library
+    context: catalog
+    definition: >-
+      The documents and items one organization has published for its own use,
+      which no storefront offers and which need no listing.
+    shortDefinition: What one organization has published for its own use.
+    associated:
+      - { relation: complements, term: catalog.catalog }
+    verbs: [publish to its library, the library holds a component]
+    example: "A component an organization publishes for its own blueprints sits in its library, and its catalog references resolve to it."
+    confusables:
+      - "A software library a validator links, the sense core v2 §6.3 uses."
+      - "The catalog, which is curated and public; an item in a library is listed in the catalog only by publishing a listing there."
+    aliases:
+      - { text: private catalog, status: discouraged, scope: [prose], suggest: library }
+      - { text: organization catalog, status: discouraged, scope: [prose], suggest: library }
+    source: [core v2 §1.3, ADR 0046]
     stability: stable
     status: approved
     tags: [catalog]
@@ -708,15 +787,15 @@ terms:
     display_name: catalog item
     context: catalog
     definition: >-
-      A directory the catalog publishes as one unit, holding its item documents
-      and component documents at one item root: a blueprint item or a
-      component item.
+      A directory published as one unit, to a library or to the catalog,
+      holding its item documents and component documents at one item root: a
+      blueprint item or a component item.
     shortDefinition: A directory published as one unit.
-    part_of: [catalog.catalog]
+    confusables: ["Membership of the catalog: the name is the item's form, and an item in a library is one too."]
     identifiers: { requirement_prefixes: [CORE-ITEM] }
     aliases:
       - { text: deployable thing, status: banned, scope: [prose], suggest: catalog item }
-    source: [listing v2 §1.1, core v2 §1.3, core v2 §4.1, core v2 §4.2, ADR 0038]
+    source: [listing v2 §1.1, core v2 §1.3, core v2 §4.1, core v2 §4.2, ADR 0038, ADR 0046]
     stability: stable
     status: approved
     tags: [catalog]
@@ -725,9 +804,10 @@ terms:
     display_name: blueprint item
     context: catalog
     definition: >-
-      A catalog item whose root holds blueprint.yaml and listing.yaml, and
-      every component document the blueprint's nodes reference.
-    shortDefinition: blueprint.yaml, listing.yaml and the components they use.
+      A catalog item whose root holds blueprint.yaml, every component document
+      the blueprint's nodes reference, and listing.yaml once it is listed in
+      the catalog.
+    shortDefinition: blueprint.yaml and the components it uses, and listing.yaml once listed.
     kind_of: [catalog.catalog-item]
     identifiers: { codes: [ERR_UNREFERENCED_COMPONENT] }
     source: [listing v2 §1.1, blueprint v2 §3, blueprint v2 §3.1]
@@ -753,15 +833,18 @@ terms:
     display_name: publication
     context: catalog
     definition: >-
-      The act of admitting a document or an item into the catalog, after every
-      admission-phase obligation it carries has completed.
-    shortDefinition: Admitting a document into the catalog.
+      The act of admitting a document or an item into an organization's
+      library or into the catalog, after every admission-phase obligation it
+      carries has completed.
+    shortDefinition: Admitting a document into a library or the catalog.
     associated:
       - { relation: completes, term: core.admission-phase }
+      - { relation: admits-into, term: catalog.library }
+      - { relation: admits-into, term: catalog.catalog }
     verbs: [publish a component, a revision counts publications]
     aliases:
       - { text: counts releases, status: banned, scope: [prose], suggest: counts publications, note: "Release means only a specification release." }
-    source: [component v2 §4, blueprint v2 §3]
+    source: [component v2 §4, blueprint v2 §3, core v2 §6.1, ADR 0046]
     stability: stable
     status: approved
     tags: [catalog, publication]
@@ -830,7 +913,7 @@ terms:
     context: component
     definition: >-
       The ordered sequence of every published revision of one component, which
-      the catalog holds and an offline validator never sees.
+      the platform holds and an offline validator never sees.
     shortDefinition: Every published revision of one component, in order.
     source: [component v2 §4]
     stability: stable
@@ -1150,10 +1233,10 @@ terms:
       input one of the connection protocols, which fixes its members.
     shortDefinition: The vendor-neutral wire contract a client speaks.
     identifiers:
-      fields: [protocol]
-      values: [HTTP, HTTPS, WS, GRPC, TCP, UDP, OPENAI_CHAT_COMPLETIONS, ANTHROPIC_MESSAGES, POSTGRES, REDIS, S3]
+      fields: [protocol, OPENAI_CHAT_COMPLETIONS, ANTHROPIC_MESSAGES, POSTGRES, REDIS, S3, TELEGRAM_BOT, SLACK_APP, DISCORD_BOT]
+      values: [HTTP, HTTPS, WS, GRPC, TCP, UDP, OPENAI_CHAT_COMPLETIONS, ANTHROPIC_MESSAGES, POSTGRES, REDIS, S3, TELEGRAM_BOT, SLACK_APP, DISCORD_BOT]
     example: "A connection input with protocol POSTGRES receives host, port, database, username, password and sslMode, and a url composed from them."
-    source: [component v2 §5.2, component v2 §6.4, ADR 0039]
+    source: [component v2 §5.2, component v2 §6.4, ADR 0039, ADR 0045]
     stability: stable
     status: approved
     tags: [networking, connections]
@@ -1337,7 +1420,7 @@ terms:
       or NONE, with an optional server name.
     shortDefinition: How the platform verifies an HTTPS endpoint's certificate.
     part_of: [component.endpoint]
-    identifiers: { fields: [tls, verify, serverName, trustBundle], values: [SYSTEM, BUNDLE, NONE], defs: [ComponentEndpointTls] }
+    identifiers: { fields: [tls, verify, serverName, trustBundle], values: [SYSTEM, BUNDLE, NONE], defs: [ComponentEndpointTls], codes: [WARN_ENDPOINT_SERVER_NAME] }
     source: [component v2 §5.2]
     stability: stable
     status: approved
@@ -1567,13 +1650,82 @@ terms:
     shortDefinition: One value a protocol fixes, such as host or apiKey.
     part_of: [blueprint.connection]
     identifiers:
-      fields: [member]
-      values: [baseURL, apiKey, model, host, port, database, username, password, sslMode, url, tls, endpointURL, region, bucket, accessKeyID, secretAccessKey, pathStyle]
+      fields: [member, baseURL, apiKey, model, host, port, database, username, password, sslMode, url, tls, endpointURL, region, bucket, accessKeyID, secretAccessKey, pathStyle, botToken, appToken, signingSecret, applicationID, publicKey]
+      values: [baseURL, apiKey, model, host, port, database, username, password, sslMode, url, tls, endpointURL, region, bucket, accessKeyID, secretAccessKey, pathStyle, botToken, appToken, signingSecret, applicationID, publicKey, disable, allow, prefer, require, verify-ca, verify-full]
       codes: [ERR_UNKNOWN_CONNECTION_MEMBER]
     confusables:
       - "endpointURL is AWS's term for an S3 API address without the bucket, not a component endpoint."
       - "A url member is never stored: resolution composes it from the other members and the credential."
-    source: [component v2 §6.4, ADR 0039]
+      - "botToken is the token of a Telegram bot, a Slack app or a Discord bot, whatever its vendor calls it; its format is not validated."
+    source: [component v2 §6.4, ADR 0039, ADR 0045]
+    stability: provisional
+    status: approved
+    tags: [connections]
+
+  - id: component.protocol-registry
+    display_name: protocol registry
+    context: component
+    definition: >-
+      The set of JSON records, one per connection protocol, in component's
+      protocols directory, normative for each protocol's members, their types,
+      presence, defaults, sensitivity, roles and value constraints, from which
+      the schema enums and the member and view tables are generated.
+    shortDefinition: One normative JSON record per connection protocol.
+    associated:
+      - { relation: defines, term: component.protocol }
+      - { relation: defines, term: component.connection-member }
+    aliases:
+      - { text: protocol table, status: discouraged, scope: [prose], suggest: protocol registry }
+    source: [component v2 §6.4, ADR 0045]
+    stability: provisional
+    status: approved
+    tags: [connections, registry]
+
+  - id: component.protocol-category
+    display_name: protocol category
+    context: component
+    definition: >-
+      A registry-only grouping of connection protocols that reach the same
+      kind of service and name their credential and locator alike, never
+      written in a document.
+    shortDefinition: LANGUAGE_MODEL, DATABASE, CACHE, OBJECT_STORAGE or MESSAGING.
+    part_of: [component.protocol-registry]
+    identifiers:
+      values: [LANGUAGE_MODEL, DATABASE, CACHE, OBJECT_STORAGE, MESSAGING]
+    source: [component v2 §6.4, ADR 0045]
+    stability: provisional
+    status: approved
+    tags: [connections, registry]
+
+  - id: component.member-role
+    display_name: member role
+    context: component
+    definition: >-
+      What a connection member is for, as its protocol record states it:
+      credential, secret, locator, parameter or derived, which decides whether
+      the credential or a view supplies it.
+    shortDefinition: credential, secret, locator, parameter or derived.
+    part_of: [component.connection-member]
+    identifiers:
+      fields: [role]
+      values: [credential, secret, locator, parameter, derived]
+    confusables:
+      - "A parameter member is carried by a view; it is not a blueprint deployment parameter."
+    source: [component v2 §6.4, ADR 0045]
+    stability: provisional
+    status: approved
+    tags: [connections, registry]
+
+  - id: component.http-based
+    display_name: HTTP-based
+    context: component
+    definition: >-
+      Said of a connection protocol with a locator member, the HTTPS URL a
+      client sends requests to, which blueprint holds to the credential's
+      permitted base URLs.
+    shortDefinition: A connection protocol with a locator.
+    kind_of: [component.protocol]
+    source: [component v2 §6.4, ADR 0039, ADR 0045]
     stability: provisional
     status: approved
     tags: [connections]
@@ -1859,10 +2011,12 @@ terms:
     shortDefinition: A UUID and a revision naming a published component.
     kind_of: [blueprint.document-reference]
     associated:
+      - { relation: resolves-in, term: catalog.library }
       - { relation: resolves-in, term: catalog.catalog }
+    confusables: ["A reference into the catalog alone: the name is the form, and the platform resolves one against the deploying organization's library and the catalog."]
     aliases:
       - { text: published reference, status: discouraged, scope: [prose], suggest: catalog reference }
-    source: [blueprint v2 §1.1, blueprint v2 §4.1, ADR 0038]
+    source: [blueprint v2 §1.1, blueprint v2 §4.1, ADR 0038, ADR 0046]
     stability: stable
     status: approved
     tags: [composition, catalog]
@@ -2058,13 +2212,13 @@ terms:
       allocation.
     shortDefinition: A value from a catalog-versioned vocabulary.
     example: "local-nvme is a storage class catalog value."
-    confusables: ["A credential token, such as a probe's bearer token or a JWT: 'token' means only that.", "A term record, which is what 'term' now means."]
+    confusables: ["A credential token, such as a probe's bearer token or a JWT: 'token' means only that.", "A term record, which is what 'term' now means.", "A value from the catalog of listed items: the name is the form, a value of the platform's versioned compute or storage vocabulary."]
     aliases:
       - { text: storage class term, status: banned, scope: [prose], suggest: storage class catalog value }
       - { text: placement term, status: banned, scope: [prose], suggest: placement catalog value }
       - { text: storage class token, status: banned, scope: [prose], suggest: storage class catalog value }
       - { text: placement token, status: banned, scope: [prose], suggest: placement catalog value }
-    source: [blueprint v2 §1.1, blueprint v2 §4.3, blueprint v2 §4.4, ADR 0038]
+    source: [blueprint v2 §1.1, blueprint v2 §4.3, blueprint v2 §4.4, ADR 0038, ADR 0046]
     stability: stable
     status: approved
     tags: [compute, catalog]
@@ -2462,7 +2616,9 @@ terms:
     part_of: [deployment.deployment-snapshot]
     associated:
       - { relation: chooses, term: blueprint.connection }
-    identifiers: { codes: [ERR_CONNECTION_NOT_FOUND, ERR_CONNECTION_DENIED, ERR_CONNECTION_INCOMPATIBLE] }
+    identifiers:
+      fields: [selection, request, costOwner]
+      codes: [ERR_CONNECTION_NOT_FOUND, ERR_CONNECTION_DENIED, ERR_CONNECTION_INCOMPATIBLE]
     aliases:
       - { text: source reference, status: banned, scope: [prose], suggest: requested path }
     source: [blueprint v2 §1.1, blueprint v2 §5.3]
@@ -2478,6 +2634,7 @@ terms:
       Musher, or USER, a complete set the deployer supplies.
     shortDefinition: MANAGED or USER.
     part_of: [blueprint.selection]
+    identifiers: { fields: [selectionKind], values: [MANAGED, USER] }
     source: [blueprint v2 §1.1, blueprint v2 §5.3, ADR 0039]
     stability: stable
     status: approved
@@ -2491,6 +2648,7 @@ terms:
       offering decides whether the connection is granted or provisioned.
     shortDefinition: Supplied and operated by Musher.
     kind_of: [blueprint.selection-kind]
+    identifiers: { fields: [provisioning] }
     aliases:
       - { text: managed database, status: banned, scope: [prose], suggest: a database an external node stands for, note: "Managed means only supplied and operated by Musher." }
     source: [blueprint v2 §5.3, ADR 0039]
@@ -2519,6 +2677,7 @@ terms:
       deployment, connection parameter and permitted service on acquisition.
     shortDefinition: An existing managed connection, scoped on acquisition.
     kind_of: [blueprint.managed]
+    identifiers: { values: [GRANTED] }
     source: [blueprint v2 §1.1, blueprint v2 §5.3, ADR 0039]
     stability: provisional
     status: approved
@@ -2533,6 +2692,7 @@ terms:
       when the deployment is deleted.
     shortDefinition: Created on first acquisition, released at deletion.
     kind_of: [blueprint.managed]
+    identifiers: { values: [PROVISIONED] }
     source: [blueprint v2 §1.1, blueprint v2 §5.3, ADR 0039]
     stability: provisional
     status: approved
@@ -2547,10 +2707,86 @@ terms:
       schemas.
     shortDefinition: One protocol's members of a selection, for one consumer.
     part_of: [blueprint.selection]
-    source: [blueprint v2 §5.3]
+    identifiers:
+      fields: [views]
+      defs: [OpenaiChatCompletionsView, AnthropicMessagesView, PostgresView, RedisView, S3View, TelegramBotView, SlackAppView, DiscordBotView]
+    source: [blueprint v2 §5.3, ADR 0045]
     stability: stable
     status: approved
     tags: [connections]
+
+  - id: blueprint.scoped-credential
+    display_name: scoped credential
+    context: blueprint
+    definition: >-
+      The one credential of a selection, scoped to the deployment, the
+      connection parameter and the service permitted, with an identity, a
+      rotation generation, the value of each view's credential member, and the
+      base URLs an HTTP-based view may reach.
+    shortDefinition: A selection's one credential, scoped to its deployment.
+    part_of: [blueprint.selection]
+    identifiers: { fields: [credential, permittedBaseURLs], defs: [ConnectionCredential] }
+    source: [blueprint v2 §5.3, ADR 0030]
+    stability: stable
+    status: approved
+    tags: [connections, security]
+
+  - id: blueprint.credential-secret
+    display_name: credential secret
+    context: blueprint
+    definition: >-
+      A secret member of a selection's protocol, such as the SLACK_APP appToken
+      or signingSecret, carried by the scoped credential beside its value and
+      never by a view.
+    shortDefinition: A secret member the credential carries, never a view.
+    part_of: [blueprint.scoped-credential]
+    associated:
+      - { relation: supplies, term: component.member-role }
+    identifiers: { fields: [secrets] }
+    source: [blueprint v2 §5.3, ADR 0045]
+    stability: provisional
+    status: approved
+    tags: [connections, security]
+
+  - id: blueprint.acquisition-status
+    display_name: acquisition status
+    context: blueprint
+    definition: >-
+      The outcome acquisition reached for one connection parameter, one of
+      NOT_ACQUIRED, NOT_FOUND, DENIED, INCOMPATIBLE and SELECTED, which decides
+      whether resolution defers, rejects or reads a persisted selection.
+    shortDefinition: NOT_ACQUIRED, NOT_FOUND, DENIED, INCOMPATIBLE or SELECTED.
+    associated:
+      - { relation: precedes, term: blueprint.selection }
+    identifiers:
+      fields: [status, persisted]
+      values: [NOT_ACQUIRED, NOT_FOUND, DENIED, INCOMPATIBLE, SELECTED]
+    confusables:
+      - "A validation result's status, VALID, INVALID or INCOMPLETE, which is core's."
+    source: [blueprint v2 §5.3, ADR 0045]
+    stability: provisional
+    status: approved
+    tags: [connections]
+
+  - id: blueprint.connection-evidence
+    display_name: connection evidence
+    context: blueprint
+    definition: >-
+      The trusted record of what acquisition reached for each connection
+      parameter of one deployment, supplied to resolution in the connections
+      stage and shaped by a schema generated from the protocol registry.
+    shortDefinition: What acquisition reached, per connection parameter.
+    associated:
+      - { relation: carries, term: blueprint.acquisition-status }
+      - { relation: carries, term: blueprint.selection }
+    identifiers:
+      fields: [deployment]
+      defs: [ConnectionAcquisition, ConnectionSelection, ConnectionRequest, Text]
+      codes: [ERR_INVALID_RESOLUTION_CONTEXT]
+    source: [blueprint v2 §5.3, ADR 0045]
+    stability: provisional
+    status: approved
+    tags: [connections, conformance]
 
   - id: blueprint.deploy-form
     display_name: deploy form
@@ -2700,6 +2936,10 @@ terms:
       resolution-phase diagnostic names.
     shortDefinition: One ordered step of resolution.
     part_of: [deployment.resolution]
+    identifiers:
+      fields: [stage]
+      values: [sources, parameters, allocation, connections, values, build, environment, record]
+      defs: [ResolutionStage]
     confusables: ["A validation phase; stage means only a resolution step, and is written 'resolution stage' where the context does not say so."]
     source: [core v2 §1.3, core v2 §6.4, core v2 §7, blueprint v2 §5.2, ADR 0038]
     stability: stable
@@ -3257,6 +3497,21 @@ terms:
     status: approved
     tags: [conformance]
 
+  - id: repository.expected-diagnostic
+    display_name: expected diagnostic
+    context: repository
+    definition: >-
+      A diagnostic a conformance case declares: a code, optionally its path,
+      phase, stage, related locations and severity, matched against a produced
+      diagnostic of the same severity, ERROR when none is named.
+    shortDefinition: A diagnostic a fixture expects.
+    part_of: [repository.conformance-case]
+    identifiers: { defs: [ExpectedDiagnostic] }
+    source: [docs/conformance.md, ADR 0044]
+    stability: stable
+    status: approved
+    tags: [conformance]
+
   - id: repository.conformance-corpus
     display_name: conformance corpus
     context: repository
@@ -3300,6 +3555,23 @@ terms:
     stability: provisional
     status: approved
     tags: [repository]
+
+  - id: repository.registry
+    display_name: registry
+    context: repository
+    definition: >-
+      A JSON projection, committed beside a family version's spec.md and
+      released with it, of facts that spec.md or the term records state:
+      requirement IDs, diagnostic codes, and for core the ordered lists and
+      every term record.
+    shortDefinition: A released JSON projection of a family version's IDs, codes or lists.
+    associated:
+      - { relation: projects, term: repository.specification }
+    confusables: ["The diagnostics table in a spec.md, which stays normative.", "The connection protocol registry, whose records are their own source."]
+    source: [docs/using-schemas.md#registries, ADR 0043]
+    stability: provisional
+    status: approved
+    tags: [publication]
 
   - id: repository.not-supported
     display_name: not supported in v2

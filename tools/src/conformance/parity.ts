@@ -3,7 +3,7 @@
  *
  * Every executable claim this repository makes is currently decided by Ajv.
  * The conformance corpus proves the fixtures behave, `check:examples` proves
- * the examples validate — and both ask the same library. A schema that Ajv
+ * the examples validate, and both ask the same library. A schema that Ajv
  * happens to interpret differently from everyone else would pass every gate
  * here and fail in the CLI, the API, and every SDK, which is the one failure
  * this repository exists to prevent.
@@ -11,7 +11,7 @@
  * So each structural subject is validated twice: once by Ajv, once by Blaze
  * through the Sourcemeta CLI, which is a separate implementation of 2020-12 in
  * a different language. Only the verdict is compared. Diagnostic text is not
- * normative (docs/conformance.md), and Blaze does not emit Musher codes —
+ * normative (docs/conformance.md), and Blaze does not emit Musher codes;
  * requiring it to would be requiring a second implementation to be the first.
  *
  * Skipped rather than failed when the CLI is absent, so a contributor without
@@ -55,7 +55,7 @@ interface Subject {
  * Batched because nearly all the cost is process startup and compiling a
  * 36 KiB schema: one instance takes ~1.5s and twenty take barely longer, so a
  * call per subject would put this check into the minutes and it would be turned
- * off. Chunked because the CLI mishandles a long argument list — past roughly
+ * off. Chunked because the CLI mishandles a long argument list: past roughly
  * fifty paths it concatenates them into one non-existent filename and exits 6.
  * Twenty is comfortably inside that and still amortises the startup.
  */
@@ -100,8 +100,8 @@ const MULTI_DOCUMENT_ENTRY = /\s*\(entry #\d+\)$/
  *
  *   - a rejected instance is announced by a line reading `fail: <path>`;
  *   - `<path>` is printed relative to the working directory from 16.10.0, and
- *     absolutely before it, so it is resolved against `cwd` either way —
- *     `resolve` returns an already-absolute path unchanged;
+ *     absolutely before it, so it is resolved against `cwd` either way
+ *     (`resolve` returns an already-absolute path unchanged);
  *   - a multi-document entry carries a trailing ` (entry #N)`;
  *   - `validate` stops at the first failing instance unless `--continue` is
  *     passed, which is why the caller passes it.
@@ -124,7 +124,7 @@ export function parseRejections(output: string, instances: string[], cwd: string
     if (!asked.has(path)) {
       throw new Error(
         `jsonschema validate named "${named}", which is not one of the instances it was asked ` +
-          'about — its output no longer has the shape this parser reads.',
+          'about. Its output no longer has the shape this parser reads.',
       )
     }
     rejected.add(path)
@@ -146,13 +146,13 @@ async function blazeRejects(schema: string, instances: string[]): Promise<Set<st
   const ask = async (chunk: string[]): Promise<Set<string>> => {
     const { status, output } = await run(['validate', '--continue', schema, ...chunk])
     if (status !== 0 && status !== 2) {
-      throw new Error(`jsonschema validate exited ${status} — ${output.trim()}`)
+      throw new Error(`jsonschema validate exited ${status}: ${output.trim()}`)
     }
     const named = parseRejections(output, chunk, REPO_ROOT)
     // A rejection the output does not name would silently become an agreement.
     // If the CLI's output shape ever changes, fail rather than pass everything.
     if (status === 2 && named.size === 0) {
-      throw new Error(`jsonschema validate reported failure but named no file — ${output.trim()}`)
+      throw new Error(`jsonschema validate reported failure but named no file: ${output.trim()}`)
     }
     return named
   }
@@ -174,7 +174,7 @@ async function blazeRejects(schema: string, instances: string[]): Promise<Set<st
  * Structural subjects: every example, plus every conformance case whose
  * document can be validated on its own.
  *
- * `parser` cases are excluded — they are about YAML this schema never sees, and
+ * `parser` cases are excluded: they are about YAML this schema never sees, and
  * a document Blaze cannot parse says nothing about schema agreement. `semantic`
  * and `admission` cases are included only for their structural verdict, which
  * is "valid": a semantic fixture is structurally well-formed by construction,

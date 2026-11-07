@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# post-create.sh — DevContainer post-create command hook.
+# post-create.sh: DevContainer post-create command hook.
 #
 # Runs once after the container is created. Sets up environment files,
 # invokes the base setup orchestrator, and configures shell customization.
@@ -19,8 +19,8 @@ source "${SCRIPT_DIR}/lib/base-setup.sh"
 # Logs the failing command and line number on ERR.
 #
 # Arguments:
-#   $1 — line number
-#   $2 — failed command string
+#   $1: line number
+#   $2: failed command string
 # Outputs:
 #   Writes error details to stderr via log()
 on_error() {
@@ -80,7 +80,7 @@ build_schema_bundles() {
 # Entry point: runs the full post-create setup sequence.
 #
 # Arguments:
-#   $@ — passed through (unused, reserved for future use)
+#   $@: passed through (unused, reserved for future use)
 # Outputs:
 #   Writes progress to stderr via log()
 main() {

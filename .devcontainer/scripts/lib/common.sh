@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# common.sh — Shared utility functions for dev container setup scripts.
+# common.sh: Shared utility functions for dev container setup scripts.
 #
 # This is a library file meant to be sourced, not executed directly.
 # Usage: source "path/to/common.sh"
@@ -13,7 +13,7 @@ set -euo pipefail
 # Logs a timestamped message to stderr.
 #
 # Arguments:
-#   $@ — message text
+#   $@: message text
 # Outputs:
 #   Writes timestamped message to stderr
 log() {
@@ -27,9 +27,9 @@ log() {
 # feature that did not exist. This is that feature.
 #
 # Globals:
-#   MUSHER_LOG_LEVEL — read, defaults to "info"
+#   MUSHER_LOG_LEVEL: read, defaults to "info"
 # Arguments:
-#   $@ — message text
+#   $@: message text
 # Outputs:
 #   Writes to stderr via log() when debug is on, nothing otherwise
 debug() {
@@ -42,7 +42,7 @@ debug() {
 # Checks whether a command exists on the PATH.
 #
 # Arguments:
-#   $1 — command name
+#   $1: command name
 # Returns:
 #   0 if found, 1 otherwise
 has_cmd() {
@@ -60,7 +60,7 @@ has_cmd() {
 # switched on.
 #
 # Arguments:
-#   $1 — the switch's value, e.g. "${MUSHER_INSTALL_CLAUDE:-1}"
+#   $1: the switch's value, e.g. "${MUSHER_INSTALL_CLAUDE:-1}"
 # Returns:
 #   0 when the install is wanted, 1 when it is switched off
 install_wanted() {
@@ -79,8 +79,8 @@ install_wanted() {
 # "fails, and the container is still usable".
 #
 # Arguments:
-#   $1 — ceiling in seconds
-#   $@ — command and arguments to execute
+#   $1: ceiling in seconds
+#   $@: command and arguments to execute
 # Returns:
 #   The command's status, or 124 if the ceiling was reached
 bounded() {
@@ -96,7 +96,7 @@ bounded() {
 # Runs a command with sudo if available, otherwise without.
 #
 # Arguments:
-#   $@ — command and arguments
+#   $@: command and arguments
 maybe_sudo() {
   if sudo -n true 2>/dev/null; then
     sudo "$@"
@@ -108,9 +108,9 @@ maybe_sudo() {
 # Retries a command with exponential back-off.
 #
 # Arguments:
-#   $1 — max attempts
-#   $2 — delay in seconds between attempts
-#   $@ — command and arguments to execute
+#   $1: max attempts
+#   $2: delay in seconds between attempts
+#   $@: command and arguments to execute
 # Returns:
 #   0 on success, 1 after exhausting all attempts
 retry() {
@@ -137,8 +137,8 @@ retry() {
 # Ensures a directory exists and is owned by the given user.
 #
 # Arguments:
-#   $1 — directory path
-#   $2 — owner (default: "vscode")
+#   $1: directory path
+#   $2: owner (default: "vscode")
 ensure_writable_dir() {
   local dir="${1:?usage: ensure_writable_dir <path>}"
   local owner="${2:-vscode}"
@@ -151,9 +151,9 @@ ensure_writable_dir() {
 # Creates config directories from "label:path" pairs.
 #
 # Globals:
-#   REMOTE_USER — read, falls back to "vscode"
+#   REMOTE_USER: read, falls back to "vscode"
 # Arguments:
-#   $@ — entries in "label:path" format
+#   $@: entries in "label:path" format
 # Outputs:
 #   Writes progress to stderr via log()
 setup_config_dirs() {
@@ -171,7 +171,7 @@ setup_config_dirs() {
 # Fixes NVM directory ownership to the current user.
 #
 # Globals:
-#   NVM_DIR — read, defaults to /usr/local/share/nvm
+#   NVM_DIR: read, defaults to /usr/local/share/nvm
 # Outputs:
 #   Writes progress to stderr via log()
 fix_nvm_permissions() {
@@ -193,7 +193,7 @@ fix_nvm_permissions() {
 # `--version`, so a non-zero status means the binary is not runnable.
 #
 # Arguments:
-#   $@ — command names to check
+#   $@: command names to check
 # Outputs:
 #   Writes status of each tool to stderr via log()
 # Returns:
@@ -210,7 +210,7 @@ verify_tools() {
       log "  ✗ ${cmd}: on PATH at $(command -v "$cmd") but does not run"
       all_ok=false
     else
-      # First line only — shellcheck and actionlint both print a banner, and the
+      # First line only: shellcheck and actionlint both print a banner, and the
       # status line is meant to be one line per tool. Trimmed after the status
       # check rather than by piping through `head`, which would report the
       # pipeline's exit code instead of the tool's.

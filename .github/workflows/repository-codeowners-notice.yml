@@ -137,9 +137,9 @@ jobs:
             done
             [[ "$is_author_owner" == false ]] && continue
             if [[ "${#owner_list[@]}" -eq 1 ]]; then
-              echo "- \`${file}\` — you are the **sole owner**; no review will be requested" >> "$workdir/self_owned"
+              echo "- \`${file}\`: you are the **sole owner**; no review will be requested" >> "$workdir/self_owned"
             else
-              echo "- \`${file}\` — co-owned (\`${owners}\`); the other owners were requested" >> "$workdir/self_owned"
+              echo "- \`${file}\`: co-owned (\`${owners}\`); the other owners were requested" >> "$workdir/self_owned"
             fi
           done < "$workdir/matches"
 
@@ -179,11 +179,11 @@ jobs:
             "$marker" \
             '### You own some of the paths this pull request changes' \
             '' \
-            "@${PR_AUTHOR}, this pull request touches paths you are a code owner for. Your authorship **waives the code-owner review requirement** — GitHub cannot request a review from a pull request's author — so nobody is automatically notified about these changes:" \
+            "@${PR_AUTHOR}, this pull request touches paths you are a code owner for. Your authorship **waives the code-owner review requirement**. GitHub cannot request a review from a pull request's author, so nobody is automatically notified about these changes:" \
             '' \
             "$SELF_OWNED" \
             '' \
-            'Double-check they are intentional. If you want a second pair of eyes, request a review manually. (Automated notice from the repository-codeowners-notice workflow — ADR 0015.)')"
+            'Double-check they are intentional. If you want a second pair of eyes, request a review manually. (Automated notice from the repository-codeowners-notice workflow; ADR 0015.)')"
 
           if [[ -n "$existing_id" ]]; then
             gh api --method PATCH \

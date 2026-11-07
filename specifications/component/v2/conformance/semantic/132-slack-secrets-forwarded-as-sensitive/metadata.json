@@ -1,0 +1,10 @@
+{
+  "id": "semantic-132-slack-secrets-forwarded-as-sensitive",
+  "phase": "semantic",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#outputs",
+  "requirements": [
+    "COMP-OUT-004"
+  ],
+  "summary": "The SLACK_APP secret members, appToken and signingSecret, forwarded by outputs declared sensitive, validate."
+}

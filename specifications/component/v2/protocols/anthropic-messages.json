@@ -1,0 +1,54 @@
+{
+  "id": "ANTHROPIC_MESSAGES",
+  "title": "Anthropic Messages",
+  "category": "LANGUAGE_MODEL",
+  "description": "The Messages wire protocol, spoken by Anthropic and by every service compatible with it.",
+  "status": "stable",
+  "introduced": "2.0.0",
+  "references": [
+    {
+      "title": "Anthropic API reference: Messages",
+      "url": "https://docs.anthropic.com/en/api/messages"
+    }
+  ],
+  "capabilities": [
+    "STREAMING",
+    "TOOL_CALLS"
+  ],
+  "members": [
+    {
+      "name": "baseURL",
+      "role": "locator",
+      "presence": "required",
+      "sensitive": false,
+      "schema": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^[Hh][Tt][Tt][Pp][Ss]://"
+      },
+      "description": "HTTPS base URL a client sends Messages requests to."
+    },
+    {
+      "name": "apiKey",
+      "role": "credential",
+      "presence": "required",
+      "sensitive": true,
+      "schema": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "API key the client authenticates with."
+    },
+    {
+      "name": "model",
+      "role": "parameter",
+      "presence": "required",
+      "sensitive": false,
+      "schema": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "Model the client names in each request."
+    }
+  ]
+}
