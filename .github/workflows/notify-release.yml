@@ -1,0 +1,111 @@
+name: Notify Release
+
+# Tells the repositories that vendor these specifications that a release
+# exists, with the `dependency-released` repository dispatch every consumer's
+# maintain-dependencies.yml answers (engineering-conventions EC-0033). Each
+# consumer then syncs the family's release archive, with the release.json it
+# carries, and opens a pull request. Consumers also sync on a schedule, so a
+# dispatch lost here delays the pin rather than losing it, and this repository
+# never has to be the only thing that remembers who reads it
+# (docs/adr/0043 §8).
+#
+# release.yml publishes each release as the release GitHub App, so
+# `release: published` starts this workflow: a release published with
+# GITHUB_TOKEN would start none. A dispatch by hand re-sends the notice for a
+# tag.
+#
+# It reads the release and never writes to it, with the job token's
+# contents:read. A dispatch to another repository needs a token with
+# contents:write there: the DEPENDENCY_DISPATCH_TOKEN secret. Without it the
+# job says so and stops, green: the consumers' schedules still carry the
+# release.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: The published release to announce, such as core/v2.1.0.
+        required: true
+        type: string
+  release:
+    types: [published]
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ inputs.tag || github.event.release.tag_name }}
+  cancel-in-progress: false
+
+jobs:
+  notify:
+    name: Dispatch dependency-released
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read  # gh release view
+    env:
+      TAG: ${{ inputs.tag || github.event.release.tag_name }}
+      # Whether the secret is set, never the secret itself: a step condition
+      # cannot read `secrets`.
+      HAS_DISPATCH_TOKEN: ${{ secrets.DEPENDENCY_DISPATCH_TOKEN != '' }}
+    steps:
+      # A family release tag, published and not a draft, with its archive and
+      # SHA256SUMS: what a consumer downloads and verifies.
+      - name: Check the release is a published family release with its archive
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [[ ! "${TAG}" =~ ^(core|component|blueprint|listing)/v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            echo "::error::${TAG} is not a family release tag (<family>/vX.Y.Z); there is nothing to announce." >&2
+            exit 1
+          fi
+          family="${BASH_REMATCH[1]}"
+          version="${BASH_REMATCH[2]}"
+          release="$(gh release view "${TAG}" --repo "${GITHUB_REPOSITORY}" --json isDraft,assets)"
+          if [ "$(jq -r .isDraft <<<"${release}")" != "false" ]; then
+            echo "::error::${TAG} is still a draft; a consumer cannot download it yet." >&2
+            exit 1
+          fi
+          for asset in "${family}-v${version}.tar.gz" SHA256SUMS; do
+            if ! jq -r '.assets[].name' <<<"${release}" | grep -qxF "${asset}"; then
+              echo "::error::${TAG} has no ${asset}; a consumer could not verify what it vendors." >&2
+              exit 1
+            fi
+          done
+          {
+            echo "FAMILY=${family}"
+            echo "VERSION=${version}"
+          } >>"${GITHUB_ENV}"
+
+      - name: Report that no dispatch token is configured
+        if: env.HAS_DISPATCH_TOKEN != 'true'
+        run: >-
+          echo "::notice::DEPENDENCY_DISPATCH_TOKEN is not set, so no consumer is
+          notified; each picks ${TAG} up on its maintain-dependencies schedule."
+
+      # One dispatch per consumer, each attempted even when an earlier one
+      # fails, and the job fails afterwards if any did. `output` is the bundle
+      # output .repo/outputs.toml declares for the family.
+      - name: Dispatch dependency-released to each consumer
+        if: env.HAS_DISPATCH_TOKEN == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.DEPENDENCY_DISPATCH_TOKEN }}
+        run: |
+          set -euo pipefail
+          failed=()
+          for consumer in platform-api musher-cli; do
+            if gh api --method POST "repos/musher-dev/${consumer}/dispatches" \
+              -f event_type=dependency-released \
+              -f "client_payload[repository]=specifications" \
+              -f "client_payload[output]=${FAMILY}-release" \
+              -f "client_payload[version]=${VERSION}"; then
+              echo "musher-dev/${consumer}: dependency-released ${FAMILY}-release ${VERSION}"
+            else
+              failed+=("${consumer}")
+            fi
+          done
+          if [ "${#failed[@]}" -gt 0 ]; then
+            echo "::error::the dispatch failed for: ${failed[*]}" >&2
+            exit 1
+          fi
