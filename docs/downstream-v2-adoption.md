@@ -178,8 +178,9 @@ stops validating. What a consumer adopts:
   platform field names onto these
   ([ADR 0044](adr/0044-the-validation-result-is-a-released-schema.md)).
 - **The protocol registry and the connection-evidence schema** (#219).
-  Connection protocols are records in component's `protocols/`, and blueprint
-  ships a `connection-evidence` schema. Generate member tables and enums from
+  Connection protocols are records in component's `protocols/`, the
+  `component-protocols` interface, and blueprint ships a connection-evidence
+  schema, the `blueprint-connection-evidence` interface. Generate member tables and enums from
   them rather than hand-porting
   ([ADR 0045](adr/0045-connection-protocols-are-a-registry.md)).
 - **Three messaging protocols and `credential.secrets`** (#220).

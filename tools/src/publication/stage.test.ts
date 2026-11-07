@@ -133,9 +133,10 @@ function declareRegistries(fx: FixtureRepo): void {
       ...iface(
         'component-registry',
         'data',
-        [`${COMPONENT2.registry}/*.json`, `${COMPONENT2.protocols}/`],
+        [`${COMPONENT2.registry}/*.json`],
         'component-release',
       ),
+      ...iface('component-protocols', 'data', [`${COMPONENT2.protocols}/`], 'component-release'),
       '',
     ].join('\n'),
   )
@@ -276,15 +277,21 @@ describe('stageRelease from 2.1.0', () => {
     expect(record.interfaces.map((i: { id: string }) => i.id)).toEqual([
       'component-schema',
       'component-registry',
+      'component-protocols',
     ])
     expect(record.interfaces[1].files.map((f: { path: string }) => f.path)).toEqual([
-      'protocols/redis.json',
       'registry/diagnostics.json',
       'registry/requirements.json',
     ])
-    for (const file of record.interfaces[1].files as { path: string; sha256: string }[]) {
-      expect(sha256(member(archive, `component-v2/${file.path}`))).toBe(file.sha256)
-    }
+    expect(record.interfaces[2].files.map((f: { path: string }) => f.path)).toEqual([
+      'protocols/redis.json',
+    ])
+    for (const iface of record.interfaces.slice(1) as {
+      files: { path: string; sha256: string }[]
+    }[])
+      for (const file of iface.files) {
+        expect(sha256(member(archive, `component-v2/${file.path}`))).toBe(file.sha256)
+      }
   })
 })
 

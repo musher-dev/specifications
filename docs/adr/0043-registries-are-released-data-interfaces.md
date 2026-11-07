@@ -123,16 +123,20 @@ and interfaces under their family names, as it carries their prose.
 | `core-validation-result` | `json-schema` | `interfaces/validation-result.schema.json` | `core-release` |
 | `core-registry-schemas` | `json-schema` | `interfaces/registry/` | `core-release` |
 | `core-registry` | `data` | `registry/` | `core-release` |
-| `component-registry` | `data` | `registry/` and `protocols/` | `component-release` |
+| `component-registry` | `data` | `registry/` | `component-release` |
+| `component-protocols` | `data` | `protocols/` | `component-release` |
 | `blueprint-registry` | `data` | `registry/` | `blueprint-release` |
 | `blueprint-connection-evidence` | `json-schema` | `interfaces/connection-evidence.schema.json` | `blueprint-release` |
 | `listing-registry` | `data` | `registry/` | `listing-release` |
 
-Each path is under `specifications/<family>/v2/`. The registries are
-`generated`, so `contracts:generate` exists and runs `task docs`. Component's
-protocol records ([ADR 0045](0045-connection-protocols-are-a-registry.md)) are
-authored, and travel in `component-registry` because a consumer reads them with
-the member lists they define.
+Each path is under `specifications/<family>/v2/`. The four `*-registry`
+interfaces are `generated`, so `contracts:generate` exists and runs
+`task docs`. Component's protocol records
+([ADR 0045](0045-connection-protocols-are-a-registry.md)) are authored, not
+generated, so they are their own interface, `component-protocols`, rather than
+part of `component-registry`. Blueprint's connection-evidence schema is
+generated from those records, so `blueprint-connection-evidence` is
+`generated` too. The core interface schemas are authored.
 
 ### 6. A part has a floor
 

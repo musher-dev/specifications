@@ -121,9 +121,15 @@ the prose by hand, as JSON
 | `registry/terms.json` | core | Every term record, as `docs/terminology.yaml` holds it. |
 | `interfaces/validation-result.schema.json` | core | The shape of a validation result ([ADR 0044](adr/0044-the-validation-result-is-a-released-schema.md)). |
 | `interfaces/registry/*.schema.json` | core | The schema each registry file and the term records are valid against. |
+| `protocols/*.json` | component | One record per connection protocol, with its members, and `categories.json` ([ADR 0045](adr/0045-connection-protocols-are-a-registry.md)). |
+| `interfaces/connection-evidence.schema.json` | blueprint | The shape of the `connections` resolution context, generated from component's protocol records. |
 
-Each is a gated interface in `.repo/outputs.toml`, listed with every file's
-SHA-256 in the archive's `release.json`, so a vendored copy is checked offline
+Each is part of a gated interface in `.repo/outputs.toml`: `core-registry`,
+`component-registry`, `blueprint-registry` and `listing-registry` for each
+family's `registry/`, `core-validation-result` and `core-registry-schemas` for
+core's `interfaces/`, `component-protocols` for `protocols/`, and
+`blueprint-connection-evidence` for blueprint's `interfaces/`. Each is listed
+with every file's SHA-256 in the archive's `release.json`, so a vendored copy is checked offline
 like the bundle. `spec.md` stays normative: a registry is generated from it by
 `task docs`, and `task check:docs` fails when the two disagree. Within a major
 version an ID, a code, a term or a list entry is never removed, and a list

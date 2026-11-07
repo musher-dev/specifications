@@ -132,7 +132,9 @@ as `component-v2/`. A kind family archive's directory holds:
   the repository, the bundle output (`<family>-release`), the version, tag and
   commit, and each interface the bundle delivers with the SHA-256 of each of
   its files: the family's schema interface (`<family>-schema`) as the bundle,
-  and from 2.1.0 its registry (`<family>-registry`) as one entry per file. A
+  and from 2.1.0 its registry (`<family>-registry`) as one entry per file,
+  with component's protocol records (`component-protocols`) and blueprint's
+  connection-evidence schema (`blueprint-connection-evidence`) beside it. A
   repository that vendors the archive keeps it unchanged, and checks its copy
   against it offline.
 
