@@ -121,9 +121,9 @@ this document and every family that applies it.
   listing.
 - A **catalog item** is a directory published as one unit, to a library or to
   the catalog ([§4.1](#item-directory)). The name is its form, not its
-  membership: an item in a library is a catalog item too. Its **item documents** sit at its **item root**,
-  and [§4.1](#item-directory) says which of its files are its component
-  documents.
+  membership: an item in a library is a catalog item too. Its
+  **item documents** sit at its **item root**, and [§4.1](#item-directory)
+  says which of its files are its component documents.
 - A **placeholder** is a `${{ <namespace>.<path> }}` expression standing for a
   value the document cannot contain ([§5.2](#placeholder-grammar)). Its
   **namespace** is one of a closed, reserved set.
