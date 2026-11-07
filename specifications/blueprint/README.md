@@ -7,7 +7,8 @@ as a deployment parameter. The blueprint is the unit of deployment.
 
 A blueprint is an [item document](../core/v2/spec.md#item-directory),
 `blueprint.yaml`, at the root of its catalog item. The component documents its
-nodes reference sit inside the same item, or in the catalog.
+nodes reference sit inside the same item, or are published to the deploying
+organization's library or the catalog.
 
 ## Versions
 

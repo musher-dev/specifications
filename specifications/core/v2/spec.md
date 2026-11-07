@@ -114,8 +114,14 @@ this document and every family that applies it.
   version validation never becomes stricter ([§3](#compatibility)).
 - A **core release** is one tagged release of this document, such as `2.0.0`, tagged `core/v2.0.0`
   ([§9](#core-releases)).
-- A **catalog item** is a directory the catalog publishes as one unit
-  ([§4.1](#item-directory)). Its **item documents** sit at its **item root**,
+- The **catalog** is the curated, public collection of catalog items, each
+  with a listing, that a storefront offers.
+- An organization's **library** is the documents and items it has published
+  for its own use. No storefront offers a library, and an item in one needs no
+  listing.
+- A **catalog item** is a directory published as one unit, to a library or to
+  the catalog ([§4.1](#item-directory)). The name is its form, not its
+  membership: an item in a library is a catalog item too. Its **item documents** sit at its **item root**,
   and [§4.1](#item-directory) says which of its files are its component
   documents.
 - A **placeholder** is a `${{ <namespace>.<path> }}` expression standing for a
@@ -158,7 +164,7 @@ beyond what this table states.
 | `ERR_UNKNOWN_REFERENCE_NAMESPACE` | `ERR_UNKNOWN_PLACEHOLDER_NAMESPACE` | They follow the term. |
 | `ERR_REFERENCE_NOT_IN_SCOPE` | `ERR_NAMESPACE_NOT_PERMITTED` | It names the condition: a family permits namespaces at a position, and "scope" now means validation scope. |
 | Reserved namespace `output` | `nodes` | A value comes from a node, and an output never "publishes". |
-| Phase `capability` | `admission` | It decides admission to the catalog or to a deployment; "capability" had four senses. |
+| Phase `capability` | `admission` | It decides admission to a library, to the catalog or to a deployment; "capability" had four senses. |
 | Phase `resolution`, used but undeclared | Declared, with stages `sources`, `parameters`, `allocation`, `connections`, `values`, `build`, `environment`, `record` | Diagnostics already reported it. `sources` is new and runs first, pinning content; `build` is new and runs after `values`, whose results its build secrets read. |
 | Validation profiles `structural`, `document`, `publication`, `deployment`; conformance profiles `parser`, `structural`, `offline`, `platform` | One validation scope lattice: `parser`, `structural`, `document`, `publication`, `deployment` | Two lattices described one thing. `offline` is `document`; `platform` is `publication` or `deployment`. |
 | Result field `validationProfile` | `validationScope` | "Profile" had seven senses. |
@@ -306,7 +312,8 @@ them that every family shares.
 
 A document does not always travel alone. Documents that belong together, such
 as a blueprint and its sibling listing, belong to a catalog item
-([§1.3](#terms)): a directory the catalog publishes as one unit.
+([§1.3](#terms)): a directory published as one unit, to a library or to the
+catalog.
 
 An **item document** is a document whose file name its family specification
 fixes ([§1.1](#family-fixes)). The directory containing an item document is the
@@ -504,12 +511,12 @@ MUST NOT report a later-phase diagnostic before the earlier phases pass.
 | `parser` | The Musher YAML profile: [§6.2](#yaml-profile). | Client and server |
 | `structural` | The family's JSON Schema 2020-12 document. | Client and server |
 | `semantic` | Rules JSON Schema cannot express: placeholder grammar and namespaces, path containment, uniqueness across collections, agreement between the documents of one item. | Client and server |
-| `admission` | Obligations that need authorized platform context: account, region and quota checks, and catalog and publication obligations, such as a revision that must exceed every published one. | Server only |
+| `admission` | Obligations that need authorized platform context: account, region and quota checks, and publication obligations, such as a revision that must exceed every published one. | Server only |
 | `resolution` | Turning an admitted blueprint revision into one deployment's values, in the stages of [§6.4](#resolution-stages). | Server only |
 
 An evaluator MUST NOT access the network in the `parser`, `structural`, or
 `semantic` phases. The `admission` and `resolution` phases read context an
-authorized resolver acquired and pinned: catalog entries, account policy,
+authorized resolver acquired and pinned: published documents, account policy,
 organization variables, connections and deployment facts. Neither phase fetches
 a URL a document selects. The one acquisition a document directs is a workload
 source: the `sources` stage of [§6.4](#resolution-stages) reads a git
@@ -517,7 +524,7 @@ source: the `sources` stage of [§6.4](#resolution-stages) reads a git
 is acquisition by the authorized resolver under platform policy, not a fetch by
 a phase, and the policy admits `https` alone: no other scheme, no `file:`, and
 no address in a private, loopback or link-local range. Because the context is
-pinned, a check over catalog-backed facts can also run offline against a
+pinned, a check over published facts can also run offline against a
 supplied copy of it.
 
 **Why the `parser` phase rejects legal YAML.** A duplicate key, an anchor and
@@ -557,7 +564,7 @@ lattice, each containing every obligation of the one before it:
 | `parser` | The YAML profile. | `parser` |
 | `structural` | The family's schema. | `parser`, `structural` |
 | `document` | Every rule the document and the item holding it decide, including the documents it references. | `parser`, `structural`, `semantic` |
-| `publication` | `document`, plus the obligations of publishing to the catalog. | the above, and `admission` |
+| `publication` | `document`, plus the obligations of publishing, to a library or to the catalog. A library needs no listing; listing an item in the catalog adds its listing's obligations. | the above, and `admission` |
 | `deployment` | `publication`, plus deploying in one organization's account under its current policy, and resolving the deployment's values. | the above, and `resolution` |
 
 A known failure takes precedence over incompleteness: a result with a
@@ -572,7 +579,7 @@ obligations.
 
 <a id="CORE-ADMISSION-001"></a>**`CORE-ADMISSION-001`**: a `publication` or
 `deployment` result MUST NOT be `VALID` until every obligation of its scope,
-including each deferred one, is completed. Synthetic catalog and account
+including each deferred one, is completed. Synthetic publication and account
 fixtures may exercise these checks offline; a production implementation still
 acquires and verifies its own authorized context.
 
@@ -891,7 +898,7 @@ control plane must do so that reading an untrusted Musher document is safe.
 vulnerability *in this repository* and how to report one.
 
 A Musher document is untrusted input. It arrives from a pull request, a
-catalog submission, or a `POST` body, and every consideration below assumes its
+publication, or a `POST` body, and every consideration below assumes its
 author is hostile. Each family specification adds what is specific to its own
 documents.
 
