@@ -42,7 +42,7 @@ function main(): void {
         continue
       }
       const detail = result.diagnostics
-        .map((d) => `        ${d.code} at ${d.path || '/'} — ${d.message}`)
+        .map((d) => `        ${d.code} at ${d.path || '/'}: ${d.message}`)
         .join('\n')
       failures.add(`${relativeToRepo(path)} failed in the ${result.phase} phase:\n${detail}`)
     }

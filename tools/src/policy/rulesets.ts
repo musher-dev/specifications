@@ -5,7 +5,7 @@
  * main-branch.json` pairs `required_approving_review_count: 0` with
  * `require_code_owner_review: true`, so review is demanded per changed file
  * rather than per pull request; `.github/CODEOWNERS` decides which files those
- * are. Break either half and the other becomes meaningless — but neither fails
+ * are. Break either half and the other becomes meaningless, but neither fails
  * loudly. A `*` catch-all restores the blanket gate. A count of `1` restores it
  * from the other side. Both changes look like tightening and read as harmless.
  *
@@ -96,7 +96,7 @@ export function rulesetViolations(repoRoot: string = REPO_ROOT): string[] {
     try {
       ruleset = JSON.parse(readFileSync(join(dir, file), 'utf8'))
     } catch (error) {
-      problems.push(`RUL-01: ${rel} is not valid JSON — ${(error as Error).message}`)
+      problems.push(`RUL-01: ${rel} is not valid JSON: ${(error as Error).message}`)
       continue
     }
 
@@ -140,7 +140,7 @@ export function rulesetViolations(repoRoot: string = REPO_ROOT): string[] {
     if (file === MAIN_RULESET) {
       const pull = typed.find((rule) => rule.type === 'pull_request')
       if (pull === undefined) {
-        problems.push(`RUL-07: ${rel} has no \`pull_request\` rule — the review gate is gone.`)
+        problems.push(`RUL-07: ${rel} has no \`pull_request\` rule; the review gate is gone.`)
       } else {
         const parameters = (pull.parameters ?? {}) as Record<string, unknown>
         if (parameters.require_code_owner_review !== true) {
@@ -201,7 +201,7 @@ function codeownersViolations(repoRoot: string): string[] {
     }
 
     // A root-anchored literal pattern that matches nothing owns nothing, and
-    // CODEOWNERS reports no error for it — the path silently becomes unowned.
+    // CODEOWNERS reports no error for it; the path silently becomes unowned.
     const literal = entry.pattern.startsWith('/') && !/[*?[\]]/.test(entry.pattern)
     if (literal && !existsSync(join(repoRoot, entry.pattern.slice(1)))) {
       problems.push(

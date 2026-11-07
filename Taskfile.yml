@@ -5,7 +5,7 @@
 # This file stays at the repo root because Task only discovers `Taskfile.*`
 # there: `--taskfile` would work but would break bare `task <name>`. It holds
 # the entry points; the tasks themselves live in taskfiles/, included below.
-# Everything else this repository configures lives in .config/ — see
+# Everything else this repository configures lives in .config/; see
 # .config/README.md and docs/adr/0011-tooling-configuration-layout.md.
 
 version: '3'
@@ -35,7 +35,7 @@ vars:
   # release-please writes specifications/*/v*/CHANGELOG.md. It is generated,
   # its blank-line style (two blank lines before a `###` section) violates
   # MD012, and a fix here would be overwritten by the next release pull
-  # request — so it is excluded rather than linted or rewritten.
+  # request, so it is excluded rather than linted or rewritten.
   MARKDOWN_GLOBS: >-
     "**/*.md" "#tools/node_modules" "#site" "#.claude/worktrees" "#.github/pull_request_template.md"
     "#specifications/*/v*/CHANGELOG.md" "#.config/prose/styles"

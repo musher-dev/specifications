@@ -22,7 +22,7 @@ tasks:
 
   site:build:
     desc: Assemble the publication tree served at specifications.musher.dev
-    # Pinned paths come only from what site:fetch verified, so it runs first —
+    # Pinned paths come only from what site:fetch verified, so it runs first,
     # but only when the ledger has a tagged entry. With none, nothing is pinned
     # and the build works offline. Untagged majors are built in memory.
     dir: '{{.ROOT_DIR}}/{{.TOOLS_DIR}}'

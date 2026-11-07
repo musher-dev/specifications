@@ -11,7 +11,7 @@
  *
  * The last of those is ADR 0021 §4: an accepted ADR's prose is immutable, but a
  * relative link target that moved may be rewritten. ADR-04 is that rule made
- * mechanical — both sides of the comparison have every `](target)` blanked to
+ * mechanical: both sides of the comparison have every `](target)` blanked to
  * `]()`, and anything still different is an edit to a decision.
  *
  * NON-NORMATIVE, like everything under tools/.
@@ -38,7 +38,7 @@ export const LINK = /\[[^\]]*\]\(([^)\s]*)\)/g
 export const SECTION = /§(\d+)/g
 /** A numbered heading: `### 3. Title` or `### 3 Title`. */
 const NUMBERED_HEADING = /^#{2,6}\s+(\d+)(?:\.|\s)/gm
-/** A scheme-qualified URL — not a path in this repository. */
+/** A scheme-qualified URL, not a path in this repository. */
 const ABSOLUTE = /^[a-z][a-z0-9+.-]*:/i
 
 /** An ADR's header: every line after the H1 and before the first `## `. */
@@ -86,7 +86,7 @@ function firstDifferingLine(a: string, b: string): number {
 
 /**
  * The ref ADR-04 compares against: `BASE_REF` when set, else `origin/main` when
- * it exists, else null — and ADR-04 is skipped with a notice.
+ * it exists, else null, and ADR-04 is skipped with a notice.
  */
 export function resolveBaseRef(
   repoRoot: string = REPO_ROOT,
@@ -99,10 +99,10 @@ export function resolveBaseRef(
     return 'origin/main'
   } catch (error) {
     // `--quiet` makes an absent ref exit 1 with nothing on stderr. Anything
-    // else — not a repository, an ownership refusal — is git failing, and
+    // else (not a repository, an ownership refusal) is git failing, and
     // reporting it as "origin/main absent" would skip ADR-04 silently.
     const message = error instanceof Error ? error.message : String(error)
-    if (/failed \(1\) — $/.test(message)) return null
+    if (/failed \(1\): $/.test(message)) return null
     throw error
   }
 }
@@ -220,7 +220,7 @@ function immutabilityViolations(repoRoot: string, baseRef: string): string[] {
     git(repoRoot, ['rev-parse', '--verify', `${baseRef}^{commit}`])
   } catch {
     return [
-      `ADR-04: base ref ${baseRef} does not resolve. The comparison needs history — ` +
+      `ADR-04: base ref ${baseRef} does not resolve. The comparison needs history: ` +
         'check out with fetch-depth: 0, or unset BASE_REF.',
     ]
   }
@@ -253,7 +253,7 @@ function immutabilityViolations(repoRoot: string, baseRef: string): string[] {
     if (left === right) continue
     problems.push(
       `ADR-04: ${path} was accepted at ${baseRef} and has changed beyond its link targets ` +
-        `(first at line ${firstDifferingLine(left, right)}). Accepted prose is immutable — ` +
+        `(first at line ${firstDifferingLine(left, right)}). Accepted prose is immutable; ` +
         'record the change in a new ADR (ADR 0021 §4).',
     )
   }
@@ -278,7 +278,7 @@ export function adrViolations(
 function main(): void {
   const baseRef = resolveBaseRef()
   if (baseRef === null) {
-    console.log('BASE_REF not set and origin/main absent — skipping ADR-04.')
+    console.log('BASE_REF not set and origin/main absent; skipping ADR-04.')
   }
   const failures = new Failures()
   for (const problem of adrViolations(REPO_ROOT, baseRef)) failures.add(problem)

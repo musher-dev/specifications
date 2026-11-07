@@ -47,7 +47,7 @@ function template(options: {
     `| Item document ([core v1 §4.1](../../core/v1/spec.md#item-directory)) | ${options.itemDocument} |`,
     '',
     'This specification narrows core v1 where it says so and relaxes it nowhere. It',
-    'cites core by its major version — "core v1 §N" — and the core release a release was',
+    'cites core by its major version ("core v1 §N"), and the core release a release was',
     'built and tested against is recorded with that release',
     '([core v1 §9](../../core/v1/spec.md#editions)).',
     '',
@@ -71,15 +71,15 @@ const COMPONENT = template({
   kind: 'COMPONENT',
   title: 'Component',
   metadata: '[§4](#metadata)',
-  nullFields: '`schedule` — [§5](#workload)',
-  itemDocument: 'No — it sits inside an item',
+  nullFields: '`schedule` ([§5](#workload))',
+  itemDocument: 'No, it sits inside an item',
 })
 
 const BLUEPRINT = template({
   kind: 'BLUEPRINT',
   title: 'Blueprint',
   metadata: '[§3](#metadata)',
-  nullFields: '`size` — [§4.3](#compute-profile)',
+  nullFields: '`size` ([§4.3](#compute-profile))',
   itemDocument: '`blueprint.yaml`',
   extraDependencies: ['| [component](../../component/v1/spec.md) | v1 |'],
 })

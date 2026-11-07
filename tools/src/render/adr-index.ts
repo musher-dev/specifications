@@ -1,11 +1,11 @@
 /**
- * Generate the ADR index in `docs/adr/README.md` — `task docs`.
+ * Generate the ADR index in `docs/adr/README.md` (`task docs`).
  *
  * The README is a hand-written introduction with a generated table between two
  * markers. The table is read from each ADR's own header: its title, status and
  * date, and its relation bullets condensed onto one line. The last column is
- * computed rather than written — which later ADRs supersede or refine this
- * one — because an accepted ADR's prose is immutable (ADR 0021 §4) and so can
+ * computed rather than written (which later ADRs supersede or refine this
+ * one) because an accepted ADR's prose is immutable (ADR 0021 §4) and so can
  * never learn what replaced it. Without the back-references a reader of ADR
  * 0001 has no way to find ADR 0023 short of reading every header.
  *
@@ -35,7 +35,7 @@ export const INDEX_END = '<!-- adr-index:end -->'
 
 /**
  * A relation's verb, as the back-reference the cited ADR shows for it. The
- * sections a relation names belong to the cited ADR — the row's own — so they
+ * sections a relation names belong to the cited ADR (the row's own), so they
  * lead: `§1 superseded by 0021`, never `Superseded by 0021 §1`, which reads as a
  * section of 0021.
  */

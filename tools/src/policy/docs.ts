@@ -1,5 +1,5 @@
 /**
- * Fail if a generated navigation document is stale — `task check:docs`.
+ * Fail if a generated navigation document is stale (`task check:docs`).
  *
  * `docs/traceability.md`, the ADR index in `docs/adr/README.md`, the
  * glossary page and Vale styles generated from `docs/terminology.yaml`, and

@@ -32,7 +32,7 @@ export class Pipeline {
     fx.writeFile('.gitignore', '/.cache/\n/site*/\n')
   }
 
-  /** Record, commit the ledger, and tag — the release pull request and its merge. */
+  /** Record, commit the ledger, and tag: the release pull request and its merge. */
   recordAndTag(tag: string): void {
     record(this.fx.root)
     this.fx.commit(`chore(release): release ${tag}`)

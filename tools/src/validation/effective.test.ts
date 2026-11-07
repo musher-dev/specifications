@@ -1,5 +1,5 @@
 /**
- * The resolver's three answers — written, defaulted, absent — and the shapes it
+ * The resolver's three answers (written, defaulted, absent) and the shapes it
  * declines rather than guesses at.
  */
 import { describe, expect, test } from 'bun:test'

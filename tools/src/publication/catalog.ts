@@ -33,7 +33,7 @@ import {
  * Glob patterns an editor uses to bind a family's schema to a file.
  *
  * A blueprint's `component` reference is a relative path, so a component
- * document is not obliged to live under `components/` — a flat directory
+ * document is not obliged to live under `components/`; a flat directory
  * beside the blueprint is equally valid. The component patterns cover both;
  * binding only the directory form would leave the flat layout with no editor
  * support for the exact layout the reference form exists to permit.

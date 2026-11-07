@@ -7,7 +7,7 @@
  * drafts included when the token can see them. `download` fetches an asset's
  * bytes through the API, so it works for a private repository too.
  *
- * Credentials: `GITHUB_TOKEN`, else `gh auth token`, else none — enough for a
+ * Credentials: `GITHUB_TOKEN`, else `gh auth token`, else none, which is enough for a
  * public repository within the unauthenticated rate limit.
  *
  * NON-NORMATIVE, like everything under tools/.
@@ -136,7 +136,7 @@ export class GitHubReleaseSource implements ReleaseSource {
     })
     if (response.status === 404) return { status: 404, body: null }
     if (!response.ok) {
-      throw new Error(`GET ${url} failed (${response.status}) — ${await response.text()}`)
+      throw new Error(`GET ${url} failed (${response.status}): ${await response.text()}`)
     }
     return { status: response.status, body: await response.json() }
   }

@@ -3,7 +3,7 @@
  * validator needs.
  *
  * This module is pure: JSON in, model out, no filesystem, no git, no HTML. That
- * is what lets the hard part — deciding what a construct *means* — be tested
+ * is what lets the hard part (deciding what a construct *means*) be tested
  * without parsing markup, and it is where the correctness guarantees live.
  *
  * The governing rule is that nothing is ever silently simplified. A generic
@@ -110,7 +110,7 @@ export type Shape =
   /**
    * A node with no type of its own. It may still assert: the two branches of
    * `BlueprintNode.component` are bare `pattern`s, and they are the entire
-   * difference between the two forms — dropping them would render the field as
+   * difference between the two forms; dropping them would render the field as
    * "any value, or any value".
    */
   | { readonly kind: 'any'; readonly constraints: readonly Constraint[] }
@@ -230,7 +230,7 @@ class Builder {
   private refTarget(node: { [k: string]: Json }, pointer: string): string | undefined {
     const ref = node.$ref
     if (typeof ref !== 'string') return undefined
-    if (!ref.startsWith('#/$defs/')) this.fail(pointer, `has a non-local $ref — ${ref}`)
+    if (!ref.startsWith('#/$defs/')) this.fail(pointer, `has a non-local $ref: ${ref}`)
     const name = ref.slice('#/$defs/'.length)
     if (this.defs[name] === undefined) this.fail(pointer, `$ref names a missing $defs/${name}`)
     return name
@@ -251,7 +251,7 @@ class Builder {
    * `ComponentWorkload/allOf/4/if/properties/endpoints/not` carries one too, and
    * it is the "no member matches" negation rather than a map. That node declares
    * no `type`, so requiring `type: "object"` on the enclosing schema separates
-   * the two — and the caller additionally never asks about a node inside a
+   * the two, and the caller additionally never asks about a node inside a
    * condition.
    */
   private isMap(node: { [k: string]: Json }): boolean {
@@ -263,7 +263,7 @@ class Builder {
    *
    * Two placements, most specific first. The annotation usually sits on the
    * `$def` that is the map's value type, which is where six of the seven are;
-   * but a map whose value is an inline scalar — `ComponentBuild.arguments` — has
+   * but a map whose value is an inline scalar (`ComponentBuild.arguments`) has
    * no definition to carry it, so the map itself may name its key instead.
    */
   private keyNameOf(node: { [k: string]: Json }, value: Shape): string | undefined {
@@ -281,7 +281,7 @@ class Builder {
    *
    * `nullable` is decided by the presence of a `{"type": "null"}` branch, never
    * by branch count: 44 of the 45 `anyOf`s in the bundles are that idiom, and
-   * the one that is not — `BlueprintNode.component` — has two live branches and
+   * the one that is not (`BlueprintNode.component`) has two live branches and
    * would be mislabelled by any arity rule.
    */
   shapeOf(raw: Json, pointer: string): { shape: Shape; nullable: boolean } {
@@ -333,7 +333,7 @@ class Builder {
       const annotated = this.keyNameOf(node, value.shape)
       if (annotated === undefined) {
         this.notes.push(
-          `${pointer}: map key unnamed — its value type carries no x-additionalPropertiesName`,
+          `${pointer}: map key unnamed: its value type carries no x-additionalPropertiesName`,
         )
       }
       const names = node.propertyNames
@@ -358,7 +358,7 @@ class Builder {
 
     const type = typeof node.type === 'string' ? node.type : undefined
     if (Array.isArray(node.type)) {
-      this.fail(pointer, 'declares an array "type", which no Musher schema uses — add a case')
+      this.fail(pointer, 'declares an array "type", which no Musher schema uses; add a case')
     }
     // `KNOWN_KEYS` gates the *name* of a keyword. These are named there
     // because they are legitimate inside a conditional, where `predicateOf`
@@ -661,8 +661,8 @@ class Builder {
 /**
  * Read a bundle into its reference model.
  *
- * Total on a bundle carrying no `$defs` and no `properties` — the shape the test
- * fixture writes — so adding a reference page cannot break the publication tests
+ * Total on a bundle carrying no `$defs` and no `properties` (the shape the test
+ * fixture writes), so adding a reference page cannot break the publication tests
  * that predate it.
  */
 export function buildReference(bundle: Json, family: string, version: string): ReferenceModel {
@@ -715,13 +715,13 @@ function describeShape(shape: Shape): string {
       const members = shape.values.map((v) => `<code>${escapeHtml(literal(v))}</code>`).join(', ')
       return shape.type === undefined
         ? `one of ${members}`
-        : `${escapeHtml(shape.type)} — one of ${members}`
+        : `${escapeHtml(shape.type)}, one of ${members}`
     }
     case 'const': {
       const value = `<code>${escapeHtml(literal(shape.value))}</code>`
       return shape.type === undefined
         ? `always ${value}`
-        : `${escapeHtml(shape.type)} — always ${value}`
+        : `${escapeHtml(shape.type)}, always ${value}`
     }
     case 'ref':
       return typeLink(shape.target)

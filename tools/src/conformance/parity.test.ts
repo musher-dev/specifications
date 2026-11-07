@@ -5,7 +5,7 @@
  * This file exists because that dependency broke silently. Sourcemeta
  * 16.10.0 began printing paths relative to the working directory, every lookup
  * against an absolute path missed, and Blaze appeared to accept all 193
- * subjects — 85 of which Ajv rejects. The check reported disagreements rather
+ * subjects, 85 of which Ajv rejects. The check reported disagreements rather
  * than a defect in itself, and its own guard against exactly that did not fire,
  * because the first failure of each batch was still named. Under a name nothing
  * could match.

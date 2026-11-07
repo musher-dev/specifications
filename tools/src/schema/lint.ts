@@ -60,7 +60,7 @@ export function lintFamilies(
     const hasRoot = modules.some((m) => m.endsWith(`/${family.name}.schema.json`))
     if (!hasRoot) {
       failures.add(
-        `${family.name}/${family.major}: no entry-point module — expected ` +
+        `${family.name}/${family.major}: no entry-point module; expected ` +
           `${familyPaths(family.name, family.major).src}/${family.name}.schema.json`,
       )
     }
@@ -100,7 +100,7 @@ export function lintFamilies(
       try {
         doc = readJson(path)
       } catch (error) {
-        failures.add(`${rel}: not valid JSON — ${(error as Error).message}`)
+        failures.add(`${rel}: not valid JSON: ${(error as Error).message}`)
         continue
       }
 
@@ -134,7 +134,7 @@ function main(): void {
   const failures = new Failures()
   const { moduleCount, familyCount } = lintFamilies(REPO_ROOT, failures)
   if (moduleCount === 0 && failures.count === 0) {
-    console.log('No schema modules authored yet — nothing to lint.')
+    console.log('No schema modules authored yet, so nothing to lint.')
     return
   }
   failures.report(`Linted ${moduleCount} schema module(s) across ${familyCount} family tree(s).`)
@@ -258,7 +258,7 @@ export function checkEnvelope(
         : null
   if (versions === null || versions.length !== 1 || versions[0] !== family.major) {
     failures.add(
-      `${where}: specVersion must admit exactly "${family.major}" — the family's major — ` +
+      `${where}: specVersion must admit exactly "${family.major}" (the family's major) ` +
         `as a one-value enum or a const, got ${JSON.stringify(versions)}`,
     )
   }
@@ -321,17 +321,17 @@ function checkRefs(doc: { [k: string]: Json }, rel: string, failures: Failures):
       const ref = node[keyword]
       if (typeof ref !== 'string') continue
       if (/^[a-z][a-z0-9+.-]*:/i.test(ref) || ref.startsWith('//')) {
-        failures.add(`${rel}: remote ${keyword} is forbidden — ${ref}`)
+        failures.add(`${rel}: remote ${keyword} is forbidden: ${ref}`)
         continue
       }
       if (keyword === '$dynamicRef') continue
       if (!ref.startsWith('#/$defs/')) {
-        failures.add(`${rel}: ${keyword} must point into #/$defs/ — ${ref}`)
+        failures.add(`${rel}: ${keyword} must point into #/$defs/: ${ref}`)
         continue
       }
       const target = decodeURIComponent(ref.slice('#/$defs/'.length))
       if (!(target in defs)) {
-        failures.add(`${rel}: ${keyword} ${ref} does not resolve — no $defs/${target}`)
+        failures.add(`${rel}: ${keyword} ${ref} does not resolve: no $defs/${target}`)
       }
     }
   }
@@ -340,7 +340,7 @@ function checkRefs(doc: { [k: string]: Json }, rel: string, failures: Failures):
 /**
  * Every object schema must close itself. `spec.md` §2 requires unknown
  * properties to be rejected "at every level", and JSON Schema only does that
- * where `additionalProperties: false` is written down — an omission validates a
+ * where `additionalProperties: false` is written down. An omission validates a
  * typo'd optional key clean and silently falls back to the default.
  *
  * Only schemas that declare `properties` are records. A schema using
@@ -354,7 +354,7 @@ function checkClosedObjects(doc: { [k: string]: Json }, rel: string, failures: F
     if (node.additionalProperties === false) continue
     failures.add(
       `${rel}: ${pointer || '<root>'} declares properties but not ` +
-        '"additionalProperties": false — unknown properties MUST be rejected at every level',
+        '"additionalProperties": false; unknown properties MUST be rejected at every level',
     )
   }
 }
@@ -371,7 +371,7 @@ function checkDefsNames(doc: { [k: string]: Json }, rel: string, failures: Failu
     // describes anything a reader of this repository can act on.
     if (SEEDED_AFFIX.test(name)) {
       failures.add(
-        `${rel}: $defs/${name} carries an implementation affix — "Seed" marks a ` +
+        `${rel}: $defs/${name} carries an implementation affix: "Seed" marks a ` +
           'platform authoring concept and "Request" a wire direction; name the concept instead',
       )
     }
@@ -399,7 +399,7 @@ function checkDefsPointers(doc: { [k: string]: Json }, rel: string, failures: Fa
 }
 
 /**
- * `title` is authored, human-facing, and belongs only on a module root — that is
+ * `title` is authored, human-facing, and belongs only on a module root, that is,
  * the one an IDE schema picker and SchemaStore display.
  *
  * Below the root, every title this repository inherited was generator output: a
@@ -412,7 +412,7 @@ function checkTitlePlacement(doc: { [k: string]: Json }, rel: string, failures: 
   for (const { node, pointer } of walkObjects(doc)) {
     if (pointer === '' || typeof node.title !== 'string') continue
     failures.add(
-      `${rel}: ${pointer} declares a "title" — only a module root may carry one; ` +
+      `${rel}: ${pointer} declares a "title", but only a module root may carry one; ` +
         'below it, describe the field in "description"',
     )
   }
@@ -423,7 +423,7 @@ function checkMetaValid(doc: { [k: string]: Json }, rel: string, failures: Failu
   try {
     ajv.compile(doc)
   } catch (error) {
-    failures.add(`${rel}: not a valid JSON Schema 2020-12 document — ${(error as Error).message}`)
+    failures.add(`${rel}: not a valid JSON Schema 2020-12 document: ${(error as Error).message}`)
   }
 }
 
@@ -433,7 +433,7 @@ function checkMetaValid(doc: { [k: string]: Json }, rel: string, failures: Failu
  * All of them are annotations: they carry no assertion, and removing one would
  * not change what validates. They are listed here rather than waved through by
  * `strict: false`, because the point of strict mode is to catch a *misspelled*
- * keyword — `additionalPropertes`, `minimun` — which 2020-12 ignores silently
+ * keyword (`additionalPropertes`, `minimun`), which 2020-12 ignores silently
  * and which would leave a rule this repository believes it is enforcing doing
  * nothing at all. A document format that rejects unknown instance fields at
  * every level should hold its own schemas to the same standard.
@@ -442,8 +442,8 @@ const EXTENSION_KEYWORDS = [
   'x-musher-grammar',
   // Names the key of a map-valued object, for documentation renderers. The
   // keys are chosen by the document author, so no schema can name them. It
-  // sits on the `$def` that is the map's value type, or — where that value is
-  // an inline scalar with no definition to carry it — on the map itself.
+  // sits on the `$def` that is the map's value type, or (where that value is
+  // an inline scalar with no definition to carry it) on the map itself.
   'x-additionalPropertiesName',
 ] as const
 
@@ -455,15 +455,15 @@ export function strictAjv(): Ajv2020 {
     // an `if`/`then` whose containing schema has already fixed the type. Adding
     // those would edit the schemas to satisfy a linter rather than to say
     // anything new, and each edit is a chance to change what validates. What
-    // strict mode is switched on for is `strictSchema` — the unknown-keyword
+    // strict mode is switched on for is `strictSchema` (the unknown-keyword
     // check that catches `additionalPropertes` or `minimun` silently doing
-    // nothing — and that stays on.
+    // nothing), and that stays on.
     strictTypes: false,
     allErrors: true,
     // In 2020-12 `format` is an annotation unless the format-assertion
     // vocabulary is explicitly declared, and no Musher schema declares it. No
     // format library is registered, so any `format` keyword is collected as an
-    // annotation and asserts nothing — which is the dialect's default
+    // annotation and asserts nothing, which is the dialect's default
     // behaviour, not a shortcut. Declaring the vocabulary would be a breaking
     // change and needs an ADR.
     validateFormats: false,
@@ -481,8 +481,8 @@ export function strictAjv(): Ajv2020 {
  * control, in languages whose regex engines do not agree. Go and Rust use RE2,
  * which has no lookaround and no backreferences and refuses to compile one;
  * JavaScript and Python have both, and both can be made to backtrack
- * exponentially. A pattern using either is therefore two different rules — it
- * rejects a document on one implementation and fails to compile on another —
+ * exponentially. A pattern using either is therefore two different rules (it
+ * rejects a document on one implementation and fails to compile on another),
  * and it is the ReDoS surface SECURITY.md names.
  *
  * Several `$comment`s already assert a pattern is "lookahead-free, so it
@@ -513,20 +513,20 @@ function checkPatternPortability(
         const where = `${rel}: ${pointer || '<root>'}/${keyword}`
         if (LOOKAROUND.test(pattern)) {
           failures.add(
-            `${where} uses lookaround — ${pattern}. RE2 (Go, Rust) will not compile it, ` +
+            `${where} uses lookaround: ${pattern}. RE2 (Go, Rust) will not compile it, ` +
               'so the rule would differ between implementations.',
           )
         }
         if (BACKREFERENCE.test(pattern)) {
           failures.add(
-            `${where} uses a backreference — ${pattern}. RE2 will not compile it, and ` +
+            `${where} uses a backreference: ${pattern}. RE2 will not compile it, and ` +
               'backtracking engines can be made to run exponentially on one.',
           )
         }
         try {
           new RegExp(pattern, 'u')
         } catch (error) {
-          failures.add(`${where} is not a valid regular expression — ${(error as Error).message}`)
+          failures.add(`${where} is not a valid regular expression: ${(error as Error).message}`)
         }
       }
     }
@@ -549,7 +549,7 @@ function checkNoUnfinishedText(doc: { [k: string]: Json }, rel: string, failures
       const value = node[keyword]
       if (typeof value !== 'string' || !UNFINISHED.test(value)) continue
       failures.add(
-        `${rel}: ${pointer || '<root>'}/${keyword} carries unfinished text — ` +
+        `${rel}: ${pointer || '<root>'}/${keyword} carries unfinished text; ` +
           'a released schema states the rule or omits the field.',
       )
     }
@@ -601,14 +601,14 @@ function checkAnnotationsValidate(
     if (hasDefault && !validate(node.default)) {
       failures.add(
         `${rel}: ${pointer || '<root>'}/default is ${JSON.stringify(node.default)}, which ` +
-          `its own schema rejects — ${ajv.errorsText(validate.errors)}`,
+          `its own schema rejects: ${ajv.errorsText(validate.errors)}`,
       )
     }
     for (const [index, example] of examples.entries()) {
       if (validate(example)) continue
       failures.add(
         `${rel}: ${pointer || '<root>'}/examples/${index} is ${JSON.stringify(example)}, ` +
-          `which its own schema rejects — ${ajv.errorsText(validate.errors)}`,
+          `which its own schema rejects: ${ajv.errorsText(validate.errors)}`,
       )
     }
   }

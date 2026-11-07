@@ -95,7 +95,7 @@ jobs:
             email="$(git show -s --format='%ae' "$sha")"
             subject="$(git show -s --format='%s' "$sha")"
 
-            # Trailers only — a "Signed-off-by" written into the body is not a
+            # Trailers only: a "Signed-off-by" written into the body is not a
             # sign-off, and %(trailers) is what git itself considers one.
             trailers="$(git show -s --format='%(trailers:key=Signed-off-by,valueonly)' "$sha")"
 
@@ -109,7 +109,7 @@ jobs:
               echo "  ✓ ${sha:0:8} ${subject}"
             elif [ "$bot" -eq 1 ] \
                  && printf '%s\n' "$trailers" | sed -E 's/ *<[^>]*>$//' | grep -qxF "$name"; then
-              echo "  ✓ ${sha:0:8} ${subject} — app sign-off by ${name}"
+              echo "  ✓ ${sha:0:8} ${subject}: app sign-off by ${name}"
             else
               echo "::error::${sha:0:8} (${subject}) has no Signed-off-by matching its author ${author}"
               failed=1

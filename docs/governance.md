@@ -19,8 +19,8 @@ contracts** and nothing else.
 - API request/response and OpenAPI documents → `musher-dev/platform`
 - Generated language bindings (Go structs, TypeScript types, Rust traits) →
   the respective SDK and implementation repositories
-- Executable binaries, reference validators, and WebAssembly modules — see
-  [Binary policy](#binary-policy)
+- Executable binaries, reference validators, and WebAssembly modules (see
+  [Binary policy](#binary-policy))
 
 ## Roles
 
@@ -33,8 +33,8 @@ beyond the [DCO](../.github/CONTRIBUTING.md#sign-your-work) is required.
 
 ## Decision process
 
-Ordinary changes — a new optional field, a corrected description, an additional
-conformance fixture — need green CI. Green CI is the whole of the mechanical
+Ordinary changes (a new optional field, a corrected description, an additional
+conformance fixture) need green CI. Green CI is the whole of the mechanical
 gate: review is required only on the paths listed in
 [`.github/CODEOWNERS`](../.github/CODEOWNERS), which are the review gate's own
 configuration and nothing else: the `CODEOWNERS` file itself and the
@@ -54,12 +54,12 @@ Structural changes need an accepted ADR first. That covers:
 - Changing the release, versioning, or publication model
 - Any change requiring a new major version
 - Changing the conformance fixture contract
-- Changing core — admitting a rule to the
+- Changing core: admitting a rule to the
   [core specification](../specifications/core/v2/spec.md), moving one out of it, or
   changing what a family takes from it
 
 ADRs live in [`docs/adr/`](adr/README.md), are numbered sequentially, and are
-immutable once accepted — supersede, never rewrite. The one edit an accepted ADR
+immutable once accepted: supersede, never rewrite. The one edit an accepted ADR
 admits is retargeting a relative link whose target moved, as
 [ADR 0021 §4](adr/0021-repository-organized-around-the-family-version.md)
 sets out. `task check:adr` compares each accepted ADR with only its relative
@@ -74,14 +74,14 @@ under the same pinned external context is a
 **breaking change**. It requires:
 
 1. Explicit approval from a maintainer listed in CODEOWNERS
-2. A new `v<N>` major directory — the previous major keeps working unchanged
+2. A new `v<N>` major directory; the previous major keeps working unchanged
 3. A migration note in the new major's `spec.md`
 
 Requirement 1 is an obligation on the maintainer, not a gate the repository
 enforces: `specifications/`, which holds every family's prose, schemas and
 conformance corpus, is deliberately unowned, so a breaking change is not blocked
 awaiting a review. What *is* enforced on every pull request is the machinery
-that detects the breakage — `check:compat`, `check:published`, and the
+that detects the breakage: `check:compat`, `check:published`, and the
 conformance suite, all required. See
 [ADR 0015 §4](adr/0015-selective-code-owner-review.md).
 
@@ -133,7 +133,7 @@ that list fails `check:compat`. How a retired major is served is in
 ## Changing a controlled vocabulary
 
 A field whose value comes from a closed `enum` is a controlled vocabulary this
-repository decides — [ADR 0003](adr/0003-controlled-vocabulary-placement.md)
+repository decides; [ADR 0003](adr/0003-controlled-vocabulary-placement.md)
 §1 calls it placement one. Adding a term is a minor release; removing one is
 breaking, and therefore a new major.
 
@@ -158,15 +158,15 @@ and the proposing pull request must say so in three parts:
    in either now sits in whichever its author picked.
 
 Approval is one maintainer. `specifications/` is unowned, so nothing blocks the
-merge awaiting it — a category addition is one of the changes where the
+merge awaiting it: a category addition is one of the changes where the
 obligation in Decision process is real and the gate is not. What is not ordinary
-is that a reviewer is expected to reject a well-formed term on editorial grounds —
+is that a reviewer is expected to reject a well-formed term on editorial grounds:
 a taxonomy is judged by what it excludes, and twenty categories is a taxonomy
 while sixty is a list with none.
 
 **There is no numeric ceiling, and the reason is worth stating.** A cap would be
 honoured only by refusing every candidate once it was reached, because the
-alternative — merging two terms to make room — is a removal and therefore a new
+alternative (merging two terms to make room) is a removal and therefore a new
 major. A limit that cannot be enforced within the major it applies to is a limit
 in name, and it would displace the judgement that actually does the work.
 
@@ -174,7 +174,7 @@ in name, and it would displace the judgement that actually does the work.
 
 `lifecycleStage` is not a taxonomy and does not share the rule above. It is a
 short ordered progression describing maturity, and its terms are not
-alternatives an author chooses between on taste — each one makes a claim about
+alternatives an author chooses between on taste: each one makes a claim about
 the item that the storefront acts on.
 
 Adding a stage therefore changes what the storefront *means*, not how it sorts,
@@ -198,7 +198,7 @@ step, the ledger, the core gate, and recovery from a failed release.
 
 Released versions are **immutable**. Tag deletion and update are blocked by
 repository ruleset, a published release's assets cannot change, and
-`published.json` is append-only — a rewritten tag, a changed asset, or an
+`published.json` is append-only: a rewritten tag, a changed asset, or an
 edited entry fails verification and stops the deploy rather than silently
 altering a URL documented as permanent. A flawed release is corrected by publishing a
 superseding patch, and the flawed version is marked with `deprecated: true`.
@@ -212,12 +212,12 @@ makes released bytes immutable release assets.
 
 ## Deprecation and retirement
 
-1. **Deprecate** — the field or version is annotated `deprecated: true`. Editors
+1. **Deprecate**: the field or version is annotated `deprecated: true`. Editors
    and the CLI surface a warning. It keeps working.
-2. **Sunset** — a removal date is published, planned to be carried by a
+2. **Sunset**: a removal date is published, planned to be carried by a
    `Sunset` header that is not generated yet (ADR 0012 follow-up 1). Minimum six
    months from deprecation.
-3. **Retire** — removal happens only in a new major version. Migration rules
+3. **Retire**: removal happens only in a new major version. Migration rules
    ship alongside it. A whole major may itself retire once a newer one
    supersedes it, as v1 did when v2 superseded it: see
    [A retired major](#compatibility-review).
@@ -227,8 +227,8 @@ makes released bytes immutable release assets.
 This repository publishes **data artifacts only**: JSON Schema documents,
 Markdown prose, and conformance fixture archives.
 
-The generated pages at `https://specifications.musher.dev/` — the index pages and the
-`/reference/` tree — are a rendering of those artifacts rather than a fourth
+The generated pages at `https://specifications.musher.dev/` (the index pages and the
+`/reference/` tree) are a rendering of those artifacts rather than a fourth
 kind. They are informative, they are regenerated on every deploy, and no release
 archive carries them: a tagged release ships the Markdown, never the HTML. See
 [ADR 0017](adr/0017-generated-field-reference.md).
@@ -238,7 +238,7 @@ validation library, WebAssembly modules, or generated language packages. A
 reference implementation becomes the de facto standard, hides normative
 behaviour inside compiled code, biases the specification toward one language's
 standard library, and saddles this repository with production security
-patching. Implementations conform to the prose and the fixtures — not to the
+patching. Implementations conform to the prose and the fixtures, not to the
 behaviour of a blessed executable.
 
 ## Tooling dependencies
@@ -249,7 +249,7 @@ produces is distributed.
 
 One is worth naming explicitly. [`@sourcemeta/jsonschema`](https://github.com/sourcemeta/jsonschema)
 is **AGPL-3.0**, and it is used to meta-validate the schemas and to cross-check
-every structural verdict against Blaze — a second, independent implementation of
+every structural verdict against Blaze, a second, independent implementation of
 JSON Schema 2020-12. Two validators agreeing is the point: everything else here
 asks Ajv, so a schema Ajv reads differently from everyone else would pass every
 gate and fail in the SDKs.

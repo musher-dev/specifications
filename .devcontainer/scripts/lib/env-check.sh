@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# env-check.sh — Library: compare a local .env against its template.
+# env-check.sh (library): compare a local .env against its template.
 #
 # This is a library file meant to be sourced, not executed directly.
 # Usage: source "path/to/env-check.sh"
 #
 # Exposes:
-#   env_check_keys <file>                — print KEY names (one per line) to stdout
-#   env_check_drift <env> <example>      — print missing keys; non-zero if any drift
-#   env_check_required <env>             — print keys with empty values to stdout
+#   env_check_keys <file>:               print KEY names (one per line) to stdout
+#   env_check_drift <env> <example>:     print missing keys; non-zero if any drift
+#   env_check_required <env>:            print keys with empty values to stdout
 set -euo pipefail
 
 # Extracts variable names from a dotenv-style file.
@@ -18,11 +18,11 @@ set -euo pipefail
 # A file declaring no keys is a legitimate state, not an error: this
 # repository's template is entirely commented defaults by design. grep exits 1
 # when it matches nothing, and `set -o pipefail` above would turn that into a
-# failure of the whole check — so the match is captured before the pipeline
+# failure of the whole check, so the match is captured before the pipeline
 # rather than inside it.
 #
 # Arguments:
-#   $1 — path to env file
+#   $1: path to env file
 # Outputs:
 #   One KEY per line on stdout (deduplicated, in file order)
 env_check_keys() {
@@ -38,8 +38,8 @@ env_check_keys() {
 # Reports keys present in <example> but missing from <env>.
 #
 # Arguments:
-#   $1 — path to .env (the user's local file)
-#   $2 — path to .env.example (the template)
+#   $1: path to .env (the user's local file)
+#   $2: path to .env.example (the template)
 # Outputs:
 #   Missing keys, one per line, to stderr
 # Returns:
@@ -67,7 +67,7 @@ env_check_drift() {
 # fill in" state from the three-state grammar).
 #
 # Arguments:
-#   $1 — path to .env
+#   $1: path to .env
 # Outputs:
 #   Empty-valued keys, one per line, to stdout
 # Returns:

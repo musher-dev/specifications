@@ -3,7 +3,7 @@
  * and anything it cannot render faithfully fails the build instead.
  *
  * The last three tests run against the real `spec.md` files rather than
- * fixtures. That is deliberate — they are the drift guard. A new construct in
+ * fixtures. That is deliberate: they are the drift guard. A new construct in
  * the normative prose that this renderer mangles should fail here, in a test
  * naming the family, rather than on the published page.
  */

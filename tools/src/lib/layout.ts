@@ -80,7 +80,7 @@ export const ADR_DIR = 'docs/adr'
 /** The ADR index: a hand-written introduction around a generated table. */
 export const ADR_INDEX_FILE = `${ADR_DIR}/README.md`
 /**
- * Where every build output lands: bundles and the catalog. Never tracked —
+ * Where every build output lands: bundles and the catalog. Never tracked:
  * `task check:generated` fails if git holds anything under it (docs/adr/0023).
  */
 export const DIST_DIR = 'dist'
@@ -119,7 +119,7 @@ export const LICENSE_FILE = 'LICENSE'
 export const NOTICE_FILE = 'NOTICE'
 /** The tooling's sources, which a base commit's own bundler is extracted from. */
 export const TOOLS_SOURCE_ROOT = 'tools/src'
-/** The bundler's command line — a downstream contract (see its module comment). */
+/** The bundler's command line, a downstream contract (see its module comment). */
 export const BUNDLER_ENTRY = `${TOOLS_SOURCE_ROOT}/schema/bundle.ts`
 /** The catalog's file name, which is also the path the site serves it at. */
 export const CATALOG_NAME = 'catalog.json'
@@ -168,7 +168,7 @@ export const ROOT_ENTRIES: readonly string[] = [
 /**
  * The base family: the Musher Document Core Specification (docs/adr/0022).
  *
- * It defines no `kind` and ships no schema — only prose and a parser-phase
+ * It defines no `kind` and ships no schema, only prose and a parser-phase
  * corpus. Every other family is a *kind* family, which fixes what core leaves
  * to it in its own §2 and publishes a bundle.
  */
@@ -189,7 +189,7 @@ export interface FamilyPaths {
   /** `schemas/`, which a core family version must not carry. */
   readonly schemas: string
   readonly src: string
-  /** The built bundle under `dist/` — build output, outside the family directory and never tracked. */
+  /** The built bundle under `dist/`: build output, outside the family directory and never tracked. */
   readonly bundle: string
   readonly examples: string
   /** The family version's conformance corpus, whether or not it exists. */
@@ -227,7 +227,7 @@ export type ReleaseDirPaths = Pick<
 >
 
 /**
- * The parts of a family version under an arbitrary directory — the `path` a
+ * The parts of a family version under an arbitrary directory: the `path` a
  * ledger entry recorded, which is where that release lived at its tag even if
  * the layout has since moved.
  */
@@ -455,7 +455,7 @@ export type AtRef =
  * ref and the path.
  *
  * `readBlobAtRef` and `listTreeFiles` answer absence with `null` and `[]`,
- * which is right for a ref that may carry nothing — a base branch, or `main`
+ * which is right for a ref that may carry nothing, such as a base branch, or `main`
  * before a family exists. At a released tag absence means the layout moved
  * underneath the tool, and an empty answer would let it pass vacuously.
  */
@@ -674,7 +674,7 @@ export function discoverFamilies(repoRoot: string = REPO_ROOT): Family[] {
 }
 
 /**
- * Every kind family version — each one a document format with a schema. What
+ * Every kind family version, each one a document format with a schema. What
  * the catalog, the field reference, and the compatibility replay iterate.
  */
 export function discoverKinds(repoRoot: string = REPO_ROOT): Family[] {
@@ -765,7 +765,7 @@ export function readJson(path: string): Json {
   return JSON.parse(readFileSync(path, 'utf8')) as Json
 }
 
-// Accepts `undefined` so callers can test an index access directly —
+// Accepts `undefined` so callers can test an index access directly:
 // `noUncheckedIndexedAccess` widens every `obj.key` lookup to `Json | undefined`.
 export function isObject(value: Json | undefined): value is { [k: string]: Json } {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -829,8 +829,8 @@ export function relativeToRepo(path: string): string {
 }
 
 /**
- * End a command line on an error it cannot recover from — a layout the release
- * does not match, a network failure — with one line rather than a stack trace.
+ * End a command line on an error it cannot recover from (a layout the release
+ * does not match, a network failure) with one line rather than a stack trace.
  */
 export function failCli(error: unknown): never {
   const message = error instanceof Error ? error.message : String(error)
@@ -851,7 +851,7 @@ export class Failures {
     return this.items.length
   }
 
-  /** Every failure added so far, in order — for a caller that inspects rather than reports. */
+  /** Every failure added so far, in order, for a caller that inspects rather than reports. */
   get messages(): readonly string[] {
     return this.items
   }

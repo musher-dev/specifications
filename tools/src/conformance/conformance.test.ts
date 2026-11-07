@@ -82,7 +82,7 @@ function kindSpec(options: {
           `| \`kind\` | \`${upper}\` |`,
           '| `metadata` | [§3](#metadata) |',
           '| Fields accepting `null` | none |',
-          '| Item document | No — it sits inside an item |',
+          '| Item document | No, it sits inside an item |',
           '',
           '**Normative dependencies**',
           '',

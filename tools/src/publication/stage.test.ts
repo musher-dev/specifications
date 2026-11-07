@@ -63,7 +63,7 @@ function stage(fx: FixtureRepo, tag: string, out: string, baseLedgerRef = 'main'
 
 /**
  * Commit component sources, record them by hand past the pending core gate,
- * commit and tag — a release whose history `release:stage` must still judge.
+ * commit and tag: a release whose history `release:stage` must still judge.
  */
 function forge(fx: FixtureRepo, options: { coreLine?: string; examples?: boolean } = {}): void {
   fx.writeFamilySkeleton('component', 'v1')

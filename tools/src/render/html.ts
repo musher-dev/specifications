@@ -3,12 +3,12 @@
  * and the document wrapper.
  *
  * It lives here rather than in `site.ts` because `reference.ts` needs it too,
- * and `site.ts` imports `reference.ts` — putting the chrome in `site.ts` would
+ * and `site.ts` imports `reference.ts`; putting the chrome in `site.ts` would
  * close a cycle.
  *
  * One stylesheet serves every page rather than one per page kind. It is inlined
  * into each document, which keeps a page a single request with no external
- * asset, no font fetch and no `_headers` rule of its own — the same property the
+ * asset, no font fetch and no `_headers` rule of its own: the same property the
  * schema bundles have, for the same reason. The palette is musher.dev's; the
  * font stacks name Inter and JetBrains Mono first and fall back to the system
  * stack, so a reader who has them gets the product's typography and a reader

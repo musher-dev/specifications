@@ -60,7 +60,7 @@ function markdownFiles(root: string): string[] {
 /**
  * GitHub's heading slug: lowercase, punctuation dropped, spaces to hyphens.
  *
- * Approximate by design — it exists so that a link to a heading that carries no
+ * Approximate by design: it exists so that a link to a heading that carries no
  * explicit anchor still resolves. Every anchor a conformance fixture depends on
  * is explicit, and those are matched exactly.
  */
@@ -118,20 +118,20 @@ function main(): void {
 
       const targetPath = pathPart === '' ? file : resolve(dirname(file), pathPart)
       if (!existsSync(targetPath)) {
-        failures.add(`${rel}: link to ${target} — no such file`)
+        failures.add(`${rel}: link to ${target}: no such file`)
         continue
       }
 
       if (fragment === undefined || fragment === '') continue
       if (statSync(targetPath).isDirectory()) {
-        failures.add(`${rel}: link to ${target} — a directory has no anchors`)
+        failures.add(`${rel}: link to ${target}: a directory has no anchors`)
         continue
       }
       if (!targetPath.endsWith('.md')) continue
 
       if (!anchorsOf(targetPath).has(decodeURIComponent(fragment))) {
         const where = pathPart === '' ? 'this document' : relative(REPO_ROOT, targetPath)
-        failures.add(`${rel}: link to ${target} — ${where} has no anchor "${fragment}"`)
+        failures.add(`${rel}: link to ${target}: ${where} has no anchor "${fragment}"`)
       }
     }
   }

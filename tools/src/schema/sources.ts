@@ -3,7 +3,7 @@
  *
  * The bundler never touches the filesystem or git itself. It asks a reader, so
  * the same compile runs over the working tree, over a base branch for a review
- * report, and over a release tag — without a temporary checkout, and without a
+ * report, and over a release tag, without a temporary checkout, and without a
  * second copy of the build that could disagree with the first.
  *
  * Paths are repo-relative and POSIX, the way `lib/layout.ts` names them.

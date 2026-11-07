@@ -589,7 +589,7 @@ function summarise(value: string): string {
 
 /**
  * True when `target` lies strictly inside `root`. Both are expected to be
- * resolved already — this compares locations, and the caller is the one that
+ * resolved already: this compares locations, and the caller is the one that
  * decides what resolution means.
  */
 function contains(root: string, target: string): boolean {
@@ -599,7 +599,7 @@ function contains(root: string, target: string): boolean {
 
 /**
  * The resolved location of `path`, following symlinks. Containment is a
- * property of the resolved location rather than of the spelling — listing §5
+ * property of the resolved location rather than of the spelling; listing §5
  * and blueprint §4.1 both turn on that distinction.
  */
 function resolveReal(path: string): string {
@@ -612,7 +612,7 @@ function resolveReal(path: string): string {
     try {
       return resolve(dirname(path), readlinkSync(path))
     } catch {
-      // Not a link, or unreadable — the caller reports it as missing instead.
+      // Not a link, or unreadable; the caller reports it as missing instead.
       return resolve(path)
     }
   }
@@ -727,7 +727,7 @@ function readDocument(path: string): Json | undefined {
 }
 
 /**
- * Core §4.2 — an item document's `metadata.slug` MUST equal the item directory
+ * Core §4.2: an item document's `metadata.slug` MUST equal the item directory
  * name. Blueprint §3 and listing §3 are where each family cites it.
  */
 function checkSlug(document: Json, itemRoot: string, out: Diagnostic[]): void {
@@ -742,7 +742,7 @@ function checkSlug(document: Json, itemRoot: string, out: Diagnostic[]): void {
 }
 
 /**
- * `LIST-ITEM-001` — listing §3. `spec.itemType` is `BLUEPRINT` if and only if
+ * `LIST-ITEM-001`, listing §3. `spec.itemType` is `BLUEPRINT` if and only if
  * the item root holds `blueprint.yaml`.
  *
  * The rule reads the directory rather than the document, which is what makes it

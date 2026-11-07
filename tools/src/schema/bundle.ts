@@ -42,7 +42,7 @@ import {
 import { buildCatalog } from '../publication/catalog.ts'
 import { fsReader, type ModuleReader } from './sources.ts'
 
-/** A family version by name — a discovered `Family` is one, and so is a release. */
+/** A family version by name. A discovered `Family` is one, and so is a release. */
 export interface FamilyRef {
   readonly name: string
   readonly major: string
@@ -110,7 +110,7 @@ export function buildBundle(family: FamilyRef, options: BuildOptions = {}): stri
     bundle[field] = value
   }
 
-  // The bundle's $id is its real publication URL — the file a consumer fetches.
+  // The bundle's $id is its real publication URL, the file a consumer fetches.
   // Source modules carry extensionless conceptual identifiers instead; they are
   // never served on their own.
   bundle.$schema = METASCHEMA
@@ -189,7 +189,7 @@ function assertSelfContained(bundle: { [k: string]: Json }, family: FamilyRef): 
     const ref = node.$ref
     if (typeof ref !== 'string') continue
     if (!ref.startsWith('#/$defs/')) {
-      throw new Error(`${label(family)}: bundle contains a non-local $ref — ${ref}`)
+      throw new Error(`${label(family)}: bundle contains a non-local $ref: ${ref}`)
     }
     const target = decodeURIComponent(ref.slice('#/$defs/'.length))
     if (!(target in defs)) {
@@ -205,7 +205,7 @@ const memo = new Map<string, string | null>()
  * source bytes.
  *
  * Keyed on the bytes rather than the family, so a caller that edits a module
- * between two calls — a test, a watch loop — gets the new bundle, not a stale
+ * between two calls (a test, a watch loop) gets the new bundle, not a stale
  * one. Reading a handful of small files is cheap; parsing, embedding and
  * canonicalizing them on every validator compile is what is saved.
  */

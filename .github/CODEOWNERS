@@ -1,4 +1,4 @@
-# CODEOWNERS — the ownership half of the selective code-owner review gate.
+# CODEOWNERS: the ownership half of the selective code-owner review gate.
 #
 # Docs: https://docs.github.com/en/repositories/managing-your-repositories-settings-and-features/customizing-your-repository/about-code-owners
 # Why it is selective: docs/adr/0015-selective-code-owner-review.md
@@ -14,7 +14,7 @@
 # The ruleset sets `required_approving_review_count: 0`, which is the sanctioned
 # "no blanket reviewers" value, and `require_code_owner_review: true`, which is
 # evaluated per changed file. Listing a path here is therefore a commitment to
-# review every change to it — not a label.
+# review every change to it, not a label.
 #
 # Invariants. Each one silently breaks the gate rather than failing loudly.
 # `task check:rulesets` checks only part of this list: RUL-05 rejects a `*`
@@ -36,7 +36,7 @@
 #     comment on those pull requests so a self-owned edit is at least visible.
 #
 # NOTE: musher-dev/platform's CODEOWNERS names `@merrelljustin`, which is not a
-# real GitHub account (the API returns 404). Do not copy that handle here — a
+# real GitHub account (the API returns 404). Do not copy that handle here: a
 # CODEOWNERS entry naming a nonexistent user silently disables the review gate
 # it appears to configure.
 #
@@ -44,10 +44,10 @@
 # contract, every family's prose, schemas and conformance corpus, and
 # `docs/conformance.md` holds the fixture format. docs/governance.md still
 # requires maintainer approval for a breaking change. That obligation is social
-# rather than mechanical — ADR 0015 records the trade and why it was accepted.
+# rather than mechanical; ADR 0015 records the trade and why it was accepted.
 
 # The gate cannot be changed unreviewed. GitHub's own recommendation: protect
-# CODEOWNERS with CODEOWNERS, and protect the ruleset the same way — between
+# CODEOWNERS with CODEOWNERS, and protect the ruleset the same way. Between
 # them these two paths are the whole control.
 /.github/CODEOWNERS      @justinmerrell
 /.github/rulesets/       @justinmerrell

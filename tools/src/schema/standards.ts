@@ -1,7 +1,7 @@
 /**
  * Validate the schemas with a toolchain this repository did not write.
  *
- * `check:schema` is Musher policy — closed objects, canonical `$id`s, local
+ * `check:schema` is Musher policy: closed objects, canonical `$id`s, local
  * refs, naming. It is deliberately opinionated and deliberately ours. What it
  * cannot do is confirm that the documents are valid JSON Schema 2020-12 by
  * anyone else's reading, because it asks Ajv, and Ajv is also what
@@ -13,7 +13,7 @@
  * 2020-12 document at all.
  *
  * `lint` blocks too: a finding fails the build unless its rule is excluded, and
- * the exclusions below are reviewed rather than assumed — see EXCLUDED_RULES.
+ * the exclusions below are reviewed rather than assumed; see EXCLUDED_RULES.
  *
  * The CLI is AGPL-3.0. It is used as a development and CI tool only; nothing it
  * produces is distributed, and no schema in this repository derives from it.
@@ -39,7 +39,7 @@ import { ensureBundleFile, familyBundle } from './bundle.ts'
  *
  * A generic linter encodes one house style. Adopting it wholesale would edit
  * 154 descriptions and 60 enums to satisfy opinions this repository has already
- * decided against — and one of them would change a diagnostic code. So each is
+ * decided against, and one of them would change a diagnostic code. So each is
  * listed with a reason a reviewer can disagree with, rather than silenced by
  * turning the linter off.
  */
@@ -64,7 +64,7 @@ const EXCLUDED_RULES: ReadonlyMap<string, string> = new Map([
     'enum_to_const',
     'This one is load-bearing, not stylistic. `specVersion` is a single-value `enum` ' +
       'and `kind` is a `const`, and tools/src/validation/validator.ts maps the two keywords to ' +
-      'different diagnostics — ERR_UNSUPPORTED_SPEC_VERSION and ERR_WRONG_KIND. ' +
+      'different diagnostics: ERR_UNSUPPORTED_SPEC_VERSION and ERR_WRONG_KIND. ' +
       'Collapsing the enum would silently change a normative code.',
   ],
   [
@@ -135,12 +135,12 @@ export function absentCliIsFailure(
 export function reportAbsentCli(check: string, cli: string = JSONSCHEMA_CLI): void {
   if (absentCliIsFailure()) {
     console.error(
-      `  ✗ ${relativeToRepo(cli)} is not installed, and CI=true — ${check} cannot be skipped ` +
+      `  ✗ ${relativeToRepo(cli)} is not installed, and CI=true; ${check} cannot be skipped ` +
         'in CI. Run `bun install --frozen-lockfile` in tools/ first.',
     )
     process.exit(1)
   }
-  console.log(`  · ${relativeToRepo(cli)} not installed — ${check} skipped, not passed.`)
+  console.log(`  · ${relativeToRepo(cli)} not installed; ${check} skipped, not passed.`)
   console.log('    Run `bun install` in tools/ to enable it.')
 }
 
@@ -175,7 +175,7 @@ function main(): void {
       validated += 1
       if (status !== 0) {
         failures.add(
-          `${relativeToRepo(path)}: rejected by an independent 2020-12 implementation — ` +
+          `${relativeToRepo(path)}: rejected by an independent 2020-12 implementation: ` +
             output.trim(),
         )
       }
@@ -188,7 +188,7 @@ function main(): void {
   // not get to fail this repository's build". That is right about the rules in
   // EXCLUDED_RULES and wrong about the shape: printing a finding nobody has to
   // act on means a new *class* of finding can appear and stay, indefinitely,
-  // with CI green — and a schema edit is when a linter is worth the most and
+  // with CI green, and a schema edit is when a linter is worth the most and
   // an ignored line is worth the least.
   //
   // The disagreement is preserved rather than overruled: a rule this repository

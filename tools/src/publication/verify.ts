@@ -1,5 +1,5 @@
 /**
- * Verify what this repository claims to have published, offline, against git —
+ * Verify what this repository claims to have published, offline, against git:
  * `task check:published` (docs/adr/0023 §4).
  *
  *   entry + tag     `<tag>:<path>` must have the recorded tree id, and the tag's
@@ -72,7 +72,7 @@ export function verifyPublications(
   if (recorded.length > 0 && tags.length === 0 && isShallow(repoRoot)) {
     failures.add(
       `${LEDGER_FILE} records ${recorded.length} release(s) but this is a shallow clone with ` +
-        'no tags. Run `git fetch --tags --unshallow` — publishing from here would drop every ' +
+        'no tags. Run `git fetch --tags --unshallow`; publishing from here would drop every ' +
         'pinned version.',
     )
     return
@@ -94,7 +94,7 @@ export function verifyPublications(
       if (tree !== entry.tree) {
         failures.add(
           `${tag}: ${entry.path} has tree ${tree}, but ${LEDGER_FILE} records ${entry.tree}. ` +
-            'A released version has been altered — the tag was rewritten or the ledger edited.',
+            'A released version has been altered: the tag was rewritten or the ledger edited.',
         )
         continue
       }
@@ -230,7 +230,7 @@ function main(): void {
   if (pending > 0) parts.push(`${pending} pending release(s)`)
   failures.report(
     parts.length === 0
-      ? `Nothing released or pending — ${LEDGER_FILE} is empty.`
+      ? `Nothing released or pending: ${LEDGER_FILE} is empty.`
       : `Verified ${parts.join(' and ')} against ${LEDGER_FILE} and git.`,
   )
 }

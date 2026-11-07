@@ -26,7 +26,7 @@ jobs:
     # Job-level, not workflow-level. A workflow-level group would be held by the
     # calling workflow while this job waited for the same group, which
     # deadlocks; and only a job-level group serialises across both the dispatch
-    # and the workflow_call path. Never cancel in flight — an interrupted deploy
+    # and the workflow_call path. Never cancel in flight: an interrupted deploy
     # would leave the published origin in an indeterminate state.
     concurrency:
       group: pages-deploy
@@ -86,7 +86,7 @@ jobs:
       # rather than configured at an edge this repository cannot see.
       # site:build re-runs site:fetch when the ledger has a tagged entry, so it
       # holds the same token: no fetch goes out unauthenticated. No
-      # ALLOW_PENDING_RELEASES here — a deploy without a tagged release's
+      # ALLOW_PENDING_RELEASES here: a deploy without a tagged release's
       # published assets would drop its pinned path, so it fails instead.
       - name: Assemble publication tree
         env:

@@ -89,7 +89,7 @@ function run(
     maxBuffer,
   })
   if (result.error !== undefined) {
-    throw new Error(`git ${args.join(' ')} could not be run — ${result.error.message}`)
+    throw new Error(`git ${args.join(' ')} could not be run: ${result.error.message}`)
   }
   return {
     status: result.status ?? 1,
@@ -102,12 +102,12 @@ function run(
 export function git(repoRoot: string, args: string[]): string {
   const { status, stdout, stderr } = run(repoRoot, args)
   if (status !== 0) {
-    throw new Error(`git ${args.join(' ')} failed (${status}) — ${stderr.trim()}`)
+    throw new Error(`git ${args.join(' ')} failed (${status}): ${stderr.trim()}`)
   }
   return stdout.toString('utf8').trim()
 }
 
-/** True when the repository has no commits yet — a fresh `git init`. */
+/** True when the repository has no commits yet, as in a fresh `git init`. */
 export function isEmptyRepository(repoRoot: string): boolean {
   return run(repoRoot, ['rev-parse', '--verify', 'HEAD']).status !== 0
 }
@@ -143,8 +143,8 @@ export function listTreeFiles(repoRoot: string, ref: string, path: string): stri
 }
 
 /**
- * The names of the files directly inside `dir` as of a ref — not recursive, no
- * subdirectories. Empty when the ref or the directory does not exist.
+ * The names of the files directly inside `dir` as of a ref, not recursive, with
+ * no subdirectories. Empty when the ref or the directory does not exist.
  *
  * `-z` so a name git would otherwise quote comes back verbatim.
  */
@@ -224,7 +224,7 @@ export function tagExists(repoRoot: string, tag: string): boolean {
   const { status, stderr } = run(repoRoot, ['rev-parse', '--verify', '--quiet', `refs/tags/${tag}`])
   if (status === 0) return true
   if (status === 1) return false
-  throw new Error(`git rev-parse refs/tags/${tag} failed (${status}) — ${stderr.trim()}`)
+  throw new Error(`git rev-parse refs/tags/${tag} failed (${status}): ${stderr.trim()}`)
 }
 
 /** Throw unless `ref` resolves to a commit. The guard before reading anything at it. */
@@ -235,14 +235,14 @@ export function assertCommit(repoRoot: string, ref: string): string {
 /**
  * Whether commit `a` is an ancestor of (or equal to) commit `b`.
  *
- * `merge-base --is-ancestor` answers 0 or 1; anything else — a ref that does
- * not resolve, a corrupt object — is an error, not a "no".
+ * `merge-base --is-ancestor` answers 0 or 1; anything else (a ref that does
+ * not resolve, a corrupt object) is an error, not a "no".
  */
 export function isAncestor(repoRoot: string, a: string, b: string): boolean {
   const { status, stderr } = run(repoRoot, ['merge-base', '--is-ancestor', a, b])
   if (status === 0) return true
   if (status === 1) return false
-  throw new Error(`git merge-base --is-ancestor ${a} ${b} failed (${status}) — ${stderr.trim()}`)
+  throw new Error(`git merge-base --is-ancestor ${a} ${b} failed (${status}): ${stderr.trim()}`)
 }
 
 /**
@@ -259,7 +259,7 @@ export function treeId(repoRoot: string, ref: string, path: string): string | nu
   const { status, stdout, stderr } = run(repoRoot, ['rev-parse', '--verify', '--quiet', spec])
   if (status === 1) return null
   if (status !== 0) {
-    throw new Error(`git rev-parse ${spec} failed (${status}) — ${stderr.trim()}`)
+    throw new Error(`git rev-parse ${spec} failed (${status}): ${stderr.trim()}`)
   }
   const id = stdout.toString('utf8').trim()
   return git(repoRoot, ['cat-file', '-t', id]) === 'tree' ? id : null
@@ -296,7 +296,7 @@ export function logRange(repoRoot: string, from: string, to: string, path: strin
     path,
   ])
   if (status !== 0) {
-    throw new Error(`git log ${from}..${to} -- ${path} failed (${status}) — ${stderr.trim()}`)
+    throw new Error(`git log ${from}..${to} -- ${path} failed (${status}): ${stderr.trim()}`)
   }
   const entries: LogEntry[] = []
   for (const record of stdout.toString('utf8').split('\x1e')) {

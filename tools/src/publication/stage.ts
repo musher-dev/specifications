@@ -1,16 +1,16 @@
 /**
- * Stage the files a release attaches — `task release:stage TAG=<tag>`
+ * Stage the files a release attaches: `task release:stage TAG=<tag>`
  * (docs/adr/0023 §2, §6).
  *
  * Runs in the release job, checked out at the tag, on the tag's own tooling.
  * Before staging anything it refuses unless:
  *
  *   - the tag exists, its own ledger records it, and the default branch's
- *     ledger holds the same entry — `origin/main`, or `BASE_LEDGER_REF`;
+ *     ledger holds the same entry (`origin/main`, or `BASE_LEDGER_REF`);
  *   - `<tag>:<path>` has the recorded tree id;
  *   - a kind family passes the whole tagged core gate on this, the tag's own
  *     tooling, carries `examples/`, and the pinned bundle it builds at the tag
- *     hashes to `bundleSha256` — a determinism assertion, since `record` hashed
+ *     hashes to `bundleSha256`, a determinism assertion, since `record` hashed
  *     the same tree;
  *   - core records `bundleSha256: null` and carries no `schemas/src`.
  *
@@ -154,7 +154,7 @@ function writeMember(path: string, bytes: Buffer | string): void {
 
 /**
  * Fix every mode, so the archive does not carry the runner's umask. Files
- * 0644, directories 0755 — an archive of data, with nothing executable.
+ * 0644, directories 0755: an archive of data, with nothing executable.
  */
 function normalizeModes(dir: string): void {
   chmodSync(dir, 0o755)
@@ -187,12 +187,11 @@ export function deterministicArchive(parent: string, root: string): Buffer {
     ],
     { maxBuffer, env: archiveEnv() },
   )
-  if (tar.error !== undefined) throw new StageError(`tar could not be run — ${tar.error.message}`)
-  if (tar.status !== 0) throw new StageError(`tar failed (${tar.status}) — ${tar.stderr}`)
+  if (tar.error !== undefined) throw new StageError(`tar could not be run: ${tar.error.message}`)
+  if (tar.status !== 0) throw new StageError(`tar failed (${tar.status}): ${tar.stderr}`)
   const gzip = spawnSync('gzip', ['-n', '-9'], { input: tar.stdout, maxBuffer, env: archiveEnv() })
-  if (gzip.error !== undefined)
-    throw new StageError(`gzip could not be run — ${gzip.error.message}`)
-  if (gzip.status !== 0) throw new StageError(`gzip failed (${gzip.status}) — ${gzip.stderr}`)
+  if (gzip.error !== undefined) throw new StageError(`gzip could not be run: ${gzip.error.message}`)
+  if (gzip.status !== 0) throw new StageError(`gzip failed (${gzip.status}): ${gzip.stderr}`)
   return gzip.stdout
 }
 
@@ -302,7 +301,7 @@ function readLedgerAt(repoRoot: string, ref: string): Ledger {
   try {
     return ledgerAtRef(repoRoot, ref)
   } catch (error) {
-    throw new StageError(`${ref}: its ledger cannot be read — ${(error as Error).message}`)
+    throw new StageError(`${ref}: its ledger cannot be read: ${(error as Error).message}`)
   }
 }
 

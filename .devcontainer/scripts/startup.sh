@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# startup.sh — Shows the startup MOTD each time the container starts.
+# startup.sh: Shows the startup MOTD each time the container starts.
 #
 # This repository runs no supporting services (devcontainer.json says why), so
 # there is nothing to start: the MOTD reports the container's state, and warns
@@ -21,8 +21,8 @@ source "${SCRIPT_DIR}/lib/motd.sh"
 # Logs the failing command and line number on ERR.
 #
 # Arguments:
-#   $1 — line number
-#   $2 — failed command string
+#   $1: line number
+#   $2: failed command string
 # Outputs:
 #   Writes error details to stderr via log()
 on_error() {

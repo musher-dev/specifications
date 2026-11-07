@@ -168,7 +168,7 @@ describe('record', () => {
     for (const [subject, body] of releasable) {
       test(`refuses after ${JSON.stringify(subject)}${body === undefined ? '' : ' with a breaking footer'}`, () => {
         const { fx } = ready()
-        fx.writeFile(CORE.spec, `## <a id="scope"></a>1. Core scope — ${subject}\n`)
+        fx.writeFile(CORE.spec, `## <a id="scope"></a>1. Core scope: ${subject}\n`)
         fx.commit(subject, body)
         const message = refusal(() => record(fx.root))
         expect(message).toContain('releasable commit(s) since core/v1.0.0')
