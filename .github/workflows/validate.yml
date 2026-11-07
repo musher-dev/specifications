@@ -8,11 +8,16 @@ name: Validate
 #
 # A job added here is required through that aggregate, with no ruleset change
 # (docs/adr/0036 §5). It must not filter on `paths:`: a required context that
-# never reports hangs every pull request (GHA-15, docs/adr/0037).
+# never reports hangs every pull request (GHA-15, docs/adr/0037). The one job
+# scoped to its inputs, the dev container's, is scoped inside: `detect`
+# decides, and the aggregate accepts that skip only when detect planned it.
 #
 # Every job installs its tools from .config/mise/config.toml, through
 # .github/actions/setup-tools, and runs `task` targets rather than tool
 # commands, so a failure reproduces locally with the command the job ran.
+# `detect` and `devcontainer` are the exceptions: one only reads git, and the
+# other builds the environment mise and Task run in, with the Dev Container
+# CLI, which no tool pin covers.
 
 on:
   pull_request:
@@ -28,6 +33,72 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  # ---------------------------------------------------------------------------
+  # Which scoped jobs this change needs
+  # ---------------------------------------------------------------------------
+  # Decides whether this change touches what the dev container is built from.
+  # The dev container job is the slowest here and proves only those files, so
+  # it runs when one of them changed and is skipped otherwise.
+  detect:
+    name: Detect Changes
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      devcontainer: ${{ steps.scope.outputs.devcontainer }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          # The base commit must be in the clone to diff against.
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Decide whether the dev container needs testing
+        id: scope
+        env:
+          EVENT: ${{ github.event_name }}
+          # What this change builds on: the pull request's base, the merge
+          # queue's base, or the previous tip of main on a push.
+          BASE_SHA: >-
+            ${{ github.event.pull_request.base.sha
+            || github.event.merge_group.base_sha
+            || github.event.before }}
+          HEAD_SHA: >-
+            ${{ github.event.pull_request.head.sha
+            || github.event.merge_group.head_sha
+            || github.sha }}
+        run: |
+          set -euo pipefail
+          # The dev container's inputs:
+          #   .devcontainer/  devcontainer.json and its lockfile, the lifecycle
+          #                   scripts and the .env template
+          #   .config/mise/   post-create's `mise install --locked`
+          #   validate.yml    the job that builds and starts it
+          # tools/package.json and tools/bun.lock stay out: post-create's
+          # `bun install --frozen-lockfile` reads them, and every job here
+          # installs them the same way.
+          inputs='^(\.devcontainer/|\.config/mise/|\.github/workflows/validate\.yml$)'
+          decide() {
+            echo "devcontainer=$1" >> "$GITHUB_OUTPUT"
+            echo "devcontainer=$1: $2"
+          }
+          case "$EVENT" in
+            pull_request|merge_group|push) ;;
+            *) decide true "a ${EVENT} run tests it"; exit 0 ;;
+          esac
+          if ! git cat-file -e "${BASE_SHA}^{commit}" 2>/dev/null; then
+            decide true "no base commit to diff against"
+            exit 0
+          fi
+          # Three dots: what the change made since it left its base, not what
+          # landed on the base since.
+          changed="$(git diff --name-only "${BASE_SHA}...${HEAD_SHA}")"
+          printf '%s\n' "$changed"
+          if grep -qE "$inputs" <<<"$changed"; then
+            decide true "a dev container input changed"
+          else
+            decide false "no dev container input changed"
+          fi
+
   # ---------------------------------------------------------------------------
   # The non-normative surface: formatting, lint and types of tools/, the
   # repository layout, the docs and the workflows
@@ -195,27 +266,76 @@ jobs:
       - name: Check the repository against the conventions
         run: task check:conventions
 
+  # ---------------------------------------------------------------------------
+  # The supported environment still builds and starts (DEVC-10)
+  # ---------------------------------------------------------------------------
+  devcontainer:
+    name: Dev Container
+    needs: detect
+    if: needs.detect.outputs.devcontainer == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      # --frozen-lockfile fails if devcontainer-lock.json is missing or if its
+      # resolved Feature digests drift from devcontainer.json. The CLI is pinned
+      # to an exact release, because a bare package name runs whatever npm
+      # resolves as newest on the day of the run.
+      - name: Build the dev container image
+        run: npx -y @devcontainers/cli@0.89.0 build --workspace-folder . --frozen-lockfile
+
+      # As opening it in an editor does: initialize.sh on the runner, then
+      # post-create, startup and post-attach in the container. post-create is
+      # its own toolchain check: base_verify_tools verifies every CLI the
+      # container was asked to install (Codex only when MUSHER_INSTALL_CODEX
+      # asks for it), and post-create exits non-zero when one is missing, which
+      # fails `up`. Its `mise install --locked` checks the pins through the
+      # GitHub API, which the runner's shared IP would call anonymously at 60
+      # an hour; the token is this job's read-only one, and with it set
+      # lib/github-auth.sh stores no gh login.
+      - name: Start the dev container and run its lifecycle
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: >-
+          npx -y @devcontainers/cli@0.89.0 up --workspace-folder .
+          --remote-env "GITHUB_TOKEN=${GITHUB_TOKEN}" --remote-env CI=true
+
   required:
     name: Validate / Required
     if: always()
     needs:
+      - detect
       - tools
       - specifications
       - site
       - conventions
+      - devcontainer
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
-      # Every job above is unconditional, so anything other than success is a
-      # failure: a skipped or cancelled job has proved nothing.
+      # Anything other than success is a failure: a skipped or cancelled job
+      # has proved nothing. The one exception: devcontainer may skip, but only
+      # when detect succeeded and said this change touched none of the dev
+      # container's inputs. A skip for any other reason (detect failed, or
+      # said true) still fails.
       - name: Classify every job result
         env:
           RESULTS: ${{ toJSON(needs) }}
+          DEVCONTAINER_SCOPED: >-
+            ${{ needs.detect.result == 'success'
+            && needs.detect.outputs.devcontainer == 'false' }}
         run: |
           set -euo pipefail
           failed=0
           while read -r job result; do
             printf '%-16s %s\n' "$job" "$result"
+            if [ "$job" = "devcontainer" ] && [ "$result" = "skipped" ] && [ "$DEVCONTAINER_SCOPED" = "true" ]; then
+              echo "  skipped as planned: no dev container input changed"
+              continue
+            fi
             if [ "$result" != "success" ]; then
               echo "::error title=Validate / Required::job '$job' reported '$result'; only success passes"
               failed=1
