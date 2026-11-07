@@ -1552,6 +1552,16 @@ it without signing in. Registering that URL with the service happens outside
 the documents, and so does any rule that a bot token has one consumer at a
 time: that is platform policy. This paragraph and its table are informative.
 
+<a id="slack-token-rotation"></a>**Slack token rotation.** The `SLACK_APP`
+`signingSecret` and `appToken` belong to the app, and its `botToken` to the
+app as installed in one workspace. Each rotates independently, and any one
+rotating is a new rotation generation of the selection's one scoped credential
+([blueprint §5.3](../../blueprint/v2/spec.md#connections)). With Slack's token
+rotation enabled, a bot token expires and is refreshed: the platform refreshes
+it, through that credential rotation, and the workload never refreshes it
+itself; it reads the current `botToken` as it reads any rotated credential.
+This paragraph is informative.
+
 <a id="derived-urls"></a>**Derived URLs.** Resolution composes the `url` of a
 `POSTGRES` or `REDIS` connection from its other members, the credential
 included, each time it resolves the connection. A `url` therefore always

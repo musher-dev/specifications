@@ -87,8 +87,11 @@ exactly the locator and parameter members, so what a view holds is derived
 rather than tabulated.
 
 `secret` is new. A Slack app holds a bot token, an app-level token for Socket
-Mode and a signing secret for HTTP events, and all three are one app's
-credentials, issued and rotated together. Making the extra two view members
+Mode and a signing secret for HTTP events. The signing secret and the
+app-level token belong to the app; the bot token belongs to the app as
+installed in one workspace. Each rotates on its own schedule, and any of them
+rotating is a new rotation generation of the one scoped credential that
+carries all three. Making the extra two view members
 would put secrets in a view, which is never redacted as a credential is. Making
 them separate connections would break the atomicity
 [ADR 0030](0030-atomic-named-connections.md) §2 exists for. They are carried
