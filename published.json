@@ -236,6 +236,14 @@
         "core": "2.0.0"
       },
       "tree": "e1a7753024a3d67083e72f2fb14367068d0946b5"
+    },
+    "listing/v2.1.0": {
+      "bundleSha256": "02a95af98fd7e307d59a74205b12dd6cce563f3345d68daf72661d4280520c68",
+      "path": "specifications/listing/v2",
+      "requires": {
+        "core": "2.1.0"
+      },
+      "tree": "4c85170d745171b4172e604f3339c834fbb7d928"
     }
   },
   "version": 2
