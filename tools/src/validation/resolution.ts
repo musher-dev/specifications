@@ -16,7 +16,7 @@ import { scanReferences } from '../lib/references.ts'
 import { familyBundle } from '../schema/bundle.ts'
 import { strictAjv } from '../schema/lint.ts'
 import { connectionMemberContract, isConnectionInput } from './connections.ts'
-import { type Diagnostic, type Phase, parseDocumentBytes } from './document.ts'
+import { type Diagnostic, type Phase, parseDocumentBytes, reported } from './document.ts'
 import {
   type ConnectionsContext,
   DEPLOYMENT_FACT_PATHS,
@@ -280,6 +280,7 @@ export function resolveDeployment(
           code: 'ERR_INVALID_VALUE',
           path: '',
           message: 'invalid blueprint structure',
+          severity: 'ERROR',
           phase: 'structural',
         },
       ],
@@ -304,7 +305,8 @@ export function resolveDeployment(
   const result = (): ResolutionResult => ({
     status: diagnostics.length ? 'INVALID' : deferred.length ? 'INCOMPLETE' : 'VALID',
     phase: reached,
-    diagnostics,
+    // Every diagnostic leaves with its severity and phase (core v2 §7).
+    diagnostics: diagnostics.map((d) => reported(d, reached)),
     deferred,
     inputs: diagnostics.length || deferred.length ? {} : inputs,
     outputs: diagnostics.length || deferred.length ? {} : outputs,

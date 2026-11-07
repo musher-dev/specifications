@@ -205,6 +205,11 @@ Required when `expected` is `fail`. A non-empty array:
 [{ "code": "ERR_MISSING_FIELD", "path": "" }]
 ```
 
+Each entry is an `ExpectedDiagnostic` of core's
+[validation result schema](../specifications/core/v2/interfaces/validation-result.schema.json),
+and carries `path` as well as `code`. `task check:conformance` validates every
+entry against it.
+
 `path` is a JSON Pointer into the submitted document; `""` is the root.
 For a referenced component, the primary pointer identifies its authored binding
 or `componentRef`. Optional `related` locations carry the component `artifact`
@@ -218,11 +223,20 @@ declared phase** and produces **at least** the declared diagnostics. Producing
 additional diagnostics is permitted: a validator reporting every problem at
 once is more useful than one that stops at the first.
 
+**Expectations match by severity, and default to `ERROR`.** An expected
+diagnostic may carry `severity`, `ERROR` or `WARNING`; one without it is
+`ERROR`. It matches only a produced diagnostic of the same severity, so an
+implementation's warnings never satisfy, and never upset, an expectation
+written before warnings existed. Every fixture the 2.0.0 releases carry is
+unchanged by this, and is read as matching `ERROR` diagnostics alone. A
+`WARN_` code is expected only at `WARNING`
+([core v2 §7](../specifications/core/v2/spec.md#diagnostics)).
+
 ## <a id="what-is-normative"></a>What is normative
 
 | Normative | Not normative |
 |---|---|
-| The diagnostic `code` | The human-readable message |
+| The diagnostic `code`, and its `severity` | The human-readable message |
 | The `path` the diagnostic anchors to | The order diagnostics are emitted |
 | The `phase` at which validation fails, and a resolution diagnostic's `stage` | Whether extra diagnostics accompany the declared ones |
 | An `effective` value | Whether an implementation stores it or computes it on demand |
@@ -373,12 +387,23 @@ Each family's optional `behavior.json` is an array. It is an explicit index;
 adapters MUST read it alongside `cases.json`. Each entry has a unique `id`, a
 `suite`, an `operation`, `requirements`, and `expect`. The latter maps JSON
 Pointers into an operation's observation to exact JSON values. Mapping order has
-no meaning; sequence order does. Optional `diagnostics` is a list of a required
-`code` and optional `path`, `phase`, `stage` and `related` observations. Every
-supplied property must match one produced diagnostic, without imposing
-diagnostic order or forbidding additional diagnostics. A declared `phase` must
-be one the code's registry lists, exactly as for a document case, and a
-`resolution` diagnostic declares its `stage` ([Phases](#phases)).
+no meaning; sequence order does. Optional `diagnostics` is a list of
+`ExpectedDiagnostic`s of core's
+[validation result schema](../specifications/core/v2/interfaces/validation-result.schema.json):
+a required `code` and optional `path`, `severity`, `phase`, `stage` and
+`related` observations. Every supplied property must match one produced
+diagnostic of the entry's severity, `ERROR` when it names none, without
+imposing diagnostic order or forbidding additional diagnostics. A declared
+`phase` must be one the code's registry lists, exactly as for a document case,
+and a `resolution` diagnostic declares its `stage` ([Phases](#phases)). A
+`WARN_` code's registry names a requirement rather than a phase, so its
+`phase` is not checked against one.
+
+`expect` reads the observation with its `diagnostics` reduced to the `ERROR`
+ones. A pointer into `/diagnostics`, such as `"/diagnostics": []`, therefore
+means "no `ERROR` diagnostic", whether or not the implementation reports
+warnings beside them. A warning is pinned in `diagnostics`, with
+`"severity": "WARNING"`, never through `expect`.
 
 An entry supplies either logical `input`, or `tree` (item-relative path to
 UTF-8 document text) plus `document` naming the document within that tree.
@@ -391,7 +416,7 @@ testing sensitivity.
 | Suite | Operation | Observation |
 |---|---|---|
 | `normalization` | `normalize` | `value`, with effective schema defaults materialized only beneath existing ancestors; `idempotent`, true when a second normalization changes nothing |
-| `resolution` | `validate` | Core validation `status`, `validationScope`, `phase`, `diagnostics` and `deferred`, over the supplied context, at the `validationScope` the context names (default `document`) |
+| `resolution` | `validate` | A validation result ([core v2 §6.1](../specifications/core/v2/spec.md#validation-scope)): `status`, `validationScope`, `phase`, `diagnostics` and `deferred`, over the supplied context, at the `validationScope` the context names (default `document`) |
 | `resolution` | `resolve` | Pre-start value-resolution status, diagnostics, deferred obligations, private inputs/outputs/environment, and redacted public inspection |
 | `resolution` | `record` | `VALID` plus the generated resolution record, or `INVALID` with `ERR_INVALID_RESOLUTION_CONTEXT` at stage `record` |
 | `rendering` | `render` | `html` produced from `input.markdown` and the full-path `input.media` URL mapping under the listing rendering rules |
