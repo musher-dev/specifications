@@ -1,0 +1,313 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://specifications.musher.dev/core/v2/registry/protocol",
+  "title": "Connection protocol record",
+  "description": "One record of component's connection protocol registry, specifications/component/v2/protocols/<protocol>.json: the members a protocol fixes, with their roles, presence, defaults, sensitivity and value constraints. $defs/ProtocolCategories is the shape of the registry's categories.json. The registry is normative for the facts it tabulates; component v2 §6.4 is normative for what they mean (docs/adr/0045).",
+  "$comment": "docs/adr/0045. A role says what a member is for, and presence whether every connection holds it. A derived member has the derived role and presence, and only it. A credential or secret member is sensitive. A default belongs only to an optional member.",
+  "$ref": "#/$defs/Protocol",
+  "$defs": {
+    "Protocol": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "category",
+        "description",
+        "status",
+        "introduced",
+        "references",
+        "capabilities",
+        "members"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/ProtocolId",
+          "description": "The value a connection input's protocol takes. The record's file name is this value in lower case, with each underscore a hyphen."
+        },
+        "title": {
+          "$ref": "#/$defs/Text",
+          "description": "Display name of the protocol."
+        },
+        "category": {
+          "$ref": "#/$defs/CategoryId",
+          "description": "The category whose conventions the protocol follows. Categories are registry metadata, never a document field."
+        },
+        "description": {
+          "$ref": "#/$defs/Text",
+          "description": "The wire contract the protocol names, in one sentence."
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "stable",
+            "deprecated"
+          ],
+          "description": "stable, or deprecated: still accepted, and never removed inside the major version."
+        },
+        "introduced": {
+          "$ref": "#/$defs/Version",
+          "description": "The component release that first defined the protocol."
+        },
+        "references": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/Reference"
+          },
+          "description": "The vendor documents that define the wire contract. Informative."
+        },
+        "capabilities": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/ProtocolId"
+          },
+          "description": "The capabilities a connection input of this protocol may require. Empty: the input takes no capabilities."
+        },
+        "members": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/Member"
+          },
+          "description": "The members, in the order component §6.4 lists them."
+        }
+      }
+    },
+    "Member": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "role",
+        "presence",
+        "sensitive",
+        "schema",
+        "description"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "role": {
+                "const": "derived"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "then": {
+            "properties": {
+              "presence": {
+                "const": "derived"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "presence": {
+                "not": {
+                  "const": "derived"
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "role": {
+                "enum": [
+                  "credential",
+                  "secret"
+                ]
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "then": {
+            "properties": {
+              "sensitive": {
+                "const": true
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "default": true
+            },
+            "required": [
+              "default"
+            ]
+          },
+          "then": {
+            "properties": {
+              "presence": {
+                "const": "optional"
+              }
+            }
+          }
+        }
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-zA-Z0-9]{0,63}$",
+          "description": "The member name an output's from.member names."
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "credential",
+            "secret",
+            "locator",
+            "parameter",
+            "derived"
+          ],
+          "description": "credential: the one secret a selection's credential value supplies. secret: another secret the same credential carries, in credential.secrets. locator: the HTTPS URL a client sends requests to, which makes the protocol HTTP-based. parameter: any other member a view carries. derived: a member resolution composes from the others."
+        },
+        "presence": {
+          "type": "string",
+          "enum": [
+            "required",
+            "optional",
+            "derived"
+          ],
+          "description": "required: every connection holds it, non-empty. optional: it may be absent, and takes its default when it has one. derived: resolution composes it."
+        },
+        "default": {
+          "description": "The value an optional member takes when a connection does not hold it."
+        },
+        "sensitive": {
+          "type": "boolean",
+          "description": "Whether the member's value is sensitive, so that an output forwarding it declares sensitive: true."
+        },
+        "schema": {
+          "type": "object",
+          "description": "JSON Schema fragment holding the member's logical type and the value constraints component §6.4 states for it. Its type is the logical type an output forwarding the member must fit."
+        },
+        "description": {
+          "$ref": "#/$defs/Text",
+          "description": "What the member holds."
+        }
+      }
+    },
+    "Reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "url"
+      ],
+      "properties": {
+        "title": {
+          "$ref": "#/$defs/Text",
+          "description": "Title of the referenced document."
+        },
+        "url": {
+          "type": "string",
+          "pattern": "^https://",
+          "description": "HTTPS URL of the referenced document."
+        }
+      }
+    },
+    "ProtocolCategories": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "categories"
+      ],
+      "description": "The registry's categories.json: every category, in the order component §6.4 lists them.",
+      "properties": {
+        "categories": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/Category"
+          },
+          "description": "The categories, in order."
+        }
+      }
+    },
+    "Category": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "description",
+        "conventions",
+        "protocols"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/CategoryId",
+          "description": "The category's identifier."
+        },
+        "title": {
+          "$ref": "#/$defs/Text",
+          "description": "Display name of the category."
+        },
+        "description": {
+          "$ref": "#/$defs/Text",
+          "description": "What the protocols of the category reach."
+        },
+        "conventions": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "The member name each protocol of the category gives the member of a role, when it has one.",
+          "properties": {
+            "credential": {
+              "type": "string",
+              "description": "Name of the credential member."
+            },
+            "locator": {
+              "type": "string",
+              "description": "Name of the locator member."
+            }
+          }
+        },
+        "protocols": {
+          "type": "array",
+          "uniqueItems": true,
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/ProtocolId"
+          },
+          "description": "The category's protocols, in the order the specification lists them. Each has a record naming this category."
+        }
+      }
+    },
+    "ProtocolId": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)*$",
+      "description": "An upper snake case identifier."
+    },
+    "CategoryId": {
+      "type": "string",
+      "enum": [
+        "LANGUAGE_MODEL",
+        "DATABASE",
+        "CACHE",
+        "OBJECT_STORAGE"
+      ],
+      "description": "A protocol category. A new category needs a decision record (docs/adr/0045)."
+    },
+    "Version": {
+      "type": "string",
+      "pattern": "^(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)$",
+      "description": "A release version, MAJOR.MINOR.PATCH."
+    },
+    "Text": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Non-empty prose."
+    }
+  }
+}

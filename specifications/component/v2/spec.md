@@ -1266,10 +1266,16 @@ NOT carry `member`.
 | The member's type does not fit the output's schema | `semantic` | `ERR_VALUE_CONSTRAINT` | `from/input` |
 | A sensitive member is forwarded by an output not declared `sensitive: true` | `semantic` | `ERR_VALUE_CONSTRAINT` | `from/member` |
 
+<!-- BEGIN GENERATED member-types: `task docs` writes this sentence from the protocol registry, protocols/ -->
+
 A forwarded integer member, `port` or the `REDIS` `database`, needs an integer
 or number schema; a boolean member, `tls` or `pathStyle`, a boolean schema; and
-every other member a string schema. The component contract then shows a credential's sensitivity
-instead of leaving it to propagation.
+every other member a string schema.
+
+<!-- END GENERATED member-types -->
+
+Declaring `sensitive: true` makes the component contract show a credential's
+sensitivity instead of leaving it to propagation.
 
 <a id="COMP-PLACEHOLDER-001"></a>**`COMP-PLACEHOLDER-001`**: A `template`
 permits only core's `self` namespace, and a `self` path is exactly
@@ -1406,6 +1412,8 @@ be absent: one with a **default** then takes it, and one without a default is
 absent. A **derived** member is never supplied: resolution composes it from the
 others ([derived URLs](#derived-urls)). Sensitive members are in bold.
 
+<!-- BEGIN GENERATED protocol-members: `task docs` writes this table from the protocol registry, protocols/ -->
+
 | Protocol | Member | Type | Presence |
 |---|---|---|---|
 | `OPENAI_CHAT_COMPLETIONS`, `ANTHROPIC_MESSAGES` | `baseURL` | string | required |
@@ -1431,6 +1439,8 @@ others ([derived URLs](#derived-urls)). Sensitive members are in bold.
 | | `accessKeyID` | string | required |
 | | **`secretAccessKey`** | string | required |
 | | `pathStyle` | boolean | optional, default `false` |
+
+<!-- END GENERATED protocol-members -->
 
 - `host` is a DNS name or an IPv4 address, in letters, digits, `-`, `_` and
   `.`, or an IPv6 address written without brackets. It never carries a port.

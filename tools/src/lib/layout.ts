@@ -42,6 +42,15 @@ export const CONFORMANCE_FORMAT_ARCHIVE_PATH = 'conformance/README.md'
 export const CASE_INDEX_FILE = 'cases.json'
 export const CASE_METADATA_FILE = 'metadata.json'
 export const CASE_DIAGNOSTICS_FILE = 'diagnostics.json'
+/**
+ * Component's connection protocol registry (docs/adr/0045): the categories
+ * file beside the records in `protocols/`, core's schema for a record under
+ * core's `interfaces/`, and the connection-evidence schema under blueprint's
+ * `interfaces/`, which `task docs` generates from the registry.
+ */
+export const PROTOCOL_CATEGORIES_FILE = 'categories.json'
+export const PROTOCOL_SCHEMA_FILE = 'registry/protocol.schema.json'
+export const CONNECTION_EVIDENCE_SCHEMA_FILE = 'connection-evidence.schema.json'
 /** The publication ledger. See docs/adr/0006. */
 export const LEDGER_FILE = 'published.json'
 export const RELEASE_PLEASE_MANIFEST_FILE = '.github/release-please/manifest.json'

@@ -1,0 +1,97 @@
+{
+  "id": "REDIS",
+  "title": "Redis",
+  "category": "CACHE",
+  "description": "The Redis serialization protocol, reached at a host and port.",
+  "status": "stable",
+  "introduced": "2.0.0",
+  "references": [
+    {
+      "title": "Redis serialization protocol specification",
+      "url": "https://redis.io/docs/latest/develop/reference/protocol-spec/"
+    }
+  ],
+  "capabilities": [],
+  "members": [
+    {
+      "name": "host",
+      "role": "parameter",
+      "presence": "required",
+      "sensitive": false,
+      "schema": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 253,
+        "pattern": "^(?:[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_])?|[0-9A-Fa-f:.]*:[0-9A-Fa-f:.]*)$"
+      },
+      "description": "DNS name, IPv4 address, or IPv6 address without brackets, of the server; never with a port."
+    },
+    {
+      "name": "port",
+      "role": "parameter",
+      "presence": "required",
+      "sensitive": false,
+      "schema": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 65535
+      },
+      "description": "Port the server listens on."
+    },
+    {
+      "name": "tls",
+      "role": "parameter",
+      "presence": "required",
+      "sensitive": false,
+      "schema": {
+        "type": "boolean"
+      },
+      "description": "Whether the client uses TLS."
+    },
+    {
+      "name": "database",
+      "role": "parameter",
+      "presence": "optional",
+      "default": 0,
+      "sensitive": false,
+      "schema": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "description": "Database index the client selects."
+    },
+    {
+      "name": "username",
+      "role": "parameter",
+      "presence": "optional",
+      "sensitive": false,
+      "schema": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "User the client authenticates as; without it, the server's default user."
+    },
+    {
+      "name": "password",
+      "role": "credential",
+      "presence": "optional",
+      "sensitive": true,
+      "schema": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "Password the client authenticates with; absent for a server that requires no authentication."
+    },
+    {
+      "name": "url",
+      "role": "derived",
+      "presence": "derived",
+      "sensitive": true,
+      "schema": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "Connection URL resolution composes from the other members and the credential."
+    }
+  ]
+}

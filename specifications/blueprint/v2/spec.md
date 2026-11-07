@@ -1271,12 +1271,16 @@ credential member, which the credential supplies, and the derived `url`, which
 is never carried. It omits an optional member it does not hold. A
 language-model view also carries its capabilities:
 
+<!-- BEGIN GENERATED protocol-views: `task docs` writes this table from component's protocol registry -->
+
 | Protocol | Credential member | View members | Optional view members |
 |---|---|---|---|
 | `OPENAI_CHAT_COMPLETIONS`, `ANTHROPIC_MESSAGES` | `apiKey` | `baseURL`, `model`, `capabilities` | none |
 | `POSTGRES` | `password` | `host`, `port`, `database`, `username`, `sslMode` | none |
 | `REDIS` | `password`, when the server requires authentication | `host`, `port`, `tls` | `database`, `username` |
 | `S3` | `secretAccessKey` | `endpointURL`, `region`, `bucket`, `accessKeyID` | `pathStyle` |
+
+<!-- END GENERATED protocol-views -->
 
 The input a view fills receives every member its protocol defines: the view's
 own, the default of each optional member the view omits, the credential member,

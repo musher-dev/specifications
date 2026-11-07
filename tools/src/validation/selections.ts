@@ -4,37 +4,41 @@
  * provisioning and credential issuance are downstream. NON-NORMATIVE.
  */
 import { isObject, type Json } from '../lib/layout.ts'
+import { credentialOf, viewMembersOf } from '../lib/protocols.ts'
 import { scanReferences } from '../lib/references.ts'
+import { strictAjv } from '../schema/lint.ts'
 import {
   CONNECTION_PROTOCOL_MEMBERS,
   CONNECTION_URL_MEMBER,
   type ConnectionProtocol,
   composeConnectionURL,
   isConnectionInput,
-  LLM_CONNECTION_PROTOCOLS,
+  PROTOCOL_RECORDS,
 } from './connections.ts'
 import type { Diagnostic } from './document.ts'
 import { boundedValue } from './values.ts'
 
-export type ConnectionCapability = 'STREAMING' | 'TOOL_CALLS'
-const CAPABILITIES: readonly string[] = ['STREAMING', 'TOOL_CALLS']
+export type ConnectionCapability = string
 /**
  * Blueprint §5.3: the member a selection's credential supplies to each view of
- * its protocol. Every other member of the protocol is carried by the view.
+ * its protocol: the protocol's credential member (docs/adr/0045). Every member
+ * a view carries is a locator or a parameter.
  */
-export const CREDENTIAL_MEMBER: Readonly<Record<ConnectionProtocol, string>> = {
-  OPENAI_CHAT_COMPLETIONS: 'apiKey',
-  ANTHROPIC_MESSAGES: 'apiKey',
-  POSTGRES: 'password',
-  REDIS: 'password',
-  S3: 'secretAccessKey',
-}
+export const CREDENTIAL_MEMBER: Readonly<Record<ConnectionProtocol, string>> = Object.fromEntries(
+  Object.values(PROTOCOL_RECORDS).map((p) => [p.id, credentialOf(p).name]),
+)
 /**
- * Blueprint §5.3: the protocols whose credential may be absent. A `REDIS`
- * server that requires no authentication has no credential, and its view then
- * carries no `username`.
+ * Blueprint §5.3: the protocols whose credential may be absent, those whose
+ * credential member is optional. A `REDIS` server that requires no
+ * authentication has no credential, and its view then carries no `username`.
  */
-const CREDENTIAL_OPTIONAL: ReadonlySet<ConnectionProtocol> = new Set(['REDIS'])
+const CREDENTIAL_OPTIONAL: ReadonlySet<ConnectionProtocol> = new Set(
+  Object.values(PROTOCOL_RECORDS)
+    .filter((p) => credentialOf(p).presence === 'optional')
+    .map((p) => p.id),
+)
+const memberSchemas = strictAjv()
+const memberValidators = new Map<string, ReturnType<typeof memberSchemas.compile>>()
 /**
  * One protocol view: the protocol's members other than the credential and the
  * derived `url`, and an LLM view's capabilities.
@@ -207,18 +211,22 @@ function validHost(host: string): boolean {
   }
   return host.length <= 253 && /^[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_])?$/.test(host)
 }
-/** One member value of the type, range and value set its protocol fixes (component §6.4). */
+/**
+ * One member value of the type, range and value set its protocol fixes
+ * (component §6.4): the value schema of its registry record. A `host` is also
+ * checked as an address, since the schema's IPv6 alternative is only a shape.
+ */
 function memberValueValid(p: ConnectionProtocol, name: string, value: Json | undefined): boolean {
-  const contract = CONNECTION_PROTOCOL_MEMBERS[p][name]
+  const contract = CONNECTION_PROTOCOL_MEMBERS[p]?.[name]
   if (contract === undefined) throw new Error(`${p} defines no member ${name}`)
-  if (contract.type === 'boolean') return typeof value === 'boolean'
-  if (contract.type === 'integer')
-    return name === 'port'
-      ? Number.isInteger(value) && Number(value) >= 1 && Number(value) <= 65535
-      : Number.isSafeInteger(value) && Number(value) >= 0
-  if (typeof value !== 'string' || !value) return false
-  if (contract.values && !contract.values.includes(value)) return false
-  return name !== 'host' || validHost(value)
+  const key = `${p}/${name}`
+  let validate = memberValidators.get(key)
+  if (!validate) {
+    validate = memberSchemas.compile(contract.schema)
+    memberValidators.set(key, validate)
+  }
+  if (!validate(value)) return false
+  return name !== 'host' || validHost(String(value))
 }
 /**
  * BP-CONNECTION-002: one protocol view. It holds the protocol's members other
@@ -232,22 +240,22 @@ function viewProblem(
   view: Json | undefined,
   credential: Record<string, Json> | undefined,
 ): 'invalid' | 'incomplete' | undefined {
-  if (!Object.hasOwn(CONNECTION_PROTOCOL_MEMBERS, protocol) || !isObject(view as Json))
-    return 'invalid'
+  const definition = Object.hasOwn(PROTOCOL_RECORDS, protocol)
+    ? PROTOCOL_RECORDS[protocol]
+    : undefined
+  if (!definition || !isObject(view as Json)) return 'invalid'
   const p = protocol as ConnectionProtocol,
     v = record(view),
-    contracts = Object.entries(CONNECTION_PROTOCOL_MEMBERS[p]).filter(
-      ([m, contract]) => m !== CREDENTIAL_MEMBER[p] && contract.derived !== true,
-    ),
-    carried = contracts.map(([m]) => m)
+    members = viewMembersOf(definition),
+    carried = members.map((m) => m.name)
   if (Object.keys(v).some((k) => k !== 'capabilities' && !carried.includes(k))) return 'invalid'
   for (const m of carried)
     if (Object.hasOwn(v, m) && !memberValueValid(p, m, v[m])) return 'invalid'
-  if (LLM_CONNECTION_PROTOCOLS.has(p)) {
+  if (definition.capabilities.length) {
     const caps = v.capabilities
     if (
       !Array.isArray(caps) ||
-      !caps.every((c) => CAPABILITIES.includes(String(c))) ||
+      !caps.every((c) => definition.capabilities.includes(String(c))) ||
       new Set(caps).size !== caps.length
     )
       return 'invalid'
@@ -270,7 +278,7 @@ function viewProblem(
   const credentialMissing = !credential && !CREDENTIAL_OPTIONAL.has(p)
   if (
     credentialMissing ||
-    contracts.some(([m, contract]) => contract.required && !Object.hasOwn(v, m))
+    members.some((m) => m.presence === 'required' && !Object.hasOwn(v, m.name))
   )
     return 'incomplete'
   return undefined
@@ -413,12 +421,14 @@ export function resolveConnections(
       // default, the credential, and the derived `url` composed from them.
       const { capabilities: _capabilities, ...carried } = view
       const members: Record<string, Json> = {}
-      for (const [m, contract] of Object.entries(CONNECTION_PROTOCOL_MEMBERS[protocol])) {
+      for (const [m, contract] of Object.entries(CONNECTION_PROTOCOL_MEMBERS[protocol] ?? {})) {
         const value = Object.hasOwn(carried, m) ? carried[m] : undefined
         if (value !== undefined) members[m] = value
         else if (contract.default !== undefined) members[m] = contract.default
       }
-      if (selection.credential) members[CREDENTIAL_MEMBER[protocol]] = selection.credential.value
+      const credentialMember = CREDENTIAL_MEMBER[protocol]
+      if (selection.credential && credentialMember)
+        members[credentialMember] = selection.credential.value
       const url = composeConnectionURL(protocol, members)
       if (url !== undefined) members.url = url
       inputs[`${node}:in:${name}`] = {

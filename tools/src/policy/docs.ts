@@ -1,8 +1,9 @@
 /**
  * Fail if a generated navigation document is stale — `task check:docs`.
  *
- * `docs/traceability.md`, the ADR index in `docs/adr/README.md`, and the
- * glossary page and Vale styles generated from `docs/terminology.yaml` are
+ * `docs/traceability.md`, the ADR index in `docs/adr/README.md`, the
+ * glossary page and Vale styles generated from `docs/terminology.yaml`, and
+ * the projections of the connection protocol registry (render/protocols.ts) are
  * generated but committed, because they are read in the repository browser
  * where nothing builds (ADR 0021 §5). A committed copy is only worth reading if
  * it is current, so this regenerates each in memory and compares them with the
@@ -13,12 +14,15 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { ADR_INDEX_FILE, Failures, inRepo, REPO_ROOT, TRACEABILITY_FILE } from '../lib/layout.ts'
 import { buildAdrIndex } from '../render/adr-index.ts'
+import { protocolOutputs } from '../render/protocols.ts'
 import { terminologyOutputs } from '../render/terminology.ts'
 import { buildMatrix } from '../render/traceability.ts'
 
 /** Every generated document, repo-relative, with the bytes it should hold. */
 function generatedDocs(repoRoot: string): [string, () => string][] {
   return [
+    // First: later documents read the spec.md tables these regenerate.
+    ...protocolOutputs(repoRoot),
     [TRACEABILITY_FILE, () => buildMatrix(repoRoot)],
     [ADR_INDEX_FILE, () => buildAdrIndex(repoRoot)],
     ...terminologyOutputs(repoRoot),

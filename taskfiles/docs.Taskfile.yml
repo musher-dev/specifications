@@ -11,13 +11,17 @@ version: '3'
 
 tasks:
   docs:
-    desc: Regenerate docs/traceability.md, the ADR index, and docs/terminology.md with its Vale styles
+    desc: Regenerate the protocol registry's projections, docs/traceability.md, the ADR index, and docs/terminology.md with its Vale styles
     dir: '{{.ROOT_DIR}}/{{.TOOLS_DIR}}'
     cmds:
       # All are committed, and `task check:docs` fails when any is stale. The
       # terminology step writes docs/terminology.md and the generated
       # MusherSpecifications Vale style (Terms.yml, Discouraged.yml) from
       # docs/terminology.yaml.
+      # The protocol registry's projections come first: the schema enums, the
+      # spec.md member and view tables, and blueprint's connection-evidence
+      # schema (docs/adr/0045). Later steps read the spec.md they rewrite.
+      - bun run src/render/protocols.ts
       - bun run src/render/traceability.ts
       - bun run src/render/adr-index.ts
       - bun run src/render/terminology.ts
