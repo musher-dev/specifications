@@ -1,9 +1,12 @@
+# yaml-language-server: $schema=../specifications/core/v2/interfaces/registry/terms.schema.json
+#
 # The term records: one concept per context, for the Musher document
 # vocabulary (docs/adr/0038).
 #
-# This file is the source. `task docs` generates docs/terminology.md and the
-# MusherSpecifications Vale style (Terms.yml, Discouraged.yml) from it, and
-# `task check:terms` holds it to docs/terminology.schema.json, to the
+# This file is the source. `task docs` generates docs/terminology.md, the
+# MusherSpecifications Vale style (Terms.yml, Discouraged.yml) and core's
+# registry/terms.json from it (docs/adr/0043), and `task check:terms` holds it
+# to specifications/core/v2/interfaces/registry/terms.schema.json, to the
 # identifiers in every v2 schema source and diagnostics table, and to the terms
 # each spec.md bold-defines. spec.md is normative: a record quotes it and may
 # not disagree with it.

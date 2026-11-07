@@ -1,0 +1,141 @@
+{
+  "family": "core",
+  "major": "v2",
+  "requirements": [
+    {
+      "id": "CORE-ENV-001",
+      "anchor": "CORE-ENV-001",
+      "section": "envelope"
+    },
+    {
+      "id": "CORE-ENV-002",
+      "anchor": "CORE-ENV-002",
+      "section": "envelope"
+    },
+    {
+      "id": "CORE-ENV-003",
+      "anchor": "CORE-ENV-003",
+      "section": "envelope"
+    },
+    {
+      "id": "CORE-ENV-004",
+      "anchor": "CORE-ENV-004",
+      "section": "envelope"
+    },
+    {
+      "id": "CORE-ENV-005",
+      "anchor": "CORE-ENV-005",
+      "section": "envelope"
+    },
+    {
+      "id": "CORE-ENV-006",
+      "anchor": "CORE-ENV-006",
+      "section": "envelope"
+    },
+    {
+      "id": "CORE-ENV-007",
+      "anchor": "CORE-ENV-007",
+      "section": "envelope"
+    },
+    {
+      "id": "CORE-ITEM-002",
+      "anchor": "CORE-ITEM-002",
+      "section": "item-directory"
+    },
+    {
+      "id": "CORE-ITEM-001",
+      "anchor": "CORE-ITEM-001",
+      "section": "item-identity"
+    },
+    {
+      "id": "CORE-PLACEHOLDER-001",
+      "anchor": "CORE-PLACEHOLDER-001",
+      "section": "reference-grammar"
+    },
+    {
+      "id": "CORE-PLACEHOLDER-002",
+      "anchor": "CORE-PLACEHOLDER-002",
+      "section": "reference-grammar"
+    },
+    {
+      "id": "CORE-PLACEHOLDER-003",
+      "anchor": "CORE-PLACEHOLDER-003",
+      "section": "reference-grammar"
+    },
+    {
+      "id": "CORE-ADMISSION-001",
+      "anchor": "CORE-ADMISSION-001",
+      "section": "coverage"
+    },
+    {
+      "id": "CORE-YAML-001",
+      "anchor": "CORE-YAML-001",
+      "section": "yaml-profile"
+    },
+    {
+      "id": "CORE-YAML-002",
+      "anchor": "CORE-YAML-002",
+      "section": "yaml-profile"
+    },
+    {
+      "id": "CORE-YAML-003",
+      "anchor": "CORE-YAML-003",
+      "section": "yaml-profile"
+    },
+    {
+      "id": "CORE-YAML-004",
+      "anchor": "CORE-YAML-004",
+      "section": "yaml-profile"
+    },
+    {
+      "id": "CORE-YAML-014",
+      "anchor": "CORE-YAML-014",
+      "section": "yaml-profile"
+    },
+    {
+      "id": "CORE-YAML-005",
+      "anchor": "CORE-YAML-005",
+      "section": "yaml-profile"
+    },
+    {
+      "id": "CORE-YAML-006",
+      "anchor": "CORE-YAML-006",
+      "section": "yaml-profile"
+    },
+    {
+      "id": "CORE-YAML-007",
+      "anchor": "CORE-YAML-007",
+      "section": "yaml-profile"
+    },
+    {
+      "id": "CORE-YAML-008",
+      "anchor": "CORE-YAML-008",
+      "section": "yaml-profile"
+    },
+    {
+      "id": "CORE-YAML-009",
+      "anchor": "CORE-YAML-009",
+      "section": "yaml-profile"
+    },
+    {
+      "id": "CORE-YAML-013",
+      "anchor": "CORE-YAML-013",
+      "section": "yaml-profile"
+    },
+    {
+      "id": "CORE-YAML-010",
+      "anchor": "CORE-YAML-010",
+      "section": "yaml-profile"
+    },
+    {
+      "id": "CORE-YAML-011",
+      "anchor": "CORE-YAML-011",
+      "section": "yaml-profile"
+    },
+    {
+      "id": "CORE-YAML-012",
+      "anchor": "CORE-YAML-012",
+      "section": "yaml-profile"
+    }
+  ]
+}

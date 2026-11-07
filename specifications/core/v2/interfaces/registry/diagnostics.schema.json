@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://specifications.musher.dev/core/v2/registry/diagnostics",
+  "title": "Diagnostic registry",
+  "description": "Every diagnostic code a document of one family version may report: core's codes, those of each normative dependency, and the family's own, as registry/diagnostics.json projects them from the diagnostics and warnings tables of each spec.md. spec.md is normative: the file is generated from it by task docs, and a file that disagrees with it fails task check:docs. Within a major version a code is never removed and its phases never shrink.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["family", "major", "diagnostics"],
+  "properties": {
+    "family": {
+      "description": "The family whose documents may report these codes.",
+      "$ref": "#/$defs/FamilyName"
+    },
+    "major": {
+      "description": "The major version directory, such as v2.",
+      "$ref": "#/$defs/Major"
+    },
+    "diagnostics": {
+      "description": "Every reachable code: core's first, then each dependency's in the order the family's §2 lists them, then the family's own.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/Diagnostic" }
+    }
+  },
+  "$defs": {
+    "FamilyName": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "Major": {
+      "type": "string",
+      "pattern": "^v[1-9][0-9]*$"
+    },
+    "Diagnostic": {
+      "description": "One code, the phases its table assigns it, and the severity at which its table declares it.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "phases", "severities", "declaredBy"],
+      "properties": {
+        "code": {
+          "description": "The diagnostic code.",
+          "type": "string",
+          "pattern": "^(ERR|WARN)_[A-Z0-9_]+$"
+        },
+        "phases": {
+          "description": "Every phase that may report the code, in phase order. Empty for a warning whose table assigns it no phase: such a code is reported in the phase that checks the requirement it names.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "enum": ["parser", "structural", "semantic", "admission", "resolution"] }
+        },
+        "severities": {
+          "description": "The severities the code's table declares it at: ERROR for a diagnostics table, WARNING for a warnings table.",
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["ERROR", "WARNING"] }
+        },
+        "declaredBy": {
+          "description": "The family whose spec.md declares the code.",
+          "$ref": "#/$defs/FamilyName"
+        },
+        "requirement": {
+          "description": "For a warning, the requirement ID its table names: the SHOULD-level rule the warning reports.",
+          "type": "string",
+          "pattern": "^[A-Z]{2,6}-[A-Z0-9]{2,12}-[0-9]{3}$"
+        }
+      }
+    }
+  }
+}

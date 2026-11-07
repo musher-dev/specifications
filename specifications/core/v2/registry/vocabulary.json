@@ -1,0 +1,106 @@
+{
+  "family": "core",
+  "major": "v2",
+  "phases": [
+    "parser",
+    "structural",
+    "semantic",
+    "admission",
+    "resolution"
+  ],
+  "scopes": [
+    {
+      "name": "parser",
+      "phases": [
+        "parser"
+      ]
+    },
+    {
+      "name": "structural",
+      "phases": [
+        "parser",
+        "structural"
+      ]
+    },
+    {
+      "name": "document",
+      "phases": [
+        "parser",
+        "structural",
+        "semantic"
+      ]
+    },
+    {
+      "name": "publication",
+      "phases": [
+        "parser",
+        "structural",
+        "semantic",
+        "admission"
+      ]
+    },
+    {
+      "name": "deployment",
+      "phases": [
+        "parser",
+        "structural",
+        "semantic",
+        "admission",
+        "resolution"
+      ]
+    }
+  ],
+  "statuses": [
+    "VALID",
+    "INVALID",
+    "INCOMPLETE"
+  ],
+  "severities": [
+    "ERROR",
+    "WARNING"
+  ],
+  "stages": [
+    "sources",
+    "parameters",
+    "allocation",
+    "connections",
+    "values",
+    "build",
+    "environment",
+    "record"
+  ],
+  "namespaces": [
+    {
+      "name": "self",
+      "assigned": true
+    },
+    {
+      "name": "parameters",
+      "assigned": false
+    },
+    {
+      "name": "variables",
+      "assigned": true
+    },
+    {
+      "name": "connections",
+      "assigned": true
+    },
+    {
+      "name": "deployment",
+      "assigned": true
+    },
+    {
+      "name": "environment",
+      "assigned": false
+    },
+    {
+      "name": "organization",
+      "assigned": false
+    },
+    {
+      "name": "nodes",
+      "assigned": false
+    }
+  ]
+}

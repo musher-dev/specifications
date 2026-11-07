@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://specifications.musher.dev/core/v2/registry/vocabulary",
+  "title": "Core vocabulary",
+  "description": "The ordered lists core defines for every family: validation phases, validation scopes with the phases each runs, result statuses, diagnostic severities, resolution stages and the reserved placeholder namespaces, as registry/vocabulary.json projects them from core's spec.md. spec.md is normative: the file is generated from it by task docs, and a file that disagrees with it fails task check:docs. Within a major version each list only grows, at its end.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["family", "major", "phases", "scopes", "statuses", "severities", "stages", "namespaces"],
+  "properties": {
+    "family": {
+      "description": "Always core.",
+      "const": "core"
+    },
+    "major": {
+      "description": "The major version directory, such as v2.",
+      "type": "string",
+      "pattern": "^v[1-9][0-9]*$"
+    },
+    "phases": {
+      "description": "The validation phases, in the order an implementation applies them (core §6).",
+      "$ref": "#/$defs/LowerList"
+    },
+    "scopes": {
+      "description": "The validation scopes, from the narrowest to the widest, each with the phases it runs (core §6.1).",
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/Scope" }
+    },
+    "statuses": {
+      "description": "The statuses a validation result carries (core §6.1).",
+      "$ref": "#/$defs/UpperList"
+    },
+    "severities": {
+      "description": "The severities a diagnostic carries, the failing one first (core §7).",
+      "$ref": "#/$defs/UpperList"
+    },
+    "stages": {
+      "description": "The stages of the resolution phase, in the order they run (core §6.4).",
+      "$ref": "#/$defs/LowerList"
+    },
+    "namespaces": {
+      "description": "The reserved placeholder namespaces, a closed set, in the order core §5.2 lists them.",
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/Namespace" }
+    }
+  },
+  "$defs": {
+    "LowerList": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^[a-z][a-z0-9]*$" }
+    },
+    "UpperList": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" }
+    },
+    "Scope": {
+      "description": "One validation scope.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "phases"],
+      "properties": {
+        "name": {
+          "description": "The scope, as a result's validationScope names it.",
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]*$"
+        },
+        "phases": {
+          "description": "The phases a result at this scope runs, in phase order.",
+          "$ref": "#/$defs/LowerList"
+        }
+      }
+    },
+    "Namespace": {
+      "description": "One reserved namespace.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "assigned"],
+      "properties": {
+        "name": {
+          "description": "The namespace, as a placeholder spells it.",
+          "type": "string",
+          "pattern": "^[a-z][a-zA-Z0-9]*$"
+        },
+        "assigned": {
+          "description": "Whether some family gives the namespace a meaning in this major version. An unassigned namespace may become assigned; an assigned one never becomes unassigned.",
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

@@ -153,7 +153,7 @@ tasks:
       - bun run src/policy/title.ts
 
   check:docs:
-    desc: Fail if docs/traceability.md, the ADR index, or docs/terminology.md and its Vale styles differ from a fresh generation
+    desc: Fail if docs/traceability.md, the ADR index, docs/terminology.md and its Vale styles, or a registry differ from a fresh generation
     dir: '{{.ROOT_DIR}}/{{.TOOLS_DIR}}'
     cmds:
       # Regenerates each in memory and writes nothing; `task docs` is the fix.
