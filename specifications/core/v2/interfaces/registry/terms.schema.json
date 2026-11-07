@@ -155,7 +155,7 @@
               "type": "array",
               "minItems": 1,
               "uniqueItems": true,
-              "items": { "type": "string", "pattern": "^ERR_[A-Z0-9_]+$" }
+              "items": { "type": "string", "pattern": "^(ERR|WARN)_[A-Z0-9_]+$" }
             },
             "requirement_prefixes": {
               "description": "Requirement ID prefixes, the ID without its number: COMP-EP.",

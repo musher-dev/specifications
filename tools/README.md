@@ -88,7 +88,7 @@ process of its own; both report in the order they would sequentially.
 | `check:adr` | ADR numbering, headers and relations, and link-target-only edits to accepted ADRs | `src/policy/adr.ts` | ADR-01..ADR-04 |
 | `check:md` | markdownlint over every Markdown file | `markdownlint-cli2` | — |
 | `check:spelling` | Prose, tooling sources and schema descriptions spell-check clean | `cspell` | — |
-| `check:prose` | Every README, the guides under `docs/` and the v2 specifications pass Vale with the conventions' MusherProse package and this repository's MusherSpecifications style, as `.config/markdown/vale.ini` sets them (COPY-01..COPY-04). The decision records, the CHANGELOGs, the two history guides and the two generated pages are left out. Any alert fails | `vale` | — |
+| `check:prose` | Every README, the guides under `docs/` and the v2 specifications pass Vale with the conventions' MusherProse package and this repository's MusherSpecifications style, as `.config/prose/vale.ini` sets them (COPY-01..COPY-04). The decision records, the CHANGELOGs and the two generated pages are left out. Any alert fails | `vale` | — |
 | `check:shell` | ShellCheck over the dev container scripts | `shellcheck` | — |
 | `check:workflow` | actionlint over `.github/workflows` | `actionlint` | — |
 

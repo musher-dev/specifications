@@ -13,6 +13,7 @@ import {
   type Context,
   checkClauseConsistency,
   loadContext,
+  readDiagnosticTables,
   runConformance,
   scopeFor,
 } from './conformance.ts'
@@ -531,6 +532,37 @@ describe('checkClauseConsistency', () => {
     expect(messages).toEqual([
       'case: a core case cites core only, but clause cites specifications/alpha/v1/spec.md',
       'case: a core case cites core only, but ALPHA-META-001 is declared in specifications/alpha/v1/spec.md',
+    ])
+  })
+})
+
+describe('the diagnostic registry tables', () => {
+  const source = [
+    '## 8. Diagnostics',
+    '',
+    '| Code | Phase | Meaning |',
+    '|---|---|---|',
+    '| `ERR_A` | `semantic`, `resolution` | One condition. |',
+    '| `WARN_OUTSIDE` | [`COMP-EP-007`](#COMP-EP-007) | Not under a Warnings heading. |',
+    '',
+    '### 8.1 Warnings',
+    '',
+    '| Code | Requirement | Meaning |',
+    '|---|---|---|',
+    '| `WARN_B` | [`COMP-EP-007`](#COMP-EP-007) | An advisory condition. |',
+    '',
+    '## 9. Conformance',
+    '',
+    '| `WARN_AFTER` | [`COMP-EP-007`](#COMP-EP-007) | After the Warnings section. |',
+  ].join('\n')
+
+  test('declare ERR_ codes with their phases, and WARN_ codes under a Warnings heading', () => {
+    const tables = readDiagnosticTables(source)
+    expect(tables.errors).toEqual([
+      { code: 'ERR_A', phases: ['semantic', 'resolution'], meaning: 'One condition.' },
+    ])
+    expect(tables.warnings).toEqual([
+      { code: 'WARN_B', requirement: 'COMP-EP-007', meaning: 'An advisory condition.' },
     ])
   })
 })

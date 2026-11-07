@@ -49,7 +49,7 @@ family version are normative in
 specifications/   one directory per family; each major version, v<N>/, releases under its own tag prefix
 docs/             guides, governance, the fixture format, traceability, and decisions
 tools/            non-normative build and check scripts (Bun and TypeScript)
-taskfiles/        the tasks behind `task check`
+taskfiles/        the task fragments Taskfile.yml includes, one per area
 .config/          every linter, formatter, and hook configuration, and the tool pins
 .devcontainer/    the development container, the supported environment
 .github/          contributing, security, rulesets, and workflows
