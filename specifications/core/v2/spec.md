@@ -134,10 +134,17 @@ this document and every family that applies it.
 - A **validation scope** is how far a validation result reaches, one of
   `parser`, `structural`, `document`, `publication` and `deployment`
   ([§6.1](#validation-scope)). A conformance claim names a scope too.
+- A **validation result** is what one validation of one document reports: its
+  status, its validation scope, the phase it reached, its diagnostics and its
+  deferred obligations ([§6.1](#validation-scope)).
 - A **deferred obligation** is a rule a validation scope requires that could
   not be decided with the context supplied.
-- A **diagnostic** is one reported condition: a code, a phase, and a JSON
-  Pointer into the submitted document ([§7](#diagnostics)).
+- A **diagnostic** is one reported condition: a code, a severity, a phase, and
+  a JSON Pointer into the submitted document ([§7](#diagnostics)).
+- A diagnostic's **severity** is `ERROR` or `WARNING`. An `ERROR` is a failure
+  of the document. A `WARNING` is advisory: it reports a SHOULD the document
+  does not meet, never changes a result's status, and is never approval
+  ([§7](#diagnostics)).
 - A family's **diagnostic registry** is every code its documents may be
   reported with: its own diagnostics table, core's ([§7](#diagnostics)), and
   the tables of the families it declares as normative dependencies
@@ -549,10 +556,12 @@ means it is well-formed and uses something this format withholds.
 
 ### <a id="coverage"></a><a id="validation-scope"></a>6.1 Validation scope
 
-A validation result carries a status (`VALID`, `INVALID` or `INCOMPLETE`), its
-`validationScope`, the phase it reached, its diagnostics and its deferred
-obligations. Each deferred obligation identifies its rule, its document pointer
-and the context that is missing.
+A validation result carries a `status` (`VALID`, `INVALID` or `INCOMPLETE`),
+its `validationScope`, the `phase` it reached, its `diagnostics` and its
+`deferred` obligations. Its shape is
+[`interfaces/validation-result.schema.json`](interfaces/validation-result.schema.json),
+released with this document: that schema states the members and this section
+states what they mean.
 
 The **validation scope** says how far a result reaches. The scopes form one
 lattice, each containing every obligation of the one before it:
@@ -567,11 +576,30 @@ lattice, each containing every obligation of the one before it:
 | `publication` | `document`, plus the obligations of publishing, to a library or to the catalog. A library needs no listing; listing an item in the catalog adds its listing's obligations. | the above, and `admission` |
 | `deployment` | `publication`, plus deploying in one organization's account under its current policy, and resolving the deployment's values. | the above, and `resolution` |
 
-A known failure takes precedence over incompleteness: a result with a
-diagnostic is `INVALID`. Otherwise a result with a deferred obligation is
-`INCOMPLETE`, and `VALID` means every obligation of the result's scope
-completed. A `document` result without the item or dependency context it
-requires is `INCOMPLETE`. No caller may interpret `INCOMPLETE` as approval.
+A known failure takes precedence over incompleteness: a result with an
+`ERROR` diagnostic is `INVALID`, and only an `ERROR` diagnostic makes it so.
+Otherwise a result with a deferred obligation is `INCOMPLETE`, and `VALID`
+means every obligation of the result's scope completed. A `document` result
+without the item or dependency context it requires is `INCOMPLETE`. No caller
+may interpret `INCOMPLETE` as approval. A `WARNING` diagnostic may accompany
+any status and never changes it: a result with warnings has the status it
+would have without them. A warning is not approval of what it reports either:
+the SHOULD it names still applies.
+
+The result's `phase` depends on its status:
+
+| Status | `phase` |
+|---|---|
+| `INVALID` | The phase that rejected the document. |
+| `INCOMPLETE` | The last phase entered. |
+| `VALID` | The last phase of the result's validation scope. |
+
+Each deferred obligation names its `rule`, the requirement ID left undecided;
+its `path`, a JSON Pointer into the submitted document where the rule applies;
+and what is `missing`, the context that would decide it. `missing` is a
+non-empty string with no grammar in v2. It SHOULD take the form
+`<context>:<key>`, naming the kind of context and the entry of it, such as
+`connection:llm` for a connection parameter with no selection.
 
 A conformance claim names a scope from the same lattice ([§8](#conformance)),
 so "conforms at `document`" and "validated at `document`" mean the same
@@ -741,14 +769,33 @@ quota or placement grant beyond the moment it was decided.
 
 ## <a id="diagnostics"></a>7. Diagnostics
 
-Diagnostic **codes** and the **phase** at which validation fails are normative.
-Human-readable messages are not: implementations in different languages emit
-different text and that is expected. A code identifies a condition, and its
-registry lists every phase that may report it. A diagnostic reports the actual
-phase where the condition was found, and a `resolution` diagnostic also reports
-its stage ([§6.4](#resolution-stages)).
+Diagnostic **codes**, their **severity** and the **phase** at which
+validation fails are normative. Human-readable messages are not:
+implementations in different languages emit different text and that is
+expected. A code identifies a condition, and its registry lists every phase
+that may report it. A diagnostic reports the actual phase where the condition
+was found, and a `resolution` diagnostic also reports its `stage`
+([§6.4](#resolution-stages)). A diagnostic of any other phase has no `stage`
+member: it is absent, never `null`. The members of a diagnostic are those of
+[`interfaces/validation-result.schema.json`](interfaces/validation-result.schema.json).
 
-A diagnostic's primary `path` is a JSON Pointer into the submitted document.
+Every diagnostic carries its `severity`, `ERROR` or `WARNING`. A code beginning
+`ERR_` is declared in a diagnostics table and is reported at `ERROR`. A code
+beginning `WARN_` is declared in a family's Warnings table, a
+`| Code | Requirement | Meaning |` table under a heading naming warnings, and
+is reported at `WARNING`: each one names the SHOULD it reports, by its
+requirement ID. An implementation MAY report an `ERR_` code at `WARNING` only
+to preview a phase outside the result's validation scope, such as an
+`admission` rule in a `document` result. The preview reports the phase it
+previews and, like any later-phase diagnostic, is reported only once the
+earlier phases pass ([§6](#validation-phases)). It is not that phase's
+decision: a result in a scope that runs the phase reports the code at `ERROR`
+if the condition holds.
+
+A diagnostic's primary `path` is a JSON Pointer into the submitted document,
+unless the diagnostic carries `artifact`. That optional member names another
+document of the same item, by its item-relative path, as the one holding the
+primary location, and `path` then points into it.
 A cross-document diagnostic anchors at an authored binding or document reference
 (`componentRef`), and carries `related` locations, each with an `artifact`
 naming the other document and its actual `path`. A missing component input
@@ -886,7 +933,7 @@ acceptable, and no document v2 accepts today is rejected.
 
 | Not supported | Today | How it closes |
 |---|---|---|
-| A core JSON Schema | Each family's bundle states the envelope for its own documents. [ADR 0022](../../../docs/adr/0022-the-musher-document-core-specification.md) §5 records why neither shared shape was worth publishing. | Releasing one. It rejects no document a family bundle accepts. |
+| A core document schema | Each family's bundle states the envelope for its own documents. The validation result schema ([§6.1](#validation-scope)) is not one: it describes what a validator reports, not a document. [ADR 0022](../../../docs/adr/0022-the-musher-document-core-specification.md) §5 records why neither shared shape was worth publishing. | Releasing one. It rejects no document a family bundle accepts. |
 | The unassigned namespaces `parameters`, `environment`, `organization` and `nodes` | Writing one is `ERR_NAMESPACE_NOT_PERMITTED` ([`CORE-PLACEHOLDER-003`](#CORE-PLACEHOLDER-003)). | A family permitting the namespace at a position, with a defined meaning. |
 | Placeholder expressions: functions, operators, conditionals, arithmetic and fallbacks | Anything but a namespace and a dotted path inside `${{ }}` is `ERR_MALFORMED_PLACEHOLDER`. | Defining a syntax for one, inside `${{ }}`, that is malformed today. |
 

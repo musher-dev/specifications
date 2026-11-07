@@ -20,20 +20,24 @@ import { familyBundle } from '../schema/bundle.ts'
 import { strictAjv } from '../schema/lint.ts'
 import {
   type Diagnostic,
+  isError,
   type Phase,
   parseDocument,
   parseDocumentBytes,
+  reported,
+  type Severity,
   type ValidationScope,
 } from './document.ts'
 import { listingObligations } from './listing.ts'
 import {
   componentObligations,
+  componentWarnings,
   type DeferredObligation,
   type SemanticContext,
   semanticReport,
 } from './semantic.ts'
 
-export type { Diagnostic, Phase, ValidationScope }
+export type { Diagnostic, Phase, Severity, ValidationScope }
 // Re-exported so callers keep one import for the pipeline. The parser phase
 // lives in document.ts because semantic.ts needs it to read an item's other
 // documents, and importing it from here would close a cycle.
@@ -45,8 +49,12 @@ export interface ValidationResult {
   /** How far the result reaches, on core v2 §6.1's lattice. */
   readonly validationScope: ValidationScope
   readonly deferred: DeferredObligation[]
-  /** Phase the document reached. On failure, the phase that rejected it. */
+  /**
+   * Core v2 §6.1: for INVALID, the phase that rejected the document; for
+   * INCOMPLETE, the last phase entered; for VALID, the last phase of the scope.
+   */
   readonly phase: Phase
+  /** ERROR and WARNING diagnostics alike, each carrying its severity and phase. */
   readonly diagnostics: Diagnostic[]
 }
 
@@ -282,7 +290,7 @@ export function validateDocument(
       validationScope: scope,
       deferred: [],
       phase: 'parser',
-      diagnostics: parsed.errors.map((d) => ({ ...d, phase: 'parser' })),
+      diagnostics: parsed.errors.map((d) => reported(d, 'parser')),
     }
   }
   if (scope === 'parser')
@@ -329,9 +337,16 @@ export function validateDocument(
         path: '/spec/nodes',
         missing: 'deployment resolution',
       })
-    const diagnostics: Diagnostic[] = report.diagnostics.map((d) => ({ ...d, phase: 'semantic' }))
+    const diagnostics: Diagnostic[] = report.diagnostics.map((d) => reported(d, 'semantic'))
+    // Component v2 §5.2: the advisory checks of the semantic phase. A WARNING
+    // never changes the status, so it neither fails the document nor stops a
+    // later phase being entered.
+    if (family.name === 'component')
+      diagnostics.push(...componentWarnings(parsed.value).map((d) => reported(d, 'semantic')))
+    let reached: Phase = 'semantic'
     // Core v2 §6: a later phase is not entered until the earlier ones pass.
-    if (diagnostics.length === 0 && (scope === 'publication' || scope === 'deployment')) {
+    if (!diagnostics.some(isError) && (scope === 'publication' || scope === 'deployment')) {
+      reached = 'admission'
       diagnostics.push(...publicationDiagnostics(family, parsed.value))
       const decided = admission(family, parsed.value, context.platform)
       diagnostics.push(...decided.diagnostics)
@@ -344,14 +359,21 @@ export function validateDocument(
         report.deferred.push(...listing.deferred)
       }
     }
-    const status = diagnostics.length ? 'INVALID' : report.deferred.length ? 'INCOMPLETE' : 'VALID'
+    const status = diagnostics.some(isError)
+      ? 'INVALID'
+      : report.deferred.length
+        ? 'INCOMPLETE'
+        : 'VALID'
     return {
       ok: status === 'VALID',
       status,
       validationScope: scope,
       deferred: report.deferred,
-      phase: diagnostics.some((d) => d.phase === 'admission') ? 'admission' : 'semantic',
-      diagnostics,
+      // INVALID: the phase that rejected; INCOMPLETE: the last phase entered;
+      // VALID: the last phase of the scope. Admission is entered only once the
+      // semantic phase passes, so the last phase entered is the one rejecting.
+      phase: reached,
+      diagnostics: diagnostics.map((d) => reported(d, reached)),
     }
   }
 
@@ -362,7 +384,7 @@ export function validateDocument(
     const key = `${diagnostic.code}\u0000${diagnostic.path}`
     if (seen.has(key)) continue
     seen.add(key)
-    diagnostics.push({ ...diagnostic, phase: 'structural' })
+    diagnostics.push(reported(diagnostic, 'structural'))
   }
 
   return {

@@ -289,6 +289,30 @@ function inputReferenceDiagnostics(
   else if (input.required === false && input.default === undefined)
     issue(out, 'ERR_INPUT_NOT_GUARANTEED', path)
 }
+/**
+ * The advisory checks of a component's semantic phase, reported at WARNING
+ * (core v2 §7). Component §5.2 COMP-EP-007: an `HTTPS` endpoint whose trust
+ * policy verifies, `SYSTEM` (the default) or `BUNDLE`, SHOULD name its
+ * `serverName`. `BUNDLE` already requires one structurally, so in practice this
+ * is a `SYSTEM` endpoint without one.
+ */
+export function componentWarnings(document: Json): Diagnostic[] {
+  const out: Diagnostic[] = []
+  const endpoints = record(at(document, 'spec', 'workload', 'endpoints'))
+  for (const [name, endpoint] of Object.entries(endpoints)) {
+    if (at(endpoint, 'protocol') !== 'HTTPS') continue
+    const verify = at(endpoint, 'tls', 'verify') ?? 'SYSTEM'
+    if (verify === 'NONE' || at(endpoint, 'tls', 'serverName') !== undefined) continue
+    out.push({
+      code: 'WARN_ENDPOINT_SERVER_NAME',
+      path: `/spec/workload/endpoints/${token(name)}`,
+      message: 'an endpoint that verifies its certificate should name its serverName',
+      severity: 'WARNING',
+      phase: 'semantic',
+    })
+  }
+  return out
+}
 export function componentDiagnostics(document: Json): Diagnostic[] {
   const out: Diagnostic[] = []
   // Every input something other than the environment reads (COMP-INPUT-001).

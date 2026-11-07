@@ -750,3 +750,17 @@ export const VALE_TERMS_FILE = `${VALE_STYLE_DIR}/Terms.yml`
 /** Discouraged prose aliases, as a Vale substitution rule at level warning. */
 export const VALE_DISCOURAGED_FILE = `${VALE_STYLE_DIR}/Discouraged.yml`
 // --- end of term records block -----------------------------------------------
+
+// -----------------------------------------------------------------------------
+// The validation result: core's schema for what one validation reports, and
+// the subset a conformance fixture declares (docs/adr/0044). Read by the
+// conformance runner and its tests.
+// -----------------------------------------------------------------------------
+
+/** The validation result schema's file name, under core's `interfaces/`. */
+export const VALIDATION_RESULT_SCHEMA_FILE = 'validation-result.schema.json'
+
+/** Absolute path of core `<major>`'s validation result schema in `repoRoot`. */
+export function validationResultSchemaPath(repoRoot: string, major: string): string {
+  return join(repoRoot, familyPaths(CORE_FAMILY, major).interfaces, VALIDATION_RESULT_SCHEMA_FILE)
+}

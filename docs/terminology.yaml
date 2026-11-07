@@ -450,6 +450,10 @@ terms:
       reports only once the earlier ones pass.
     shortDefinition: parser, structural, semantic, admission, resolution.
     verbs: [a rule is decided in a phase, a diagnostic reports its phase]
+    identifiers:
+      fields: [phase]
+      values: [parser, structural, semantic, admission, resolution]
+      defs: [ValidationPhase]
     aliases:
       - { text: validation layer, status: banned, scope: [prose], suggest: validation phase }
       - { text: validation layers, status: banned, scope: [prose], suggest: validation phases }
@@ -541,7 +545,11 @@ terms:
       from the lattice parser ⊂ structural ⊂ document ⊂ publication ⊂
       deployment, and the level an implementation declares it conforms at.
     shortDefinition: "parser ⊂ structural ⊂ document ⊂ publication ⊂ deployment."
-    identifiers: { requirement_prefixes: [CORE-ADMISSION] }
+    identifiers:
+      requirement_prefixes: [CORE-ADMISSION]
+      fields: [validationScope]
+      values: [parser, structural, document, publication, deployment]
+      defs: [ValidationScope]
     example: "An editor integration conforms at structural validation scope."
     aliases:
       - { text: validationProfile, status: banned, scope: [identifier], suggest: validationScope }
@@ -557,10 +565,11 @@ terms:
     context: core
     definition: >-
       The verdict of a validation result: VALID when every obligation of the
-      claimed scope completed, INVALID on a known failure, and INCOMPLETE when
-      context was missing and an obligation was deferred.
+      claimed scope completed, INVALID on an ERROR diagnostic, and INCOMPLETE
+      when context was missing and an obligation was deferred.
     shortDefinition: VALID, INVALID or INCOMPLETE.
-    part_of: [core.validation-scope]
+    part_of: [core.validation-result]
+    identifiers: { fields: [status], values: [VALID, INVALID, INCOMPLETE] }
     example: "No caller may read INCOMPLETE as approval."
     source: [core v2 §6.1]
     stability: stable
@@ -575,7 +584,8 @@ terms:
       its requirement, its document pointer and the missing context, and
       making the result INCOMPLETE.
     shortDefinition: A rule left undecided for lack of context.
-    part_of: [core.validation-scope]
+    part_of: [core.validation-result]
+    identifiers: { fields: [deferred, rule, missing], defs: [DeferredObligation] }
     source: [core v2 §1.3, core v2 §6.1]
     stability: stable
     status: approved
@@ -602,11 +612,15 @@ terms:
     display_name: diagnostic
     context: core
     definition: >-
-      One reported failure of a document: a normative code, the phase that
-      found it, a JSON Pointer path into the submitted document, and
-      non-normative message text.
-    shortDefinition: Code, phase and path of one failure.
-    identifiers: { codes: [ERR_UNKNOWN_FIELD] }
+      One reported condition of a document: a normative code, its severity,
+      the phase that found it, a JSON Pointer path into the submitted document
+      or another document of its item, and non-normative message text.
+    shortDefinition: Code, severity, phase and path of one condition.
+    part_of: [core.validation-result]
+    identifiers:
+      codes: [ERR_UNKNOWN_FIELD]
+      fields: [diagnostics, path, artifact, related, message]
+      defs: [Diagnostic, DocumentPointer, RelatedLocation]
     verbs: [a diagnostic anchors at a path, an implementation reports a diagnostic]
     source: [core v2 §1.3, core v2 §7]
     stability: stable
@@ -617,11 +631,46 @@ terms:
     display_name: diagnostic code
     context: core
     definition: >-
-      The stable ERR_ name of one condition a document can fail, declared in
-      exactly one diagnostics table with every phase it may be reported in.
-    shortDefinition: The ERR_ name of one condition.
+      The stable name of one condition a diagnostic reports: an error code,
+      prefixed ERR, declared in exactly one diagnostics table with every phase
+      it may be reported in, or a warning code, prefixed WARN, declared in a
+      Warnings table with the requirement it reports.
+    shortDefinition: The stable name of one condition.
     part_of: [core.diagnostic]
+    identifiers: { fields: [code], defs: [DiagnosticCode] }
     source: [core v2 §7]
+    stability: stable
+    status: approved
+    tags: [validation]
+
+  - id: core.severity
+    display_name: severity
+    context: core
+    definition: >-
+      The class of a diagnostic: ERROR, a failure of the document that makes
+      the result INVALID, or WARNING, an advisory report of a SHOULD the
+      document does not meet, which never changes the result's status.
+    shortDefinition: ERROR or WARNING.
+    part_of: [core.diagnostic]
+    identifiers: { fields: [severity], values: [ERROR, WARNING], defs: [Severity] }
+    example: "A VALID result may carry WARNING diagnostics."
+    confusables: ["The validation status: a severity classifies one diagnostic, a status the whole result."]
+    source: [core v2 §1.3, core v2 §6.1, core v2 §7, ADR 0044]
+    stability: stable
+    status: approved
+    tags: [validation]
+
+  - id: core.validation-result
+    display_name: validation result
+    context: core
+    definition: >-
+      What one validation of one document reports: its status, its validation
+      scope, the phase it reached, its diagnostics and its deferred
+      obligations, in the shape a released core schema states.
+    shortDefinition: Status, scope, phase, diagnostics and deferred obligations.
+    identifiers: { fields: [status, validationScope, phase, diagnostics, deferred] }
+    confusables: ["A conformance result, which reports how many corpus cases an implementation passed, not one document's validation."]
+    source: [core v2 §1.3, core v2 §6.1, ADR 0044]
     stability: stable
     status: approved
     tags: [validation]
@@ -1367,7 +1416,7 @@ terms:
       or NONE, with an optional server name.
     shortDefinition: How the platform verifies an HTTPS endpoint's certificate.
     part_of: [component.endpoint]
-    identifiers: { fields: [tls, verify, serverName, trustBundle], values: [SYSTEM, BUNDLE, NONE], defs: [ComponentEndpointTls] }
+    identifiers: { fields: [tls, verify, serverName, trustBundle], values: [SYSTEM, BUNDLE, NONE], defs: [ComponentEndpointTls], codes: [WARN_ENDPOINT_SERVER_NAME] }
     source: [component v2 §5.2]
     stability: stable
     status: approved
@@ -2732,6 +2781,10 @@ terms:
       resolution-phase diagnostic names.
     shortDefinition: One ordered step of resolution.
     part_of: [deployment.resolution]
+    identifiers:
+      fields: [stage]
+      values: [sources, parameters, allocation, connections, values, build, environment, record]
+      defs: [ResolutionStage]
     confusables: ["A validation phase; stage means only a resolution step, and is written 'resolution stage' where the context does not say so."]
     source: [core v2 §1.3, core v2 §6.4, core v2 §7, blueprint v2 §5.2, ADR 0038]
     stability: stable
@@ -3285,6 +3338,21 @@ terms:
     shortDefinition: One fixture with a declared outcome.
     part_of: [repository.conformance-corpus]
     source: [docs/conformance.md]
+    stability: stable
+    status: approved
+    tags: [conformance]
+
+  - id: repository.expected-diagnostic
+    display_name: expected diagnostic
+    context: repository
+    definition: >-
+      A diagnostic a conformance case declares: a code, optionally its path,
+      phase, stage, related locations and severity, matched against a produced
+      diagnostic of the same severity, ERROR when none is named.
+    shortDefinition: A diagnostic a fixture expects.
+    part_of: [repository.conformance-case]
+    identifiers: { defs: [ExpectedDiagnostic] }
+    source: [docs/conformance.md, ADR 0044]
     stability: stable
     status: approved
     tags: [conformance]
