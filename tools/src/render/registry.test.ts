@@ -48,7 +48,12 @@ describe('declaredCodes', () => {
     expect(declaredCodes(markdown)).toEqual([
       { code: 'ERR_A', phases: ['parser', 'semantic'], severities: ['ERROR'] },
       { code: 'ERR_B', phases: ['resolution'], severities: ['ERROR'] },
-      { code: 'WARN_C', phases: [], severities: ['WARNING'], requirement: 'COMP-EP-007' },
+      {
+        code: 'WARN_C',
+        phases: ['parser', 'structural', 'semantic', 'admission', 'resolution'],
+        severities: ['WARNING'],
+        requirement: 'COMP-EP-007',
+      },
     ])
   })
 })

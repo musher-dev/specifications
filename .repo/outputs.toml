@@ -89,6 +89,19 @@ compatibility = "gated"
 audience = "public"
 docs = "docs/using-schemas.md#which-url"
 
+# The validation result (docs/adr/0044): what one validation reports, the
+# shape the platform, the CLI and every SDK return, and the subset a
+# conformance fixture declares. Authored, not generated.
+[[interfaces]]
+id = "core-validation-result"
+format = "json-schema"
+description = "The JSON Schema of a validation result and its diagnostics, for every implementation that reports one."
+definitions = ["specifications/core/v2/interfaces/validation-result.schema.json"]
+delivered_by = "core-release"
+compatibility = "gated"
+audience = "public"
+docs = "docs/using-schemas.md#registries"
+
 # The registries (docs/adr/0043). Each is a committed projection `task docs`
 # writes from spec.md and docs/terminology.yaml, so `generated`: check:docs is
 # its drift check and check:compat:registry its breaking-change check. spec.md

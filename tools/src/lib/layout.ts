@@ -261,12 +261,6 @@ export const VOCABULARY_REGISTRY_FILE = 'vocabulary.json'
 /** Every term record, projected from `docs/terminology.yaml`. Core only. */
 export const TERMS_REGISTRY_FILE = 'terms.json'
 
-/**
- * Core's validation result schema, in `interfaces/` (docs/adr/0044). Its enums
- * are frozen within a major: a consumer switches on them.
- */
-export const VALIDATION_RESULT_SCHEMA_NAME = 'validation-result.schema.json'
-
 /** The registry files a family version carries, in the order `task docs` writes them. */
 export function registryFiles(name: string): readonly string[] {
   return name === CORE_FAMILY

@@ -28,6 +28,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import Ajv2020 from 'ajv/dist/2020.js'
 import { parse } from 'yaml'
+import { readDiagnosticTables } from '../conformance/conformance.ts'
 import {
   ADR_DIR,
   CORE_FAMILY,
@@ -413,10 +414,8 @@ export function schemaIdentifiers(schema: Json, family: string, file: string): F
   return found
 }
 
-/** A row of a `| Code | Phase | Meaning |` table, as `check:conformance` reads one. */
-const DIAGNOSTIC_ROW = /^\|\s*`(ERR_[A-Z0-9_]+)`\s*\|\s*((?:`[a-z]+`(?:\s*,\s*)?)+)\s*\|/
-/** A row of a `| Code | Requirement | Meaning |` table, the one a warnings section holds. */
-const WARNING_ROW = /^\|\s*`(WARN_[A-Z0-9_]+)`\s*\|/
+/** A table row's first cell, when it is one backticked code. */
+const CODE_CELL = /^\|\s*`((?:ERR|WARN)_[A-Z0-9_]+)`\s*\|/
 
 /** The header of core's reserved-namespace table. */
 const NAMESPACE_HEADER = /^\|\s*Namespace\s*\|/
@@ -430,11 +429,19 @@ export function proseIdentifiers(
 ): FoundIdentifier[] {
   const found: FoundIdentifier[] = []
   const lines = markdown.split('\n')
+  // The codes the diagnostics and warnings tables declare, read as
+  // check:conformance reads them; each is reported at the row declaring it.
+  const tables = readDiagnosticTables(markdown)
+  const declared = new Set([...tables.errors, ...tables.warnings].map((row) => row.code))
+  const reported = new Set<string>()
   let inNamespaces = false
   for (const [index, line] of lines.entries()) {
     const where = `${file}:${index + 1}`
-    const row = DIAGNOSTIC_ROW.exec(line) ?? WARNING_ROW.exec(line)
-    if (row?.[1] !== undefined) found.push({ kind: 'codes', name: row[1], family, where })
+    const code = CODE_CELL.exec(line)?.[1]
+    if (code !== undefined && declared.has(code) && !reported.has(code)) {
+      reported.add(code)
+      found.push({ kind: 'codes', name: code, family, where })
+    }
     if (family === CORE_FAMILY) {
       if (NAMESPACE_HEADER.test(line)) inNamespaces = true
       else if (!line.startsWith('|')) inNamespaces = false

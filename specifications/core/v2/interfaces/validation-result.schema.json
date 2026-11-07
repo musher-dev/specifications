@@ -58,7 +58,6 @@
         "properties": {
           "diagnostics": {
             "contains": {
-              "type": "object",
               "properties": {
                 "severity": {
                   "const": "ERROR"
@@ -84,7 +83,6 @@
         "properties": {
           "diagnostics": {
             "items": {
-              "type": "object",
               "properties": {
                 "severity": {
                   "const": "WARNING"
@@ -110,7 +108,6 @@
         "properties": {
           "diagnostics": {
             "items": {
-              "type": "object",
               "properties": {
                 "severity": {
                   "const": "WARNING"

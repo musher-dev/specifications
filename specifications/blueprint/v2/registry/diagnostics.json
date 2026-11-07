@@ -485,6 +485,21 @@
       "declaredBy": "component"
     },
     {
+      "code": "WARN_ENDPOINT_SERVER_NAME",
+      "phases": [
+        "parser",
+        "structural",
+        "semantic",
+        "admission",
+        "resolution"
+      ],
+      "severities": [
+        "WARNING"
+      ],
+      "declaredBy": "component",
+      "requirement": "COMP-EP-007"
+    },
+    {
       "code": "ERR_COMPONENT_NOT_FOUND",
       "phases": [
         "semantic"

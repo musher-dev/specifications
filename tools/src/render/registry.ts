@@ -30,6 +30,7 @@
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname } from 'node:path'
+import { readDiagnosticTables } from '../conformance/conformance.ts'
 import { readBindings } from '../lib/bindings.ts'
 import {
   CORE_FAMILY,
@@ -53,19 +54,11 @@ import { readTerminologySource } from '../policy/terms.ts'
 const PHASE_ORDER = ['parser', 'structural', 'semantic', 'admission', 'resolution'] as const
 
 /**
- * The severities a diagnostic carries, the failing one first. Core v2 §7 names
- * them, as docs/adr/0044 decides; neither has a table to project, so they are
- * spelled here once.
+ * The severities a diagnostic carries, the failing one first, as core v2 §1.3
+ * defines them (docs/adr/0044). `buildVocabulary` fails when the two differ.
  */
 export const SEVERITIES = ['ERROR', 'WARNING'] as const
 type Severity = (typeof SEVERITIES)[number]
-
-/** A row of a `| Code | Phase | Meaning |` table. The conformance runner reads the same shape. */
-const DIAGNOSTIC_ROW = /^\|\s*`(ERR_[A-Z0-9_]+)`\s*\|\s*((?:`[a-z]+`(?:\s*,\s*)?)+)\s*\|/
-/** A row of a `| Code | Requirement | Meaning |` table under a heading naming warnings. */
-const WARNING_ROW = /^\|\s*`(WARN_[A-Z0-9_]+)`\s*\|([^|]*)\|/
-const REQUIREMENT_IN_CELL = /\b([A-Z]{2,6}-[A-Z0-9]{2,12}-\d{3})\b/
-const HEADING = /^#{1,6}\s+(.*)$/
 
 /** One code as one spec.md's tables declare it. */
 interface DeclaredCode {
@@ -80,8 +73,14 @@ function inPhaseOrder(phases: Iterable<string>): string[] {
   return PHASE_ORDER.filter((phase) => set.has(phase))
 }
 
-/** Every code one spec.md declares, in document order. */
+/**
+ * Every code one spec.md declares: its diagnostics tables' rows, then its
+ * warnings tables' rows, read as the conformance runner reads them. A warnings
+ * table has no phase column, so a warning may be reported in any phase: the one
+ * that checks the requirement it names.
+ */
 export function declaredCodes(markdown: string): DeclaredCode[] {
+  const tables = readDiagnosticTables(markdown)
   const byCode = new Map<
     string,
     { phases: Set<string>; severities: Set<Severity>; requirement?: string }
@@ -94,30 +93,16 @@ export function declaredCodes(markdown: string): DeclaredCode[] {
     }
     return held
   }
-  let inWarnings = false
-  for (const line of markdown.split('\n')) {
-    const heading = HEADING.exec(line)
-    if (heading !== null) {
-      inWarnings = /\bWarnings\b/.test(heading[1] ?? '')
-      continue
-    }
-    const row = DIAGNOSTIC_ROW.exec(line)
-    if (row?.[1] !== undefined && row[2] !== undefined) {
-      const held = entry(row[1])
-      held.severities.add('ERROR')
-      for (const match of row[2].matchAll(/`([a-z]+)`/g)) {
-        if ((PHASE_ORDER as readonly string[]).includes(match[1] ?? ''))
-          held.phases.add(match[1] as string)
-      }
-      continue
-    }
-    if (!inWarnings) continue
-    const warning = WARNING_ROW.exec(line)
-    if (warning?.[1] === undefined) continue
-    const held = entry(warning[1])
+  for (const row of tables.errors) {
+    const held = entry(row.code)
+    held.severities.add('ERROR')
+    for (const phase of row.phases) held.phases.add(phase)
+  }
+  for (const row of tables.warnings) {
+    const held = entry(row.code)
     held.severities.add('WARNING')
-    const requirement = REQUIREMENT_IN_CELL.exec(warning[2] ?? '')?.[1]
-    if (requirement !== undefined) held.requirement = requirement
+    for (const phase of PHASE_ORDER) held.phases.add(phase)
+    held.requirement = row.requirement
   }
   return [...byCode].map(([code, held]) => ({
     code,
@@ -251,11 +236,22 @@ export function buildVocabulary(core: Family): Json {
     above = scopePhases
     return { name: firstTicked(row[0], 'scope'), phases: scopePhases }
   })
-  const status = /\ba status \(([^)]*)\)/.exec(markdown.replace(/\s+/g, ' '))
+  const prose = markdown.replace(/\s+/g, ' ')
+  const status = /\ba `?status`? \(([^)]*)\)/.exec(prose)
   if (status?.[1] === undefined) {
     throw new Error(
-      'core spec.md §6.1 no longer says "a status (`VALID`, ...)". Teach ' +
+      'core spec.md §6.1 no longer says "a `status` (`VALID`, ...)". Teach ' +
         'tools/src/render/registry.ts where the statuses are listed.',
+    )
+  }
+  // §1.3 defines the severities; the diagnostics projection spells them too,
+  // so the two must agree.
+  const severity = /\*\*severity\*\* is ([^.]*)\./.exec(prose)
+  const severities = ticked(severity?.[1] ?? '')
+  if (severities.join() !== SEVERITIES.join()) {
+    throw new Error(
+      `core spec.md §1.3 defines the severities as ${severities.join(', ') || 'nothing'}, ` +
+        `and tools/src/render/registry.ts spells ${SEVERITIES.join(', ')}. Make them agree.`,
     )
   }
   const stages = tableRows(markdown, 'Stage').map((row) => firstTicked(row[0], 'stage'))
@@ -269,7 +265,7 @@ export function buildVocabulary(core: Family): Json {
     phases,
     scopes,
     statuses: ticked(status[1]),
-    severities: [...SEVERITIES],
+    severities,
     stages,
     namespaces,
   }

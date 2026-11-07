@@ -42,8 +42,9 @@
           "pattern": "^(ERR|WARN)_[A-Z0-9_]+$"
         },
         "phases": {
-          "description": "Every phase that may report the code, in phase order. Empty for a warning whose table assigns it no phase: such a code is reported in the phase that checks the requirement it names.",
+          "description": "Every phase that may report the code, in phase order. A warnings table assigns no phase, so a warning lists every phase: it is reported in the phase that checks the requirement it names.",
           "type": "array",
+          "minItems": 1,
           "uniqueItems": true,
           "items": { "enum": ["parser", "structural", "semantic", "admission", "resolution"] }
         },

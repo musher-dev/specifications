@@ -483,6 +483,21 @@
         "ERROR"
       ],
       "declaredBy": "component"
+    },
+    {
+      "code": "WARN_ENDPOINT_SERVER_NAME",
+      "phases": [
+        "parser",
+        "structural",
+        "semantic",
+        "admission",
+        "resolution"
+      ],
+      "severities": [
+        "WARNING"
+      ],
+      "declaredBy": "component",
+      "requirement": "COMP-EP-007"
     }
   ]
 }

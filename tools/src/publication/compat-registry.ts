@@ -56,7 +56,7 @@ import {
   releaseDirPaths,
   requireTreeAtRef,
   TERMS_REGISTRY_FILE,
-  VALIDATION_RESULT_SCHEMA_NAME,
+  VALIDATION_RESULT_SCHEMA_FILE,
   VOCABULARY_REGISTRY_FILE,
   walkObjects,
 } from '../lib/layout.ts'
@@ -297,7 +297,7 @@ export function compareFile(
   }
   if (part === 'protocols') return compareProtocol(released, current)
   if (name.endsWith('.schema.json')) {
-    return compareInterfaceSchema(released, current, name === VALIDATION_RESULT_SCHEMA_NAME)
+    return compareInterfaceSchema(released, current, name === VALIDATION_RESULT_SCHEMA_FILE)
   }
   return []
 }
