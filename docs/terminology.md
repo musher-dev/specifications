@@ -2139,7 +2139,8 @@ whether resolution defers, rejects or reads a persisted selection.
 #### <a id="blueprint-active"></a>active
 
 A rollout whose every SERVICE and WORKER node is ready and whose every ordered
-job, a JOB without a schedule that carries startAfter, has succeeded.
+job, a JOB without a schedule that carries startAfter or that a startAfter
+names, has succeeded; one whose ordered job fails never is.
 
 - **Part of:** [node graph](#blueprint-node-graph)
 - **Source:** [blueprint v2 §1.1](../specifications/blueprint/v2/spec.md#terms),

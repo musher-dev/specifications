@@ -1425,20 +1425,37 @@ longer declares `timeLimitSeconds`. The default belongs to the run, not to the
 document: the schema gives `timeLimitSeconds` no default, because a scheduled
 job's depends on its schedule.
 
-<a id="COMP-JOB-008"></a>**`COMP-JOB-008`**: A run still executing when its time
-limit has passed since it started MUST be stopped, and its outcome recorded for
-the deployment as failed: for a job without a schedule, that is the outcome
-[`COMP-JOB-001`](#COMP-JOB-001) records. Platform obligation; no document
-breaks it.
+<a id="COMP-JOB-008"></a>**`COMP-JOB-008`**: A run's time limit MUST count
+from when the run's command starts: once every condition of its blueprint
+`startAfter` holds, its host is chosen and its image is in place. Time spent
+waiting for any of them is not part of the limit. A run still executing when
+its limit has passed MUST be stopped, and its outcome recorded for the
+deployment as failed, whatever it exits with once the stop has begun: for a job
+without a schedule, that is the outcome [`COMP-JOB-001`](#COMP-JOB-001)
+records. The platform MUST stop a run by sending its process the stop signal
+its image's configuration declares, `SIGTERM` when it declares none, and MUST
+NOT force the run to end sooner than 10 seconds after that signal. Each run
+has its own limit: a run of a scheduled job shares it with no other run.
+Platform obligation; no document breaks it.
 
-Stopping a run ends it: no process of the run executes afterwards, so it is no
-longer still executing in the sense of [`COMP-JOB-004`](#COMP-JOB-004). How the
-platform ends a run, and whether it first lets the command exit by itself, is
-left to the platform, so a job that must not be cut off partway through its
-work declares a limit with room to spare. A run that hangs is stopped at its
-limit, so [`COMP-JOB-004`](#COMP-JOB-004) skips only the runs that fall due
-before then, never every later one, and whatever waits for a run to end, such
-as the replacement of the host it runs on, waits no longer than its limit.
+Stopping a run ends it: no process of the run executes afterwards. A run that
+is being stopped is still executing in the sense of
+[`COMP-JOB-004`](#COMP-JOB-004) until it has ended, so a run that falls due
+meanwhile is skipped. Because the limit counts from the command's start and the
+stop takes time, a scheduled run whose limit is close to its period can still
+be executing when the next run falls due. The 10 seconds let a command that
+handles the signal finish what it is writing and exit; a job that must not be
+cut off partway through its work still declares a limit with room to spare,
+because a run stopped at its limit has failed even when it then exits 0. A run
+that hangs is stopped at its limit, so [`COMP-JOB-004`](#COMP-JOB-004) skips
+only the runs that fall due before then, never every later one, and whatever
+waits for a run to end, such as the replacement of the host it runs on, waits
+no longer than its limit and the stop that follows it.
+
+How long a run waits to start, for a host or for its image, is bounded by the
+platform and is not part of its limit; a wait on a blueprint `startAfter` ends
+when what it waits on succeeds, becomes ready or fails
+([blueprint `BP-ORDER-004`](../../blueprint/v2/spec.md#BP-ORDER-004)).
 
 ### <a id="files"></a>5.8 Files
 

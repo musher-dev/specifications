@@ -71,8 +71,10 @@ deployment.
   Its **deployer** is the person who creates or changes it, and its **creator**
   is the person who created it.
 - A **rollout** is one applied generation of a deployment: the workloads
-  started from one resolution record. A rollout is **active** once every node
-  it starts has reached the condition [§4.6](#start-order) defines.
+  started from one resolution record. A rollout is **active** once every
+  `SERVICE` and `WORKER` node it runs is ready and every ordered job has
+  succeeded in it, and has **completed** once it is active or has failed
+  ([`BP-ORDER-005`](#BP-ORDER-005)).
 - A **deployment parameter** is a named value the deployment takes from outside
   the documents ([§5](#parameters)).
 - A **connection** is component's term
@@ -890,19 +892,31 @@ admitted and identified as any other is, whatever else it carries. The
 exemption takes effect only once [`BP-ACCESS-012`](#BP-ACCESS-012) lets it.
 
 <a id="BP-ACCESS-012"></a>**`BP-ACCESS-012`**: An exemption on a `RESTRICTED`
-endpoint, `PATHS` or `BEARER`, MUST take effect only once a rollout that carries
-it is active ([`BP-ORDER-005`](#BP-ORDER-005)): every `SERVICE` and `WORKER`
-node ready, and every ordered job succeeded, such as a job that claims the
-application's first administrator account. Until the deployment's first rollout
-is active, and, for an exemption a later rollout adds, until that rollout is,
-the platform MUST authenticate and admit every request on the endpoint as
-[`BP-ACCESS-002`](#BP-ACCESS-002) says, an exempt one included. An exemption an
-active rollout carries stays in effect while a later rollout that keeps it
-starts. Endpoints without an exemption are unaffected: a `RESTRICTED` one
-signs every viewer in from the start, and an `OPEN` one is reachable as soon as
-its node is ready
+endpoint MUST take effect path by path: an exempt path under `PATHS`, or the
+endpoint under `BEARER`, is exempt only once a rollout that exempts it is
+active ([`BP-ORDER-005`](#BP-ORDER-005)): every `SERVICE` and `WORKER` node
+ready, and every ordered job succeeded, such as a job that claims the
+application's first administrator account. In a deployment whose blueprint
+carries no `startAfter`, and so orders no job, it MUST instead take effect once
+the node that exposes the endpoint is ready in a rollout that exempts it. Until
+then the platform MUST authenticate and admit every request on the endpoint as
+[`BP-ACCESS-002`](#BP-ACCESS-002) says, an exempt one included. A path an
+active rollout exempts stays exempt while a later rollout that keeps it starts,
+and a path the later rollout newly exempts waits for that rollout. Endpoints
+without an exemption are unaffected: a `RESTRICTED` one signs every viewer in
+from the start, and an `OPEN` one is reachable as soon as its node is ready
 ([ADR 0055](../../../docs/adr/0055-a-node-starts-after-the-nodes-it-names.md)
 §4).
+
+The gate is per path, not per exemption, so a later rollout that exempts one
+more path cannot open it before the job that guards it has run, while the
+paths already open stay open. Release 2.2.0 put no condition on when an
+exemption takes effect, so it did as soon as its node served. Once the
+platform adopts this release, a released document, which carries no
+`startAfter`, keeps that meaning in all but one point: an exempt path opens
+once the node that exposes it is ready in the rollout that exempts it. Another
+node of the deployment, such as a worker that keeps crashing, does not hold it
+closed. A blueprint that adds `startAfter` gains the whole gate.
 
 <a id="private-endpoints"></a><a id="BP-ACCESS-011"></a>**`BP-ACCESS-011`**: The
 platform MUST make a `PRIVATE` endpoint reachable only from the nodes of the
@@ -952,7 +966,8 @@ deployment, as it applies an update: every node that reads `oidcClientSecret`
 starts with the new secret, and every `JOB` without a `schedule` runs again
 ([component `COMP-JOB-001`](../../component/v2/spec.md#COMP-JOB-001)). The
 issuer MUST keep accepting the previous secret until that rollout has
-completed, and MUST NOT accept it afterwards. An app that stores its client,
+completed, by becoming active or by failing
+([`BP-ORDER-005`](#BP-ORDER-005)), and MUST NOT accept it afterwards. An app that stores its client,
 rather than reading it from its environment, registers it again from such a
 `JOB`.
 
@@ -1014,6 +1029,16 @@ checked removed. It MUST refuse, without forwarding, any other request that
 carries no valid viewer session and that no `PATHS` exemption covers, one
 with a wrong key included. A request that carries a valid session is
 authenticated, admitted and identified as any other is.
+The key takes effect only when
+[`BP-ACCESS-012`](#BP-ACCESS-012) would let an exemption on the endpoint take
+effect, and until then the platform MUST authenticate and admit a request that
+carries it as [`BP-ACCESS-002`](#BP-ACCESS-002) says.
+
+A later revision can name a parameter whose value is already disclosed or
+bound to another node, and the key reaches every route of the endpoint,
+setup routes included, so it waits as an exemption does. That costs a
+blueprint nothing: a bootstrap job reaches the node over its private endpoint,
+which no key gates.
 
 ### <a id="start-order"></a>4.6 Start order
 
@@ -1045,7 +1070,7 @@ nodes:
 | Condition | Holds once | Names |
 |---|---|---|
 | `READY` | The node has a ready replica in the rollout: its readiness probe passes or, without one, its startup probe has succeeded or, without either, its workload has started ([component §5.4](../../component/v2/spec.md#health)) | A `SERVICE` or a `WORKER` |
-| `SUCCEEDED` | The node's run in the rollout has completed successfully | A `JOB` without `schedule` |
+| `SUCCEEDED` | The node's run in the rollout has exited 0 before its time limit ([component `COMP-JOB-008`](../../component/v2/spec.md#COMP-JOB-008)) | A `JOB` without `schedule` |
 
 <a id="BP-ORDER-001"></a>**`BP-ORDER-001`**: `startAfter` is a non-empty list
 without repeats, and each entry is closed and requires `node` and `condition`.
@@ -1076,13 +1101,20 @@ and a start order adds no value dependency.
 
 <a id="BP-ORDER-004"></a>**`BP-ORDER-004`**: In each rollout, the platform MUST
 NOT start a node's workload until every condition its `startAfter` names holds
-in that rollout, and MUST report a node that waits as waiting, never as failed
-or degraded. A condition that can no longer hold, because the `JOB` it names
+in that rollout, and MUST report a node that waits as waiting, together with
+the conditions it still waits on, never as failed or degraded. For a node the
+rollout does not change, its current ready replica is a ready replica in the
+rollout. A condition that can no longer hold, because the `JOB` it names
 failed, leaves the node not started and the rollout failed, as the platform API
-reports; v2 defines no retry. Ordering governs only when a node starts: a node
-that later stops being ready neither stops nor restarts the nodes that waited
-for it. A `JOB` without `schedule` that neither carries `startAfter` nor is
-named by one keeps
+reports; v2 defines no retry. A run stopped at its time limit has failed
+([component `COMP-JOB-008`](../../component/v2/spec.md#COMP-JOB-008)), so
+`SUCCEEDED` on it can no longer hold. A run the platform ends to move it to
+another host, rather than at its limit, has not failed: the run that replaces
+it decides the condition. v2 sets no deadline on a wait: every wait ends when
+what it waits on succeeds, becomes ready or fails. Ordering governs only when
+a node starts: a node that later stops being ready neither stops nor restarts
+the nodes that waited for it. A `JOB` without `schedule` that neither carries
+`startAfter` nor is named by one keeps
 [component `COMP-JOB-001`](../../component/v2/spec.md#COMP-JOB-001)'s meaning,
 ordered against no other node; `startAfter` is the exception that rule names,
 and how a blueprint orders one.
@@ -1090,10 +1122,23 @@ Platform obligation; no document breaks it.
 
 <a id="BP-ORDER-005"></a>**`BP-ORDER-005`**: A rollout is **active** once every
 `SERVICE` and `WORKER` node it runs is `READY` and every **ordered job**, a
-`JOB` without `schedule` that carries `startAfter`, has `SUCCEEDED` in it. The
-platform MUST NOT report a deployment active before its rollout is. A `JOB`
-without `startAfter` does not hold activation: its outcome is recorded, and
-blocks nothing. Platform obligation; no document breaks it.
+`JOB` without `schedule` that carries `startAfter` or that a `startAfter`
+names, has `SUCCEEDED` in it. A rollout whose ordered job fails, a run stopped
+at its time limit included, has failed and is never active, so no exemption
+that only it carries takes effect ([`BP-ACCESS-012`](#BP-ACCESS-012)). A
+rollout has **completed** once it is active or has failed. The platform MUST
+NOT report a deployment active before its first rollout is. Until a later
+rollout is active, the previous active rollout keeps serving, and the
+deployment stays reported active while the later one starts. A `JOB` that
+neither carries `startAfter` nor is named by one does not hold activation: its
+outcome is recorded, and blocks nothing. Platform obligation; no document
+breaks it.
+
+An ordered job runs again in every rollout
+([component `COMP-JOB-001`](../../component/v2/spec.md#COMP-JOB-001)), so it
+should be written to succeed when its work is already done: a job that claims
+the first administrator account succeeds, and changes nothing, when the account
+is already claimed.
 
 ### <a id="public-hosts"></a>4.7 Public hosts
 

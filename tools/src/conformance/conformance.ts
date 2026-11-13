@@ -1235,10 +1235,11 @@ const UNPINNED: ReadonlyMap<string, string> = new Map([
   ],
   [
     'COMP-JOB-008',
-    'Stopping a run that is still executing when its time limit passes, and recording it as ' +
-      'failed, is a runtime obligation of the platform; no document phase or behavioural ' +
-      'operation observes a run. The limit it enforces is pinned where a document can break ' +
-      'it (COMP-JOB-005, COMP-JOB-006)',
+    "Counting a run's time limit from its command's start, stopping a run still executing " +
+      "when it passes with the image's stop signal and at least 10 seconds before a forced " +
+      'end, and recording it as failed whatever it then exits with, are runtime obligations ' +
+      'of the platform; no document phase or behavioural operation observes a run. The limit ' +
+      'it enforces is pinned where a document can break it (COMP-JOB-005, COMP-JOB-006)',
   ],
   [
     'BP-ACCESS-002',
@@ -1304,9 +1305,10 @@ const UNPINNED: ReadonlyMap<string, string> = new Map([
   ],
   [
     'BP-ACCESS-012',
-    'That an exemption takes effect only once a rollout carrying it is active, and that ' +
-      'exempt requests require sign-in until then, is a runtime obligation of the platform ' +
-      'edge; no document phase or behavioural operation observes a request or a rollout',
+    'That an exempt path takes effect only once a rollout that exempts it is active, or, ' +
+      'without startAfter, once the node that exposes it is ready, and that exempt requests ' +
+      'require sign-in until then, is a runtime obligation of the platform edge; no document ' +
+      'phase or behavioural operation observes a request or a rollout',
   ],
   [
     'BP-ACCESS-014',
@@ -1329,10 +1331,11 @@ const UNPINNED: ReadonlyMap<string, string> = new Map([
   ],
   [
     'BP-ACCESS-018',
-    'Checking a bearer token against the API key in constant time, forwarding a match without ' +
-      'identity headers and with the Authorization header removed, and refusing any other ' +
-      'request without a session, are runtime obligations of the platform edge; the apiKey ' +
-      'declaration is pinned by blueprint cases (BP-ACCESS-016), but no operation observes a request',
+    'Checking a bearer token against the API key in constant time once the rollout is active, ' +
+      'forwarding a match without identity headers and with the Authorization header removed, ' +
+      'and refusing any other request without a session, are runtime obligations of the ' +
+      'platform edge; the apiKey declaration is pinned by blueprint cases (BP-ACCESS-016), but ' +
+      'no operation observes a request',
   ],
   [
     'BP-HOST-001',
@@ -1354,16 +1357,18 @@ const UNPINNED: ReadonlyMap<string, string> = new Map([
   ],
   [
     'BP-ORDER-004',
-    'Holding a node until the conditions its startAfter names hold, reporting it as waiting ' +
-      'and failing a rollout whose condition cannot hold are runtime obligations of the ' +
-      'platform; the semantic phase pins what a document may name (BP-ORDER-002, ' +
-      'BP-ORDER-003), but no operation observes a rollout',
+    'Holding a node until the conditions its startAfter names hold, ending every wait when ' +
+      'what it waits on succeeds, becomes ready or fails, reporting a node as waiting with ' +
+      'what it waits on, and failing a rollout whose condition cannot hold are runtime ' +
+      'obligations of the platform; the semantic phase pins what a document may name ' +
+      '(BP-ORDER-002, BP-ORDER-003), but no operation observes a rollout',
   ],
   [
     'BP-ORDER-005',
-    'When a rollout becomes active, every SERVICE and WORKER ready and every ordered job ' +
-      'succeeded, is a runtime observation of the platform; no document phase or behavioural ' +
-      'operation observes a rollout',
+    'When a rollout becomes active, every SERVICE and WORKER ready and every ordered or named ' +
+      'job succeeded, that one whose job fails has failed and is never active, and that the ' +
+      'previous rollout serves until then, are runtime observations of the platform; no ' +
+      'document phase or behavioural operation observes a rollout',
   ],
   [
     'BP-PARAM-015',

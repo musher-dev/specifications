@@ -35,7 +35,7 @@ A node may carry `startAfter`, a list of `{node, condition}`. `condition` is
   replica in the rollout: its readiness probe passes or, without one, its
   startup probe has succeeded or, without either, its workload has started.
 - `SUCCEEDED` names an unscheduled `JOB`. It holds once the job's run in the
-  rollout has completed successfully.
+  rollout has exited 0 before its time limit.
 
 A `SERVICE`, a `WORKER` and an unscheduled `JOB` may carry `startAfter`. An
 `EXTERNAL` node runs nothing, and a scheduled `JOB` is started by its schedule,
@@ -57,8 +57,9 @@ no start, and a start order adds no value dependency.
 ### 3. What the platform does
 
 In each rollout the platform starts a node only once every condition it names
-holds in that rollout, and reports a node that waits as waiting, never as
-failed or degraded. A condition that can no longer hold, because the job it
+holds in that rollout, and reports a node that waits as waiting, with what it
+waits on, never as failed or degraded. A node the rollout does not change
+holds `READY` with its current ready replica. A condition that can no longer hold, because the job it
 names failed, leaves the node not started and the rollout failed. Ordering
 governs only when a node starts: a dependency that later stops being ready
 neither stops nor restarts the node that waited for it. Orchestration after a
@@ -68,13 +69,42 @@ rollout stays out of scope.
 
 A rollout is **active** once every `SERVICE` and `WORKER` node it runs is
 `READY` and every **ordered job**, an unscheduled `JOB` that carries
-`startAfter`, has `SUCCEEDED`. The platform reports a deployment active only
-then. A job without `startAfter` keeps `COMP-JOB-001`'s meaning: it is ordered
-against nothing, and its outcome does not hold activation.
+`startAfter` or that one names, has `SUCCEEDED`. A rollout whose ordered job
+fails has failed and is never active, and a rollout has **completed** once it
+is active or has failed. The platform reports a deployment active only once
+its first rollout is, and the previous active rollout keeps serving until a
+later one is active, so an update is not an outage. A job neither carrying nor
+named by `startAfter` keeps `COMP-JOB-001`'s meaning: it is ordered against
+nothing, and its outcome does not hold activation. An ordered job runs again
+in every rollout, so it is written to succeed when its work is already done.
 
-Activation is what an exemption waits for (`BP-ACCESS-012`): until the rollout
-that carries an exemption is active, the exempt requests require sign-in like
-any other, so a bootstrap job finishes before anything it guards opens.
+Activation is what an exemption waits for (`BP-ACCESS-012`), path by path:
+until a rollout that exempts a path is active, requests to it require sign-in
+like any other, so a bootstrap job finishes before anything it guards opens,
+and a path a later rollout adds waits for that rollout. A platform-checked API
+key (`BP-ACCESS-018`) waits the same way. A blueprint with no `startAfter`
+orders no job, so its exempt paths wait only for the node that exposes them to
+be ready, and a node that never becomes ready elsewhere in the deployment does
+not hold them closed.
+
+### 5. Time limits
+
+A job's run has a time limit (component `COMP-JOB-005` to `COMP-JOB-008`), and
+start order counts with it, not against it:
+
+- The limit counts from when the run's command starts, after its `startAfter`
+  conditions hold, so time spent waiting is never charged to it.
+- A run stopped at its limit has failed, whatever it exits with after the stop
+  begins. `SUCCEEDED` on it can no longer hold, and a rollout that orders it has
+  failed and is never active.
+- A run the platform ends to move it to another host has not failed; the run
+  that replaces it decides the condition.
+- No wait has a deadline of its own. Every wait ends when what it waits on
+  succeeds, becomes ready or fails, and a job's time limit bounds the longest
+  wait on one.
+
+[ADR 0063](0063-a-job-runs-time-limit-counts-from-its-start-and-ends-with-a-graceful-stop.md)
+records the limit and why no further field is added.
 
 ## Alternatives considered
 
@@ -94,8 +124,12 @@ outcome.
 
 - The not-supported row "startup ordering between nodes" closes by the
   relaxation it named: a new optional field on a node.
-- Component `COMP-JOB-001` still says an unscheduled job is ordered against no
-  other node. A blueprint now orders one, so the component family should name
-  `startAfter` as the exception.
+- Component `COMP-JOB-001` names `startAfter` as the one exception to an
+  unscheduled job being ordered against no other node, and says that a job a
+  `startAfter` names, or that carries one, fails the rollout when it reaches
+  its time limit.
+- Released documents carry no `startAfter`, so their exempt paths wait only for
+  the node that exposes them (`BP-ACCESS-012`), a change of runtime meaning the
+  blueprint states where it applies.
 - platform-api holds a node until its conditions hold, reports it as waiting,
   and reports a deployment active by §4.
