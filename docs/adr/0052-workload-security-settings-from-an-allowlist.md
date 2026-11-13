@@ -1,6 +1,6 @@
 # ADR 0052: Workload security settings, from an allowlist
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-13
 - **Relies on:** [ADR 0007](0007-naming-conventions.md) §1, field and value naming
 - **Relies on:** [ADR 0044](0044-the-validation-result-is-a-released-schema.md) §6, deferred obligations name what is missing

@@ -1,6 +1,6 @@
 # ADR 0048: A workload's environment is its image's, overlaid by its inputs
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-13
 - **Relies on:** [ADR 0033](0033-inputs-are-the-only-way-into-a-component.md) §1, inputs are the only way in
 - **Relies on:** [ADR 0032](0032-correcting-a-released-family-within-its-major.md) §1, valid against the released prose

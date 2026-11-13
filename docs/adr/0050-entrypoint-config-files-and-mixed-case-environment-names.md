@@ -1,6 +1,6 @@
 # ADR 0050: Entrypoint, configuration files and mixed-case environment names
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-13
 - **Relies on:** [ADR 0033](0033-inputs-are-the-only-way-into-a-component.md) §1, inputs are the only way in
 - **Relies on:** [ADR 0032](0032-correcting-a-released-family-within-its-major.md) §3, a relaxation is declared

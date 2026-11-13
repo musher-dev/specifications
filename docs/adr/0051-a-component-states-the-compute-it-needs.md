@@ -1,6 +1,6 @@
 # ADR 0051: A component states the compute it needs
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-13
 - **Relies on:** [ADR 0033](0033-inputs-are-the-only-way-into-a-component.md) §1, inputs are the only way in
 - **Relies on:** [ADR 0003](0003-controlled-vocabulary-placement.md) §1, offerings are the platform's

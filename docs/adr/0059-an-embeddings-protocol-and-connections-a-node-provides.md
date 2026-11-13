@@ -1,6 +1,6 @@
 # ADR 0059: An embeddings protocol, and connections a node provides
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-13
 - **Refines:** [ADR 0045](0045-connection-protocols-are-a-registry.md) §7, a protocol with a member §6.4 does not yet state
 - **Refines:** [ADR 0033](0033-inputs-are-the-only-way-into-a-component.md) §2, a connection enters through one

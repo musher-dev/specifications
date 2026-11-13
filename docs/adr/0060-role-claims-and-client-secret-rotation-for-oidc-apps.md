@@ -1,6 +1,6 @@
 # ADR 0060: Role claims, and client-secret rotation, for the apps a viewer signs in to
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-13
 - **Refines:** [ADR 0035](0035-how-identity-and-credentials-reach-a-workload.md) §2, the claims a node releases
 - **Refines:** [ADR 0035](0035-how-identity-and-credentials-reach-a-workload.md) §3, a rotation is an allocation

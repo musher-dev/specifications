@@ -1,6 +1,6 @@
 # ADR 0047: A workload without an endpoint starts when its process runs
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-13
 - **Relies on:** [ADR 0005](0005-platform-divergence-reconciliation.md) §1, the prose governs the platform
 - **Closes:** [platform-api#1440](https://github.com/musher-dev/platform-api/issues/1440)

@@ -1,6 +1,6 @@
 # ADR 0049: TCP, exec and gRPC probes, and probe headers
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-13
 - **Relies on:** [ADR 0031](0031-one-grammar-for-the-authored-documents.md) §1, the key that is present names the mechanism
 - **Relies on:** [ADR 0032](0032-correcting-a-released-family-within-its-major.md) §3, a relaxation is declared

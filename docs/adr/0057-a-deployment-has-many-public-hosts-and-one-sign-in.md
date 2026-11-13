@@ -1,6 +1,6 @@
 # ADR 0057: A deployment has many public hosts and one sign-in
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-13
 - **Extends:** [ADR 0034](0034-access-and-viewer-identity-are-part-of-exposure.md) §1, exposure decisions
 - **Relies on:** [ADR 0034](0034-access-and-viewer-identity-are-part-of-exposure.md) §5, platform obligations fail closed

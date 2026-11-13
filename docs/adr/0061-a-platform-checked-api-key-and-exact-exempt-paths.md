@@ -1,6 +1,6 @@
 # ADR 0061: A platform-checked API key, and exact exempt paths
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-13
 - **Refines:** [ADR 0035](0035-how-identity-and-credentials-reach-a-workload.md) §4, machine traffic
 - **Relies on:** [ADR 0035](0035-how-identity-and-credentials-reach-a-workload.md) §6, generated values rotate

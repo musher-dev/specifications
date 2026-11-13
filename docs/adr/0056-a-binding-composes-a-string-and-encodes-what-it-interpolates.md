@@ -1,6 +1,6 @@
 # ADR 0056: A binding composes a string, and encodes what it interpolates
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-13
 - **Extends:** [ADR 0027](0027-a-reference-names-a-fact-the-document-cannot-contain.md) §3, the namespace set
 - **Relies on:** [ADR 0027](0027-a-reference-names-a-fact-the-document-cannot-contain.md) §4, no re-scanning

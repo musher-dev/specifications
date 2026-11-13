@@ -1,6 +1,6 @@
 # ADR 0055: A node starts after the nodes it names
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-13
 - **Relies on:** [ADR 0038](0038-v2-one-vocabulary-and-v1-retires.md) §3, the composition graph of nodes
 

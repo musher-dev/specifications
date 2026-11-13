@@ -1,6 +1,6 @@
 # ADR 0062: A parameter offers options, and a generated secret can be disclosed
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-13
 - **Refines:** [ADR 0018](0018-install-form-presentation.md) §3, what a form field declares
 - **Refines:** [ADR 0035](0035-how-identity-and-credentials-reach-a-workload.md) §6, disclosure of a generated value

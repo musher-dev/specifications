@@ -1,6 +1,6 @@
 # ADR 0063: A job run's time limit counts from its start and ends with a graceful stop
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-13
 - **Relies on:** [ADR 0055](0055-a-node-starts-after-the-nodes-it-names.md) §5, time limits and start order
 

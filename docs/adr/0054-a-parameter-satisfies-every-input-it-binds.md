@@ -1,6 +1,6 @@
 # ADR 0054: A parameter satisfies every input it binds
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-13
 - **Refines:** [ADR 0028](0028-explicit-binding-and-resolution-before-release.md) §2, values and sensitivity
 

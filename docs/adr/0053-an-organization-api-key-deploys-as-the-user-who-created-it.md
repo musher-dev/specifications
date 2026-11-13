@@ -1,6 +1,6 @@
 # ADR 0053: An organization API key deploys as the user who created it
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-13
 - **Extends:** [ADR 0035](0035-how-identity-and-credentials-reach-a-workload.md) §5, the creator's facts
 - **Relies on:** [ADR 0038](0038-v2-one-vocabulary-and-v1-retires.md) §5, one scope lattice
