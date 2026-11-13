@@ -1,0 +1,17 @@
+specVersion: v2
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: JOB
+  workload:
+    source:
+      image: example/service:1
+    schedule:
+      cron: 0 3 * * *
+    command:
+    - /bin/run
+  contract:
+    inputs: {}
+    outputs: {}

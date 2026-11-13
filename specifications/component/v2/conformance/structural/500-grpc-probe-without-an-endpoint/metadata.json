@@ -1,0 +1,10 @@
+{
+  "id": "structural-500-grpc-probe-without-an-endpoint",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#health",
+  "requirements": [
+    "COMP-PROBE-002"
+  ],
+  "summary": "A gRPC probe names the endpoint it asks."
+}

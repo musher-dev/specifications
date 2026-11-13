@@ -1,0 +1,11 @@
+{
+  "id": "semantic-505-template-names-an-unknown-node",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#bindings",
+  "requirements": [
+    "BP-BIND-009"
+  ],
+  "summary": "A template naming an output of a node the blueprint does not have is rejected.",
+  "document": "app/blueprint.yaml"
+}

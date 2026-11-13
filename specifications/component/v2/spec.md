@@ -2252,8 +2252,9 @@ connection's name matches `^[a-z][a-zA-Z0-9]{0,63}$`. It is closed, requires
 some protocol defines and whose values are output names. Only a `SERVICE` or a
 `WORKER` declares `providedConnections`. Structural: `ERR_INVALID_VALUE` at
 `/spec/contract/providedConnections` on a `JOB` or an `EXTERNAL` component,
-and at a `members` map with a key no protocol defines; `ERR_MISSING_FIELD` at
-the provided connection without `connection` or `members`.
+and at a `members` map that is empty or has a key no protocol defines;
+`ERR_MISSING_FIELD` at the provided connection without `connection` or
+`members`.
 
 <a id="COMP-CONNECTION-005"></a>**`COMP-CONNECTION-005`**: A provided
 connection MUST map every required member of its protocol, and only members

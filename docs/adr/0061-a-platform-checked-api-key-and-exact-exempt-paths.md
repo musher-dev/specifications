@@ -81,10 +81,10 @@ validation rule. Mount routing uses the same normalization.
 ### 3. The bare string stays, as the `prefix` form
 
 The bare string already had segment-bounded semantics, so nothing a released
-component offers changes meaning. It stays valid in v2 as an exact alias of
-`{ prefix: <path> }`, and no warning is reported for it: a warning would ask
-every released component to change bytes for no change of meaning. A v3 may
-drop it.
+component offers changes meaning. It stays valid in v2 as another spelling of
+`{ prefix: <path> }`, never of `{ exact: <path> }`, and no warning is reported
+for it: a warning would ask every released component to change bytes for no
+change of meaning. A v3 may drop it.
 
 ### 4. Everything here is a relaxation
 

@@ -84,9 +84,9 @@ releases this in a minor version.
 
 ## Consequences
 
-- Blueprint gains `BP-UI-006` to `BP-UI-008`. The form observation of the
-  fixture format gains `options` and `editable`, and the control
-  `options`.
+- Blueprint gains `BP-UI-006` to `BP-UI-008` for options, and `BP-UI-009`
+  for disclosure. The form observation of the fixture format gains `options`
+  and `editable`, and the control `options`.
 - platform-console renders options as a select, or a combo box when
   editable, and shows disclosed values behind a reveal in the deployment's
   settings. platform-api rejects a value outside closed options.

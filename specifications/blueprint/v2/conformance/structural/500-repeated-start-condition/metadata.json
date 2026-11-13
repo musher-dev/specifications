@@ -1,0 +1,10 @@
+{
+  "id": "structural-500-repeated-start-condition",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#start-order",
+  "requirements": [
+    "BP-ORDER-001"
+  ],
+  "summary": "A startAfter list naming one condition twice is rejected."
+}

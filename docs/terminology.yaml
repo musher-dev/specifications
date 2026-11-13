@@ -2182,7 +2182,7 @@ terms:
     identifiers: { fields: [startAfter, node, condition], values: [READY, SUCCEEDED], defs: [BlueprintStartCondition], codes: [ERR_START_CYCLE, ERR_INVALID_START_ORDER], requirement_prefixes: [BP-ORDER] }
     confusables: ["A value dependency, which orders no start.", "Compose's depends_on, which this follows."]
     source: [blueprint v2 §4.6, ADR 0055]
-    stability: stable
+    stability: provisional
     status: approved
     tags: [composition, lifecycle]
 
@@ -2196,7 +2196,7 @@ terms:
     shortDefinition: A rollout that has finished starting.
     part_of: [blueprint.node-graph]
     source: [blueprint v2 §1.1, blueprint v2 §4.6, ADR 0055]
-    stability: stable
+    stability: provisional
     status: approved
     tags: [lifecycle]
 
@@ -2325,7 +2325,7 @@ terms:
     identifiers: { fields: [template, format], values: [URL, TEXT], codes: [ERR_INVALID_TEMPLATE] }
     confusables: ["A component output template, which reads only the component's own endpoint properties."]
     source: [blueprint v2 §4.2, ADR 0056]
-    stability: stable
+    stability: provisional
     status: approved
     tags: [values]
 
@@ -2634,7 +2634,7 @@ terms:
     part_of: [blueprint.exposure]
     identifiers: { fields: [viewerClaims], values: [EMAIL, NAME, ROLE] }
     confusables: ["An OIDC claim in general; only these three are released."]
-    source: [blueprint v2 §4.5, ADR 0060]
+    source: [blueprint v2 §4.5, ADR 0035, ADR 0060]
     stability: stable
     status: approved
     tags: [viewer]
@@ -2650,7 +2650,7 @@ terms:
     identifiers: { fields: [mount, node, endpoint, path], defs: [BlueprintMount], codes: [ERR_INVALID_HOST_MOUNT], requirement_prefixes: [BP-HOST] }
     confusables: ["A custom domain, which v2 does not support."]
     source: [blueprint v2 §4.7, ADR 0057]
-    stability: stable
+    stability: provisional
     status: approved
     tags: [networking, access]
 

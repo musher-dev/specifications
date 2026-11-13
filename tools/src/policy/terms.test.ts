@@ -31,6 +31,7 @@ import {
   checkIdentifiers,
   checkRecords,
   checkSources,
+  checkStability,
   claimedField,
   collectIdentifiers,
   definedTermsIn,
@@ -505,6 +506,30 @@ describe('checkSources', () => {
       'core.b: source "core v3 §1": core/v3 has no spec.md',
       'core.b: source "ADR 0099": no ADR 0099 in docs/adr',
       'core.b: source "docs/missing.md" does not exist',
+    ])
+  })
+})
+
+describe('checkStability', () => {
+  test('fails a stable term whose introducing ADR is Proposed', () => {
+    repo = new FixtureRepo()
+    repo.writeFile(
+      'docs/adr/0010-old.md',
+      '# ADR 0010: Old\n\n- **Status:** Accepted\n\n## Context\n',
+    )
+    repo.writeFile(
+      'docs/adr/0050-new.md',
+      '# ADR 0050: New\n\n- **Status:** Proposed\n\n## Context\n',
+    )
+    const terms = [
+      // Introduced by an Accepted ADR and refined by a Proposed one: stays stable.
+      term({ id: 'core.a', stability: 'stable', source: ['ADR 0050', 'ADR 0010'] }),
+      term({ id: 'core.b', stability: 'stable', source: ['core v2 §2', 'ADR 0050 §1'] }),
+      term({ id: 'core.c', stability: 'provisional', source: ['ADR 0050'] }),
+      term({ id: 'core.d', stability: 'stable', source: ['core v2 §2'] }),
+    ]
+    expect(checkStability(terms, repo.root)).toEqual([
+      'core.b: stability is stable, but ADR 0050, which introduces it, is Proposed; mark it provisional until the ADR is Accepted',
     ])
   })
 })

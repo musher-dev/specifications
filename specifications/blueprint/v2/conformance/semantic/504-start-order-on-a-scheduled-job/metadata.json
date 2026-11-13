@@ -1,0 +1,11 @@
+{
+  "id": "semantic-504-start-order-on-a-scheduled-job",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#start-order",
+  "requirements": [
+    "BP-ORDER-002"
+  ],
+  "summary": "A scheduled job starts on its schedule, not in a rollout, so it cannot wait for a node.",
+  "document": "app/blueprint.yaml"
+}

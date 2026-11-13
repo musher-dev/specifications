@@ -1,0 +1,11 @@
+{
+  "id": "semantic-507-url-template-with-a-character-outside-rfc-3986",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#bindings",
+  "requirements": [
+    "BP-BIND-010"
+  ],
+  "summary": "A URL template whose literal text holds a space is no URL the platform can encode.",
+  "document": "app/blueprint.yaml"
+}

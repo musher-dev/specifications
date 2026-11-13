@@ -1,0 +1,11 @@
+{
+  "id": "semantic-506-template-names-a-non-scalar-output",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#bindings",
+  "requirements": [
+    "BP-BIND-009"
+  ],
+  "summary": "A template cannot interpolate an output whose value is not a scalar.",
+  "document": "app/blueprint.yaml"
+}
