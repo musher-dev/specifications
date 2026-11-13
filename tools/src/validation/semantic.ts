@@ -1256,6 +1256,25 @@ export function semanticReport(
         )
       )
         issue(out, 'ERR_UNKNOWN_ENUM_MEMBER', `${path}/ui/enumLabels/${token(member)}`)
+    // BP-UI-007: every option fits every receiver, and a closed list holds the default.
+    const options = at(p, 'ui', 'options')
+    if (Array.isArray(options)) {
+      options.forEach((option, i) => {
+        const value = at(option, 'value')
+        if (
+          value !== undefined &&
+          receivers.some((v) => v.schema !== undefined && !valueFits(v.schema, value))
+        )
+          issue(out, 'ERR_VALUE_CONSTRAINT', `${path}/ui/options/${i}/value`)
+      })
+      const fallback = at(p, 'default')
+      if (
+        fallback !== undefined &&
+        at(p, 'ui', 'editable') !== true &&
+        !options.some((o) => canonicalJson(at(o, 'value') ?? null) === canonicalJson(fallback))
+      )
+        issue(out, 'ERR_VALUE_CONSTRAINT', `${path}/default`)
+    }
     for (const supply of ['generator', 'hash'])
       if (at(p, supply) !== undefined && receivers.some((v) => at(v.schema, 'type') !== 'string'))
         issue(out, 'ERR_VALUE_CONSTRAINT', `${path}/${supply}`)

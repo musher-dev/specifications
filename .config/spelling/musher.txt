@@ -46,6 +46,7 @@ flowise
 Gitea
 Graphiti
 langflow
+Metabase
 mlflow
 Nextcloud
 Ollama

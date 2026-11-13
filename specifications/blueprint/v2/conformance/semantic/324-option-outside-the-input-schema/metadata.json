@@ -1,0 +1,11 @@
+{
+  "id": "semantic-324-option-outside-the-input-schema",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#deploy-form",
+  "requirements": [
+    "BP-UI-007"
+  ],
+  "summary": "An option the receiving input would reject is rejected, and so is a default outside closed options.",
+  "document": "app/blueprint.yaml"
+}

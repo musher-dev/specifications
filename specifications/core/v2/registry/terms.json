@@ -5960,6 +5960,63 @@
       ]
     },
     {
+      "id": "blueprint.parameter-option",
+      "display_name": "parameter option",
+      "context": "blueprint",
+      "definition": "A value a deploy form offers for a submitted parameter, with the label it shows, in a list that is closed unless it is editable, when the deployer may also type a value in.",
+      "shortDefinition": "A value and label a deploy form offers.",
+      "part_of": [
+        "blueprint.deploy-form"
+      ],
+      "identifiers": {
+        "fields": [
+          "options",
+          "editable"
+        ],
+        "defs": [
+          "BlueprintParameterOption"
+        ]
+      },
+      "confusables": [
+        "An enum in the receiving input's value schema, which closes the value for every blueprint and is labelled with enumLabels."
+      ],
+      "source": [
+        "blueprint v2 §5.4",
+        "ADR 0050"
+      ],
+      "stability": "provisional",
+      "status": "approved",
+      "tags": [
+        "parameters",
+        "presentation"
+      ]
+    },
+    {
+      "id": "blueprint.disclosed-value",
+      "display_name": "disclosed value",
+      "context": "blueprint",
+      "definition": "A generated parameter's value that the platform shows the people who manage the deployment, behind an explicit reveal and apart from the deploy form, as one to keep, such as a key that encrypts backed-up data.",
+      "shortDefinition": "A generated value the deployer is shown and keeps.",
+      "part_of": [
+        "blueprint.deploy-form"
+      ],
+      "identifiers": {
+        "fields": [
+          "disclosed"
+        ]
+      },
+      "source": [
+        "blueprint v2 §5.4",
+        "ADR 0050"
+      ],
+      "stability": "provisional",
+      "status": "approved",
+      "tags": [
+        "parameters",
+        "presentation"
+      ]
+    },
+    {
       "id": "deployment.deployment",
       "display_name": "deployment",
       "context": "deployment",

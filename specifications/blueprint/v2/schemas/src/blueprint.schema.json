@@ -541,6 +541,57 @@
               "ui": false
             }
           }
+        },
+        {
+          "$comment": "spec.md §5.4 BP-UI-006, BP-UI-009 / ADR 0050. A generated value is never an editable field, so it offers no options; only a generated value is disclosed.",
+          "if": {
+            "properties": {
+              "generator": true
+            },
+            "required": [
+              "generator"
+            ]
+          },
+          "then": {
+            "properties": {
+              "ui": {
+                "properties": {
+                  "editable": false,
+                  "options": false
+                }
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "ui": {
+                "properties": {
+                  "disclosed": false
+                }
+              }
+            }
+          }
+        },
+        {
+          "$comment": "spec.md §5.4 BP-UI-006 / ADR 0050 §1. A variable, deployment fact or connection is never an editable field, so it offers no options.",
+          "if": {
+            "properties": {
+              "from": true
+            },
+            "required": [
+              "from"
+            ]
+          },
+          "then": {
+            "properties": {
+              "ui": {
+                "properties": {
+                  "editable": false,
+                  "options": false
+                }
+              }
+            }
+          }
         }
       ],
       "description": "Deployment parameter: a named value the deployment takes from outside the documents, bound explicitly by the nodes that consume it.",
@@ -619,11 +670,58 @@
       ],
       "type": "object"
     },
-    "BlueprintParameterUi": {
-      "$comment": "spec.md §5.4. The control is derived from the value schema of the inputs the parameter is bound to rather than declared, so this carries only what a derivation cannot supply.",
+    "BlueprintParameterOption": {
       "additionalProperties": false,
-      "description": "Presentation metadata for a deploy-form parameter.",
+      "description": "One value a deploy form offers, and the label it shows for it.",
       "properties": {
+        "label": {
+          "description": "Human-readable label shown for the value. Never empty.",
+          "minLength": 1,
+          "type": "string"
+        },
+        "value": {
+          "description": "Logical value submitted when the option is chosen. It satisfies the value schema of every input the parameter binds (BP-UI-007)."
+        }
+      },
+      "required": [
+        "value",
+        "label"
+      ],
+      "type": "object"
+    },
+    "BlueprintParameterUi": {
+      "$comment": "spec.md §5.4. The control is derived from the value schema of the inputs the parameter is bound to rather than declared, so this carries only what a derivation cannot supply. options lists the values a form offers for an open schema, and enumLabels labels a closed one, so a ui carries one or the other (BP-UI-006); editable needs options.",
+      "additionalProperties": false,
+      "dependentRequired": {
+        "editable": [
+          "options"
+        ]
+      },
+      "description": "Presentation metadata for a deploy-form parameter.",
+      "if": {
+        "properties": {
+          "enumLabels": true
+        },
+        "required": [
+          "enumLabels"
+        ]
+      },
+      "then": {
+        "properties": {
+          "options": false
+        }
+      },
+      "properties": {
+        "disclosed": {
+          "default": false,
+          "description": "True when the generated value is one the deployer is expected to keep, such as a key that encrypts data a backup holds: the platform discloses it behind an explicit reveal, apart from the deploy form. Generated parameters only.",
+          "type": "boolean"
+        },
+        "editable": {
+          "default": false,
+          "description": "True when the form also accepts a value typed in beside the options, which the receiving inputs' schemas still constrain. Requires options.",
+          "type": "boolean"
+        },
         "enumLabels": {
           "additionalProperties": {
             "type": "string"
@@ -643,6 +741,16 @@
           "description": "Human-readable label shown on the deploy form. Never empty.",
           "minLength": 1,
           "type": "string"
+        },
+        "options": {
+          "description": "Values the form offers, in order, each with the label it shows. Every value satisfies the value schema of every input the parameter binds. Without editable the list is closed, and a submitted value outside it is rejected. Submitted parameters only.",
+          "items": {
+            "$ref": "#/$defs/BlueprintParameterOption"
+          },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
         },
         "order": {
           "description": "Relative position of the field within the form. Lower sorts first; a parameter declaring no order sorts after every parameter that declares one.",

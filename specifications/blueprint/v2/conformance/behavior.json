@@ -7894,5 +7894,113 @@
         "phase": "resolution"
       }
     ]
+  },
+  {
+    "id": "rendering-parameter-options",
+    "suite": "rendering",
+    "operation": "form",
+    "requirements": [
+      "BP-UI-008"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v2\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"model\":{\"default\":\"llama3.2:1b\",\"ui\":{\"label\":\"Model\",\"options\":[{\"value\":\"llama3.2:1b\",\"label\":\"Llama 3.2 1B\"},{\"value\":\"qwen2.5:0.5b\",\"label\":\"Qwen 2.5 0.5B\"}],\"editable\":true}},\"encryptionKey\":{\"generator\":{\"byteLength\":32},\"ui\":{\"label\":\"Encryption key\",\"disclosed\":true}}},\"nodes\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"model\":{\"parameter\":\"model\"},\"encryptionKey\":{\"parameter\":\"encryptionKey\"}}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v2\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"model\":{\"description\":\"Model the worker loads\",\"schema\":{\"type\":\"string\",\"maxLength\":32},\"target\":{\"envVar\":\"MODEL\"}},\"encryptionKey\":{\"description\":\"Key the worker encrypts its data with\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVar\":\"ENCRYPTION_KEY\"}}},\"outputs\":{}}}}"
+    },
+    "document": "app/blueprint.yaml",
+    "context": {},
+    "expect": {
+      "/0/name": "model",
+      "/0/control": "options",
+      "/0/editable": true,
+      "/0/options": [
+        {
+          "value": "llama3.2:1b",
+          "label": "Llama 3.2 1B"
+        },
+        {
+          "value": "qwen2.5:0.5b",
+          "label": "Qwen 2.5 0.5B"
+        }
+      ]
+    }
+  },
+  {
+    "id": "resolution-value-outside-closed-options",
+    "suite": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-UI-008"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v2\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"model\":{\"ui\":{\"label\":\"Model\",\"options\":[{\"value\":\"llama3.2:1b\",\"label\":\"Llama 3.2 1B\"},{\"value\":\"qwen2.5:0.5b\",\"label\":\"Qwen 2.5 0.5B\"}]}},\"encryptionKey\":{\"generator\":{\"byteLength\":32},\"ui\":{\"label\":\"Encryption key\",\"disclosed\":true}}},\"nodes\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"model\":{\"parameter\":\"model\"},\"encryptionKey\":{\"parameter\":\"encryptionKey\"}}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v2\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"model\":{\"description\":\"Model the worker loads\",\"schema\":{\"type\":\"string\",\"maxLength\":32},\"target\":{\"envVar\":\"MODEL\"}},\"encryptionKey\":{\"description\":\"Key the worker encrypts its data with\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVar\":\"ENCRYPTION_KEY\"}}},\"outputs\":{}}}}"
+    },
+    "document": "app/blueprint.yaml",
+    "context": {
+      "sources": {
+        "web": {
+          "imageDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      },
+      "credentials": {
+        "encryptionKey": {
+          "value": "synthetic-generated",
+          "sensitive": true
+        }
+      },
+      "parameters": {
+        "model": {
+          "value": "mistral:7b",
+          "sensitive": false
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_VALUE_CONSTRAINT",
+        "path": "/spec/parameters/model",
+        "stage": "parameters",
+        "phase": "resolution"
+      }
+    ]
+  },
+  {
+    "id": "resolution-value-typed-beside-editable-options",
+    "suite": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-UI-008"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v2\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"model\":{\"default\":\"llama3.2:1b\",\"ui\":{\"label\":\"Model\",\"options\":[{\"value\":\"llama3.2:1b\",\"label\":\"Llama 3.2 1B\"},{\"value\":\"qwen2.5:0.5b\",\"label\":\"Qwen 2.5 0.5B\"}],\"editable\":true}},\"encryptionKey\":{\"generator\":{\"byteLength\":32},\"ui\":{\"label\":\"Encryption key\",\"disclosed\":true}}},\"nodes\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"model\":{\"parameter\":\"model\"},\"encryptionKey\":{\"parameter\":\"encryptionKey\"}}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v2\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"model\":{\"description\":\"Model the worker loads\",\"schema\":{\"type\":\"string\",\"maxLength\":32},\"target\":{\"envVar\":\"MODEL\"}},\"encryptionKey\":{\"description\":\"Key the worker encrypts its data with\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVar\":\"ENCRYPTION_KEY\"}}},\"outputs\":{}}}}"
+    },
+    "document": "app/blueprint.yaml",
+    "context": {
+      "sources": {
+        "web": {
+          "imageDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      },
+      "credentials": {
+        "encryptionKey": {
+          "value": "synthetic-generated",
+          "sensitive": true
+        }
+      },
+      "parameters": {
+        "model": {
+          "value": "mistral:7b",
+          "sensitive": false
+        }
+      }
+    },
+    "expect": {
+      "/status": "VALID",
+      "/environment/web/MODEL/value": "mistral:7b"
+    }
   }
 ]

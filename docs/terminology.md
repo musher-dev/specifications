@@ -10,7 +10,7 @@ it. `task check:terms` holds the records, the schemas and the prose together,
 and the words to avoid are enforced in prose by the generated
 `MusherSpecifications` Vale style.
 
-221 record(s). A record marked *proposed* is an open item, not yet a decision.
+223 record(s). A record marked *proposed* is an open item, not yet a decision.
 
 ## Index
 
@@ -76,6 +76,7 @@ and the words to avoid are enforced in prose by the generated
 | [diagnostic](#core-diagnostic) | core | Code, severity, phase and path of one condition. |
 | [diagnostic code](#core-diagnostic-code) | core | The stable name of one condition. |
 | [diagnostic registry](#core-diagnostic-registry) | core | Every code a family may report, with its phases. |
+| [disclosed value](#blueprint-disclosed-value) | blueprint | A generated value the deployer is shown and keeps. |
 | [display name](#listing-display-name) | listing | The item's storefront title. |
 | [DNS-label grammar](#core-dns-label-grammar) | core | The lowercase DNS label, 2 to 63 characters. |
 | [document reference](#blueprint-document-reference) | blueprint | componentRef, item-local or catalog. |
@@ -144,6 +145,7 @@ and the words to avoid are enforced in prose by the generated
 | [overview Markdown profile](#listing-overview-markdown-profile) | listing | CommonMark with no raw HTML and local images only. |
 | [parameter binding](#blueprint-parameter-binding) | blueprint | Binds { parameter }. |
 | [parameter from](#blueprint-parameter-from) | blueprint | One whole placeholder in variables, deployment or connections. |
+| [parameter option](#blueprint-parameter-option) | blueprint | A value and label a deploy form offers. |
 | [parameter origin](#blueprint-parameter-origin) | blueprint | How a parameter's value is obtained. |
 | [parameters stage](#deployment-parameters-stage) | deployment | Obtains every parameter's value. |
 | [parser phase](#core-parser-phase) | core | Reads bytes under the YAML profile. |
@@ -332,6 +334,10 @@ connection input [component.connection-input] (a kind of component.input)
 core [core.core] (a kind of core.family)
   - what a family fixes [core.family-parameter]
   - what belongs in core [core.membership-test]
+
+deploy form [blueprint.deploy-form]
+  - disclosed value [blueprint.disclosed-value]
+  - parameter option [blueprint.parameter-option]
 
 deployment [deployment.deployment]
   - deployment snapshot [deployment.deployment-snapshot]
@@ -2231,6 +2237,19 @@ deployment.creator.<fact> }}`.
   §5.2](../specifications/blueprint/v2/spec.md#value-sources)
 - **Status:** approved, stable. Tags: parameters.
 
+#### <a id="blueprint-disclosed-value"></a>disclosed value
+
+A generated parameter's value that the platform shows the people who manage the
+deployment, behind an explicit reveal and apart from the deploy form, as one to
+keep, such as a key that encrypts backed-up data.
+
+- **Part of:** [deploy form](#blueprint-deploy-form)
+- **Identifiers:** fields: `disclosed`
+- **Source:** [blueprint v2
+  §5.4](../specifications/blueprint/v2/spec.md#deploy-form), [ADR
+  0050](adr/0050-a-parameter-offers-options-and-a-generated-secret-can-be-disclosed.md)
+- **Status:** approved, provisional. Tags: parameters, presentation.
+
 #### <a id="blueprint-document-reference"></a>document reference
 
 A node's componentRef naming the component document it deploys, either as an
@@ -2461,6 +2480,22 @@ the variables, deployment or connections namespace.
 - **Source:** [blueprint v2
   §5.2](../specifications/blueprint/v2/spec.md#value-sources)
 - **Status:** approved, stable. Tags: parameters, placeholder.
+
+#### <a id="blueprint-parameter-option"></a>parameter option
+
+A value a deploy form offers for a submitted parameter, with the label it shows,
+in a list that is closed unless it is editable, when the deployer may also type
+a value in.
+
+- **Part of:** [deploy form](#blueprint-deploy-form)
+- **Identifiers:** fields: `options`, `editable`; defs:
+  `BlueprintParameterOption`
+- **Not to be confused with:** An enum in the receiving input's value schema,
+  which closes the value for every blueprint and is labelled with enumLabels.
+- **Source:** [blueprint v2
+  §5.4](../specifications/blueprint/v2/spec.md#deploy-form), [ADR
+  0050](adr/0050-a-parameter-offers-options-and-a-generated-secret-can-be-disclosed.md)
+- **Status:** approved, provisional. Tags: parameters, presentation.
 
 #### <a id="blueprint-parameter-origin"></a>parameter origin
 

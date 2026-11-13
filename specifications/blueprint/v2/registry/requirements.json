@@ -331,6 +331,26 @@
       "id": "BP-UI-005",
       "anchor": "BP-UI-005",
       "section": "deploy-form"
+    },
+    {
+      "id": "BP-UI-006",
+      "anchor": "BP-UI-006",
+      "section": "deploy-form"
+    },
+    {
+      "id": "BP-UI-007",
+      "anchor": "BP-UI-007",
+      "section": "deploy-form"
+    },
+    {
+      "id": "BP-UI-008",
+      "anchor": "BP-UI-008",
+      "section": "deploy-form"
+    },
+    {
+      "id": "BP-UI-009",
+      "anchor": "BP-UI-009",
+      "section": "deploy-form"
     }
   ]
 }

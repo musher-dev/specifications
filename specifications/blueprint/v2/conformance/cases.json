@@ -901,6 +901,46 @@
       "id": "semantic-315-api-key-naming-a-submitted-parameter",
       "phase": "semantic",
       "path": "semantic/315-api-key-naming-a-submitted-parameter"
+    },
+    {
+      "id": "structural-316-parameter-options-and-a-disclosed-key",
+      "phase": "structural",
+      "path": "structural/316-parameter-options-and-a-disclosed-key"
+    },
+    {
+      "id": "structural-317-options-on-a-generated-parameter",
+      "phase": "structural",
+      "path": "structural/317-options-on-a-generated-parameter"
+    },
+    {
+      "id": "structural-318-editable-without-options",
+      "phase": "structural",
+      "path": "structural/318-editable-without-options"
+    },
+    {
+      "id": "structural-319-option-without-a-label",
+      "phase": "structural",
+      "path": "structural/319-option-without-a-label"
+    },
+    {
+      "id": "structural-320-options-beside-enum-labels",
+      "phase": "structural",
+      "path": "structural/320-options-beside-enum-labels"
+    },
+    {
+      "id": "structural-322-disclosed-on-a-submitted-parameter",
+      "phase": "structural",
+      "path": "structural/322-disclosed-on-a-submitted-parameter"
+    },
+    {
+      "id": "semantic-323-parameter-options-fit-the-input",
+      "phase": "semantic",
+      "path": "semantic/323-parameter-options-fit-the-input"
+    },
+    {
+      "id": "semantic-324-option-outside-the-input-schema",
+      "phase": "semantic",
+      "path": "semantic/324-option-outside-the-input-schema"
     }
   ]
 }

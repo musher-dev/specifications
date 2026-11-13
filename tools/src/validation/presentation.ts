@@ -56,23 +56,29 @@ export function formControls(blueprint: Json, components: ReadonlyMap<string, Js
         ? 'connection'
         : receivers.some((v) => v.sensitive === true)
           ? 'secret'
-          : schema.enum
-            ? 'enum'
-            : schema.type === 'array' &&
-                at(schema.items, 'type') === 'string' &&
-                at(schema.items, 'enum')
-              ? 'multiChoice'
-              : schema.type === 'boolean'
-                ? 'boolean'
-                : ['array', 'object'].includes(String(schema.type))
-                  ? 'json'
-                  : 'text'
+          : Array.isArray(ui.options)
+            ? 'options'
+            : schema.enum
+              ? 'enum'
+              : schema.type === 'array' &&
+                  at(schema.items, 'type') === 'string' &&
+                  at(schema.items, 'enum')
+                ? 'multiChoice'
+                : schema.type === 'boolean'
+                  ? 'boolean'
+                  : ['array', 'object'].includes(String(schema.type))
+                    ? 'json'
+                    : 'text'
     fields.push({
       name,
       label: ui.label ?? name,
       control,
       order: ui.order ?? null,
       prominence: ui.prominence ?? 'PRIMARY',
+      // BP-UI-008: the options in their order, and whether a value may be typed in.
+      ...(control === 'options'
+        ? { options: ui.options ?? [], editable: ui.editable ?? false }
+        : {}),
     })
   }
   fields.sort(

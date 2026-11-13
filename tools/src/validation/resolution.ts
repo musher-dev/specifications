@@ -373,6 +373,18 @@ export function resolveDeployment(
       !Object.hasOwn(context.parameters ?? {}, name)
     )
       fail('ERR_MISSING_PARAMETER_VALUE', `/spec/parameters/${token(name)}`, 'parameters')
+  // BP-UI-008: a submitted value is one of the values of options that are not editable.
+  for (const [name, p] of Object.entries(parameters)) {
+    const options = at(p, 'ui', 'options')
+    if (!Array.isArray(options) || at(p, 'ui', 'editable') === true) continue
+    const submitted = context.parameters?.[name]
+    if (
+      submitted !== undefined &&
+      Object.hasOwn(context.parameters ?? {}, name) &&
+      !options.some((o) => canonicalJson(at(o, 'value') ?? null) === canonicalJson(submitted.value))
+    )
+      fail('ERR_VALUE_CONSTRAINT', `/spec/parameters/${token(name)}`, 'parameters')
+  }
   if (context.allocations !== undefined && !isObject(context.allocations as unknown as Json)) {
     fail('ERR_INVALID_RESOLUTION_CONTEXT', '/spec/nodes', 'allocation')
     return result()

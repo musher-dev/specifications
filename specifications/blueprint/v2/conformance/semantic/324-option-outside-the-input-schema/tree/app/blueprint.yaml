@@ -1,0 +1,31 @@
+specVersion: v2
+kind: BLUEPRINT
+metadata:
+  slug: app
+  revision: 1
+  description: Synthetic conformance fixture blueprint.
+spec:
+  parameters:
+    model:
+      default: mistral:7b
+      ui:
+        label: Model
+        options:
+          - { value: llama3.2:1b, label: Llama 3.2 1B }
+          - { value: a-model-name-far-longer-than-thirty-two-characters, label: Too long }
+    encryptionKey:
+      generator:
+        byteLength: 32
+      ui:
+        label: Encryption key
+        disclosed: true
+  nodes:
+    web:
+      componentRef: ./web.yaml
+      compute:
+        profile: general.standard.small
+      bindings:
+        model:
+          parameter: model
+        encryptionKey:
+          parameter: encryptionKey

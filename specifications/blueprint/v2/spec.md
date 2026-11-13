@@ -1604,6 +1604,67 @@ this ordering does not affect validation. Clients validate logical values;
 server admission MUST validate them independently as well. Labels and
 descriptions do not override value schemas.
 
+<a id="options"></a>**Options.** A form can offer a submitted parameter's
+likely values without closing the value schema of the inputs it binds.
+`ui.options` lists them, each a `value` and the `label` a form shows, and
+`ui.editable: true` lets the deployer type a value that is not among them
+([ADR 0050](../../../docs/adr/0050-a-parameter-offers-options-and-a-generated-secret-can-be-disclosed.md)):
+
+```yaml
+parameters:
+  model:
+    default: "llama3.2:1b"
+    ui:
+      label: Model
+      options:
+        - { value: "llama3.2:1b", label: Llama 3.2 1B }
+        - { value: "qwen2.5:0.5b", label: Qwen 2.5 0.5B }
+      editable: true
+```
+
+<a id="BP-UI-006"></a>**`BP-UI-006`**: `options` is a non-empty list of at most
+256 closed objects, each requiring `value`, a logical value, and `label`, a
+non-empty string, with no two objects equal. `editable` is a
+boolean, and requires `options`. Neither belongs to the `ui` of a generated
+parameter or one with `from`, and `options` never sits beside `enumLabels`.
+Structural, under the parameter's `ui`: `ERR_INVALID_VALUE` at `options` or
+`editable` on a generated parameter or one with `from`, at `options` beside
+`enumLabels`, at an empty, overlong or repeating list, and at an empty
+`label`; `ERR_MISSING_FIELD` at an option without `value` or `label`, and
+at `ui` with `editable` and without `options`; `ERR_UNKNOWN_FIELD` at an
+option with another member.
+
+<a id="BP-UI-007"></a>**`BP-UI-007`**: Every option's `value` MUST satisfy the
+value schema of every input the parameter binds, and the `default` of a
+parameter whose options are not `editable` MUST be one of their values.
+Semantic: `ERR_VALUE_CONSTRAINT` at `ui/options/<index>/value`, and at the
+parameter's `default`.
+
+<a id="BP-UI-008"></a>**`BP-UI-008`**: A deploy form MUST offer a parameter
+that declares `options` as a choice among their labels, in their order, and
+when it is `editable` MUST also accept a value typed in. A value outside
+options that are not `editable` MUST NOT be submitted. Resolution, in the
+`parameters` stage: a submitted value that is not one of the values of
+options that are not `editable` is `ERR_VALUE_CONSTRAINT` at
+`/spec/parameters/<name>`.
+
+Options belong to the form, not the value schema: the receiving inputs keep
+their own schemas, and an `editable` value is held to them as any submitted
+value is. A schema `enum` is labelled with `enumLabels` instead. A form
+conceals a sensitive value first, so it never offers options for one.
+
+<a id="disclosure"></a>**Disclosure.** A generated parameter whose `ui` sets
+`disclosed: true` holds a value the deployer is expected to keep, such as a key
+that encrypts data a backup holds.
+
+<a id="BP-UI-009"></a>**`BP-UI-009`**: `disclosed` is a boolean, and belongs
+only to the `ui` of a generated parameter. Structural: `ERR_INVALID_VALUE` at
+`ui/disclosed` on any other parameter. The platform MUST disclose the value of
+a parameter whose `ui` sets `disclosed: true` to the people who manage the
+deployment, behind an explicit reveal, apart from the deploy form, and say
+that it is to be kept. The privacy rules of
+[`BP-PARAM-012`](#BP-PARAM-012)'s disclosure apply to it.
+
 ## <a id="validation-phases"></a><a id="validation-layers"></a>6. Validation phases
 
 Core's phases, validation scopes and statuses apply
