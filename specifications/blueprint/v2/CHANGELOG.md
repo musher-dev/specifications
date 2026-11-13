@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.0](https://github.com/musher-dev/specifications/compare/blueprint/v2.1.0...blueprint/v2.2.0) (2026-11-13)
+
+
+### Additions
+
+* **component:** give a job a time limit shorter than its schedule ([#227](https://github.com/musher-dev/specifications/issues/227)) ([08ad04f](https://github.com/musher-dev/specifications/commit/08ad04f13a13cfdffa116ce413979b1fb78a53b3))
+
 ## [2.1.0](https://github.com/musher-dev/specifications/compare/blueprint/v2.0.0...blueprint/v2.1.0) (2026-11-07)
 
 
