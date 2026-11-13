@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.0](https://github.com/musher-dev/specifications/compare/blueprint/v2.2.0...blueprint/v2.3.0) (2026-11-13)
+
+
+### Additions
+
+* **core:** specify the platform gaps found by catalog deploy-testing ([#231](https://github.com/musher-dev/specifications/issues/231)) ([91101b7](https://github.com/musher-dev/specifications/commit/91101b75fb49989446c561d4f2a5a9b06e747ce6))
+
 ## [2.2.0](https://github.com/musher-dev/specifications/compare/blueprint/v2.1.0...blueprint/v2.2.0) (2026-11-13)
 
 
