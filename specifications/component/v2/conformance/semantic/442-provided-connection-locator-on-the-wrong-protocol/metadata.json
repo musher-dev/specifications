@@ -1,0 +1,10 @@
+{
+  "id": "semantic-442-provided-connection-locator-on-the-wrong-protocol",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#provided-connections",
+  "requirements": [
+    "COMP-CONNECTION-005"
+  ],
+  "summary": "A provided connection whose locator reads a TCP endpoint, or names https for an HTTP endpoint, is rejected at the locator."
+}

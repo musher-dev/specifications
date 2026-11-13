@@ -1,0 +1,10 @@
+{
+  "id": "semantic-441-provided-connection-locator-on-a-public-property",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#provided-connections",
+  "requirements": [
+    "COMP-CONNECTION-005"
+  ],
+  "summary": "A provided connection whose locator is an endpoint origin, or a template over a public property, is rejected at the locator."
+}

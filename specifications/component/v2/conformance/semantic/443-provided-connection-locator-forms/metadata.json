@@ -1,0 +1,11 @@
+{
+  "id": "semantic-443-provided-connection-locator-forms",
+  "phase": "semantic",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#provided-connections",
+  "requirements": [
+    "COMP-CONNECTION-004",
+    "COMP-CONNECTION-005"
+  ],
+  "summary": "Provided connections whose locators are a private hostname and port of an HTTP endpoint, and a private hostname of an HTTPS endpoint, validate."
+}
