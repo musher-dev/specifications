@@ -4638,7 +4638,7 @@
       "id": "blueprint.active",
       "display_name": "active",
       "context": "blueprint",
-      "definition": "A rollout whose every SERVICE and WORKER node is ready and whose every ordered job, a JOB without a schedule that carries startAfter, has succeeded.",
+      "definition": "A rollout whose every SERVICE and WORKER node is ready and whose every ordered job, a JOB without a schedule that carries startAfter or that a startAfter names, has succeeded; one whose ordered job fails never is.",
       "shortDefinition": "A rollout that has finished starting.",
       "part_of": [
         "blueprint.node-graph"
