@@ -26,6 +26,7 @@ import {
 } from './selections.ts'
 import {
   addressProperty,
+  apiKeyParameters,
   at,
   effectiveExposure,
   forwards,
@@ -1188,6 +1189,10 @@ export function resolutionRecord(
       }
     }
   }
+  // BP-ACCESS-015: a generated parameter an apiKey names is a credential of the record.
+  for (const name of apiKeyParameters(record(at(parsed.value, 'spec', 'nodes'))))
+    if (at(parsed.value, 'spec', 'parameters', name, 'generator') !== undefined)
+      expectedCredentials.add(name)
   if (
     !equal([...expectedVariables].sort(), Object.keys(variables).sort()) ||
     !equal([...expectedVariables].sort(), Object.keys(snapshot.variables).sort()) ||

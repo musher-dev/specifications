@@ -717,6 +717,16 @@
       "declaredBy": "blueprint"
     },
     {
+      "code": "ERR_INVALID_API_KEY_PARAMETER",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
       "code": "ERR_UNKNOWN_ENUM_MEMBER",
       "phases": [
         "semantic"

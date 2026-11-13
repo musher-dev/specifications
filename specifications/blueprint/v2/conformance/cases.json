@@ -871,6 +871,36 @@
       "id": "structural-309-role-claim-under-header",
       "phase": "structural",
       "path": "structural/309-role-claim-under-header"
+    },
+    {
+      "id": "semantic-310-api-key-checked-by-the-platform",
+      "phase": "semantic",
+      "path": "semantic/310-api-key-checked-by-the-platform"
+    },
+    {
+      "id": "structural-311-api-key-on-an-open-endpoint",
+      "phase": "structural",
+      "path": "structural/311-api-key-on-an-open-endpoint"
+    },
+    {
+      "id": "structural-312-api-key-beside-a-bearer-exemption",
+      "phase": "structural",
+      "path": "structural/312-api-key-beside-a-bearer-exemption"
+    },
+    {
+      "id": "structural-313-api-key-without-a-parameter",
+      "phase": "structural",
+      "path": "structural/313-api-key-without-a-parameter"
+    },
+    {
+      "id": "semantic-314-api-key-naming-an-undeclared-parameter",
+      "phase": "semantic",
+      "path": "semantic/314-api-key-naming-an-undeclared-parameter"
+    },
+    {
+      "id": "semantic-315-api-key-naming-a-submitted-parameter",
+      "phase": "semantic",
+      "path": "semantic/315-api-key-naming-a-submitted-parameter"
     }
   ]
 }

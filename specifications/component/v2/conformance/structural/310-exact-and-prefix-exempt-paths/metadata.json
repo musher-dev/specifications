@@ -1,0 +1,10 @@
+{
+  "id": "structural-310-exact-and-prefix-exempt-paths",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#endpoints",
+  "requirements": [
+    "COMP-EP-021"
+  ],
+  "summary": "An exempt path may be bare, a prefix or an exact path, side by side."
+}

@@ -323,6 +323,17 @@ function providedConnectionDiagnostics(contract: Record<string, Json>): Diagnost
   return out
 }
 
+/** Blueprint BP-ACCESS-015: the parameters the exposures' `apiKey`s name. */
+export function apiKeyParameters(nodes: Readonly<Record<string, Json>>): Set<string> {
+  const names = new Set<string>()
+  for (const n of Object.values(nodes))
+    for (const exposure of Object.values(record(at(n, 'exposure')))) {
+      const key = at(exposure, 'apiKey', 'parameter')
+      if (typeof key === 'string') names.add(key)
+    }
+  return names
+}
+
 function inputReferenceDiagnostics(
   out: Diagnostic[],
   contract: Record<string, Json>,
@@ -992,6 +1003,14 @@ export function semanticReport(
         const e = at(workload, 'endpoints', endpoint)
         const exposure = effectiveExposure(n.exposure, endpoint)
         const where = `${base}/exposure/${token(endpoint)}`
+        // BP-ACCESS-015: the key the platform checks is a generated parameter.
+        const key = at(record(n.exposure)[endpoint], 'apiKey', 'parameter')
+        if (typeof key === 'string') {
+          if (!Object.hasOwn(parameters, key))
+            issue(out, 'ERR_UNKNOWN_PARAMETER', `${where}/apiKey/parameter`)
+          else if (at(parameters[key], 'generator') === undefined)
+            issue(out, 'ERR_INVALID_API_KEY_PARAMETER', `${where}/apiKey/parameter`)
+        }
         if (!e) issue(out, 'ERR_UNKNOWN_ENDPOINT', where)
         else if (exposure.visibility === 'PUBLIC' && category === 'WORKER')
           issue(out, 'ERR_ENDPOINT_NOT_EXPOSABLE', where)
@@ -1187,6 +1206,8 @@ export function semanticReport(
       Object.values(nodes).some((n) =>
         Object.values(record(at(n, 'bindings'))).some((b) => at(b, 'parameter') === name),
       ) ||
+      // BP-ACCESS-015: an exposure's apiKey uses the parameter it names.
+      apiKeyParameters(nodes).has(name) ||
       (at(p, 'generator') !== undefined &&
         at(p, 'ui') !== undefined &&
         Object.values(parameters).some((other) => at(other, 'hash', 'parameter') === name))

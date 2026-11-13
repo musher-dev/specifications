@@ -10,7 +10,7 @@ it. `task check:terms` holds the records, the schemas and the prose together,
 and the words to avoid are enforced in prose by the generated
 `MusherSpecifications` Vale style.
 
-220 record(s). A record marked *proposed* is an open item, not yet a decision.
+221 record(s). A record marked *proposed* is an open item, not yet a decision.
 
 ## Index
 
@@ -39,6 +39,7 @@ and the words to avoid are enforced in prose by the generated
 | [catalog reference](#blueprint-catalog-reference) | blueprint | A UUID and a revision naming a published component. |
 | [catalog value](#blueprint-catalog-value) | blueprint | A value from a catalog-versioned vocabulary. |
 | [category](#listing-category) | listing | The closed-vocabulary shelf of a listing. |
+| [checked API key](#blueprint-checked-api-key) | blueprint | A generated key the platform checks for machine clients. |
 | [command](#component-command) | component | Exec-form CMD replacement. |
 | [component](#component-component) | component | A reusable, versioned definition a node deploys. |
 | [component contract](#component-component-contract) | component | A component's inputs and outputs. |
@@ -260,6 +261,7 @@ blueprint [blueprint.blueprint] (a kind of core.musher-document)
     - exposure [blueprint.exposure]
       - access [blueprint.access]
       - access exemption [blueprint.access-exemption]
+      - checked API key [blueprint.checked-api-key]
       - viewer claim [blueprint.viewer-claim]
       - viewer identity mode [blueprint.viewer-identity-mode]
       - visibility [blueprint.visibility]
@@ -1247,13 +1249,14 @@ value and by nothing else.
 #### <a id="component-exemptible-requests"></a>exemptible requests
 
 An endpoint's statement of which requests it can safely take without a signed-in
-viewer: the paths that serve machines, and whether every route checks the bearer
-token a request carries.
+viewer: the paths that serve machines, each matched as a prefix or exactly, and
+whether every route checks the bearer token a request carries.
 
 - **Part of:** [endpoint](#component-endpoint)
 - **is granted by:** [access exemption](#blueprint-access-exemption)
-- **Identifiers:** fields: `exemptibleRequests`, `paths`, `bearerToken`; defs:
-  `ComponentEndpointExemptibleRequests`
+- **Identifiers:** fields: `exemptibleRequests`, `paths`, `bearerToken`,
+  `prefix`, `exact`; defs: `ComponentEndpointExemptibleRequests`,
+  `ComponentExemptPath`
 - **Not to be confused with:** Access exemptions on a blueprint exposure: the
   grant, where this is the offer.
 - **Not to be confused with:** A probe's bearer credential.
@@ -1263,7 +1266,8 @@ token a request carries.
   "ComponentEndpointExemptibleRequests".
 - **Source:** [component v2
   §5.2](../specifications/component/v2/spec.md#endpoints), [ADR
-  0038](adr/0038-v2-one-vocabulary-and-v1-retires.md)
+  0038](adr/0038-v2-one-vocabulary-and-v1-retires.md), [ADR
+  0049](adr/0049-a-platform-checked-api-key-and-exact-exempt-paths.md)
 - **Status:** approved, stable. Tags: viewer, access.
 
 #### <a id="component-external"></a>EXTERNAL
@@ -2024,6 +2028,23 @@ or a network class, written in a placement constraint or a volume allocation.
   0038](adr/0038-v2-one-vocabulary-and-v1-retires.md), [ADR
   0046](adr/0046-the-catalog-is-curated-and-an-organization-publishes-to-its-library.md)
 - **Status:** approved, stable. Tags: compute, catalog.
+
+#### <a id="blueprint-checked-api-key"></a>checked API key
+
+A generated parameter an exposure names in apiKey, whose value the platform
+accepts as the bearer token of a request without a viewer session on a
+RESTRICTED endpoint, and checks before forwarding it.
+
+- **Part of:** [exposure](#blueprint-exposure)
+- **Identifiers:** codes: `ERR_INVALID_API_KEY_PARAMETER`; defs:
+  `BlueprintExposureApiKey`
+- **Not to be confused with:** The BEARER exemption, which passes any bearer
+  token on for the workload to check.
+- **Not to be confused with:** The apiKey member of a language-model connection.
+- **Source:** [blueprint v2
+  §4.5](../specifications/blueprint/v2/spec.md#access), [ADR
+  0049](adr/0049-a-platform-checked-api-key-and-exact-exempt-paths.md)
+- **Status:** approved, provisional. Tags: access.
 
 #### <a id="blueprint-compute"></a>compute
 

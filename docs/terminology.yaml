@@ -1395,18 +1395,19 @@ terms:
     context: component
     definition: >-
       An endpoint's statement of which requests it can safely take without a
-      signed-in viewer: the paths that serve machines, and whether every
-      route checks the bearer token a request carries.
+      signed-in viewer: the paths that serve machines, each matched as a
+      prefix or exactly, and whether every route checks the bearer token a
+      request carries.
     shortDefinition: The requests an endpoint can take without a viewer.
     part_of: [component.endpoint]
     associated:
       - { relation: is-granted-by, term: blueprint.access-exemption }
-    identifiers: { fields: [exemptibleRequests, paths, bearerToken], defs: [ComponentEndpointExemptibleRequests] }
+    identifiers: { fields: [exemptibleRequests, paths, bearerToken, prefix, exact], defs: [ComponentEndpointExemptibleRequests, ComponentExemptPath] }
     confusables: ["Access exemptions on a blueprint exposure: the grant, where this is the offer.", "A probe's bearer credential."]
     aliases:
       - { text: accessExemptions, status: banned, scope: [identifier], suggest: exemptibleRequests, note: "Blueprint keeps accessExemptions for the grant." }
       - { text: ComponentEndpointAccessExemptions, status: banned, scope: [identifier], suggest: ComponentEndpointExemptibleRequests }
-    source: [component v2 §5.2, ADR 0038]
+    source: [component v2 §5.2, ADR 0038, ADR 0049]
     stability: stable
     status: approved
     tags: [viewer, access]
@@ -2420,6 +2421,22 @@ terms:
     identifiers: { fields: [accessExemptions], values: [PATHS, BEARER], codes: [ERR_EXEMPTION_NOT_DECLARED] }
     source: [blueprint v2 §4.5]
     stability: stable
+    status: approved
+    tags: [access]
+
+  - id: blueprint.checked-api-key
+    display_name: checked API key
+    context: blueprint
+    definition: >-
+      A generated parameter an exposure names in apiKey, whose value the
+      platform accepts as the bearer token of a request without a viewer
+      session on a RESTRICTED endpoint, and checks before forwarding it.
+    shortDefinition: A generated key the platform checks for machine clients.
+    part_of: [blueprint.exposure]
+    identifiers: { defs: [BlueprintExposureApiKey], codes: [ERR_INVALID_API_KEY_PARAMETER] }
+    confusables: ["The BEARER exemption, which passes any bearer token on for the workload to check.", "The apiKey member of a language-model connection."]
+    source: [blueprint v2 §4.5, ADR 0049]
+    stability: provisional
     status: approved
     tags: [access]
 

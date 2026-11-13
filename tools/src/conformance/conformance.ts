@@ -1308,6 +1308,20 @@ const UNPINNED: ReadonlyMap<string, string> = new Map([
       'operation observes a rollout or the issuer',
   ],
   [
+    'BP-ACCESS-016',
+    'Matching a normalised request path exactly or by segment-bounded prefix, ' +
+      'case-sensitively and without the query, is a runtime obligation of the platform edge; ' +
+      'the exempt path forms are pinned by component cases (COMP-EP-021), but no operation ' +
+      'observes a request',
+  ],
+  [
+    'BP-ACCESS-017',
+    'Checking a bearer token against the API key in constant time, forwarding a match without ' +
+      'identity headers and with the Authorization header removed, and refusing any other ' +
+      'request without a session, are runtime obligations of the platform edge; the apiKey ' +
+      'declaration is pinned by blueprint cases (BP-ACCESS-015), but no operation observes a request',
+  ],
+  [
     'COMP-VOL-002',
     'That a non-shared volume is mounted into at most one replica at a time is a runtime ' +
       'obligation of the platform; no document phase or behavioural operation observes a mount',

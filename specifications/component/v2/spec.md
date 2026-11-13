@@ -738,6 +738,26 @@ a path, because a list that covers every request is not an exemption. The
 platform serves its own sign-in under `/.musher` on an endpoint that requires
 one.
 
+<a id="COMP-EP-021"></a>**`COMP-EP-021`**: An entry of
+`exemptibleRequests.paths` is an endpoint path, or a closed object holding
+exactly one of `prefix` and `exact`, whose value is an endpoint path. A bare
+path is the `prefix` form, and means what `{ prefix: <path> }` means.
+Structural, at the entry: `ERR_INVALID_VALUE` for an object holding neither
+member or both, and at the member for a value outside
+[`COMP-EP-016`](#COMP-EP-016); `ERR_UNKNOWN_FIELD` for an object with another
+member.
+
+```yaml
+exemptibleRequests:
+  paths: [/webhook, { prefix: /api/embed/widget }, { exact: /healthz }]
+```
+
+`prefix` covers the path and every path under it, segment by segment, and
+`exact` covers the path alone
+([blueprint `BP-ACCESS-016`](../../blueprint/v2/spec.md#BP-ACCESS-016)). So
+`{ exact: /healthz }` exempts a health check without exempting what an app
+serves below it.
+
 An authoritative endpoint allocation has opaque `identity` and `version`, an
 optional `privateHostname`, and optional public routing facts: `hostname`,
 `port`, `scheme` and `path`, and, on an endpoint that tells its workload who

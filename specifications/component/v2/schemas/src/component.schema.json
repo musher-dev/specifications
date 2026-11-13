@@ -345,9 +345,9 @@
           "type": "boolean"
         },
         "paths": {
-          "description": "Routes that serve machines. A request is covered by blueprint BP-ACCESS-009's rule: once normalised, its path equals an exempt path or continues it with /, so /webhook covers /webhook and /webhook/abc, never /webhooks.",
+          "description": "Routes that serve machines, each a bare endpoint path or { prefix } or { exact }. A bare path is the prefix form. prefix covers the path and every path under it, segment by segment, so /webhook covers /webhook and /webhook/abc, never /webhooks; exact covers the path alone (blueprint BP-ACCESS-016).",
           "items": {
-            "$ref": "#/$defs/ComponentEndpointPath"
+            "$ref": "#/$defs/ComponentExemptPath"
           },
           "maxItems": 32,
           "minItems": 1,
@@ -463,6 +463,32 @@
         }
       },
       "type": "object"
+    },
+    "ComponentExemptPath": {
+      "$comment": "spec.md §5.2 COMP-EP-021 / ADR 0049 §2, §3. A bare path is the prefix form, so every released offer keeps its meaning. Written as if/then on the instance type rather than oneOf, so a malformed bare path reports only the path's own error.",
+      "description": "One exempt path: a bare endpoint path, which is the prefix form, or an object holding exactly one of prefix and exact.",
+      "if": {
+        "type": "string"
+      },
+      "then": {
+        "$ref": "#/$defs/ComponentEndpointPath"
+      },
+      "else": {
+        "additionalProperties": false,
+        "maxProperties": 1,
+        "minProperties": 1,
+        "properties": {
+          "exact": {
+            "$ref": "#/$defs/ComponentEndpointPath",
+            "description": "Covers a request whose normalised path equals this one, and no other."
+          },
+          "prefix": {
+            "$ref": "#/$defs/ComponentEndpointPath",
+            "description": "Covers a request whose normalised path equals this one or continues it with /."
+          }
+        },
+        "type": "object"
+      }
     },
     "ComponentGitRef": {
       "$comment": "spec.md §5.1 COMP-SRC-001 and COMP-SRC-006. Exactly one of branch, tag and commit.",

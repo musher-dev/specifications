@@ -41,6 +41,7 @@ SPDX
 # --- Applications the catalog deploys, and prior art ADRs compare --------------
 Authelia
 Cloudron
+Firecrawl
 flowise
 Gitea
 Graphiti

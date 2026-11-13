@@ -857,6 +857,61 @@ completed, and MUST NOT accept it afterwards. An app that stores its client,
 rather than reading it from its environment, registers it again from such a
 `JOB`.
 
+<a id="api-keys"></a>**API keys the platform checks.** A machine client
+has no viewer session, and the `BEARER` exemption passes its token on
+unchecked, which is safe only for a workload that checks every token itself.
+An exposure whose access is `RESTRICTED` may instead name, in `apiKey`, a
+generated parameter whose value the platform checks
+([ADR 0049](../../../docs/adr/0049-a-platform-checked-api-key-and-exact-exempt-paths.md)):
+
+```yaml
+parameters:
+  apiKey: { generator: { byteLength: 32 }, ui: { label: API key } }
+nodes:
+  api:
+    componentRef: ./components/api.yaml
+    compute: { profile: general.standard.small }
+    exposure:
+      api: { visibility: PUBLIC, access: RESTRICTED, apiKey: { parameter: apiKey } }
+```
+
+<a id="BP-ACCESS-015"></a>**`BP-ACCESS-015`**: `apiKey` is closed and requires
+`parameter`, which names a generated parameter of the blueprint. It belongs
+only to an exposure whose access is `RESTRICTED`, and never beside a `BEARER`
+exemption, which answers the same bearer token another way. Structural, at
+the exposure's `apiKey`: `ERR_INVALID_VALUE` under `PRIVATE`, without
+`access: RESTRICTED` and beside `BEARER` in `accessExemptions`;
+`ERR_MISSING_FIELD` without `parameter`; `ERR_UNKNOWN_FIELD` for another
+member. Semantic, at `apiKey/parameter`: `ERR_UNKNOWN_PARAMETER` for a
+parameter the blueprint does not declare, and
+`ERR_INVALID_API_KEY_PARAMETER` for one that is not generated.
+
+A parameter an `apiKey` names is used, so it needs no binding of its own
+([`BP-PARAM-001`](#BP-PARAM-001)), and the resolution record lists it among
+its credentials as it lists a bound generated parameter
+([§5.2](#resolution-record)). A `ui` on it lets the people who manage the
+deployment read the key ([`BP-PARAM-012`](#BP-PARAM-012)).
+
+<a id="BP-ACCESS-016"></a>**`BP-ACCESS-016`**: Under `PATHS`, an exempt path
+the component gives as `{ exact: <path> }` covers a request only when the
+request's path, normalised as [`BP-ACCESS-009`](#BP-ACCESS-009) says, equals
+it; one given as `{ prefix: <path> }`, or as the bare path, covers a request
+as [`BP-ACCESS-009`](#BP-ACCESS-009) says, so `/status` covers `/status` and
+`/status/x` and never `/status-page`. The platform MUST match case-sensitively,
+and the query takes no part in matching.
+
+<a id="BP-ACCESS-017"></a>**`BP-ACCESS-017`**: Under `apiKey`, the platform MUST
+forward a request that carries no valid viewer session and an `Authorization`
+header of the `Bearer` scheme whose token equals the value of the current
+rotation generation of the named parameter, compared in constant time. It
+forwards it as an exempt request: without authenticating a viewer, with no
+identity, claim or assertion header, with inbound copies of them removed as
+[`BP-ACCESS-003`](#BP-ACCESS-003) says, and with the `Authorization` header it
+checked removed. It MUST refuse, without forwarding, any other request that
+carries no valid viewer session and that no `PATHS` exemption covers, one
+with a wrong key included. A request that carries a valid session is
+authenticated, admitted and identified as any other is.
+
 ## <a id="parameters"></a><a id="deployment-parameters"></a>5. Deployment parameters
 
 `spec.parameters` lists every value a deployment takes from outside the
@@ -1589,6 +1644,7 @@ Core and component diagnostics apply, with these additions:
 | `ERR_ENDPOINT_NOT_PUBLIC` | `semantic` | An output reads a public property of an endpoint the blueprint does not expose. |
 | `ERR_VIEWER_IDENTITY_NOT_FORWARDED` | `semantic` | An output reads a viewer identity property of an endpoint whose exposure does not forward that property's mode or claim. |
 | `ERR_EXEMPTION_NOT_DECLARED` | `semantic` | An exposure lets through requests without a viewer that the component does not offer in `exemptibleRequests`. |
+| `ERR_INVALID_API_KEY_PARAMETER` | `semantic` | An exposure's `apiKey` names a parameter that is not generated. |
 | `ERR_UNKNOWN_ENUM_MEMBER` | `semantic` | A UI label names no enum member. |
 | `ERR_PARAMETER_NOT_OFFERED` | `semantic` | A submitted parameter with neither `ui` nor `default` binds a required input, so no form can supply it. |
 | `ERR_INVALID_PARAMETER_ORIGIN` | `semantic` | A parameter's `from` is not one whole placeholder. |

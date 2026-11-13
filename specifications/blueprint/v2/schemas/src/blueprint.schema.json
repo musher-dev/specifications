@@ -173,6 +173,7 @@
             "properties": {
               "access": false,
               "accessExemptions": false,
+              "apiKey": false,
               "viewerClaims": false,
               "viewerIdentity": false
             }
@@ -192,6 +193,7 @@
           "else": {
             "properties": {
               "accessExemptions": false,
+              "apiKey": false,
               "viewerIdentity": {
                 "const": "NONE"
               }
@@ -245,6 +247,26 @@
               }
             }
           }
+        },
+        {
+          "$comment": "spec.md §4.5 BP-ACCESS-015 / ADR 0049 §1. A checked key and a BEARER exemption both answer the bearer token, one by checking it and one by passing it on, so an exposure takes one.",
+          "if": {
+            "properties": {
+              "accessExemptions": {
+                "contains": {
+                  "const": "BEARER"
+                }
+              }
+            },
+            "required": [
+              "accessExemptions"
+            ]
+          },
+          "then": {
+            "properties": {
+              "apiKey": false
+            }
+          }
         }
       ],
       "description": "Exposure of one endpoint in the object form: its visibility, whether the platform authenticates viewers, how the workload learns who they are, which of their claims it receives, and which requests pass without a viewer. Bare PUBLIC or PRIVATE is the object form with only visibility.",
@@ -270,6 +292,10 @@
           "minItems": 1,
           "type": "array",
           "uniqueItems": true
+        },
+        "apiKey": {
+          "$ref": "#/$defs/BlueprintExposureApiKey",
+          "description": "A key the platform checks before forwarding a request without a viewer session: the bearer token must equal the named generated parameter's value. RESTRICTED only, and never beside a BEARER exemption."
         },
         "viewerClaims": {
           "description": "Facts about the viewer released to the workload beside the subject: EMAIL, the viewer's verified email address; NAME, their display name; and ROLE, their role in the deployment's organization and whether they created the deployment, under ASSERTION or OIDC only. Requires a viewerIdentity other than NONE.",
@@ -310,6 +336,23 @@
       ],
       "type": "object",
       "$comment": "spec.md §4.5 / ADR 0034 §1-§2 / ADR 0035 §2, §4. A bare PUBLIC or PRIVATE, or the object form. Bare PUBLIC is { visibility: PUBLIC } with every default: access OPEN, viewerIdentity NONE. Every member but visibility applies only to PUBLIC; an identity mode and accessExemptions require RESTRICTED; viewerClaims requires an identity mode (BP-NODE-006)."
+    },
+    "BlueprintExposureApiKey": {
+      "$comment": "spec.md §4.5 BP-ACCESS-015 / ADR 0049 §1. The key is a generated parameter, so it is persisted, rotated and disclosed as any generated credential is; whether the parameter is generated is semantic.",
+      "additionalProperties": false,
+      "description": "The generated parameter whose value the platform accepts as a bearer token on this endpoint.",
+      "properties": {
+        "parameter": {
+          "description": "Generated parameter holding the key.",
+          "maxLength": 64,
+          "pattern": "^[a-z][a-zA-Z0-9]{0,63}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "parameter"
+      ],
+      "type": "object"
     },
     "BlueprintMetadata": {
       "additionalProperties": false,

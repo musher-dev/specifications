@@ -1271,6 +1271,26 @@
       "id": "semantic-309-provided-connection-output-mismatch",
       "phase": "semantic",
       "path": "semantic/309-provided-connection-output-mismatch"
+    },
+    {
+      "id": "structural-310-exact-and-prefix-exempt-paths",
+      "phase": "structural",
+      "path": "structural/310-exact-and-prefix-exempt-paths"
+    },
+    {
+      "id": "structural-311-exempt-path-with-prefix-and-exact",
+      "phase": "structural",
+      "path": "structural/311-exempt-path-with-prefix-and-exact"
+    },
+    {
+      "id": "structural-312-exact-exempt-path-outside-the-grammar",
+      "phase": "structural",
+      "path": "structural/312-exact-exempt-path-outside-the-grammar"
+    },
+    {
+      "id": "structural-313-exempt-path-with-an-unknown-match",
+      "phase": "structural",
+      "path": "structural/313-exempt-path-with-an-unknown-match"
     }
   ]
 }
