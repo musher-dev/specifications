@@ -188,6 +188,14 @@
       },
       "tree": "2df69b468b57753f4eb17a53d3d41e642e889926"
     },
+    "component/v2.2.0": {
+      "bundleSha256": "a702a7e2f9041070d34ec6f8bf2462ee740cdc116c898cc204fc0dbda2519bc2",
+      "path": "specifications/component/v2",
+      "requires": {
+        "core": "2.2.0"
+      },
+      "tree": "1a6eef58d1211e5dd5903cfa48e2e9e193b09770"
+    },
     "core/v1.0.0": {
       "bundleSha256": null,
       "path": "specifications/core/v1",
