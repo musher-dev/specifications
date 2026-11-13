@@ -50,7 +50,12 @@ export function formControls(blueprint: Json, components: ReadonlyMap<string, Js
       for (const [key, b] of Object.entries(record(at(n, 'bindings'))).sort())
         if (at(b, 'parameter') === name)
           receivers.push(record(at(components.get(node), 'spec', 'contract', 'inputs', key)))
-    const schema = record(receivers[0]?.schema)
+    // Blueprint BP-PARAM-002: the form's schema is the intersection of the
+    // receivers', so a choice any receiver restricts to an enum is offered as one.
+    const schema = record(
+      receivers.find((v) => at(v.schema, 'enum') || at(v.schema, 'items', 'enum'))?.schema ??
+        receivers[0]?.schema,
+    )
     const control =
       origin?.namespace === 'connections'
         ? 'connection'

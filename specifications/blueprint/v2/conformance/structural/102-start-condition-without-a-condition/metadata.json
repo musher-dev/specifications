@@ -1,0 +1,10 @@
+{
+  "id": "structural-102-start-condition-without-a-condition",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#start-order",
+  "requirements": [
+    "BP-ORDER-001"
+  ],
+  "summary": "An entry naming a node and no condition is rejected."
+}

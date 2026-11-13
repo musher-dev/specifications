@@ -1,0 +1,11 @@
+{
+  "id": "semantic-144-integer-bounds-holding-no-integer",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#recipients",
+  "requirements": [
+    "BP-PARAM-002"
+  ],
+  "summary": "An integer input and a number input whose bounds leave no integer between them.",
+  "document": "app/blueprint.yaml"
+}

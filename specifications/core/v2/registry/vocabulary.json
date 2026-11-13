@@ -76,7 +76,7 @@
     },
     {
       "name": "parameters",
-      "assigned": false
+      "assigned": true
     },
     {
       "name": "variables",
@@ -100,7 +100,7 @@
     },
     {
       "name": "nodes",
-      "assigned": false
+      "assigned": true
     }
   ]
 }

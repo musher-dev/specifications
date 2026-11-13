@@ -1,0 +1,10 @@
+{
+  "id": "structural-109-mounted-endpoint",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/blueprint/v2/spec.md#public-hosts",
+  "requirements": [
+    "BP-HOST-002"
+  ],
+  "summary": "An endpoint is served under a path of another node's public host."
+}

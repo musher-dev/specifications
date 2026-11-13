@@ -1,0 +1,11 @@
+{
+  "id": "semantic-152-start-after-itself",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#start-order",
+  "requirements": [
+    "BP-ORDER-003"
+  ],
+  "summary": "A node that waits for itself is a cycle.",
+  "document": "app/blueprint.yaml"
+}

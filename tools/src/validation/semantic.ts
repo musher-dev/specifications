@@ -10,7 +10,7 @@ import {
   statSync,
 } from 'node:fs'
 import { basename, dirname, isAbsolute, join, posix, relative, resolve } from 'node:path'
-import { canonicalJson, type Family, isObject, type Json } from '../lib/layout.ts'
+import { type Family, isObject, type Json } from '../lib/layout.ts'
 import { scanReferences } from '../lib/references.ts'
 import {
   CONNECTION_MEMBERS,
@@ -26,7 +26,15 @@ import {
   parameterOrigin,
   parameterOriginDiagnostics,
 } from './selections.ts'
-import { compatible, schemaProblem, valueFits } from './values.ts'
+import { scanTemplate, templateTarget, urlComponents } from './templates.ts'
+import {
+  compatible,
+  generatorConflicts,
+  intersectionConflicts,
+  schemaKey,
+  schemaProblem,
+  valueFits,
+} from './values.ts'
 
 export type { Diagnostic }
 export interface DeferredObligation {
@@ -977,7 +985,68 @@ export function semanticReport(
       if (at(readDocument(path), 'kind') === 'COMPONENT')
         issue(out, 'ERR_UNREFERENCED_COMPONENT', '/spec/nodes')
     }
+  /** Parameters a template names, with the inputs those templates bind (BP-BIND-009). */
+  const templated = new Map<string, Record<string, Json>[]>()
+  // BP-BIND-009 and BP-BIND-010: what a template binding names, and where.
+  const templateDiagnostics = (
+    binding: Record<string, Json>,
+    where: string,
+    consumer: Record<string, Json>,
+    declared: boolean,
+  ) => {
+    const text = String(binding.template),
+      scan = scanTemplate(text)
+    for (const failure of scan.failures)
+      issue(
+        out,
+        failure.kind === 'malformed'
+          ? 'ERR_MALFORMED_PLACEHOLDER'
+          : failure.kind === 'unknown-namespace'
+            ? 'ERR_UNKNOWN_PLACEHOLDER_NAMESPACE'
+            : 'ERR_NAMESPACE_NOT_PERMITTED',
+        where,
+      )
+    if (scan.failures.length) return
+    // A template produces a string, so the input it binds takes one.
+    if (declared && !isConnectionInput(consumer) && at(consumer.schema, 'type') !== 'string')
+      issue(out, 'ERR_INCOMPATIBLE_TYPE', where)
+    for (const target of scan.references.map(templateTarget)) {
+      if (target.kind === 'unknown-parameter') issue(out, 'ERR_UNKNOWN_PARAMETER', where)
+      else if (target.kind === 'unknown-output') issue(out, 'ERR_UNKNOWN_OUTPUT', where)
+      else if (target.kind === 'parameter') {
+        const p = Object.hasOwn(parameters, target.parameter)
+          ? parameters[target.parameter]
+          : undefined
+        if (p === undefined) issue(out, 'ERR_UNKNOWN_PARAMETER', where)
+        else if (parameterOrigin(p)?.namespace === 'connections')
+          issue(out, 'ERR_INVALID_CONNECTION_BINDING', where)
+        else {
+          const list = templated.get(target.parameter) ?? []
+          if (declared) list.push(consumer)
+          templated.set(target.parameter, list)
+        }
+      } else if (!Object.hasOwn(nodes, target.node)) issue(out, 'ERR_UNKNOWN_NODE', where)
+      else {
+        const producer = resolved.get(target.node),
+          output = at(producer, 'spec', 'contract', 'outputs', target.output)
+        if (producer && !output) issue(out, 'ERR_UNKNOWN_OUTPUT', where)
+        // A placeholder yields the string form of a scalar (BP-BIND-009).
+        if (
+          output &&
+          !['string', 'integer', 'number', 'boolean'].includes(String(at(output, 'schema', 'type')))
+        )
+          issue(out, 'ERR_INCOMPATIBLE_TYPE', where)
+      }
+    }
+    if (binding.format === 'URL' && !urlComponents(text, scan.references))
+      issue(out, 'ERR_INVALID_TEMPLATE', where)
+    // A template without placeholders is a literal (BP-BIND-008, BP-BIND-009).
+    if (!scan.references.length && declared && consumer.sensitive === true)
+      issue(out, 'ERR_SENSITIVE_LITERAL', where)
+  }
+  /** Each parameter's receiving inputs, with where each is declared (BP-PARAM-002). */
   const consumers = new Map<string, Record<string, Json>[]>()
+  const receiving = new Map<string, { node: string; input: string; componentRef: string }[]>()
   const dependencies = new Map<string, string[]>()
   for (const [name, node] of Object.entries(nodes)) {
     const n = record(node),
@@ -1094,9 +1163,17 @@ export function semanticReport(
         path = `${base}/bindings/${token(input)}`,
         consumer = record(inputs[input])
       if (component && !inputs[input]) issue(out, 'ERR_UNKNOWN_INPUT', path)
+      // BP-BIND-002: a node binding, and each node output a template names, is a
+      // value dependency of the input.
       dependencies.set(
         `${name}:in:${input}`,
-        typeof s.node === 'string' ? [`${s.node}:out:${s.output}`] : [],
+        typeof s.node === 'string'
+          ? [`${s.node}:out:${s.output}`]
+          : typeof s.template === 'string'
+            ? scanTemplate(s.template)
+                .references.map(templateTarget)
+                .flatMap((t) => (t.kind === 'output' ? [`${t.node}:out:${t.output}`] : []))
+            : [],
       )
       if (typeof s.parameter === 'string') {
         const p = parameters[s.parameter]
@@ -1111,6 +1188,9 @@ export function semanticReport(
           const receivers = consumers.get(String(s.parameter)) ?? []
           receivers.push(consumer)
           consumers.set(String(s.parameter), receivers)
+          const where = receiving.get(String(s.parameter)) ?? []
+          where.push({ node: name, input, componentRef: String(n.componentRef) })
+          receiving.set(String(s.parameter), where)
           const value = at(p, 'default')
           if (
             value !== undefined &&
@@ -1151,6 +1231,8 @@ export function semanticReport(
           !valueFits(consumer.schema, literal)
         )
           issue(out, 'ERR_VALUE_CONSTRAINT', path)
+      } else if (typeof s.template === 'string') {
+        templateDiagnostics(s, `${path}/template`, consumer, Boolean(inputs[input]))
       } else if (Object.hasOwn(s, 'value') && inputs[input]) {
         if (
           consumer.schema !== undefined &&
@@ -1162,6 +1244,102 @@ export function semanticReport(
       }
     }
   }
+  // BP-HOST-003: a mounted endpoint is served under a path of another node's
+  // public, HTTP-routed endpoint, which has a host of its own, and no two mounts
+  // on one host overlap. Each reads the components, so it is decided only for
+  // those that are available.
+  const mounts = new Map<string, { path: string; where: string }[]>()
+  const protocolOf = (node: string, endpoint: string) =>
+    String(at(resolved.get(node), 'spec', 'workload', 'endpoints', endpoint, 'protocol'))
+  for (const [name, node] of Object.entries(nodes))
+    for (const [endpoint, exposure] of Object.entries(record(at(node, 'exposure')))) {
+      const mount = at(exposure, 'mount')
+      if (!isObject(mount)) continue
+      const where = `/spec/nodes/${token(name)}/exposure/${token(endpoint)}/mount`
+      const host = asString(mount.node) ?? '',
+        hostEndpoint = asString(mount.endpoint) ?? '',
+        path = asString(mount.path) ?? ''
+      if (!Object.hasOwn(nodes, host)) {
+        issue(out, 'ERR_UNKNOWN_NODE', `${where}/node`)
+        continue
+      }
+      const target = record(at(nodes[host], 'exposure'))[hostEndpoint]
+      const hostComponent = resolved.get(host)
+      if (hostComponent && !at(hostComponent, 'spec', 'workload', 'endpoints', hostEndpoint)) {
+        issue(out, 'ERR_UNKNOWN_ENDPOINT', `${where}/endpoint`)
+        continue
+      }
+      const segments = path.split('/').slice(1)
+      if (
+        (host === name && hostEndpoint === endpoint) ||
+        effectiveExposure(at(nodes[host], 'exposure'), hostEndpoint).visibility !== 'PUBLIC' ||
+        at(target, 'mount') !== undefined ||
+        segments.some((segment) => segment === '.' || segment === '..') ||
+        segments[0] === '.musher' ||
+        (resolved.get(name) && !HTTP_ROUTED.includes(protocolOf(name, endpoint))) ||
+        (hostComponent && !HTTP_ROUTED.includes(protocolOf(host, hostEndpoint)))
+      ) {
+        issue(out, 'ERR_INVALID_MOUNT', where)
+        continue
+      }
+      const key = `${host}\u0000${hostEndpoint}`,
+        siblings = mounts.get(key) ?? []
+      const under = (a: string, b: string) => a === b || a.startsWith(`${b}/`)
+      if (siblings.some((other) => under(path, other.path) || under(other.path, path)))
+        issue(out, 'ERR_INVALID_MOUNT', where)
+      siblings.push({ path, where })
+      mounts.set(key, siblings)
+    }
+  // BP-ORDER-002: a start condition fits the node it names, and only a node a
+  // rollout starts waits. Each reads a component, so it is decided only for one
+  // that is available.
+  const startEdges = new Map<string, string[]>()
+  const starts = (component: Json | undefined) => {
+    const type = at(component, 'spec', 'type')
+    return type === 'SERVICE' || type === 'WORKER'
+      ? 'READY'
+      : type === 'JOB' && at(component, 'spec', 'workload', 'schedule') === undefined
+        ? 'SUCCEEDED'
+        : undefined
+  }
+  for (const [name, node] of Object.entries(nodes)) {
+    const order = at(node, 'startAfter')
+    if (!Array.isArray(order)) continue
+    const base = `/spec/nodes/${token(name)}/startAfter`,
+      own = resolved.get(name)
+    if (own && starts(own) === undefined) issue(out, 'ERR_INVALID_START_ORDER', base)
+    const edges: string[] = []
+    order.forEach((entry, i) => {
+      const target = asString(at(entry, 'node'))
+      if (target === undefined) return
+      if (!Object.hasOwn(nodes, target)) {
+        issue(out, 'ERR_UNKNOWN_NODE', `${base}/${i}/node`)
+        return
+      }
+      edges.push(target)
+      const component = resolved.get(target)
+      if (component && starts(component) !== at(entry, 'condition'))
+        issue(out, 'ERR_INVALID_START_ORDER', `${base}/${i}/condition`)
+    })
+    startEdges.set(name, edges)
+  }
+  // BP-ORDER-003: the start graph is acyclic. Kahn's ordering terminates, and
+  // what it cannot order lies on a cycle.
+  {
+    const done = new Set<string>()
+    let progressed = true
+    while (progressed) {
+      progressed = false
+      for (const [n, edges] of startEdges) {
+        if (done.has(n)) continue
+        if (edges.every((e) => done.has(e) || !startEdges.has(e))) {
+          done.add(n)
+          progressed = true
+        }
+      }
+    }
+    if (done.size !== startEdges.size) issue(out, 'ERR_START_CYCLE', '/spec/nodes')
+  }
   for (const [name, p] of Object.entries(parameters)) {
     const receivers = consumers.get(name) ?? [],
       path = `/spec/parameters/${token(name)}`
@@ -1171,6 +1349,7 @@ export function semanticReport(
       Object.values(nodes).some((n) =>
         Object.values(record(at(n, 'bindings'))).some((b) => at(b, 'parameter') === name),
       ) ||
+      templated.has(name) ||
       (at(p, 'generator') !== undefined &&
         at(p, 'ui') !== undefined &&
         Object.values(parameters).some((other) => at(other, 'hash', 'parameter') === name))
@@ -1179,7 +1358,7 @@ export function semanticReport(
     // default, cannot reach a required input through a form deployment.
     if (
       ['generator', 'hash', 'from', 'ui', 'default'].every((key) => at(p, key) === undefined) &&
-      receivers.some((v) => v.required !== false)
+      [...receivers, ...(templated.get(name) ?? [])].some((v) => v.required !== false)
     )
       issue(out, 'ERR_PARAMETER_NOT_OFFERED', path)
     out.push(...parameterOriginDiagnostics(name, p))
@@ -1196,19 +1375,58 @@ export function semanticReport(
       )
         issue(out, 'ERR_INVALID_HASHED_PARAMETER', `${path}/hash/algorithm`)
     }
+    // BP-PARAM-002: the parameter's value schema is the intersection of its
+    // receivers'. Schemas that differ only in mapping order or in the order of a
+    // set (`required`, `enum`) are the same schema.
+    const schemas = receivers.map((v) => v.schema ?? null)
+    const differ = schemas.some((v) => schemaKey(v) !== schemaKey(schemas[0]))
+    const conflicts = new Set(differ ? intersectionConflicts(schemas) : [])
+    // BP-PARAM-002 and BP-PARAM-017: every string a generator can produce lies in
+    // the intersection. Where the receivers declare one schema, which 2.1.0
+    // accepted, a generator outside it is a warning rather than an error.
+    const generator = at(p, 'generator')
     if (
-      receivers.length > 1 &&
-      receivers.some(
-        (v) => canonicalJson(v.schema ?? null) !== canonicalJson(receivers[0]?.schema ?? null),
-      )
+      generator !== undefined &&
+      schemas.length &&
+      schemas.every((v) => at(v, 'type') === 'string')
+    ) {
+      const failing = [...new Set(schemas.flatMap((v) => generatorConflicts(generator, v)))]
+      if (differ) for (const keyword of failing) conflicts.add(keyword)
+      else if (failing.length)
+        out.push({
+          code: 'WARN_GENERATOR_OUTSIDE_SCHEMA',
+          path: `${path}/generator`,
+          message: `a generated value can fail ${failing.join(', ')}`,
+          phase: 'semantic',
+          severity: 'WARNING',
+        })
+    }
+    if (conflicts.size)
+      out.push({
+        code: 'ERR_CONFLICTING_INPUT_SCHEMA',
+        path,
+        message: `no value satisfies every input the parameter binds: ${[...conflicts].join(', ')}`,
+        phase: 'semantic',
+        related: (receiving.get(name) ?? []).map((r) => ({
+          artifact: r.componentRef,
+          path: `/spec/contract/inputs/${token(r.input)}/schema`,
+        })),
+      })
+    // BP-UI-003: the enum a form offers is the intersection's, in the order of
+    // the first receiver declaring one.
+    const enumOf = (v: Json | undefined) =>
+      Array.isArray(at(v, 'enum'))
+        ? (at(v, 'enum') as Json[])
+        : Array.isArray(at(v, 'items', 'enum'))
+          ? (at(v, 'items', 'enum') as Json[])
+          : undefined
+    const declaring = schemas.find((v) => enumOf(v) !== undefined)
+    const members = (enumOf(declaring) ?? []).filter((member) =>
+      schemas.every((v) => {
+        const own = enumOf(v)
+        return own === undefined || own.some((m) => schemaKey(m) === schemaKey(member))
+      }),
     )
-      issue(out, 'ERR_CONFLICTING_INPUT_SCHEMA', path)
-    const schema = record(receivers[0]?.schema)
-    const members = Array.isArray(schema.enum)
-      ? schema.enum
-      : Array.isArray(at(schema.items, 'enum'))
-        ? (at(schema.items, 'enum') as Json[])
-        : []
     for (const member of Object.keys(record(at(p, 'ui', 'enumLabels'))))
       if (
         receivers.length &&

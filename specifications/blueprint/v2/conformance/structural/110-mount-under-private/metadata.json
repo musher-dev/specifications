@@ -1,0 +1,10 @@
+{
+  "id": "structural-110-mount-under-private",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#public-hosts",
+  "requirements": [
+    "BP-HOST-002"
+  ],
+  "summary": "A PRIVATE endpoint has no public host to be served under."
+}

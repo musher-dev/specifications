@@ -1,0 +1,11 @@
+{
+  "id": "semantic-171-mount-under-a-private-host",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#public-hosts",
+  "requirements": [
+    "BP-HOST-003"
+  ],
+  "summary": "A mount's host endpoint must be PUBLIC.",
+  "document": "app/blueprint.yaml"
+}

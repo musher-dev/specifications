@@ -1,0 +1,11 @@
+{
+  "id": "semantic-172-mount-under-the-platform-sign-in",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#public-hosts",
+  "requirements": [
+    "BP-HOST-003"
+  ],
+  "summary": "A mount path under /.musher would shadow the platform's own sign-in.",
+  "document": "app/blueprint.yaml"
+}

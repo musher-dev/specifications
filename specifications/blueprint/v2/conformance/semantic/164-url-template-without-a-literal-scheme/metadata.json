@@ -1,0 +1,11 @@
+{
+  "id": "semantic-164-url-template-without-a-literal-scheme",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#bindings",
+  "requirements": [
+    "BP-BIND-010"
+  ],
+  "summary": "A URL template whose scheme a placeholder supplies is no URL the platform can encode.",
+  "document": "app/blueprint.yaml"
+}

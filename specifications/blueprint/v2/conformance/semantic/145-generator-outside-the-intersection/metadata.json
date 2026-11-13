@@ -1,0 +1,12 @@
+{
+  "id": "semantic-145-generator-outside-the-intersection",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#parameters",
+  "requirements": [
+    "BP-PARAM-002",
+    "BP-PARAM-004"
+  ],
+  "summary": "A BASE64 generator can produce a + or a /, which the stricter of two different input schemas rejects.",
+  "document": "app/blueprint.yaml"
+}

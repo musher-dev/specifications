@@ -1,0 +1,10 @@
+{
+  "id": "structural-104-start-condition-with-an-unknown-member",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#start-order",
+  "requirements": [
+    "BP-ORDER-001"
+  ],
+  "summary": "An entry with a member other than node and condition is rejected."
+}

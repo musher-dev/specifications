@@ -1,0 +1,11 @@
+{
+  "id": "semantic-174-mount-names-an-unknown-node",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#public-hosts",
+  "requirements": [
+    "BP-HOST-003"
+  ],
+  "summary": "A mount naming no node is rejected.",
+  "document": "app/blueprint.yaml"
+}

@@ -29,6 +29,7 @@ import {
   type ValidationScope,
 } from './document.ts'
 import { listingObligations } from './listing.ts'
+import { deploymentFacts } from './selections.ts'
 import {
   componentObligations,
   componentWarnings,
@@ -66,6 +67,11 @@ export type ValidationContext = Omit<SemanticContext, 'validationScope'> & {
   readonly validationScope?: ValidationScope
   /** The platform's catalog and runtime, for the admission rules that read them. */
   readonly platform?: Json
+  /**
+   * Blueprint BP-PARAM-016: at the `deployment` scope, the caller's facts as the
+   * prospective creator, in the shape of the resolution context's `deployment`.
+   */
+  readonly deployment?: unknown
 }
 
 /**
@@ -358,12 +364,6 @@ export function validateDocument(
         path: '',
         missing: 'authorized catalog and policy admission',
       })
-    if (scope === 'deployment')
-      report.deferred.push({
-        rule: 'BP-RESOLVE-001',
-        path: '/spec/nodes',
-        missing: 'deployment resolution',
-      })
     const diagnostics: Diagnostic[] = report.diagnostics.map((d) => reported(d, 'semantic'))
     // Component v2 §5.2: the advisory checks of the semantic phase. A WARNING
     // never changes the status, so it neither fails the document nor stops a
@@ -386,6 +386,33 @@ export function validateDocument(
         report.deferred.push(...listing.deferred)
       }
     }
+    // Blueprint BP-PARAM-016: a deployment-scope validation treats its caller as
+    // the prospective creator, and resolves the deployment facts the caller
+    // supplies rather than deferring them. The rest of resolution stays deferred.
+    if (scope === 'deployment' && family.name === 'blueprint' && !diagnostics.some(isError)) {
+      reached = 'resolution'
+      const parameters = field(field(parsed.value, 'spec'), 'parameters')
+      const facts = deploymentFacts(
+        isObject(parameters) ? parameters : {},
+        context.deployment as Json | undefined,
+      )
+      if (facts.malformed)
+        diagnostics.push({
+          code: 'ERR_INVALID_RESOLUTION_CONTEXT',
+          path: '/spec/parameters',
+          message: 'ERR_INVALID_RESOLUTION_CONTEXT',
+          phase: 'resolution',
+          stage: 'parameters',
+        })
+      diagnostics.push(...facts.diagnostics)
+      report.deferred.push(...facts.deferred)
+    }
+    if (scope === 'deployment')
+      report.deferred.push({
+        rule: 'BP-RESOLVE-001',
+        path: '/spec/nodes',
+        missing: 'deployment resolution',
+      })
     const status = diagnostics.some(isError)
       ? 'INVALID'
       : report.deferred.length

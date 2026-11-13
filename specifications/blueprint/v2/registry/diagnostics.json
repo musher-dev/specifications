@@ -847,7 +847,37 @@
       "declaredBy": "blueprint"
     },
     {
+      "code": "ERR_START_CYCLE",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_INVALID_START_ORDER",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
       "code": "ERR_INVALID_CONNECTION_BINDING",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_INVALID_TEMPLATE",
       "phases": [
         "semantic"
       ],
@@ -935,6 +965,17 @@
         "ERROR"
       ],
       "declaredBy": "blueprint"
+    },
+    {
+      "code": "WARN_GENERATOR_OUTSIDE_SCHEMA",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "WARNING"
+      ],
+      "declaredBy": "blueprint",
+      "requirement": "BP-PARAM-017"
     }
   ]
 }

@@ -1,0 +1,11 @@
+{
+  "id": "semantic-153-start-after-an-unknown-node",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#start-order",
+  "requirements": [
+    "BP-ORDER-002"
+  ],
+  "summary": "A start condition naming no node is rejected.",
+  "document": "app/blueprint.yaml"
+}

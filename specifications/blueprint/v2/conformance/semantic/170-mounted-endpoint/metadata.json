@@ -1,0 +1,11 @@
+{
+  "id": "semantic-170-mounted-endpoint",
+  "phase": "semantic",
+  "expected": "pass",
+  "clause": "specifications/blueprint/v2/spec.md#public-hosts",
+  "requirements": [
+    "BP-HOST-003"
+  ],
+  "summary": "A realtime node is served under a path of the application's restricted public host.",
+  "document": "app/blueprint.yaml"
+}

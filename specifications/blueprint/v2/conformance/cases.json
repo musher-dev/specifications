@@ -826,6 +826,216 @@
       "id": "structural-091-uppercase-catalog-reference",
       "phase": "structural",
       "path": "structural/091-uppercase-catalog-reference"
+    },
+    {
+      "id": "semantic-140-stricter-consumer-shares-a-parameter",
+      "phase": "semantic",
+      "path": "semantic/140-stricter-consumer-shares-a-parameter"
+    },
+    {
+      "id": "semantic-141-required-compares-as-a-set",
+      "phase": "semantic",
+      "path": "semantic/141-required-compares-as-a-set"
+    },
+    {
+      "id": "semantic-142-lengths-that-cannot-meet",
+      "phase": "semantic",
+      "path": "semantic/142-lengths-that-cannot-meet"
+    },
+    {
+      "id": "semantic-143-disjoint-enums",
+      "phase": "semantic",
+      "path": "semantic/143-disjoint-enums"
+    },
+    {
+      "id": "semantic-144-integer-bounds-holding-no-integer",
+      "phase": "semantic",
+      "path": "semantic/144-integer-bounds-holding-no-integer"
+    },
+    {
+      "id": "semantic-145-generator-outside-the-intersection",
+      "phase": "semantic",
+      "path": "semantic/145-generator-outside-the-intersection"
+    },
+    {
+      "id": "semantic-146-generator-within-the-intersection",
+      "phase": "semantic",
+      "path": "semantic/146-generator-within-the-intersection"
+    },
+    {
+      "id": "semantic-147-generator-longer-than-the-intersection",
+      "phase": "semantic",
+      "path": "semantic/147-generator-longer-than-the-intersection"
+    },
+    {
+      "id": "structural-100-start-after",
+      "phase": "structural",
+      "path": "structural/100-start-after"
+    },
+    {
+      "id": "structural-101-start-condition-outside-the-vocabulary",
+      "phase": "structural",
+      "path": "structural/101-start-condition-outside-the-vocabulary"
+    },
+    {
+      "id": "structural-102-start-condition-without-a-condition",
+      "phase": "structural",
+      "path": "structural/102-start-condition-without-a-condition"
+    },
+    {
+      "id": "structural-103-empty-start-after",
+      "phase": "structural",
+      "path": "structural/103-empty-start-after"
+    },
+    {
+      "id": "structural-104-start-condition-with-an-unknown-member",
+      "phase": "structural",
+      "path": "structural/104-start-condition-with-an-unknown-member"
+    },
+    {
+      "id": "semantic-150-start-order",
+      "phase": "semantic",
+      "path": "semantic/150-start-order"
+    },
+    {
+      "id": "semantic-151-start-cycle",
+      "phase": "semantic",
+      "path": "semantic/151-start-cycle"
+    },
+    {
+      "id": "semantic-152-start-after-itself",
+      "phase": "semantic",
+      "path": "semantic/152-start-after-itself"
+    },
+    {
+      "id": "semantic-153-start-after-an-unknown-node",
+      "phase": "semantic",
+      "path": "semantic/153-start-after-an-unknown-node"
+    },
+    {
+      "id": "semantic-154-ready-condition-on-a-job",
+      "phase": "semantic",
+      "path": "semantic/154-ready-condition-on-a-job"
+    },
+    {
+      "id": "semantic-155-succeeded-condition-on-a-scheduled-job",
+      "phase": "semantic",
+      "path": "semantic/155-succeeded-condition-on-a-scheduled-job"
+    },
+    {
+      "id": "semantic-156-start-order-on-an-external-node",
+      "phase": "semantic",
+      "path": "semantic/156-start-order-on-an-external-node"
+    },
+    {
+      "id": "structural-105-template-binding",
+      "phase": "structural",
+      "path": "structural/105-template-binding"
+    },
+    {
+      "id": "structural-106-template-without-a-format",
+      "phase": "structural",
+      "path": "structural/106-template-without-a-format"
+    },
+    {
+      "id": "structural-107-template-format-outside-the-vocabulary",
+      "phase": "structural",
+      "path": "structural/107-template-format-outside-the-vocabulary"
+    },
+    {
+      "id": "structural-108-template-beside-a-value",
+      "phase": "structural",
+      "path": "structural/108-template-beside-a-value"
+    },
+    {
+      "id": "semantic-160-url-template",
+      "phase": "semantic",
+      "path": "semantic/160-url-template"
+    },
+    {
+      "id": "semantic-161-template-in-a-namespace-not-permitted",
+      "phase": "semantic",
+      "path": "semantic/161-template-in-a-namespace-not-permitted"
+    },
+    {
+      "id": "semantic-162-template-names-an-unknown-parameter",
+      "phase": "semantic",
+      "path": "semantic/162-template-names-an-unknown-parameter"
+    },
+    {
+      "id": "semantic-163-template-output-path-without-outputs",
+      "phase": "semantic",
+      "path": "semantic/163-template-output-path-without-outputs"
+    },
+    {
+      "id": "semantic-164-url-template-without-a-literal-scheme",
+      "phase": "semantic",
+      "path": "semantic/164-url-template-without-a-literal-scheme"
+    },
+    {
+      "id": "semantic-165-template-into-an-integer-input",
+      "phase": "semantic",
+      "path": "semantic/165-template-into-an-integer-input"
+    },
+    {
+      "id": "semantic-166-template-names-a-connection-parameter",
+      "phase": "semantic",
+      "path": "semantic/166-template-names-a-connection-parameter"
+    },
+    {
+      "id": "semantic-167-literal-template-into-a-sensitive-input",
+      "phase": "semantic",
+      "path": "semantic/167-literal-template-into-a-sensitive-input"
+    },
+    {
+      "id": "structural-109-mounted-endpoint",
+      "phase": "structural",
+      "path": "structural/109-mounted-endpoint"
+    },
+    {
+      "id": "structural-110-mount-under-private",
+      "phase": "structural",
+      "path": "structural/110-mount-under-private"
+    },
+    {
+      "id": "structural-111-mount-path-with-a-trailing-slash",
+      "phase": "structural",
+      "path": "structural/111-mount-path-with-a-trailing-slash"
+    },
+    {
+      "id": "structural-112-mount-without-a-path",
+      "phase": "structural",
+      "path": "structural/112-mount-without-a-path"
+    },
+    {
+      "id": "semantic-170-mounted-endpoint",
+      "phase": "semantic",
+      "path": "semantic/170-mounted-endpoint"
+    },
+    {
+      "id": "semantic-171-mount-under-a-private-host",
+      "phase": "semantic",
+      "path": "semantic/171-mount-under-a-private-host"
+    },
+    {
+      "id": "semantic-172-mount-under-the-platform-sign-in",
+      "phase": "semantic",
+      "path": "semantic/172-mount-under-the-platform-sign-in"
+    },
+    {
+      "id": "semantic-173-mount-of-a-tcp-endpoint",
+      "phase": "semantic",
+      "path": "semantic/173-mount-of-a-tcp-endpoint"
+    },
+    {
+      "id": "semantic-174-mount-names-an-unknown-node",
+      "phase": "semantic",
+      "path": "semantic/174-mount-names-an-unknown-node"
+    },
+    {
+      "id": "semantic-175-overlapping-mounts",
+      "phase": "semantic",
+      "path": "semantic/175-overlapping-mounts"
     }
   ]
 }

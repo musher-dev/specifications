@@ -1,0 +1,23 @@
+specVersion: v2
+kind: BLUEPRINT
+metadata:
+  slug: app
+  revision: 1
+  description: Synthetic conformance fixture blueprint.
+spec:
+  parameters: {}
+  nodes:
+    db:
+      componentRef: ./components/db.yaml
+      compute:
+        profile: general.standard.small
+      startAfter:
+      - node: web
+        condition: READY
+    web:
+      componentRef: ./components/web.yaml
+      compute:
+        profile: general.standard.small
+      startAfter:
+      - node: db
+        condition: READY

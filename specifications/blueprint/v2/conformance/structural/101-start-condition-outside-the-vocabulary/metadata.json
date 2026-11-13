@@ -1,0 +1,10 @@
+{
+  "id": "structural-101-start-condition-outside-the-vocabulary",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#start-order",
+  "requirements": [
+    "BP-ORDER-001"
+  ],
+  "summary": "A start condition other than READY or SUCCEEDED is rejected."
+}

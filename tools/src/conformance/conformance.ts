@@ -1296,6 +1296,50 @@ const UNPINNED: ReadonlyMap<string, string> = new Map([
       'connection',
   ],
   [
+    'BP-ACCESS-012',
+    'That an exemption takes effect only once a rollout carrying it is active, and that ' +
+      'exempt requests require sign-in until then, is a runtime obligation of the platform ' +
+      'edge; no document phase or behavioural operation observes a request or a rollout',
+  ],
+  [
+    'BP-HOST-001',
+    'That every unmounted PUBLIC endpoint is allocated a hostname of its own is a fact of ' +
+      'the platform edge; resolution reads the allocations it is given but no operation ' +
+      'allocates one',
+  ],
+  [
+    'BP-HOST-004',
+    "Forwarding a request under a mount's path to the mounted endpoint, path unchanged, is a " +
+      'runtime obligation of the platform edge; the semantic phase pins what a mount may name ' +
+      '(BP-HOST-003), but no operation observes a request',
+  ],
+  [
+    'BP-HOST-005',
+    "That one sign-in holds across a deployment's public hosts, and no other deployment's, is " +
+      'a runtime obligation of the platform edge; no document phase or behavioural operation ' +
+      'observes a session',
+  ],
+  [
+    'BP-ORDER-004',
+    'Holding a node until the conditions its startAfter names hold, reporting it as waiting ' +
+      'and failing a rollout whose condition cannot hold are runtime obligations of the ' +
+      'platform; the semantic phase pins what a document may name (BP-ORDER-002, ' +
+      'BP-ORDER-003), but no operation observes a rollout',
+  ],
+  [
+    'BP-ORDER-005',
+    'When a rollout becomes active, every SERVICE and WORKER ready and every ordered job ' +
+      'succeeded, is a runtime observation of the platform; no document phase or behavioural ' +
+      'operation observes a rollout',
+  ],
+  [
+    'BP-PARAM-015',
+    'That a deployment an organization API key creates takes the user who created the key ' +
+      'as its creator is a fact of the platform identity service; resolution and validation ' +
+      'read the creator facts they are given (BP-PARAM-011, BP-PARAM-016) but no operation ' +
+      'observes a key',
+  ],
+  [
     'COMP-VOL-002',
     'That a non-shared volume is mounted into at most one replica at a time is a runtime ' +
       'obligation of the platform; no document phase or behavioural operation observes a mount',
