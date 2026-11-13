@@ -10,7 +10,7 @@ it. `task check:terms` holds the records, the schemas and the prose together,
 and the words to avoid are enforced in prose by the generated
 `MusherSpecifications` Vale style.
 
-221 record(s). A record marked *proposed* is an open item, not yet a decision.
+222 record(s). A record marked *proposed* is an open item, not yet a decision.
 
 ## Index
 
@@ -207,6 +207,7 @@ and the words to avoid are enforced in prose by the generated
 | [summary](#listing-summary) | listing | A one-line plain-text tagline. |
 | [tag](#listing-tag) | listing | An open, kebab-case discovery key. |
 | [target port](#component-target-port) | component | The port the workload listens on. |
+| [template](#blueprint-template-binding) | blueprint | Binds { template, format }. |
 | [template](#component-template) | component | A string with self placeholders substituted. |
 | [term record](#repository-term-record) | repository | One concept in one context, in docs/terminology.yaml. |
 | [trust policy](#component-trust-policy) | component | How the platform verifies an HTTPS endpoint's certificate. |
@@ -2580,6 +2581,22 @@ default, and the only kind a deploy form edits.
   §5](../specifications/blueprint/v2/spec.md#parameters), [blueprint v2
   §5.2](../specifications/blueprint/v2/spec.md#value-sources)
 - **Status:** approved, stable. Tags: parameters.
+
+#### <a id="blueprint-template-binding"></a>template
+
+A binding whose origin is a string composed of literal text and placeholders
+naming deployment parameters and node outputs, written into the text as its
+format says.
+
+- **Kind of:** [binding](#blueprint-binding)
+- **Identifiers:** fields: `template`, `format`; values: `URL`, `TEXT`; codes:
+  `ERR_INVALID_TEMPLATE`
+- **Not to be confused with:** A component output template, which reads only the
+  component's own endpoint properties.
+- **Source:** [blueprint v2
+  §4.2](../specifications/blueprint/v2/spec.md#bindings), [ADR
+  0050](adr/0050-a-binding-composes-a-string-and-encodes-what-it-interpolates.md)
+- **Status:** approved, stable. Tags: values.
 
 #### <a id="blueprint-user-selection"></a>USER selection
 

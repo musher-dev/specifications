@@ -1,0 +1,11 @@
+{
+  "id": "semantic-163-template-output-path-without-outputs",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#bindings",
+  "requirements": [
+    "BP-BIND-009"
+  ],
+  "summary": "A nodes path that skips outputs names no output explicitly.",
+  "document": "app/blueprint.yaml"
+}

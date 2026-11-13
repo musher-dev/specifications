@@ -1,0 +1,11 @@
+{
+  "id": "semantic-162-template-names-an-unknown-parameter",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#bindings",
+  "requirements": [
+    "BP-BIND-009"
+  ],
+  "summary": "A template names a parameter the blueprint does not declare.",
+  "document": "app/blueprint.yaml"
+}

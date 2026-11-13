@@ -21,11 +21,11 @@
  * namespace outside it is `CORE-PLACEHOLDER-002` wherever it is written.
  *
  * A position permits only the namespaces its family names: `self` in component
- * and blueprint values, and `variables`, `connections` and `deployment` in a
- * blueprint parameter's `from`. `parameters`, `environment`, `organization` and
- * `nodes` have no meaning yet, so writing one anywhere is
- * `CORE-PLACEHOLDER-003`. They are listed because reserving a name is the only
- * part of this that cannot be done later.
+ * and blueprint values, `variables`, `connections` and `deployment` in a
+ * blueprint parameter's `from`, and `parameters` and `nodes` in a blueprint
+ * binding's `template`. `environment` and `organization` have no meaning yet, so
+ * writing one anywhere is `CORE-PLACEHOLDER-003`. They are listed because
+ * reserving a name is the only part of this that cannot be done later.
  */
 export const RESERVED_NAMESPACES = [
   'self',

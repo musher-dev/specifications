@@ -2109,6 +2109,22 @@ terms:
     status: approved
     tags: [values]
 
+  - id: blueprint.template-binding
+    display_name: template
+    context: blueprint
+    definition: >-
+      A binding whose origin is a string composed of literal text and
+      placeholders naming deployment parameters and node outputs, written into
+      the text as its format says.
+    shortDefinition: "Binds { template, format }."
+    kind_of: [blueprint.binding]
+    identifiers: { fields: [template, format], values: [URL, TEXT], codes: [ERR_INVALID_TEMPLATE] }
+    confusables: ["A component output template, which reads only the component's own endpoint properties."]
+    source: [blueprint v2 §4.2, ADR 0050]
+    stability: stable
+    status: approved
+    tags: [values]
+
   - id: blueprint.node-output-binding
     display_name: node output binding
     context: blueprint

@@ -58,6 +58,21 @@
       "section": "bindings"
     },
     {
+      "id": "BP-BIND-009",
+      "anchor": "BP-BIND-009",
+      "section": "bindings"
+    },
+    {
+      "id": "BP-BIND-010",
+      "anchor": "BP-BIND-010",
+      "section": "bindings"
+    },
+    {
+      "id": "BP-BIND-011",
+      "anchor": "BP-BIND-011",
+      "section": "bindings"
+    },
+    {
       "id": "BP-NODE-001",
       "anchor": "BP-NODE-001",
       "section": "node-compute"

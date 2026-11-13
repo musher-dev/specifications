@@ -26,6 +26,7 @@ import {
   parameterOrigin,
   parameterOriginDiagnostics,
 } from './selections.ts'
+import { scanTemplate, templateTarget, urlComponents } from './templates.ts'
 import {
   compatible,
   generatorConflicts,
@@ -920,6 +921,65 @@ export function semanticReport(
       if (at(readDocument(path), 'kind') === 'COMPONENT')
         issue(out, 'ERR_UNREFERENCED_COMPONENT', '/spec/nodes')
     }
+  /** Parameters a template names, with the inputs those templates bind (BP-BIND-009). */
+  const templated = new Map<string, Record<string, Json>[]>()
+  // BP-BIND-009 and BP-BIND-010: what a template binding names, and where.
+  const templateDiagnostics = (
+    binding: Record<string, Json>,
+    where: string,
+    consumer: Record<string, Json>,
+    declared: boolean,
+  ) => {
+    const text = String(binding.template),
+      scan = scanTemplate(text)
+    for (const failure of scan.failures)
+      issue(
+        out,
+        failure.kind === 'malformed'
+          ? 'ERR_MALFORMED_PLACEHOLDER'
+          : failure.kind === 'unknown-namespace'
+            ? 'ERR_UNKNOWN_PLACEHOLDER_NAMESPACE'
+            : 'ERR_NAMESPACE_NOT_PERMITTED',
+        where,
+      )
+    if (scan.failures.length) return
+    // A template produces a string, so the input it binds takes one.
+    if (declared && !isConnectionInput(consumer) && at(consumer.schema, 'type') !== 'string')
+      issue(out, 'ERR_INCOMPATIBLE_TYPE', where)
+    for (const target of scan.references.map(templateTarget)) {
+      if (target.kind === 'unknown-parameter') issue(out, 'ERR_UNKNOWN_PARAMETER', where)
+      else if (target.kind === 'unknown-output') issue(out, 'ERR_UNKNOWN_OUTPUT', where)
+      else if (target.kind === 'parameter') {
+        const p = Object.hasOwn(parameters, target.parameter)
+          ? parameters[target.parameter]
+          : undefined
+        if (p === undefined) issue(out, 'ERR_UNKNOWN_PARAMETER', where)
+        else if (parameterOrigin(p)?.namespace === 'connections')
+          issue(out, 'ERR_INVALID_CONNECTION_BINDING', where)
+        else {
+          const list = templated.get(target.parameter) ?? []
+          if (declared) list.push(consumer)
+          templated.set(target.parameter, list)
+        }
+      } else if (!Object.hasOwn(nodes, target.node)) issue(out, 'ERR_UNKNOWN_NODE', where)
+      else {
+        const producer = resolved.get(target.node),
+          output = at(producer, 'spec', 'contract', 'outputs', target.output)
+        if (producer && !output) issue(out, 'ERR_UNKNOWN_OUTPUT', where)
+        // A placeholder yields the string form of a scalar (BP-BIND-009).
+        if (
+          output &&
+          !['string', 'integer', 'number', 'boolean'].includes(String(at(output, 'schema', 'type')))
+        )
+          issue(out, 'ERR_INCOMPATIBLE_TYPE', where)
+      }
+    }
+    if (binding.format === 'URL' && !urlComponents(text, scan.references))
+      issue(out, 'ERR_INVALID_TEMPLATE', where)
+    // A template without placeholders is a literal (BP-BIND-008, BP-BIND-009).
+    if (!scan.references.length && declared && consumer.sensitive === true)
+      issue(out, 'ERR_SENSITIVE_LITERAL', where)
+  }
   /** Each parameter's receiving inputs, with where each is declared (BP-PARAM-002). */
   const consumers = new Map<string, Record<string, Json>[]>()
   const receiving = new Map<string, { node: string; input: string; componentRef: string }[]>()
@@ -1038,9 +1098,17 @@ export function semanticReport(
         path = `${base}/bindings/${token(input)}`,
         consumer = record(inputs[input])
       if (component && !inputs[input]) issue(out, 'ERR_UNKNOWN_INPUT', path)
+      // BP-BIND-002: a node binding, and each node output a template names, is a
+      // value dependency of the input.
       dependencies.set(
         `${name}:in:${input}`,
-        typeof s.node === 'string' ? [`${s.node}:out:${s.output}`] : [],
+        typeof s.node === 'string'
+          ? [`${s.node}:out:${s.output}`]
+          : typeof s.template === 'string'
+            ? scanTemplate(s.template)
+                .references.map(templateTarget)
+                .flatMap((t) => (t.kind === 'output' ? [`${t.node}:out:${t.output}`] : []))
+            : [],
       )
       if (typeof s.parameter === 'string') {
         const p = parameters[s.parameter]
@@ -1098,6 +1166,8 @@ export function semanticReport(
           !valueFits(consumer.schema, literal)
         )
           issue(out, 'ERR_VALUE_CONSTRAINT', path)
+      } else if (typeof s.template === 'string') {
+        templateDiagnostics(s, `${path}/template`, consumer, Boolean(inputs[input]))
       } else if (Object.hasOwn(s, 'value') && inputs[input]) {
         if (
           consumer.schema !== undefined &&
@@ -1168,6 +1238,7 @@ export function semanticReport(
       Object.values(nodes).some((n) =>
         Object.values(record(at(n, 'bindings'))).some((b) => at(b, 'parameter') === name),
       ) ||
+      templated.has(name) ||
       (at(p, 'generator') !== undefined &&
         at(p, 'ui') !== undefined &&
         Object.values(parameters).some((other) => at(other, 'hash', 'parameter') === name))
@@ -1176,7 +1247,7 @@ export function semanticReport(
     // default, cannot reach a required input through a form deployment.
     if (
       ['generator', 'hash', 'from', 'ui', 'default'].every((key) => at(p, key) === undefined) &&
-      receivers.some((v) => v.required !== false)
+      [...receivers, ...(templated.get(name) ?? [])].some((v) => v.required !== false)
     )
       issue(out, 'ERR_PARAMETER_NOT_OFFERED', path)
     out.push(...parameterOriginDiagnostics(name, p))

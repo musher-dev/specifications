@@ -7913,5 +7913,117 @@
         "phase": "semantic"
       }
     ]
+  },
+  {
+    "id": "resolution-url-template-encodes-each-component",
+    "suite": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-BIND-009",
+      "BP-BIND-010",
+      "BP-BIND-011"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v2\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"dbUser\":{\"ui\":{\"label\":\"User\"}},\"dbPassword\":{\"ui\":{\"label\":\"Password\"}},\"dbName\":{\"ui\":{\"label\":\"Database\"}}},\"nodes\":{\"db\":{\"componentRef\":\"./db.yaml\",\"bindings\":{\"host\":{\"value\":\"db.internal\"},\"port\":{\"value\":5432}}},\"app\":{\"componentRef\":\"./app.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"databaseURL\":{\"template\":\"postgres://${{ parameters.dbUser }}:${{ parameters.dbPassword }}@${{ nodes.db.outputs.host }}:${{ nodes.db.outputs.port }}/${{ parameters.dbName }}?application_name=${{ parameters.dbName }}#${{ parameters.dbUser }}\",\"format\":\"URL\"}}}}}}",
+      "app/db.yaml": "{\"specVersion\":\"v2\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"EXTERNAL\",\"contract\":{\"inputs\":{\"host\":{\"schema\":{\"type\":\"string\"},\"description\":\"Host the database answers on.\"},\"port\":{\"schema\":{\"type\":\"integer\"},\"description\":\"Port the database answers on.\"}},\"outputs\":{\"host\":{\"schema\":{\"type\":\"string\"},\"description\":\"Host the database answers on.\",\"from\":{\"input\":\"host\"}},\"port\":{\"schema\":{\"type\":\"integer\"},\"description\":\"Port the database answers on.\",\"from\":{\"input\":\"port\"}}}}}}",
+      "app/app.yaml": "{\"specVersion\":\"v2\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/service:1\"}},\"contract\":{\"inputs\":{\"databaseURL\":{\"schema\":{\"type\":\"string\"},\"description\":\"Synthetic input.\",\"target\":{\"envVar\":\"DATABASE_URL\"}}},\"outputs\":{}}}}"
+    },
+    "document": "app/blueprint.yaml",
+    "context": {
+      "sources": {
+        "app": {
+          "imageDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      },
+      "parameters": {
+        "dbUser": {
+          "value": "ad min",
+          "sensitive": false
+        },
+        "dbPassword": {
+          "value": "p@ss/w:rd+=",
+          "sensitive": true
+        },
+        "dbName": {
+          "value": "my db",
+          "sensitive": false
+        }
+      }
+    },
+    "expect": {
+      "/status": "VALID",
+      "/environment/app/DATABASE_URL/value": "postgres://ad%20min:p%40ss%2Fw%3Ard%2B%3D@db.internal:5432/my%20db?application_name=my%20db#ad%20min",
+      "/inputs/app:in:databaseURL/sensitive": true,
+      "/inspection/app:in:databaseURL": {
+        "sensitive": true,
+        "redacted": true
+      }
+    }
+  },
+  {
+    "id": "resolution-text-template-writes-values-as-they-are",
+    "suite": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-BIND-010",
+      "BP-BIND-011"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v2\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"dbPassword\":{\"ui\":{\"label\":\"Password\"}}},\"nodes\":{\"db\":{\"componentRef\":\"./db.yaml\",\"bindings\":{\"host\":{\"value\":\"db.internal\"},\"port\":{\"value\":5432}}},\"app\":{\"componentRef\":\"./app.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"databaseURL\":{\"template\":\"neo4j/${{ parameters.dbPassword }} on ${{ nodes.db.outputs.port }}\",\"format\":\"TEXT\"}}}}}}",
+      "app/db.yaml": "{\"specVersion\":\"v2\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"EXTERNAL\",\"contract\":{\"inputs\":{\"host\":{\"schema\":{\"type\":\"string\"},\"description\":\"Host the database answers on.\"},\"port\":{\"schema\":{\"type\":\"integer\"},\"description\":\"Port the database answers on.\"}},\"outputs\":{\"host\":{\"schema\":{\"type\":\"string\"},\"description\":\"Host the database answers on.\",\"from\":{\"input\":\"host\"}},\"port\":{\"schema\":{\"type\":\"integer\"},\"description\":\"Port the database answers on.\",\"from\":{\"input\":\"port\"}}}}}}",
+      "app/app.yaml": "{\"specVersion\":\"v2\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/service:1\"}},\"contract\":{\"inputs\":{\"databaseURL\":{\"schema\":{\"type\":\"string\"},\"description\":\"Synthetic input.\",\"target\":{\"envVar\":\"DATABASE_URL\"}}},\"outputs\":{}}}}"
+    },
+    "document": "app/blueprint.yaml",
+    "context": {
+      "sources": {
+        "app": {
+          "imageDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      },
+      "parameters": {
+        "dbPassword": {
+          "value": "p@ss/w:rd+=",
+          "sensitive": true
+        }
+      }
+    },
+    "expect": {
+      "/status": "VALID",
+      "/environment/app/DATABASE_URL/value": "neo4j/p@ss/w:rd+= on 5432",
+      "/inputs/app:in:databaseURL/sensitive": true
+    }
+  },
+  {
+    "id": "resolution-url-template-host-outside-its-characters",
+    "suite": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-BIND-010"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v2\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{},\"nodes\":{\"db\":{\"componentRef\":\"./db.yaml\",\"bindings\":{\"host\":{\"value\":\"db internal\"},\"port\":{\"value\":5432}}},\"app\":{\"componentRef\":\"./app.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"databaseURL\":{\"template\":\"postgres://${{ nodes.db.outputs.host }}/app\",\"format\":\"URL\"}}}}}}",
+      "app/db.yaml": "{\"specVersion\":\"v2\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"EXTERNAL\",\"contract\":{\"inputs\":{\"host\":{\"schema\":{\"type\":\"string\"},\"description\":\"Host the database answers on.\"},\"port\":{\"schema\":{\"type\":\"integer\"},\"description\":\"Port the database answers on.\"}},\"outputs\":{\"host\":{\"schema\":{\"type\":\"string\"},\"description\":\"Host the database answers on.\",\"from\":{\"input\":\"host\"}},\"port\":{\"schema\":{\"type\":\"integer\"},\"description\":\"Port the database answers on.\",\"from\":{\"input\":\"port\"}}}}}}",
+      "app/app.yaml": "{\"specVersion\":\"v2\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/service:1\"}},\"contract\":{\"inputs\":{\"databaseURL\":{\"schema\":{\"type\":\"string\"},\"description\":\"Synthetic input.\",\"target\":{\"envVar\":\"DATABASE_URL\"}}},\"outputs\":{}}}}"
+    },
+    "document": "app/blueprint.yaml",
+    "context": {
+      "sources": {
+        "app": {
+          "imageDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID",
+      "/inputs": {}
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_VALUE_CONSTRAINT",
+        "path": "/spec/nodes/app/bindings/databaseURL",
+        "phase": "resolution",
+        "stage": "values"
+      }
+    ]
   }
 ]

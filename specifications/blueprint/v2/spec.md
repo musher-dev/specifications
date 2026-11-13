@@ -415,14 +415,15 @@ node. The map key names an input of the node's component
 | `parameter` | `parameter` | A named deployment parameter ([§5](#parameters)) |
 | `node` | `node`, `output` | An output of another node |
 | `value` | `value` | A logical literal value, never for a sensitive input ([`BP-BIND-008`](#BP-BIND-008)) |
+| `template` | `template`, `format` | A string composed of literal text, parameters and node outputs ([§4.2.1](#templates)) |
 
 <a id="BP-BIND-003"></a>**`BP-BIND-003`**: A binding names exactly one origin:
-`parameter`, `node` with `output`, or `value`. Structural: a binding naming no
-origin is `ERR_MISSING_FIELD` at the binding, and one carrying members of two
-origins is `ERR_INVALID_VALUE` there. `node` and `output` go together: `node`
-without `output` and `output` without `node` are both `ERR_MISSING_FIELD` at the
-binding. Duplicate input keys fail during parsing, and there is no override
-priority between origins.
+`parameter`, `node` with `output`, `value`, or `template` with `format`.
+Structural: a binding naming no origin is `ERR_MISSING_FIELD` at the binding,
+and one carrying members of two origins is `ERR_INVALID_VALUE` there. `node`
+and `output` go together, and so do `template` and `format`: one without the
+other is `ERR_MISSING_FIELD` at the binding. Duplicate input keys fail during
+parsing, and there is no override priority between origins.
 
 ```yaml
 bindings:
@@ -458,6 +459,82 @@ discovery cycle is permitted. Semantic: a value cycle is `ERR_VALUE_CYCLE` at
 Coverage by matching names is rejected: an input is supplied only by its own
 binding, so adding an unrelated node MUST NOT change what an existing input
 receives.
+
+#### <a id="templates"></a>4.2.1 Templates
+
+A **template** binding composes a string from literal text and placeholders
+([core v2 §5.2](../../core/v2/spec.md#placeholder-grammar)), for the inputs that
+take one string where the documents hold its parts: a connection URL with a
+generated password inside it, or a value with a fixed prefix
+([ADR 0050](../../../docs/adr/0050-a-binding-composes-a-string-and-encodes-what-it-interpolates.md)).
+`format` says how each placeholder's value is written into the text:
+
+```yaml
+bindings:
+  cacheURL:
+    template: "redis://:${{ parameters.cachePassword }}@${{ nodes.cache.outputs.address }}/0"
+    format: URL
+  neo4jAuth:
+    template: "neo4j/${{ parameters.graphPassword }}"
+    format: TEXT
+```
+
+<a id="BP-BIND-009"></a>**`BP-BIND-009`**: A binding's `template` permits two
+namespaces. `${{ parameters.<parameter> }}` names a deployment parameter, and
+`${{ nodes.<node>.outputs.<output> }}` an output of a node; any other path in
+them names neither explicitly. A placeholder yields the string form of a scalar
+value: a string as it is, a number as its shortest round-trip JSON text, and a
+boolean as `true` or `false`. Substitution is single-pass, as core says. A
+template produces a string. Semantic, each at the binding's `template`:
+
+| Condition | Diagnostic |
+|---|---|
+| A placeholder outside core's grammar, or naming a namespace other than these two | Core's code ([`CORE-PLACEHOLDER-001`](../../core/v2/spec.md#CORE-PLACEHOLDER-001) to [`CORE-PLACEHOLDER-003`](../../core/v2/spec.md#CORE-PLACEHOLDER-003)) |
+| A `parameters` path that is not one declared parameter | `ERR_UNKNOWN_PARAMETER` |
+| A `nodes` path whose node does not exist | `ERR_UNKNOWN_NODE` |
+| A `nodes` path that is not `<node>.outputs.<output>`, or names no output of the node's component | `ERR_UNKNOWN_OUTPUT` |
+| A connection parameter, which is not a value ([§5.3](#connections)) | `ERR_INVALID_CONNECTION_BINDING` |
+| An output whose value schema is not a scalar's, or an input whose value schema is not a string's | `ERR_INCOMPATIBLE_TYPE` |
+| A template without a placeholder supplying a sensitive input, which makes it a literal ([`BP-BIND-008`](#BP-BIND-008)) | `ERR_SENSITIVE_LITERAL` |
+
+A template is a binding of each parameter it names: it counts for
+[`BP-PARAM-001`](#BP-PARAM-001), and the input it supplies counts for whether a
+parameter is optional ([`BP-PARAM-005`](#BP-PARAM-005),
+[`BP-UI-005`](#BP-UI-005)) and for its sensitivity. It adds no value schema to
+the parameter: [`BP-PARAM-002`](#BP-PARAM-002) intersects only the inputs a
+`parameter` binding names, and a parameter only templates name is offered as
+text. Each node output a template names is a value dependency of the input
+([`BP-BIND-002`](#BP-BIND-002)). A template without a placeholder is a
+statically known string, and is checked against the input as a literal is
+([`BP-PARAM-008`](#BP-PARAM-008)).
+
+<a id="BP-BIND-010"></a>**`BP-BIND-010`**: `format` is `URL` or `TEXT`, and is
+REQUIRED: how a value is written is never inferred.
+
+- `TEXT` writes each value's string form as it is.
+- `URL` reads the template as an RFC 3986 absolute URI, its scheme literal text
+  before the first placeholder. Each placeholder lies in one component, decided
+  by the literal text around it: the user information before a literal `@` in
+  the authority, the host and port after it, the path, the query or the
+  fragment. A value in the user information, the path, the query or the
+  fragment is percent-encoded, every UTF-8 octet but the unreserved characters
+  (RFC 3986 §2.3), so no value can end its component, add one or be read two
+  ways. A value in the host and port is written as it is, and holds only
+  unreserved characters, `:`, `[` and `]`.
+
+Semantic: a `URL` template whose scheme is not literal text before its first
+placeholder, or whose literal text holds a character RFC 3986 does not, is
+`ERR_INVALID_TEMPLATE` at the binding's `template`. Resolution, in the `values`
+stage, at the binding: a placeholder whose value is not a scalar, and a host and
+port value holding another character, are `ERR_VALUE_CONSTRAINT`, as is a
+composed string the input's value schema rejects.
+
+<a id="BP-BIND-011"></a>**`BP-BIND-011`**: A composed string is sensitive when
+any value it interpolates is, or the input it supplies is, and it is concealed
+wherever a sensitive value is ([§10](#security)). A diagnostic about a template
+quotes its placeholders, never a value. When a value a template names is absent,
+an optional parameter without a default, the input the template supplies is
+absent too, as an unbound optional input is.
 
 ### <a id="node-compute"></a>4.3 Compute, storage and exposure
 
@@ -1412,7 +1489,8 @@ connection parameter MUST bind only connection inputs. Semantic, each
 
 | Condition | At |
 |---|---|
-| A `value` or `node` binding to a connection input | The binding |
+| A `value`, `node` or `template` binding to a connection input | The binding |
+| A `template` naming a connection parameter | The binding's `template` |
 | A `parameter` binding to a connection input naming a parameter that is not a connection parameter | The binding's `parameter` |
 | A `parameter` binding to a value input naming a connection parameter | The binding's `parameter` |
 
@@ -1660,7 +1738,8 @@ Core and component diagnostics apply, with these additions:
 | `ERR_VALUE_CYCLE` | `semantic` | Value dependencies contain a cycle. |
 | `ERR_START_CYCLE` | `semantic` | The start graph contains a cycle. |
 | `ERR_INVALID_START_ORDER` | `semantic` | A start condition does not fit the node it names, or a node a rollout does not start waits for another. |
-| `ERR_INVALID_CONNECTION_BINDING` | `semantic` | A connection input is bound by something other than a connection parameter, or a connection parameter binds a value input. |
+| `ERR_INVALID_CONNECTION_BINDING` | `semantic` | A connection input is bound by something other than a connection parameter, or a connection parameter binds a value input or is named by a template. |
+| `ERR_INVALID_TEMPLATE` | `semantic` | A `URL` template is not an absolute URI with a literal scheme. |
 | `ERR_PARAMETER_NOT_SUBMITTABLE` | `resolution` | A submitted value names a generated, hash, variable, deployment-fact or connection parameter. |
 | `ERR_MISSING_PARAMETER_VALUE` | `resolution` | A required submitted value is absent. |
 | `ERR_VARIABLE_NOT_AUTHORIZED` | `resolution` | The deployment cannot read the organization variable. |
@@ -1699,6 +1778,8 @@ evidence.
 | Conditional node sets, including swapping a self-hosted `SERVICE` for a connection at deployment ([ADR 0019](../../../docs/adr/0019-external-component-node.md)) | A new optional field on a node |
 | Outputs produced by a job at run time | A new output origin, in component |
 | Recursive templates, and provider-specific maps | A new optional field |
+| Functions in a template, such as trimming a suffix or taking a URL's origin | A placeholder expression, [core v2 §10](../../core/v2/spec.md#not-supported) |
+| A component output template that reads the component's own inputs | A new `self` path in component's `template` |
 | A document naming the principals, roles or policy a `RESTRICTED` endpoint admits, or a default membership; the policy is the deployment's, managed through the platform API | A new optional member of the exposure object |
 | `RESTRICTED` access to a `GRPC`, `TCP` or `UDP` endpoint | Permit `RESTRICTED` on those protocols |
 | Role or group claims | A new `viewerClaims` value |

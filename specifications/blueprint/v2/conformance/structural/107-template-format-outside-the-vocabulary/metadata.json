@@ -1,0 +1,10 @@
+{
+  "id": "structural-107-template-format-outside-the-vocabulary",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#bindings",
+  "requirements": [
+    "BP-BIND-010"
+  ],
+  "summary": "A format other than URL or TEXT is rejected."
+}

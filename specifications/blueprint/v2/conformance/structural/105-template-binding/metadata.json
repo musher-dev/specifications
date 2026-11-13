@@ -1,0 +1,11 @@
+{
+  "id": "structural-105-template-binding",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/blueprint/v2/spec.md#bindings",
+  "requirements": [
+    "BP-BIND-003",
+    "BP-BIND-010"
+  ],
+  "summary": "A binding composes a URL from a template."
+}

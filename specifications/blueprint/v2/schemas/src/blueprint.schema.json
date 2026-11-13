@@ -34,14 +34,20 @@
   "type": "object",
   "$defs": {
     "BlueprintBinding": {
-      "$comment": "spec.md §4.2 BP-BIND-003 / ADR 0031 §1. The key that is present names the binding's origin: a deployment parameter, another node's output, or a literal value. Exactly one; `node` goes with `output`. Values from outside the documents enter only through parameters.",
+      "$comment": "spec.md §4.2 BP-BIND-003, BP-BIND-009 / ADR 0031 §1 / ADR 0050. The key that is present names the binding's origin: a deployment parameter, another node's output, a literal value, or a template composed of literal text and placeholders. Exactly one; `node` goes with `output`, and `template` with `format`. Values from outside the documents enter only through parameters.",
       "additionalProperties": false,
       "dependentRequired": {
+        "format": [
+          "template"
+        ],
         "node": [
           "output"
         ],
         "output": [
           "node"
+        ],
+        "template": [
+          "format"
         ]
       },
       "description": "A binding: the origin of one input of the node, named by the key present.",
@@ -71,9 +77,27 @@
           "required": [
             "value"
           ]
+        },
+        {
+          "properties": {
+            "format": true,
+            "template": true
+          },
+          "required": [
+            "template",
+            "format"
+          ]
         }
       ],
       "properties": {
+        "format": {
+          "description": "How each placeholder's value is written into the template: URL percent-encodes it for the URL component it sits in, and TEXT writes its string form as it is.",
+          "enum": [
+            "URL",
+            "TEXT"
+          ],
+          "type": "string"
+        },
         "node": {
           "description": "Node whose output supplies the value.",
           "type": "string",
@@ -90,6 +114,11 @@
           "pattern": "^[a-z][a-zA-Z0-9]{0,63}$",
           "maxLength": 64,
           "description": "Deployment parameter that is the origin of the value."
+        },
+        "template": {
+          "$comment": "spec.md §4.2.1. Placeholders are ${{ parameters.<parameter> }} and ${{ nodes.<node>.outputs.<output> }}; their grammar, namespaces and the URL structure are semantic checks (BP-BIND-009, BP-BIND-010).",
+          "description": "A string composed of literal text and placeholders naming deployment parameters and node outputs.",
+          "type": "string"
         },
         "value": {
           "description": "Logical literal value. Never for a sensitive input."

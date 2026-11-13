@@ -1,0 +1,10 @@
+{
+  "id": "structural-108-template-beside-a-value",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#bindings",
+  "requirements": [
+    "BP-BIND-003"
+  ],
+  "summary": "A binding naming a template and a literal value names two origins."
+}

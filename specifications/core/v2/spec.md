@@ -184,7 +184,7 @@ beyond what this table states.
 | "Unsupported capabilities" | "Not supported in v2" ([§10](#not-supported)) | Each row states how it closes, and every row closes by relaxation. |
 | `ERR_INVALID_NUMBER`, with no requirement ID | `CORE-YAML-013` | Every rule a document can violate carries an ID. |
 | `ERR_INVALID_YAML`, with no requirement ID | `CORE-YAML-014`, and [`CORE-ITEM-002`](#CORE-ITEM-002) for a YAML file of an item | The same reason. A component document of an item is defined once ([§4.1](#item-directory)). |
-| A "reserved" namespace, meaning one with no meaning yet | An unassigned namespace. "Reserved" names all eight ([§5.2](#placeholder-grammar)) | Every namespace in the set is reserved; only four have no meaning. |
+| A "reserved" namespace, meaning one with no meaning yet | An unassigned namespace. "Reserved" names all eight ([§5.2](#placeholder-grammar)) | Every namespace in the set is reserved; only two have no meaning. |
 | Placeholder segment `^[a-z][a-zA-Z0-9]*$` | `^[a-z]$`, or `^[a-z][a-zA-Z0-9-]*[a-zA-Z0-9]$` | A DNS-label name, such as a node name, is addressable. Every v1 segment is still accepted. |
 | "tag line" | "tag prefix" | It names the prefix a family's tags share, such as `component/`. |
 
@@ -483,13 +483,13 @@ than adding to it.
 | Namespace | Names | v2 |
 |---|---|---|
 | `self` | The addressing of the thing the value is bound to. | Defined by the family that permits it. |
-| `parameters` | A value supplied when a blueprint is deployed. | Unassigned. |
+| `parameters` | A value supplied when a blueprint is deployed. | Defined by blueprint bindings' `template`. |
 | `variables` | An organization variable, as visible to the environment a deployment reads variable values from. | Defined by blueprint parameters' `from`. |
 | `connections` | A connection ([component v2 §1.1](../../component/v2/spec.md#terms)). | Defined by blueprint parameters' `from`. |
 | `deployment` | Facts about the deployment, such as `deployment.creator.*`. | Defined by blueprint parameters' `from`. |
 | `environment` | The environment a deployment reads variable values from. | Unassigned. |
 | `organization` | Facts about the owning organization. | Unassigned. |
-| `nodes` | A value another node of the same blueprint produces. | Unassigned. |
+| `nodes` | A value another node of the same blueprint produces. | Defined by blueprint bindings' `template`. |
 
 An **unassigned** namespace is a reserved one with no meaning in any document of
 any family in this major version. No family permits one, so writing it is
@@ -940,6 +940,9 @@ adopts in a major version of its own.
   defines placeholder syntax only.
 - **Deployment facts.** The `deployment` namespace is defined only where
   blueprint parameters' `from` permits it.
+- **Parameters and node outputs.** The `parameters` and `nodes` namespaces are
+  defined only where a blueprint binding's `template` permits them, and that
+  position defines the encoding of what it interpolates.
 
 **Not supported in v2.** Each row is something v2 does not do, and each closes,
 if it ever does, by a relaxation inside v2: a document v2 rejects today becomes
@@ -948,7 +951,7 @@ acceptable, and no document v2 accepts today is rejected.
 | Not supported | Today | How it closes |
 |---|---|---|
 | A core document schema | Each family's bundle states the envelope for its own documents. The validation result schema ([§6.1](#validation-scope)) is not one: it describes what a validator reports, not a document. [ADR 0022](../../../docs/adr/0022-the-musher-document-core-specification.md) §5 records why neither shared shape was worth publishing. | Releasing one. It rejects no document a family bundle accepts. |
-| The unassigned namespaces `parameters`, `environment`, `organization` and `nodes` | Writing one is `ERR_NAMESPACE_NOT_PERMITTED` ([`CORE-PLACEHOLDER-003`](#CORE-PLACEHOLDER-003)). | A family permitting the namespace at a position, with a defined meaning. |
+| The unassigned namespaces `environment` and `organization` | Writing one is `ERR_NAMESPACE_NOT_PERMITTED` ([`CORE-PLACEHOLDER-003`](#CORE-PLACEHOLDER-003)). | A family permitting the namespace at a position, with a defined meaning. |
 | Placeholder expressions: functions, operators, conditionals, arithmetic and fallbacks | Anything but a namespace and a dotted path inside `${{ }}` is `ERR_MALFORMED_PLACEHOLDER`. | Defining a syntax for one, inside `${{ }}`, that is malformed today. |
 
 ## <a id="security"></a>11. Security considerations

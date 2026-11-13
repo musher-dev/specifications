@@ -1,0 +1,19 @@
+specVersion: v2
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: WORKER
+  workload:
+    source:
+      image: example/service:1
+  contract:
+    inputs:
+      databaseURL:
+        schema:
+          type: integer
+        description: Synthetic input.
+        target:
+          envVar: DATABASE_URL
+    outputs: {}

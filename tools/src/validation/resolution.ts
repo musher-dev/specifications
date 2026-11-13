@@ -33,6 +33,16 @@ import {
   semanticReport,
   token,
 } from './semantic.ts'
+import {
+  ESCAPED,
+  HOST_VALUE,
+  OPENER,
+  percentEncode,
+  scanTemplate,
+  stringForm,
+  templateTarget,
+  urlComponents,
+} from './templates.ts'
 import { compileFamily } from './validator.ts'
 import { boundedValue, encodeEnvironment, valueFits } from './values.ts'
 
@@ -322,14 +332,21 @@ export function resolveDeployment(
   diagnostics.push(...sourceResult.diagnostics)
   deferred.push(...sourceResult.deferred)
   if (diagnostics.length) return result()
+  // The parameters a binding reads: the one it names, or each its template names
+  // (BP-BIND-009).
+  const readBy = (b: Json): string[] =>
+    typeof at(b, 'parameter') === 'string'
+      ? [String(at(b, 'parameter'))]
+      : typeof at(b, 'template') === 'string'
+        ? scanTemplate(String(at(b, 'template')))
+            .references.map(templateTarget)
+            .flatMap((t) => (t.kind === 'parameter' ? [t.parameter] : []))
+        : []
   const parameterSensitivity = new Set<string>()
   for (const [node, n] of Object.entries(nodes))
     for (const [name, b] of Object.entries(record(at(n, 'bindings'))))
-      if (
-        typeof at(b, 'parameter') === 'string' &&
-        at(report.components.get(node), 'spec', 'contract', 'inputs', name, 'sensitive') === true
-      )
-        parameterSensitivity.add(String(at(b, 'parameter')))
+      if (at(report.components.get(node), 'spec', 'contract', 'inputs', name, 'sensitive') === true)
+        for (const key of readBy(b)) parameterSensitivity.add(key)
   const connectionResult = resolveConnections(document, report.components, context.connections)
   diagnostics.push(...connectionResult.diagnostics)
   deferred.push(...connectionResult.deferred)
@@ -358,10 +375,9 @@ export function resolveDeployment(
   for (const [node, n] of Object.entries(nodes))
     for (const [input, b] of Object.entries(record(at(n, 'bindings'))))
       if (
-        typeof at(b, 'parameter') === 'string' &&
         at(report.components.get(node), 'spec', 'contract', 'inputs', input, 'required') !== false
       )
-        bound.add(String(at(b, 'parameter')))
+        for (const key of readBy(b)) bound.add(key)
   for (const [name, p] of Object.entries(parameters))
     if (
       bound.has(name) &&
@@ -616,6 +632,46 @@ export function resolveDeployment(
     done.add(id)
     return outputs[id]
   }
+  /** The value of one deployment parameter, as a binding at `path` reads it. */
+  function parameterValue(key: string, path: string): ResolvedValue | undefined {
+    let value: ResolvedValue | undefined
+    const p = record(parameters[key]),
+      source = parameterOrigin(p),
+      submitted =
+        context.parameters && Object.hasOwn(context.parameters, key)
+          ? context.parameters[key]
+          : undefined
+    if (p.generator || p.hash) {
+      // A submitted value was already rejected with ERR_PARAMETER_NOT_SUBMITTABLE.
+      value =
+        context.credentials && Object.hasOwn(context.credentials, key)
+          ? context.credentials[key]
+          : undefined
+      if (value) value = { ...value, sensitive: true }
+      else if (submitted === undefined) missing(path, `credential:${key}`)
+      // BP-PARAM-012: a stored hash has its algorithm's one format.
+      if (
+        value &&
+        p.hash &&
+        !hashFormat(String(at(p.hash, 'algorithm'))).test(String(value.value))
+      ) {
+        fail('ERR_INVALID_RESOLUTION_CONTEXT', path)
+        value = undefined
+      }
+    } else if (source?.namespace === 'variables') {
+      // Reported once for the parameter above; a binding only takes the value.
+      value = variables.get(key)
+    } else if (source?.namespace === 'deployment') {
+      value = facts.get(key)
+    } else {
+      // A missing value was reported once for the parameter, in the parameters stage.
+      value = submitted
+      if (!value && Object.hasOwn(p, 'default') && p.default !== undefined)
+        value = { value: p.default, sensitive: false }
+    }
+
+    return value
+  }
   function input(node: string, name: string): ResolvedValue | undefined {
     const id = `${node}:in:${name}`,
       path = Object.hasOwn(record(at(nodes[node], 'bindings')), name)
@@ -639,42 +695,43 @@ export function resolveDeployment(
     } else if (Object.hasOwn(s, 'value') && s.value !== undefined)
       value = { value: s.value, sensitive: false }
     else if (typeof s.node === 'string') value = output(s.node, String(s.output))
-    else if (typeof s.parameter === 'string') {
-      const key = s.parameter,
-        p = record(parameters[key]),
-        source = parameterOrigin(p),
-        submitted =
-          context.parameters && Object.hasOwn(context.parameters, key)
-            ? context.parameters[key]
-            : undefined
-      if (p.generator || p.hash) {
-        // A submitted value was already rejected with ERR_PARAMETER_NOT_SUBMITTABLE.
-        value =
-          context.credentials && Object.hasOwn(context.credentials, key)
-            ? context.credentials[key]
-            : undefined
-        if (value) value = { ...value, sensitive: true }
-        else if (submitted === undefined) missing(path, `credential:${key}`)
-        // BP-PARAM-012: a stored hash has its algorithm's one format.
-        if (
-          value &&
-          p.hash &&
-          !hashFormat(String(at(p.hash, 'algorithm'))).test(String(value.value))
-        ) {
-          fail('ERR_INVALID_RESOLUTION_CONTEXT', path)
-          value = undefined
+    else if (typeof s.parameter === 'string') value = parameterValue(s.parameter, path)
+    else if (typeof s.template === 'string') {
+      // BP-BIND-009 to BP-BIND-011: each placeholder's value, in its string form
+      // and, in a URL, encoded for the component it sits in.
+      const text = String(s.template),
+        scan = scanTemplate(text),
+        components = s.format === 'URL' ? (urlComponents(text, scan.references) ?? []) : undefined
+      let rendered = '',
+        from = 0,
+        complete = true,
+        sensitive = false
+      scan.references.forEach((reference, i) => {
+        if (!complete) return
+        const target = templateTarget(reference)
+        const part =
+          target.kind === 'parameter'
+            ? parameterValue(target.parameter, path)
+            : target.kind === 'output'
+              ? output(target.node, target.output)
+              : undefined
+        if (part === undefined) {
+          complete = false
+          return
         }
-      } else if (source?.namespace === 'variables') {
-        // Reported once for the parameter above; a binding only takes the value.
-        value = variables.get(key)
-      } else if (source?.namespace === 'deployment') {
-        value = facts.get(key)
-      } else {
-        // A missing value was reported once for the parameter, in the parameters stage.
-        value = submitted
-        if (!value && Object.hasOwn(p, 'default') && p.default !== undefined)
-          value = { value: p.default, sensitive: false }
-      }
+        const form = stringForm(part.value)
+        if (form === undefined || (components?.[i] === 'host' && !HOST_VALUE.test(form))) {
+          fail('ERR_VALUE_CONSTRAINT', path)
+          complete = false
+          return
+        }
+        rendered += text.slice(from, reference.offset).replaceAll(ESCAPED, OPENER)
+        rendered += components && components[i] !== 'host' ? percentEncode(form) : form
+        sensitive ||= part.sensitive
+        from = reference.offset + reference.raw.length
+      })
+      if (complete)
+        value = { value: rendered + text.slice(from).replaceAll(ESCAPED, OPENER), sensitive }
     }
     if (value && (typeof value.sensitive !== 'boolean' || !boundedValue(value.value))) {
       fail('ERR_INVALID_RESOLUTION_CONTEXT', path)

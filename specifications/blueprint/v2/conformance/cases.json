@@ -926,6 +926,66 @@
       "id": "semantic-156-start-order-on-an-external-node",
       "phase": "semantic",
       "path": "semantic/156-start-order-on-an-external-node"
+    },
+    {
+      "id": "structural-105-template-binding",
+      "phase": "structural",
+      "path": "structural/105-template-binding"
+    },
+    {
+      "id": "structural-106-template-without-a-format",
+      "phase": "structural",
+      "path": "structural/106-template-without-a-format"
+    },
+    {
+      "id": "structural-107-template-format-outside-the-vocabulary",
+      "phase": "structural",
+      "path": "structural/107-template-format-outside-the-vocabulary"
+    },
+    {
+      "id": "structural-108-template-beside-a-value",
+      "phase": "structural",
+      "path": "structural/108-template-beside-a-value"
+    },
+    {
+      "id": "semantic-160-url-template",
+      "phase": "semantic",
+      "path": "semantic/160-url-template"
+    },
+    {
+      "id": "semantic-161-template-in-a-namespace-not-permitted",
+      "phase": "semantic",
+      "path": "semantic/161-template-in-a-namespace-not-permitted"
+    },
+    {
+      "id": "semantic-162-template-names-an-unknown-parameter",
+      "phase": "semantic",
+      "path": "semantic/162-template-names-an-unknown-parameter"
+    },
+    {
+      "id": "semantic-163-template-output-path-without-outputs",
+      "phase": "semantic",
+      "path": "semantic/163-template-output-path-without-outputs"
+    },
+    {
+      "id": "semantic-164-url-template-without-a-literal-scheme",
+      "phase": "semantic",
+      "path": "semantic/164-url-template-without-a-literal-scheme"
+    },
+    {
+      "id": "semantic-165-template-into-an-integer-input",
+      "phase": "semantic",
+      "path": "semantic/165-template-into-an-integer-input"
+    },
+    {
+      "id": "semantic-166-template-names-a-connection-parameter",
+      "phase": "semantic",
+      "path": "semantic/166-template-names-a-connection-parameter"
+    },
+    {
+      "id": "semantic-167-literal-template-into-a-sensitive-input",
+      "phase": "semantic",
+      "path": "semantic/167-literal-template-into-a-sensitive-input"
     }
   ]
 }
