@@ -1,0 +1,10 @@
+{
+  "id": "structural-329-unknown-seccomp-profile",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#workload-security",
+  "requirements": [
+    "COMP-SECURITY-001"
+  ],
+  "summary": "A seccomp profile other than RUNTIME_DEFAULT and UNCONFINED is rejected."
+}

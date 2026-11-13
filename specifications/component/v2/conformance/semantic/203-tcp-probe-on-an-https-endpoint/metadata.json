@@ -1,0 +1,10 @@
+{
+  "id": "semantic-203-tcp-probe-on-an-https-endpoint",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#health",
+  "requirements": [
+    "COMP-PROBE-001"
+  ],
+  "summary": "A TCP probe of an HTTPS endpoint is rejected: it would bypass the trust policy."
+}

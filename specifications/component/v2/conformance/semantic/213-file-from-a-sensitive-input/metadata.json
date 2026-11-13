@@ -1,0 +1,10 @@
+{
+  "id": "semantic-213-file-from-a-sensitive-input",
+  "phase": "semantic",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#files",
+  "requirements": [
+    "COMP-FILE-002"
+  ],
+  "summary": "A file may read a sensitive input, which then needs no target."
+}

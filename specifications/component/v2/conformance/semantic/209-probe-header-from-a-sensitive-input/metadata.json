@@ -1,0 +1,10 @@
+{
+  "id": "semantic-209-probe-header-from-a-sensitive-input",
+  "phase": "semantic",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#health",
+  "requirements": [
+    "COMP-PROBE-005"
+  ],
+  "summary": "A probe header may read a sensitive input, which then needs no target."
+}

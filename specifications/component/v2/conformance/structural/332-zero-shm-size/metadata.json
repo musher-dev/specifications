@@ -1,0 +1,10 @@
+{
+  "id": "structural-332-zero-shm-size",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#workload-security",
+  "requirements": [
+    "COMP-SECURITY-001"
+  ],
+  "summary": "A /dev/shm size of zero is rejected."
+}

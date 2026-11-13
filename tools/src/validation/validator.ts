@@ -71,6 +71,7 @@ export type ValidationContext = Omit<SemanticContext, 'validationScope'> & {
 /**
  * The admission rules that read the platform's catalog and runtime
  * (docs/conformance.md, Admission context): component `COMP-EP-019` and
+ * `COMP-SECURITY-002` to `COMP-SECURITY-004`, and
  * blueprint `BP-NODE-009` to `BP-NODE-012`. Each is decided against the
  * supplied `platform` context, and deferred where the context is absent.
  */
@@ -126,6 +127,32 @@ function admission(family: Family, document: Json, platform: Json | undefined): 
       if (typeof binds !== 'boolean')
         deferred.push({ rule: 'COMP-EP-019', path, missing: 'platform.privilegedPorts' })
       else if (!binds) reject('ERR_PRIVILEGED_PORT', path)
+    }
+    // COMP-SECURITY-002 to COMP-SECURITY-004: a setting the runtime does not grant.
+    const security = field(field(spec, 'workload'), 'security')
+    const base = '/spec/workload/security'
+    const added = field(field(security, 'capabilities'), 'add')
+    if (Array.isArray(added))
+      added.forEach((capability, i) => {
+        const path = `${base}/capabilities/add/${i}`
+        const granted = field(platform, 'capabilities')
+        if (!Array.isArray(granted))
+          deferred.push({ rule: 'COMP-SECURITY-002', path, missing: 'platform.capabilities' })
+        else if (!granted.includes(capability)) reject('ERR_CAPABILITY_NOT_GRANTED', path)
+      })
+    if (field(security, 'seccompProfile') === 'UNCONFINED') {
+      const path = `${base}/seccompProfile`
+      const unconfined = field(platform, 'unconfinedSeccomp')
+      if (typeof unconfined !== 'boolean')
+        deferred.push({ rule: 'COMP-SECURITY-003', path, missing: 'platform.unconfinedSeccomp' })
+      else if (!unconfined) reject('ERR_SECCOMP_NOT_GRANTED', path)
+    }
+    for (const [name] of entries(field(security, 'sysctls'))) {
+      const path = `${base}/sysctls/${pointer(name)}`
+      const set = field(platform, 'sysctls')
+      if (!Array.isArray(set))
+        deferred.push({ rule: 'COMP-SECURITY-004', path, missing: 'platform.sysctls' })
+      else if (!set.includes(name)) reject('ERR_SYSCTL_NOT_GRANTED', path)
     }
   }
   if (family.name !== 'blueprint') return { diagnostics, deferred }

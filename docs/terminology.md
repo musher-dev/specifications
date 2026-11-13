@@ -10,7 +10,7 @@ it. `task check:terms` holds the records, the schemas and the prose together,
 and the words to avoid are enforced in prose by the generated
 `MusherSpecifications` Vale style.
 
-219 record(s). A record marked *proposed* is an open item, not yet a decision.
+228 record(s). A record marked *proposed* is an open item, not yet a decision.
 
 ## Index
 
@@ -34,6 +34,7 @@ and the words to avoid are enforced in prose by the generated
 | [build recipe](#component-build-recipe) | component | How a source becomes an image. |
 | [build secret](#component-build-secret) | component | A sensitive input mounted into the build only. |
 | [build stage](#deployment-build-stage) | deployment | Builds pinned source content into images. |
+| [capability](#component-capability) | component | A Linux privilege from the OCI default set. |
 | [catalog](#catalog-catalog) | catalog | The curated, public collection of listed items. |
 | [catalog item](#catalog-catalog-item) | catalog | A directory published as one unit. |
 | [catalog reference](#blueprint-catalog-reference) | blueprint | A UUID and a revision naming a published component. |
@@ -49,6 +50,7 @@ and the words to avoid are enforced in prose by the generated
 | [compute](#blueprint-compute) | blueprint | A node's compute profile and placement. |
 | [compute family](#blueprint-compute-family) | blueprint | general, compute, memory, storage, gpu, accelerator. |
 | [compute profile](#blueprint-compute-profile) | blueprint | family.tier.size, such as general.standard.small. |
+| [compute requirement](#component-compute-requirement) | component | The vCPUs and memory a workload needs. |
 | [compute size](#blueprint-compute-size) | blueprint | nano, small, medium, large, xlarge. |
 | [compute tier](#blueprint-compute-tier) | blueprint | economy, standard, performance, premium. |
 | [conformance case](#repository-conformance-case) | repository | One fixture with a declared outcome. |
@@ -81,19 +83,23 @@ and the words to avoid are enforced in prose by the generated
 | [endpoint](#component-endpoint) | component | A named port and protocol a workload serves. |
 | [endpoint path](#component-endpoint-path) | component | A literal request path, matched by segment. |
 | [endpoint property](#component-endpoint-property) | component | An allocated fact about one endpoint. |
+| [entrypoint](#component-entrypoint) | component | Exec-form replacement for the image's program. |
 | [envelope](#core-envelope) | core | specVersion, kind, metadata and spec. |
 | [environment namespace](#core-environment-namespace) | core | Reserved, for the environment a deployment reads from. |
 | [environment stage](#deployment-environment-stage) | deployment | Encodes values into environment variables. |
 | [environment variable](#component-environment-variable) | component | Where an input's encoded value is written. |
+| [exec probe](#component-exec-probe) | component | A command run in the container as a check. |
 | [exemptible requests](#component-exemptible-requests) | component | The requests an endpoint can take without a viewer. |
 | [expected diagnostic](#repository-expected-diagnostic) | repository | A diagnostic a fixture expects. |
 | [exposure](#blueprint-exposure) | blueprint | Who reaches an endpoint, and how. |
 | [EXTERNAL](#component-external) | component | Runs nothing; stands in for something outside the graph. |
 | [family](#core-family) | core | One specification, released under its own tag prefix. |
+| [file](#component-file) | component | A file written into the container before start. |
 | [generated parameter](#blueprint-generated-parameter) | blueprint | A persisted random credential. |
 | [getting started](#listing-getting-started) | listing | What to do once the deployment is running. |
 | [git source](#component-git-source) | component | A repository the platform builds. |
 | [granted](#blueprint-granted) | blueprint | An existing managed connection, scoped on acquisition. |
+| [gRPC probe](#component-grpc-probe) | component | A gRPC health check of a named endpoint. |
 | [guaranteed input](#component-guaranteed-input) | component | Required, or with a default. |
 | [hash parameter](#blueprint-hash-parameter) | blueprint | A persisted hash of a generated parameter. |
 | [HTTP-based](#component-http-based) | component | A connection protocol with a locator. |
@@ -152,8 +158,9 @@ and the words to avoid are enforced in prose by the generated
 | [port-addressed](#component-port-addressed) | component | TCP, UDP. |
 | [presentation hint](#component-presentation-hint) | component | A UI annotation that asserts nothing. |
 | [privilege](#repository-privilege) | repository | A runtime permission beyond the ordinary. |
-| [probe](#component-probe) | component | A periodic HTTP check of a named endpoint. |
+| [probe](#component-probe) | component | A periodic check of a workload. |
 | [probe credential](#component-probe-credential) | component | Basic or bearer credentials sent on the probe only. |
+| [probe header](#component-probe-header) | component | A header an HTTP probe sends. |
 | [protocol](#component-protocol) | component | The vendor-neutral wire contract a client speaks. |
 | [protocol category](#component-protocol-category) | component | LANGUAGE_MODEL, DATABASE, CACHE, OBJECT_STORAGE or MESSAGING. |
 | [protocol registry](#component-protocol-registry) | component | One normative JSON record per connection protocol. |
@@ -205,6 +212,7 @@ and the words to avoid are enforced in prose by the generated
 | [summary](#listing-summary) | listing | A one-line plain-text tagline. |
 | [tag](#listing-tag) | listing | An open, kebab-case discovery key. |
 | [target port](#component-target-port) | component | The port the workload listens on. |
+| [TCP probe](#component-tcp-probe) | component | A connection check of a named endpoint. |
 | [template](#component-template) | component | A string with self placeholders substituted. |
 | [term record](#repository-term-record) | repository | One concept in one context, in docs/terminology.yaml. |
 | [trust policy](#component-trust-policy) | component | How the platform verifies an HTTPS endpoint's certificate. |
@@ -234,6 +242,7 @@ and the words to avoid are enforced in prose by the generated
 | [what belongs in core](#core-membership-test) | core | The three conditions for a rule to live in core. |
 | [WORKER](#component-worker) | component | Long-running, not request-driven. |
 | [workload](#component-workload) | component | How the platform runs a component. |
+| [workload security](#component-workload-security) | component | Container settings within the allowlists. |
 | [YAML document](#core-yaml-document) | core | One parsed YAML tree, before any schema applies. |
 
 ## Concept system
@@ -299,6 +308,7 @@ component [component.component] (a kind of core.musher-document)
       - build context [component.build-context]
       - build secret [component.build-secret]
     - command [component.command]
+    - compute requirement [component.compute-requirement]
     - endpoint [component.endpoint]
       - endpoint path [component.endpoint-path]
       - endpoint property [component.endpoint-property]
@@ -306,13 +316,18 @@ component [component.component] (a kind of core.musher-document)
       - OIDC client [component.oidc-client]
       - target port [component.target-port]
       - trust policy [component.trust-policy]
+    - entrypoint [component.entrypoint]
+    - file [component.file]
     - probe [component.probe]
       - probe credential [component.probe-credential]
+      - probe header [component.probe-header]
     - schedule [component.schedule]
     - source [component.source]
       - source content key [component.source-content-key]
       - source root [component.source-root]
     - volume [component.volume]
+    - workload security [component.workload-security]
+      - capability [component.capability]
 
 conformance corpus [repository.conformance-corpus]
   - behaviour suite [repository.behaviour-suite]
@@ -1020,6 +1035,23 @@ layer, provenance, the build log or the launch environment.
   0040](adr/0040-source-and-build-recipe.md)
 - **Status:** approved, provisional. Tags: build, sensitivity.
 
+#### <a id="component-capability"></a>capability
+
+A Linux privilege from the OCI default set that a workload drops, or adds back
+after dropping, where the platform's runtime grants it.
+
+- **Part of:** [workload security](#component-workload-security)
+- **Identifiers:** fields: `add`, `drop`; values: `ALL`, `AUDIT_WRITE`, `CHOWN`,
+  `DAC_OVERRIDE`, `FOWNER`, `FSETID`, `KILL`, `MKNOD`, `NET_BIND_SERVICE`,
+  `NET_RAW`, `SETFCAP`, `SETGID`, `SETPCAP`, `SETUID`, `SYS_CHROOT`; codes:
+  `ERR_CAPABILITY_NOT_GRANTED`; defs: `ComponentCapabilities`
+- **Not to be confused with:** A connection protocol's capabilities, such as
+  STREAMING.
+- **Source:** [component v2
+  §5.10](../specifications/component/v2/spec.md#workload-security), [ADR
+  0052](adr/0052-workload-security-settings-from-an-allowlist.md)
+- **Status:** approved, provisional. Tags: security.
+
 #### <a id="component-command"></a>command
 
 The exec-form list of arguments that replaces an image's CMD and keeps its
@@ -1117,6 +1149,22 @@ SERVICE, WORKER or JOB, or nothing, for an EXTERNAL one.
   §5](../specifications/component/v2/spec.md#workload), [ADR
   0039](adr/0039-provenance-is-chosen-at-deployment.md)
 - **Status:** approved, stable. Tags: component.
+
+#### <a id="component-compute-requirement"></a>compute requirement
+
+The vCPUs and memory a workload needs, as a minimum a node's profile must meet
+and a recommendation a deploy form pre-selects, never a profile slug.
+
+- **Part of:** [workload](#component-workload)
+- **Identifiers:** fields: `recommended`, `vcpus`, `memoryMiB`; codes:
+  `ERR_INVALID_COMPUTE`; requirement prefixes: `COMP-COMPUTE`; defs:
+  `ComponentCompute`, `ComponentComputeResources`
+- **Not to be confused with:** A blueprint node's compute profile, which this is
+  judged against.
+- **Source:** [component v2
+  §5.9](../specifications/component/v2/spec.md#compute), [ADR
+  0051](adr/0051-a-component-states-the-compute-it-needs.md)
+- **Status:** approved, provisional. Tags: workload, compute.
 
 #### <a id="component-connection-capability"></a>connection capability
 
@@ -1227,6 +1275,20 @@ such as privateAddress or publicURL, that an output or a template may read.
   §5.2](../specifications/component/v2/spec.md#endpoints)
 - **Status:** approved, stable. Tags: networking.
 
+#### <a id="component-entrypoint"></a>entrypoint
+
+The exec-form program a workload runs in place of the one its image names, after
+which the image's CMD is not used and command supplies the arguments.
+
+- **Part of:** [workload](#component-workload)
+- **Identifiers:** fields: `entrypoint`
+- **Not to be confused with:** Kubernetes command, which is this field, not
+  component command.
+- **Source:** [component v2
+  §5](../specifications/component/v2/spec.md#workload), [ADR
+  0050](adr/0050-entrypoint-config-files-and-mixed-case-environment-names.md)
+- **Status:** approved, provisional. Tags: workload.
+
 #### <a id="component-environment-variable"></a>environment variable
 
 The process variable an input's target names, written with the input's encoded
@@ -1242,6 +1304,18 @@ value and by nothing else.
 - **Source:** [component v2
   §5.3](../specifications/component/v2/spec.md#env-vars)
 - **Status:** approved, stable. Tags: workload, values.
+
+#### <a id="component-exec-probe"></a>exec probe
+
+A probe that succeeds when an exec-form command, run inside the workload's
+container with its environment and user, exits 0 in time.
+
+- **Kind of:** [probe](#component-probe)
+- **Identifiers:** fields: `exec`; defs: `ComponentExecProbe`
+- **Source:** [component v2
+  §5.4](../specifications/component/v2/spec.md#health), [ADR
+  0049](adr/0049-tcp-exec-and-grpc-probes-and-probe-headers.md)
+- **Status:** approved, provisional. Tags: health.
 
 #### <a id="component-exemptible-requests"></a>exemptible requests
 
@@ -1286,6 +1360,22 @@ the graph.
   0039](adr/0039-provenance-is-chosen-at-deployment.md)
 - **Status:** approved, stable. Tags: component.
 
+#### <a id="component-file"></a>file
+
+Named content the platform writes into a workload's container before every
+start, at a canonical absolute path, with a mode, from a literal or from one of
+the component's own inputs.
+
+- **Part of:** [workload](#component-workload)
+- **Identifiers:** fields: `files`, `content`, `mode`; requirement prefixes:
+  `COMP-FILE`; defs: `ComponentFile`, `ComponentFileContent`
+- **Not to be confused with:** A volume, which is persistent storage rather than
+  content the document supplies.
+- **Source:** [component v2 §5.8](../specifications/component/v2/spec.md#files),
+  [ADR
+  0050](adr/0050-entrypoint-config-files-and-mixed-case-environment-names.md)
+- **Status:** approved, provisional. Tags: workload, sensitivity.
+
 #### <a id="component-git-source"></a>git source
 
 A workload source naming an https git repository URL and an optional ref, a
@@ -1300,6 +1390,19 @@ build recipe.
   §5.1](../specifications/component/v2/spec.md#source), [ADR
   0040](adr/0040-source-and-build-recipe.md)
 - **Status:** approved, stable. Tags: workload, build.
+
+#### <a id="component-grpc-probe"></a>gRPC probe
+
+A probe that succeeds when a grpc.health.v1 Check call on a named GRPC endpoint,
+for a service or for the whole server, answers SERVING.
+
+- **Kind of:** [probe](#component-probe)
+- **Identifiers:** fields: `grpc`, `service`; codes: `ERR_ENDPOINT_NOT_GRPC`;
+  defs: `ComponentGrpcProbe`
+- **Source:** [component v2
+  §5.4](../specifications/component/v2/spec.md#health), [ADR
+  0049](adr/0049-tcp-exec-and-grpc-probes-and-probe-headers.md)
+- **Status:** approved, provisional. Tags: health.
 
 #### <a id="component-guaranteed-input"></a>guaranteed input
 
@@ -1488,15 +1591,15 @@ CONNECTION_STRING, that asserts nothing about the value.
 
 #### <a id="component-probe"></a>probe
 
-A periodic HTTP GET the platform sends to a named endpoint of a SERVICE or
-WORKER, over that endpoint's protocol and trust policy, from a peer inside
-trustedProxyCIDRs and with no viewer identity.
+A periodic check the platform makes of a SERVICE or WORKER: an HTTP GET to a
+named endpoint, a TCP connection, a gRPC health check, or a command run in its
+container.
 
 - **Part of:** [workload](#component-workload)
 - **Identifiers:** fields: `health`, `http`, `path`, `expectedStatuses`,
   `initialDelaySeconds`, `periodSeconds`, `timeoutSeconds`, `successThreshold`,
-  `failureThreshold`; defs: `ComponentHealthProbes`, `ComponentHttpProbe`,
-  `ComponentProbe`
+  `failureThreshold`; requirement prefixes: `COMP-HEALTH`; defs:
+  `ComponentHealthProbes`, `ComponentHttpProbe`, `ComponentProbe`
 - **Not to be confused with:** Kubernetes probes, which these follow.
 - **Avoid:** "health stage" (banned, prose): write "probe".
 - **Avoid:** "health stages" (banned, prose): write "probes".
@@ -1519,6 +1622,21 @@ token.
 - **Not to be confused with:** Exemptible requests' bearerToken.
 - **Source:** [component v2 §5.4](../specifications/component/v2/spec.md#health)
 - **Status:** approved, stable. Tags: health, sensitivity.
+
+#### <a id="component-probe-header"></a>probe header
+
+A request header an HTTP probe sends, named in lower case and valued by a
+literal or by one of the component's own inputs, never one of the names the
+platform, auth or request framing sets.
+
+- **Part of:** [probe](#component-probe)
+- **Identifiers:** fields: `headers`; values: `authorization`, `forwarded`,
+  `x-forwarded-for`, `content-length`, `transfer-encoding`, `connection`, `te`,
+  `upgrade`, `cookie`; defs: `ComponentProbeHeader`
+- **Source:** [component v2
+  §5.4](../specifications/component/v2/spec.md#health), [ADR
+  0049](adr/0049-tcp-exec-and-grpc-probes-and-probe-headers.md)
+- **Status:** approved, provisional. Tags: health.
 
 #### <a id="component-protocol"></a>protocol
 
@@ -1721,6 +1839,19 @@ endpoint is forwarded to, never the public port.
   §5.2](../specifications/component/v2/spec.md#endpoints)
 - **Status:** approved, stable. Tags: networking.
 
+#### <a id="component-tcp-probe"></a>TCP probe
+
+A probe that succeeds when a TCP connection to a named endpoint's target port is
+established, sending nothing, on a TCP, HTTP, WS or GRPC endpoint.
+
+- **Kind of:** [probe](#component-probe)
+- **Identifiers:** fields: `tcp`; codes: `ERR_ENDPOINT_NOT_TCP`; requirement
+  prefixes: `COMP-PROBE`; defs: `ComponentTcpProbe`
+- **Source:** [component v2
+  §5.4](../specifications/component/v2/spec.md#health), [ADR
+  0049](adr/0049-tcp-exec-and-grpc-probes-and-probe-headers.md)
+- **Status:** approved, provisional. Tags: health.
+
 #### <a id="component-template"></a>template
 
 An output origin that substitutes self placeholders into a string in a single
@@ -1858,6 +1989,28 @@ build recipe, command, endpoints, probes, volumes and schedule.
 - **Source:** [component v2 §1.1](../specifications/component/v2/spec.md#terms),
   [component v2 §5](../specifications/component/v2/spec.md#workload)
 - **Status:** approved, stable. Tags: component, workload.
+
+#### <a id="component-workload-security"></a>workload security
+
+The container settings a workload may adjust within this specification's
+allowlists: the size of /dev/shm, a read-only root, capabilities, the seccomp
+profile and namespaced sysctls, each of which a platform may refuse at
+admission.
+
+- **Part of:** [workload](#component-workload)
+- **Identifiers:** fields: `security`, `shmSizeMiB`, `readOnlyRootFilesystem`,
+  `seccompProfile`, `sysctls`; values: `RUNTIME_DEFAULT`, `UNCONFINED`,
+  `kernel.shm_rmid_forced`, `net.core.somaxconn`,
+  `net.ipv4.ip_local_port_range`, `net.ipv4.ip_unprivileged_port_start`,
+  `net.ipv4.ping_group_range`, `net.ipv4.tcp_fin_timeout`,
+  `net.ipv4.tcp_keepalive_intvl`, `net.ipv4.tcp_keepalive_probes`,
+  `net.ipv4.tcp_keepalive_time`, `net.ipv4.tcp_syncookies`; codes:
+  `ERR_SECCOMP_NOT_GRANTED`, `ERR_SYSCTL_NOT_GRANTED`; requirement prefixes:
+  `COMP-SECURITY`; defs: `ComponentSecurity`
+- **Source:** [component v2
+  §5.10](../specifications/component/v2/spec.md#workload-security), [ADR
+  0052](adr/0052-workload-security-settings-from-an-allowlist.md)
+- **Status:** approved, provisional. Tags: workload, security.
 
 ### Blueprint: nodes, bindings and parameters
 

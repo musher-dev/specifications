@@ -1,0 +1,10 @@
+{
+  "id": "semantic-216-file-reads-an-optional-input",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#files",
+  "requirements": [
+    "COMP-FILE-002"
+  ],
+  "summary": "A file reading an optional input with no default is rejected."
+}

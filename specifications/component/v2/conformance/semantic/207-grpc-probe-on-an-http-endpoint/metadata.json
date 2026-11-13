@@ -1,0 +1,10 @@
+{
+  "id": "semantic-207-grpc-probe-on-an-http-endpoint",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#health",
+  "requirements": [
+    "COMP-PROBE-002"
+  ],
+  "summary": "A gRPC probe of an endpoint that is not GRPC is rejected."
+}

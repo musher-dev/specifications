@@ -1226,6 +1226,291 @@
       "id": "semantic-134-slack-member-on-a-telegram-input",
       "phase": "semantic",
       "path": "semantic/134-slack-member-on-a-telegram-input"
+    },
+    {
+      "id": "structural-300-worker-without-endpoints-or-probes",
+      "phase": "structural",
+      "path": "structural/300-worker-without-endpoints-or-probes"
+    },
+    {
+      "id": "structural-301-entrypoint-with-command",
+      "phase": "structural",
+      "path": "structural/301-entrypoint-with-command"
+    },
+    {
+      "id": "structural-302-entrypoint-as-a-string",
+      "phase": "structural",
+      "path": "structural/302-entrypoint-as-a-string"
+    },
+    {
+      "id": "structural-303-empty-entrypoint",
+      "phase": "structural",
+      "path": "structural/303-empty-entrypoint"
+    },
+    {
+      "id": "structural-304-mixed-case-env-var",
+      "phase": "structural",
+      "path": "structural/304-mixed-case-env-var"
+    },
+    {
+      "id": "structural-305-probe-naming-no-mechanism",
+      "phase": "structural",
+      "path": "structural/305-probe-naming-no-mechanism"
+    },
+    {
+      "id": "structural-306-probe-naming-two-mechanisms",
+      "phase": "structural",
+      "path": "structural/306-probe-naming-two-mechanisms"
+    },
+    {
+      "id": "structural-307-tcp-probe-without-an-endpoint",
+      "phase": "structural",
+      "path": "structural/307-tcp-probe-without-an-endpoint"
+    },
+    {
+      "id": "structural-308-grpc-service-too-long",
+      "phase": "structural",
+      "path": "structural/308-grpc-service-too-long"
+    },
+    {
+      "id": "structural-309-exec-probe",
+      "phase": "structural",
+      "path": "structural/309-exec-probe"
+    },
+    {
+      "id": "structural-310-exec-command-as-a-string",
+      "phase": "structural",
+      "path": "structural/310-exec-command-as-a-string"
+    },
+    {
+      "id": "structural-311-empty-exec-command",
+      "phase": "structural",
+      "path": "structural/311-empty-exec-command"
+    },
+    {
+      "id": "structural-312-probe-headers",
+      "phase": "structural",
+      "path": "structural/312-probe-headers"
+    },
+    {
+      "id": "structural-313-probe-header-with-a-reserved-name",
+      "phase": "structural",
+      "path": "structural/313-probe-header-with-a-reserved-name"
+    },
+    {
+      "id": "structural-314-probe-header-name-not-lowercase",
+      "phase": "structural",
+      "path": "structural/314-probe-header-name-not-lowercase"
+    },
+    {
+      "id": "structural-315-probe-header-value-with-a-newline",
+      "phase": "structural",
+      "path": "structural/315-probe-header-value-with-a-newline"
+    },
+    {
+      "id": "structural-316-probe-header-with-two-origins",
+      "phase": "structural",
+      "path": "structural/316-probe-header-with-two-origins"
+    },
+    {
+      "id": "structural-317-file-from-a-literal",
+      "phase": "structural",
+      "path": "structural/317-file-from-a-literal"
+    },
+    {
+      "id": "structural-318-file-mode-without-a-leading-zero",
+      "phase": "structural",
+      "path": "structural/318-file-mode-without-a-leading-zero"
+    },
+    {
+      "id": "structural-319-file-without-content",
+      "phase": "structural",
+      "path": "structural/319-file-without-content"
+    },
+    {
+      "id": "structural-320-file-content-with-two-origins",
+      "phase": "structural",
+      "path": "structural/320-file-content-with-two-origins"
+    },
+    {
+      "id": "structural-321-file-at-a-relative-path",
+      "phase": "structural",
+      "path": "structural/321-file-at-a-relative-path"
+    },
+    {
+      "id": "structural-322-compute-minimum-and-recommendation",
+      "phase": "structural",
+      "path": "structural/322-compute-minimum-and-recommendation"
+    },
+    {
+      "id": "structural-323-compute-figure-missing",
+      "phase": "structural",
+      "path": "structural/323-compute-figure-missing"
+    },
+    {
+      "id": "structural-324-compute-with-zero-vcpus",
+      "phase": "structural",
+      "path": "structural/324-compute-with-zero-vcpus"
+    },
+    {
+      "id": "structural-325-security-settings",
+      "phase": "structural",
+      "path": "structural/325-security-settings"
+    },
+    {
+      "id": "structural-326-security-defaults",
+      "phase": "structural",
+      "path": "structural/326-security-defaults"
+    },
+    {
+      "id": "structural-327-capability-outside-the-allowlist",
+      "phase": "structural",
+      "path": "structural/327-capability-outside-the-allowlist"
+    },
+    {
+      "id": "structural-328-repeated-capability",
+      "phase": "structural",
+      "path": "structural/328-repeated-capability"
+    },
+    {
+      "id": "structural-329-unknown-seccomp-profile",
+      "phase": "structural",
+      "path": "structural/329-unknown-seccomp-profile"
+    },
+    {
+      "id": "structural-330-host-sysctl",
+      "phase": "structural",
+      "path": "structural/330-host-sysctl"
+    },
+    {
+      "id": "structural-331-sysctl-value-not-numeric",
+      "phase": "structural",
+      "path": "structural/331-sysctl-value-not-numeric"
+    },
+    {
+      "id": "structural-332-zero-shm-size",
+      "phase": "structural",
+      "path": "structural/332-zero-shm-size"
+    },
+    {
+      "id": "structural-333-read-only-root-as-a-string",
+      "phase": "structural",
+      "path": "structural/333-read-only-root-as-a-string"
+    },
+    {
+      "id": "semantic-200-input-targets-hostname",
+      "phase": "semantic",
+      "path": "semantic/200-input-targets-hostname"
+    },
+    {
+      "id": "semantic-201-env-vars-differing-in-case",
+      "phase": "semantic",
+      "path": "semantic/201-env-vars-differing-in-case"
+    },
+    {
+      "id": "semantic-202-tcp-probe-on-a-tcp-endpoint",
+      "phase": "semantic",
+      "path": "semantic/202-tcp-probe-on-a-tcp-endpoint"
+    },
+    {
+      "id": "semantic-203-tcp-probe-on-an-https-endpoint",
+      "phase": "semantic",
+      "path": "semantic/203-tcp-probe-on-an-https-endpoint"
+    },
+    {
+      "id": "semantic-204-tcp-probe-on-a-udp-endpoint",
+      "phase": "semantic",
+      "path": "semantic/204-tcp-probe-on-a-udp-endpoint"
+    },
+    {
+      "id": "semantic-205-tcp-probe-names-an-unknown-endpoint",
+      "phase": "semantic",
+      "path": "semantic/205-tcp-probe-names-an-unknown-endpoint"
+    },
+    {
+      "id": "semantic-206-grpc-probe",
+      "phase": "semantic",
+      "path": "semantic/206-grpc-probe"
+    },
+    {
+      "id": "semantic-207-grpc-probe-on-an-http-endpoint",
+      "phase": "semantic",
+      "path": "semantic/207-grpc-probe-on-an-http-endpoint"
+    },
+    {
+      "id": "semantic-208-grpc-probe-names-an-unknown-endpoint",
+      "phase": "semantic",
+      "path": "semantic/208-grpc-probe-names-an-unknown-endpoint"
+    },
+    {
+      "id": "semantic-209-probe-header-from-a-sensitive-input",
+      "phase": "semantic",
+      "path": "semantic/209-probe-header-from-a-sensitive-input"
+    },
+    {
+      "id": "semantic-210-probe-header-reads-an-unknown-input",
+      "phase": "semantic",
+      "path": "semantic/210-probe-header-reads-an-unknown-input"
+    },
+    {
+      "id": "semantic-211-probe-header-reads-a-non-string-input",
+      "phase": "semantic",
+      "path": "semantic/211-probe-header-reads-a-non-string-input"
+    },
+    {
+      "id": "semantic-212-probe-header-reads-an-optional-input",
+      "phase": "semantic",
+      "path": "semantic/212-probe-header-reads-an-optional-input"
+    },
+    {
+      "id": "semantic-213-file-from-a-sensitive-input",
+      "phase": "semantic",
+      "path": "semantic/213-file-from-a-sensitive-input"
+    },
+    {
+      "id": "semantic-214-file-reads-an-unknown-input",
+      "phase": "semantic",
+      "path": "semantic/214-file-reads-an-unknown-input"
+    },
+    {
+      "id": "semantic-215-file-reads-a-non-string-input",
+      "phase": "semantic",
+      "path": "semantic/215-file-reads-a-non-string-input"
+    },
+    {
+      "id": "semantic-216-file-reads-an-optional-input",
+      "phase": "semantic",
+      "path": "semantic/216-file-reads-an-optional-input"
+    },
+    {
+      "id": "semantic-217-file-at-a-volume-mount",
+      "phase": "semantic",
+      "path": "semantic/217-file-at-a-volume-mount"
+    },
+    {
+      "id": "semantic-218-file-above-another-file",
+      "phase": "semantic",
+      "path": "semantic/218-file-above-another-file"
+    },
+    {
+      "id": "semantic-219-file-path-with-a-dot-segment",
+      "phase": "semantic",
+      "path": "semantic/219-file-path-with-a-dot-segment"
+    },
+    {
+      "id": "semantic-220-file-under-a-volume",
+      "phase": "semantic",
+      "path": "semantic/220-file-under-a-volume"
+    },
+    {
+      "id": "semantic-221-recommendation-below-minimum",
+      "phase": "semantic",
+      "path": "semantic/221-recommendation-below-minimum"
+    },
+    {
+      "id": "semantic-222-worker-with-an-exec-readiness-probe",
+      "phase": "semantic",
+      "path": "semantic/222-worker-with-an-exec-readiness-probe"
     }
   ]
 }

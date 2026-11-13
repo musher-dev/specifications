@@ -1,0 +1,10 @@
+{
+  "id": "structural-314-probe-header-name-not-lowercase",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#health",
+  "requirements": [
+    "COMP-PROBE-004"
+  ],
+  "summary": "A probe header name in upper case is rejected."
+}

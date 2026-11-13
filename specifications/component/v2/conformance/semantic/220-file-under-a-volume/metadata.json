@@ -1,0 +1,10 @@
+{
+  "id": "semantic-220-file-under-a-volume",
+  "phase": "semantic",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#files",
+  "requirements": [
+    "COMP-FILE-003"
+  ],
+  "summary": "A file under a volume mount is permitted."
+}

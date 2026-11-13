@@ -66,9 +66,9 @@ relative, such as `from/input`, is relative to the object the rule is about.
   builder, build arguments and build secrets ([§5.1](#build)).
 - An **endpoint** is a named port a workload listens on, with the protocol the
   platform speaks to it ([§5.2](#endpoints)).
-- A **probe** is an HTTP request the platform sends to a named endpoint to
-  decide whether a workload has started, is ready or is alive
-  ([§5.4](#health)).
+- A **probe** is a check the platform makes, an HTTP request, a TCP
+  connection, a gRPC health check or a command run in the container, to decide
+  whether a workload has started, is ready or is alive ([§5.4](#health)).
 - The **component contract** is the inputs a component consumes and the
   outputs it produces ([§6](#contract)).
 - An **input** is a value input, which declares a value schema, or a
@@ -301,11 +301,15 @@ The type decides which workload fields apply:
 |---|---|---|---|
 | `source` | Required to publish | Required to publish | Required to publish |
 | `build` | Beside a `git` or `upload` source only | Beside a `git` or `upload` source only | Beside a `git` or `upload` source only |
-| `command` | Optional | Optional | Required to publish |
+| `command` | Optional | Optional | Required to publish, unless `entrypoint` is present |
+| `entrypoint` | Optional | Optional | Optional |
 | `endpoints` | At least one to publish | Optional | Forbidden |
 | `health` | Optional | Optional | Forbidden |
 | `schedule` | Forbidden | Forbidden | Optional |
 | `volumes` | Optional | Optional | Optional |
+| `files` | Optional | Optional | Optional |
+| `compute` | Optional | Optional | Optional |
+| `security` | Optional | Optional | Optional |
 
 Forbidden means absent. Empty mappings and null are not alternative spellings.
 A forbidden field is `ERR_INVALID_VALUE` at its own path, and an unknown field
@@ -322,7 +326,7 @@ the `admission` phase when it is published:
 | A runnable component carries a `workload` | [`COMP-TYPE-006`](#COMP-TYPE-006) | `ERR_WORKLOAD_REQUIRED` | `/spec` |
 | A workload carries a `source` | [`COMP-SRC-004`](#COMP-SRC-004) | `ERR_SOURCE_REQUIRED` | `/spec/workload` |
 | A `SERVICE` declares an endpoint | [`COMP-TYPE-002`](#COMP-TYPE-002) | `ERR_ENDPOINT_REQUIRED` | `/spec/workload`, or `/spec/workload/endpoints` when empty |
-| A `JOB` carries a `command` | [`COMP-TYPE-007`](#COMP-TYPE-007) | `ERR_COMMAND_REQUIRED` | `/spec/workload` |
+| A `JOB` carries a `command` or an `entrypoint` | [`COMP-TYPE-007`](#COMP-TYPE-007) | `ERR_COMMAND_REQUIRED` | `/spec/workload` |
 | An `EXTERNAL` component produces an output | [`COMP-EXT-003`](#COMP-EXT-003) | `ERR_OUTPUT_REQUIRED` | The object that lacks it, or `/spec/contract/outputs` when empty |
 | Every input and output is described | [`COMP-DESC-004`](#COMP-DESC-004) | `ERR_DESCRIPTION_REQUIRED` | The input or output |
 
@@ -349,8 +353,9 @@ with the same code ([blueprint §4.3](../../blueprint/v2/spec.md#node-compute)).
 Structural: `ERR_INVALID_VALUE` at the field.
 
 <a id="COMP-TYPE-007"></a>**`COMP-TYPE-007`**: A published `JOB` MUST carry
-`command`, because it has nothing to run to completion without one. Admission:
-`ERR_COMMAND_REQUIRED` at `/spec/workload`.
+`command` or `entrypoint`, because it has nothing to run to completion without
+one. Admission: `ERR_COMMAND_REQUIRED` at `/spec/workload` when it carries
+neither.
 
 <a id="COMP-TYPE-005"></a>**`COMP-TYPE-005`**: Only a `JOB` MAY declare
 `schedule`; a schedule is a property of a job, not a type of its own.
@@ -366,6 +371,23 @@ Structural: a string is `ERR_INVALID_TYPE` and an empty list
 `command` means in Docker and Compose. Where `command` is omitted, the image's
 own `CMD` runs. A workload that needs a shell names one, as in
 `["/bin/sh", "-c", "…"]`.
+
+<a id="COMP-CMD-002"></a>**`COMP-CMD-002`**: `entrypoint` is a non-empty list
+of strings in exec form, as `command` is, and replaces the image's
+`ENTRYPOINT`. With `entrypoint` present the image's `CMD` is not used:
+`command` supplies the arguments, and without `command` the entrypoint runs
+with none. Structural: a string is `ERR_INVALID_TYPE` and an empty list
+`ERR_INVALID_VALUE`, at `/spec/workload/entrypoint`.
+
+That is what `entrypoint` means in Docker and Compose, and what `command`
+means in Kubernetes. An image whose `ENTRYPOINT` ignores its arguments, or is
+the program itself, still runs a shell this way:
+
+```yaml
+workload:
+  entrypoint: [/bin/sh, -c]
+  command: ["ollama serve & sleep 5 && ollama pull llama3.2 && wait"]
+```
 
 ### <a id="source"></a>5.1 Source and build recipe
 
@@ -481,8 +503,9 @@ never `.` or `..`, and no `\` or control character. `context` may also be `.`
 alone, the source root; `dockerfile` may not, because `.` is not a file.
 
 <a id="COMP-BUILD-003"></a>**`COMP-BUILD-003`**: An `arguments` key and a
-`secrets` ID match the environment-variable grammar of [§5.3](#env-vars), and an
-argument's value is a string. Structural: `ERR_INVALID_VALUE` at the key, and
+`secrets` ID match `^[A-Z_][A-Z0-9_]*$` and hold at most 128 characters, the
+upper-case form of the environment-variable grammar of [§5.3](#env-vars), and
+an argument's value is a string. Structural: `ERR_INVALID_VALUE` at the key, and
 `ERR_INVALID_TYPE` at a value that is not a string.
 
 Arguments configure the build only; runtime configuration rides on inputs
@@ -573,7 +596,8 @@ these sets:
 | **URL-addressed** | `HTTP`, `HTTPS`, `WS`, `GRPC` | A public URL can address it: `publicURL` and `publicHostname`, and the readiness probe a `PUBLIC` one requires |
 | **Port-addressed** | `TCP`, `UDP` | It is reached at a host and port with no URL: `publicAddress` and `publicPort` |
 | **HTTP-routed** | `HTTP`, `HTTPS`, `WS` | The platform's proxy routes it per request: sign-in, viewer identity properties, `oidc` and `exemptibleRequests` |
-| **HTTP probe protocols** | `HTTP`, `HTTPS` | A probe can be sent to it ([§5.4](#health)) |
+| **HTTP probe protocols** | `HTTP`, `HTTPS` | An HTTP probe can be sent to it ([§5.4](#health)) |
+| **TCP probe protocols** | `TCP`, `HTTP`, `WS`, `GRPC` | A TCP probe can connect to it ([§5.4](#other-probes)) |
 
 Components declare endpoints, never exposure. A blueprint node selects public
 exposure, and an endpoint it does not expose is private. A `WORKER`'s endpoints
@@ -832,13 +856,37 @@ not, `SYSTEM` being the only verifying mode that lets it be absent, with
 
 ### <a id="env-vars"></a>5.3 Environment variables
 
-A workload's environment is exactly its inputs' targets. An input of a workload
-component may name, in `target.envVar`, the variable its value is written to
-([§6.1](#inputs)), and nothing else writes the environment.
+A workload's environment is its image's environment with its inputs' targets
+written over it. An input of a workload component may name, in
+`target.envVar`, the variable its value is written to ([§6.1](#inputs)), and
+nothing else in the document writes the environment.
 
 <a id="COMP-ENVVAR-004"></a>**`COMP-ENVVAR-004`**: An environment-variable
-name matches `^[A-Z_][A-Z0-9_]*$` and holds 1 to 128 characters. Structural:
-`ERR_INVALID_VALUE` at the input's `target/envVar`.
+name matches `^[A-Za-z_][A-Za-z0-9_]*$` and holds 1 to 128 characters.
+Structural: `ERR_INVALID_VALUE` at the input's `target/envVar`.
+
+Names are case-sensitive, as POSIX makes them: `FOO` and `foo` are two
+variables, and every rule comparing names compares them exactly.
+
+<a id="COMP-ENVVAR-005"></a>**`COMP-ENVVAR-005`**: The environment a workload's
+process starts with is the image's configured environment, with every input
+target written over it: an input's target replaces an image variable of the
+same name, and every other image variable keeps its value. The platform MUST
+NOT add any other variable, or change or remove one the image or an input
+sets, except that where neither sets `PATH`, `HOME` or `HOSTNAME` it MAY set
+it, as container runtimes do. Platform obligation; no document breaks it.
+
+Those three are the whole of what a runtime supplies. A platform fact a
+workload needs, such as its compute ([§5.9](#compute)), enters through an
+input like any other value.
+
+<a id="COMP-ENVVAR-006"></a>**`COMP-ENVVAR-006`**: No environment-variable name
+is reserved. An input MAY target any name the grammar admits, `PATH`, `HOME`
+and `HOSTNAME` included, and the workload sees the input's value. Structural:
+such a target is valid.
+
+An input targeting `HOSTNAME` is how a component pins a bind address that an
+image reads from it, whatever the runtime would otherwise set.
 
 A value that does not vary between deployments is still an input: one with a
 `default`, which a blueprint may leave unbound or override
@@ -891,21 +939,42 @@ named by its role:
 | `readiness` | Traffic gate. Failure stops forwarding to the replica, without a restart |
 | `liveness` | Restart on failure |
 
+<a id="COMP-HEALTH-001"></a>**`COMP-HEALTH-001`**: A replica of a `SERVICE` or
+`WORKER` has started when its startup probe succeeds, or, with no startup
+probe, once its process is running, and it is ready when its readiness probe
+succeeds, or, with none, once it has started. A platform MUST NOT require the
+workload to listen on any port other than a declared endpoint's `targetPort`,
+and MUST NOT fail, restart or withhold readiness from it for not listening on
+one; a check that a port is bound, where a platform applies one, applies only
+to a declared endpoint. Platform obligation; no document breaks it.
+
+So a `WORKER` that declares no endpoint and no probe, such as a scheduler or a
+queue consumer, is ready once its process runs, and stays so until it exits.
+A workload that wants a stronger signal declares a probe; `exec` needs no port.
+
 A probe names its mechanism by the key that is present, beside the timing
-fields.
+fields:
 
-<a id="COMP-EP-002"></a>**`COMP-EP-002`**: A probe requires `http`, which names
-an `endpoint` with an HTTP probe protocol and an absolute HTTP `path`.
-Structural: `ERR_MISSING_FIELD` without `http`, and `ERR_UNKNOWN_FIELD` for any
-other mechanism key. Semantic, at `/spec/workload/health/<probe>/http/endpoint`:
-`ERR_UNKNOWN_ENDPOINT` for an undeclared endpoint, and `ERR_ENDPOINT_NOT_HTTP`
-for one whose protocol is not `HTTP` or `HTTPS`.
+| Mechanism | Succeeds when |
+|---|---|
+| `http` | A `GET` of `path` on the named endpoint answers with an expected status |
+| `tcp` | A TCP connection to the named endpoint's `targetPort` is established |
+| `grpc` | A `grpc.health.v1.Health/Check` on the named endpoint answers `SERVING` |
+| `exec` | `command`, run inside the workload's container, exits 0 |
 
-`http` is the only mechanism in v2. A `WS` or `GRPC` workload may declare a
-separate HTTP endpoint for health. A probe is a `GET` of `path`, sent over the
-named endpoint's protocol and trust policy ([`COMP-EP-007`](#COMP-EP-007)); a
-probe has no TLS settings of its own, and a health check needing a different
-protocol names a different endpoint. HTTP status 200 to 399 succeeds; transport
+<a id="COMP-EP-002"></a>**`COMP-EP-002`**: A probe holds exactly one of
+`http`, `tcp`, `grpc` and `exec`, and `http` names an `endpoint` with an HTTP
+probe protocol and an absolute HTTP `path`. Structural: naming none is
+`ERR_MISSING_FIELD` and naming two or more `ERR_INVALID_VALUE`, at the probe,
+and any other mechanism key is `ERR_UNKNOWN_FIELD`. Semantic, at
+`/spec/workload/health/<probe>/http/endpoint`: `ERR_UNKNOWN_ENDPOINT` for an
+undeclared endpoint, and `ERR_ENDPOINT_NOT_HTTP` for one whose protocol is not
+`HTTP` or `HTTPS`.
+
+An HTTP probe is a `GET` of `path`, sent over the named endpoint's protocol and
+trust policy ([`COMP-EP-007`](#COMP-EP-007)); a probe has no TLS settings of
+its own, and a health check needing a different protocol names a different
+endpoint or another mechanism. HTTP status 200 to 399 succeeds; transport
 failure, timeout or another status fails. A redirect is a status like any
 other: it is evaluated as returned and never followed. Failure thresholds count
 consecutive failures; success thresholds count consecutive successes.
@@ -984,6 +1053,89 @@ a real page. A workload behind a login that offers neither can still be probed
 with `expectedStatuses: [401]`, which is valid but proves only that the login
 answers, not that what is behind it works. A listing whose readiness rests on
 such a probe SHOULD say so.
+
+<a id="probe-headers"></a>**Probe headers.** An HTTP probe may send request
+headers of its own, for a health route keyed on one:
+
+```yaml
+readiness:
+  http:
+    endpoint: api
+    path: /health
+    headers:
+      x-api-key: { input: apiKey }
+      accept: { value: application/json }
+```
+
+<a id="COMP-PROBE-004"></a>**`COMP-PROBE-004`**: `http.headers` maps at most 16
+header names to exactly one origin each, a literal `value` or an `input`, as a
+probe credential does. A name matches `^[a-z][a-z0-9-]{0,63}$` and is none of
+`host`, `authorization`, `forwarded`, `x-forwarded-for`, `content-length`,
+`transfer-encoding`, `connection`, `te`, `upgrade` and `cookie`; a `value` is 1
+to 1024 characters of visible ASCII, spaces and tabs. Structural:
+`ERR_INVALID_VALUE` at `headers` for a name outside the grammar or a reserved
+one, `ERR_MISSING_FIELD` and `ERR_INVALID_VALUE` at the header for no origin and
+two, and `ERR_INVALID_VALUE` at a `value` outside its grammar.
+
+Header names compare case-insensitively, so writing them in lower case makes a
+mapping key unique exactly when the header is. The reserved names are the ones
+the platform sets ([`COMP-EP-017`](#COMP-EP-017)), the ones `auth` sets, and
+the ones that frame the request.
+
+<a id="COMP-PROBE-005"></a>**`COMP-PROBE-005`**: A header's `input` MUST name
+one of the component's own string inputs that is always supplied, and MAY name
+a sensitive one. Semantic, at the header's `input`: `ERR_UNKNOWN_INPUT` for an
+input that does not exist, `ERR_VALUE_CONSTRAINT` for one that is not a string,
+and `ERR_INPUT_NOT_GUARANTEED` for an optional one with no default.
+
+A header carrying a secret reads it from a sensitive input, and is then
+sensitive wherever it travels, as a probe credential is.
+
+<a id="other-probes"></a>**TCP, gRPC and exec probes.**
+
+```yaml
+health:
+  readiness:
+    exec:
+      command: [pg_isready, -U, postgres, -h, 127.0.0.1]
+  liveness:
+    tcp: { endpoint: db }
+```
+
+<a id="COMP-PROBE-001"></a>**`COMP-PROBE-001`**: `tcp` requires `endpoint`,
+naming a declared endpoint whose protocol is `TCP`, `HTTP`, `WS` or `GRPC`.
+Structural: `ERR_MISSING_FIELD` at `tcp` without it. Semantic, at
+`/spec/workload/health/<probe>/tcp/endpoint`: `ERR_UNKNOWN_ENDPOINT` for an
+undeclared endpoint, and `ERR_ENDPOINT_NOT_TCP` for an `HTTPS` or `UDP` one.
+
+Those four protocols are carried over TCP and are cleartext on the hop to the
+workload. A connection to an `HTTPS` endpoint that never completes the TLS
+handshake would bypass its trust policy ([`COMP-EP-007`](#COMP-EP-007)), and
+`UDP` has no connection. A TCP probe proves only that the port accepts a
+connection; an HTTP endpoint is better probed over HTTP.
+
+<a id="COMP-PROBE-002"></a>**`COMP-PROBE-002`**: `grpc` requires `endpoint`,
+naming a declared `GRPC` endpoint, and takes an optional `service` of at most
+256 characters, default the empty string, which asks about the whole server.
+Structural: `ERR_MISSING_FIELD` at `grpc` without `endpoint`,
+`ERR_INVALID_VALUE` at a longer `service`. Semantic, at
+`/spec/workload/health/<probe>/grpc/endpoint`: `ERR_UNKNOWN_ENDPOINT` for an
+undeclared endpoint, and `ERR_ENDPOINT_NOT_GRPC` for one of another protocol.
+
+<a id="COMP-PROBE-003"></a>**`COMP-PROBE-003`**: `exec` requires `command`, a
+non-empty list of strings in exec form, as the workload's `command` is.
+Structural: `ERR_MISSING_FIELD` at `exec` without it, `ERR_INVALID_TYPE` for a
+string and `ERR_INVALID_VALUE` for an empty list, at `exec/command`.
+
+<a id="COMP-PROBE-006"></a>**`COMP-PROBE-006`**: The platform MUST run each
+mechanism as the table above says: a TCP probe sends nothing and closes the
+connection; a gRPC probe is a cleartext `Check` call whose request names
+`service`; an exec probe runs inside the workload's container with its
+environment and user, and fails when it has not exited within
+`timeoutSeconds`. Probe headers MUST be sent on the probe's request only,
+never on traffic the platform forwards, and a header whose resolved value holds
+a CR, LF or NUL MUST NOT be sent: that is a configuration error, never a failed
+probe. Platform obligation; no document breaks it.
 
 <a id="COMP-EP-003"></a>**`COMP-EP-003`**: A URL-addressed endpoint a blueprint
 exposes `PUBLIC` requires a readiness probe. Blueprint checks it against the
@@ -1140,6 +1292,175 @@ at the schedule's next time. Platform obligation; no document breaks it.
 A scheduled `JOB` runs only when its schedule falls due; a rollout does not
 start one.
 
+### <a id="files"></a>5.8 Files
+
+`files` names files the platform writes into the workload's container before
+its process starts, such as a configuration file an image reads from a fixed
+path. Names use core's
+[DNS-label grammar](../../core/v2/spec.md#dns-label-grammar).
+
+```yaml
+files:
+  settings:
+    path: /etc/searxng/settings.yml
+    content: { input: settingsYaml }
+  initdb:
+    path: /docker-entrypoint-initdb.d/00-vector.sql
+    mode: "0444"
+    content: { value: "CREATE EXTENSION IF NOT EXISTS vector;" }
+```
+
+<a id="COMP-FILE-001"></a>**`COMP-FILE-001`**: `files` holds at most 32 files.
+Each requires `path`, beginning with `/` and at most 512 characters, and
+`content`, which holds exactly one origin: a literal `value` of at most 65536
+characters, or `input`. `mode` is a string of four octal digits beginning with
+`0`, default `"0444"`. Structural: a missing field is `ERR_MISSING_FIELD`;
+`content` naming no origin is `ERR_MISSING_FIELD` and naming both
+`ERR_INVALID_VALUE`, at `content`; any other breach is `ERR_INVALID_VALUE` at
+the field.
+
+`mode` is a string because YAML reads an unquoted `0644` as octal under one
+version and decimal under another.
+
+<a id="COMP-FILE-002"></a>**`COMP-FILE-002`**: A content `input` MUST name one
+of the component's own string inputs that is always supplied, and MAY name a
+sensitive one. Semantic, at `/spec/workload/files/<name>/content/input`:
+`ERR_UNKNOWN_INPUT` for an input that does not exist, `ERR_VALUE_CONSTRAINT`
+for one that is not a string, and `ERR_INPUT_NOT_GUARANTEED` for an optional
+one with no default.
+
+A file is how a secret reaches a workload without entering its environment. A
+file's content is one input; a value built from more than one is composed upstream,
+by a blueprint binding's template.
+
+<a id="COMP-FILE-003"></a>**`COMP-FILE-003`**: A file's `path` MUST be a
+canonical absolute POSIX path other than `/`, and no file's path may equal, or
+be an ancestor of, another file's path or a volume's `mountPath`. Semantic:
+`ERR_INVALID_MOUNT` at the later file's `path`, in document order, files after
+volumes.
+
+A file under a volume's mount is permitted, and the file is what the workload
+reads at that path.
+
+<a id="COMP-FILE-004"></a>**`COMP-FILE-004`**: The platform MUST write each
+file before the workload's process starts, at every start, holding exactly the
+UTF-8 bytes of its content with nothing added, with the permission bits of
+`mode` and owned by the user the process runs as, and MUST treat a file whose
+content comes from a sensitive input as sensitive wherever it travels.
+Platform obligation; no document breaks it.
+
+### <a id="compute"></a>5.9 Compute
+
+A blueprint node names the compute profile a workload runs on
+([blueprint §4.3](../../blueprint/v2/spec.md#node-compute)). A component
+states, in `compute`, the resources it needs, so that a node can be judged and
+a deploy form can choose:
+
+```yaml
+compute:
+  minimum: { vcpus: 2, memoryMiB: 4096 }
+  recommended: { vcpus: 4, memoryMiB: 8192 }
+```
+
+<a id="COMP-COMPUTE-001"></a>**`COMP-COMPUTE-001`**: `compute` holds an
+optional `minimum` and an optional `recommended`, and each requires `vcpus`, a
+number greater than 0 and at most 256, and `memoryMiB`, an integer from 64 to
+4194304. Structural: `ERR_MISSING_FIELD` at the object lacking a figure, and
+`ERR_INVALID_VALUE` at a figure out of range.
+
+A component states figures, never a profile slug: a slug names an offering of
+one platform's catalog, and a component is published once and deployed by
+many items. A deploy form SHOULD pre-select the smallest profile that meets
+`recommended`.
+
+<a id="COMP-COMPUTE-002"></a>**`COMP-COMPUTE-002`**: `recommended`, beside a
+`minimum`, MUST be at or above it in both figures. Semantic:
+`ERR_INVALID_COMPUTE` at each `recommended` figure below its minimum.
+
+<a id="COMP-COMPUTE-003"></a>**`COMP-COMPUTE-003`**: A node MUST NOT run the
+workload on a compute profile with fewer vCPUs or less memory than `minimum`.
+Blueprint decides it against the compute catalog when it admits a node, as it
+decides [`COMP-EP-003`](#COMP-EP-003) against exposure.
+
+A workload that sizes itself from its compute, such as a thread pool, reads
+the figure through an input, like every other value; nothing is injected into
+its environment ([`COMP-ENVVAR-005`](#COMP-ENVVAR-005)).
+
+### <a id="workload-security"></a>5.10 Workload security
+
+`security` adjusts the container a workload runs in, within limits this
+specification sets and the platform's runtime may narrow:
+
+```yaml
+security:
+  shmSizeMiB: 1024
+  readOnlyRootFilesystem: true
+  capabilities: { drop: [ALL], add: [NET_RAW] }
+  seccompProfile: RUNTIME_DEFAULT
+  sysctls:
+    net.ipv4.ping_group_range: "0 2147483647"
+```
+
+<a id="COMP-SECURITY-001"></a>**`COMP-SECURITY-001`**: `security` is closed and
+every field is optional. Structural: `ERR_INVALID_VALUE`, or `ERR_INVALID_TYPE`
+for a value of the wrong type, at the field or the member that breaks it:
+
+| Field | Rule |
+|---|---|
+| `shmSizeMiB` | An integer from 1 to 65536: the size of `/dev/shm` |
+| `readOnlyRootFilesystem` | A boolean, default `false` |
+| `capabilities.add` | Unique capabilities from the allowlist below |
+| `capabilities.drop` | Unique capabilities from the allowlist below, or `ALL` |
+| `seccompProfile` | `RUNTIME_DEFAULT` or `UNCONFINED`, default `RUNTIME_DEFAULT` |
+| `sysctls` | Names from the allowlist below, each value one or more decimal integers separated by single spaces, at most 64 characters; a name outside it is `ERR_INVALID_VALUE` at `sysctls` |
+
+The capability allowlist is the default set of an OCI container: `AUDIT_WRITE`,
+`CHOWN`, `DAC_OVERRIDE`, `FOWNER`, `FSETID`, `KILL`, `MKNOD`,
+`NET_BIND_SERVICE`, `NET_RAW`, `SETFCAP`, `SETGID`, `SETPCAP`, `SETUID` and
+`SYS_CHROOT`. `drop` applies first and `add` after it, so `drop: [ALL]` with an
+`add` keeps exactly what is added. A component can give privilege up freely,
+and ask back only for what a container ordinarily holds.
+
+The sysctl allowlist holds the namespaced sysctls a container can set without
+affecting its host: `kernel.shm_rmid_forced`, `net.core.somaxconn`,
+`net.ipv4.ip_local_port_range`, `net.ipv4.ip_unprivileged_port_start`,
+`net.ipv4.ping_group_range`, `net.ipv4.tcp_fin_timeout`,
+`net.ipv4.tcp_keepalive_intvl`, `net.ipv4.tcp_keepalive_probes`,
+`net.ipv4.tcp_keepalive_time` and `net.ipv4.tcp_syncookies`.
+
+Without `shmSizeMiB`, `/dev/shm` is at least 64 MiB, and its size counts
+against the workload's memory either way. With `readOnlyRootFilesystem: true`
+the root filesystem is read-only; volumes, files and `/dev/shm` are as
+declared, and a workload that writes elsewhere mounts a volume there.
+
+<a id="COMP-SECURITY-002"></a>**`COMP-SECURITY-002`**: Where the platform's
+runtime does not grant a capability, a `capabilities.add` naming it MUST be
+rejected. Admission, against the platform's runtime:
+`ERR_CAPABILITY_NOT_GRANTED` at
+`/spec/workload/security/capabilities/add/<index>`.
+
+<a id="COMP-SECURITY-003"></a>**`COMP-SECURITY-003`**: Where the platform's
+runtime does not run a workload without a seccomp filter,
+`seccompProfile: UNCONFINED` MUST be rejected. Admission, against the
+platform's runtime: `ERR_SECCOMP_NOT_GRANTED` at
+`/spec/workload/security/seccompProfile`.
+
+<a id="COMP-SECURITY-004"></a>**`COMP-SECURITY-004`**: Where the platform's
+runtime does not set a sysctl, a `sysctls` entry naming it MUST be rejected.
+Admission, against the platform's runtime: `ERR_SYSCTL_NOT_GRANTED` at
+`/spec/workload/security/sysctls/<name>`.
+
+Each of the three is decided as [`COMP-EP-019`](#COMP-EP-019) is: a document
+is valid as written, and a platform that cannot honour a setting refuses it
+before anything runs, never ignores it.
+
+<a id="COMP-SECURITY-005"></a>**`COMP-SECURITY-005`**: The platform MUST apply
+every setting of `security` it admits; MUST NOT run a workload privileged;
+MUST run it with no-new-privileges set and, unless `UNCONFINED` is admitted,
+its runtime's default seccomp profile; and MUST grant by default only
+capabilities from the allowlist, and say which. Platform obligation; no
+document breaks it.
+
 ## <a id="contract"></a>6. Component contract
 
 `contract.inputs` and `contract.outputs` are named maps. The component contract
@@ -1191,7 +1512,7 @@ inputs:
 
 <a id="COMP-INPUT-001"></a>**`COMP-INPUT-001`**: An input of a `SERVICE`,
 `WORKER` or `JOB` with no `target` MUST be read by a build secret, a probe
-credential, a trust bundle or an output. Semantic: `ERR_UNUSED_INPUT` at
+credential, a probe header, a trust bundle, a file or an output. Semantic: `ERR_UNUSED_INPUT` at
 `/spec/contract/inputs/<name>`.
 
 An input with no target is never written to the launch environment. A build
@@ -1633,9 +1954,12 @@ rules of this document: [`COMP-ID-001`](#COMP-ID-001), because the lineage is a
 fact the platform holds, and [`COMP-DESC-003`](#COMP-DESC-003),
 [`COMP-DESC-004`](#COMP-DESC-004) and the obligations
 [§5](#publication-obligations) lists, because an unwritten field is only a
-defect in a component someone is trying to publish. One `admission` rule reads
+defect in a component someone is trying to publish. Four `admission` rules read
 the platform's runtime rather than an unwritten field:
-[`COMP-EP-019`](#COMP-EP-019), a port below 1024 that runtime cannot bind.
+[`COMP-EP-019`](#COMP-EP-019), a port below 1024 that runtime cannot bind, and
+[`COMP-SECURITY-002`](#COMP-SECURITY-002) to
+[`COMP-SECURITY-004`](#COMP-SECURITY-004), a capability, seccomp profile or
+sysctl it does not grant.
 Running a workload additionally requires blueprint resolution, the `deployment`
 scope, in which `ERR_ENV_ENCODING` and resolved `ERR_VALUE_CONSTRAINT` are
 reported.
@@ -1643,12 +1967,16 @@ reported.
 The platform obligations of this document, [`COMP-BUILD-005`](#COMP-BUILD-005),
 [`COMP-BUILD-006`](#COMP-BUILD-006), [`COMP-EP-007`](#COMP-EP-007),
 [`COMP-EP-011`](#COMP-EP-011), [`COMP-EP-017`](#COMP-EP-017),
-[`COMP-VOL-002`](#COMP-VOL-002), [`COMP-JOB-001`](#COMP-JOB-001) and
-[`COMP-JOB-004`](#COMP-JOB-004), bind what the platform does with a valid
+[`COMP-ENVVAR-005`](#COMP-ENVVAR-005), [`COMP-HEALTH-001`](#COMP-HEALTH-001),
+[`COMP-PROBE-006`](#COMP-PROBE-006), [`COMP-VOL-002`](#COMP-VOL-002),
+[`COMP-JOB-001`](#COMP-JOB-001), [`COMP-JOB-004`](#COMP-JOB-004),
+[`COMP-FILE-004`](#COMP-FILE-004) and
+[`COMP-SECURITY-005`](#COMP-SECURITY-005), bind what the platform does with a valid
 document, and the workload obligations, [`COMP-SEC-001`](#COMP-SEC-001) and
 [`COMP-SEC-002`](#COMP-SEC-002), bind what a workload does with what the
 platform forwards. No document breaks them, and no validation phase reports
-them.
+them. [`COMP-COMPUTE-003`](#COMP-COMPUTE-003) is decided by blueprint, against
+the node.
 
 ## <a id="diagnostics"></a>8. Diagnostics
 
@@ -1660,26 +1988,32 @@ Core diagnostics also apply.
 | `ERR_UNKNOWN_ENDPOINT` | `semantic` | A field names an endpoint that is not declared, or names none explicitly. |
 | `ERR_ENDPOINT_NOT_URL_ADDRESSED` | `semantic` | `publicURL` or `publicHostname` is read from an endpoint that is not URL-addressed. |
 | `ERR_ENDPOINT_NOT_PORT_ADDRESSED` | `semantic` | `publicAddress` or `publicPort` is read from an endpoint that is not port-addressed. |
-| `ERR_ENDPOINT_NOT_HTTP` | `semantic` | A probe names an endpoint without an HTTP probe protocol, a viewer identity property is read from an endpoint that is not HTTP-routed, or a blueprint selects `access: RESTRICTED` on an endpoint that is not HTTP-routed ([blueprint `BP-NODE-007`](../../blueprint/v2/spec.md#BP-NODE-007)). |
+| `ERR_ENDPOINT_NOT_TCP` | `semantic` | A TCP probe names an endpoint whose protocol is `HTTPS` or `UDP`. |
+| `ERR_ENDPOINT_NOT_GRPC` | `semantic` | A gRPC probe names an endpoint whose protocol is not `GRPC`. |
+| `ERR_ENDPOINT_NOT_HTTP` | `semantic` | An HTTP probe names an endpoint without an HTTP probe protocol, a viewer identity property is read from an endpoint that is not HTTP-routed, or a blueprint selects `access: RESTRICTED` on an endpoint that is not HTTP-routed ([blueprint `BP-NODE-007`](../../blueprint/v2/spec.md#BP-NODE-007)). |
 | `ERR_UNKNOWN_ENDPOINT_PROPERTY` | `semantic` | A template reads a property [§5.2](#endpoint-properties) does not define. |
 | `ERR_ENDPOINT_NOT_EXPOSABLE` | `semantic` | A `WORKER` endpoint is exposed `PUBLIC`, or a `WORKER` output reads a public or viewer identity property. |
 | `ERR_ENDPOINT_NOT_OIDC_CLIENT` | `semantic` | An OpenID Connect client property is read from, or `OIDC` selected for, an endpoint that declares no `oidc`. |
 | `ERR_INVALID_SCHEDULE` | `semantic` | A cron field is outside [§5.7](#jobs)'s grammar or range. |
 | `ERR_UNKNOWN_INPUT` | `semantic` | A field names an input the component does not declare, or an output names a connection input without a `member` or a value input with one. |
 | `ERR_UNKNOWN_CONNECTION_MEMBER` | `semantic` | An output reads a member the input's protocol does not define. |
-| `ERR_INPUT_NOT_GUARANTEED` | `semantic` | An output, trust bundle, probe credential or build secret reads an input that may be absent, or an output reads a connection member that may be absent. |
+| `ERR_INPUT_NOT_GUARANTEED` | `semantic` | An output, trust bundle, probe credential, probe header, file or build secret reads an input that may be absent, or an output reads a connection member that may be absent. |
 | `ERR_UNUSED_INPUT` | `semantic` | A workload input has no target and nothing reads it. |
-| `ERR_INVALID_MOUNT` | `semantic` | A mount path is not canonical or overlaps another. |
+| `ERR_INVALID_MOUNT` | `semantic` | A mount or file path is not canonical or overlaps another. |
+| `ERR_INVALID_COMPUTE` | `semantic` | A recommended compute figure is below its minimum. |
 | `ERR_INVALID_VALUE_SCHEMA` | `semantic` | A value schema is outside [§6.3](#value-schema)'s profile or invalid. |
 | `ERR_VALUE_CONSTRAINT` | `semantic`, `resolution` | A known value, or the input or member an origin names, violates the component contract. |
 | `ERR_SENSITIVE_LITERAL` | `semantic` | An authored literal supplies a sensitive value. |
 | `ERR_REVISION_NOT_INCREASING` | `admission` | A published component's revision is not greater than every earlier one. |
 | `ERR_PRIVILEGED_PORT` | `admission` | A `targetPort` below 1024 on a platform whose runtime cannot bind one. |
+| `ERR_CAPABILITY_NOT_GRANTED` | `admission` | A capability to add that the platform's runtime does not grant. |
+| `ERR_SECCOMP_NOT_GRANTED` | `admission` | `UNCONFINED` on a platform whose runtime does not run a workload without a seccomp filter. |
+| `ERR_SYSCTL_NOT_GRANTED` | `admission` | A sysctl the platform's runtime does not set. |
 | `ERR_DESCRIPTION_REQUIRED` | `admission` | Publication requires a description this document, or one of its inputs or outputs, does not carry. |
 | `ERR_WORKLOAD_REQUIRED` | `admission` | Publication requires a workload of a `SERVICE`, `WORKER` or `JOB`. |
 | `ERR_SOURCE_REQUIRED` | `admission` | Publication requires a workload source. |
 | `ERR_ENDPOINT_REQUIRED` | `admission` | Publication requires an endpoint of a `SERVICE`. |
-| `ERR_COMMAND_REQUIRED` | `admission` | Publication requires a command of a `JOB`. |
+| `ERR_COMMAND_REQUIRED` | `admission` | Publication requires a command or an entrypoint of a `JOB`. |
 | `ERR_OUTPUT_REQUIRED` | `admission` | Publication requires an output of an `EXTERNAL` component. |
 | `ERR_ENV_ENCODING` | `resolution` | A value cannot be encoded into an environment variable. |
 
@@ -1712,9 +2046,12 @@ evidence.
 | Outputs produced by a workload at run time | A new origin |
 | Arbitrary expressions or recursive substitution in a template | A new origin kind beside `template` |
 | Provider-specific configuration maps | A new optional field |
-| Health mechanisms other than HTTP | A new mechanism key beside `http` |
 | TLS on the hop to a `WS` or `GRPC` workload | Permit `tls` on those protocols |
-| Probe request headers other than credentials | A new optional field on `http` |
+| Request metadata on a gRPC probe | A new optional field on `grpc` |
+| A file whose content is a template over more than one input | A new origin beside `value` and `input` |
+| Reading the node's compute in the component; a workload reads it through an input a blueprint binds | A new fact path in blueprint |
+| A seccomp profile other than the runtime's default, user namespaces, tmpfs paths and a PID limit | A new value of `seccompProfile`, or a new optional field on `security` |
+| A capability or sysctl outside the allowlists | A new value in an allowlist |
 | Forwarded viewer roles or scopes | A new claim value |
 | Viewer assertions signed with an algorithm other than RS256 | A new optional field |
 | OpenID Connect post-logout redirects | A new optional field on `oidc` |
@@ -1755,6 +2092,15 @@ whose certificate cannot be verified, and prefer `BUNDLE` wherever the
 certificate is known in advance. Probe credentials are sent on probes only
 ([`COMP-EP-011`](#COMP-EP-011)), so an endpoint's own authentication still
 guards the traffic the platform forwards to it.
+
+A file or probe header that reads a sensitive input is as sensitive as the
+input ([`COMP-FILE-004`](#COMP-FILE-004), [`COMP-PROBE-006`](#COMP-PROBE-006)).
+A file is the better path for a secret than the environment, which a process
+hands to its children and which crash reports often record.
+`seccompProfile: UNCONFINED` and an added capability widen what code in the
+workload can do to its kernel; a platform admits them only where its runtime
+isolates the workload by other means
+([§5.10](#workload-security)).
 
 <a id="COMP-SEC-001"></a>**`COMP-SEC-001`**: A workload that reads a viewer's
 identity from `viewerIdentityHeader` ([§5.2](#viewer-identity)) MUST accept that

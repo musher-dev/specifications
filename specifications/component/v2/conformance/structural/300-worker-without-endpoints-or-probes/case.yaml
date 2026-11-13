@@ -1,0 +1,13 @@
+specVersion: v2
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: WORKER
+  workload:
+    source:
+      image: example/web:1
+    command:
+    - supercronic
+    - /etc/crontab

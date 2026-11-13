@@ -1,0 +1,10 @@
+{
+  "id": "structural-324-compute-with-zero-vcpus",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#compute",
+  "requirements": [
+    "COMP-COMPUTE-001"
+  ],
+  "summary": "Zero vCPUs is rejected."
+}

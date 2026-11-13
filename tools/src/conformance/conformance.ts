@@ -1332,6 +1332,46 @@ const UNPINNED: ReadonlyMap<string, string> = new Map([
       'operation runs a build',
   ],
   [
+    'COMP-HEALTH-001',
+    'When a replica has started and is ready, and that no port but a declared endpoint is ' +
+      'checked for binding, are runtime obligations of the host agent; no document phase or ' +
+      'behavioural operation observes a running process. The runtime test home is the host ' +
+      "agent's integration suite (platform-api#1440); structural cases show an endpoint-less " +
+      'WORKER is valid',
+  ],
+  [
+    'COMP-ENVVAR-005',
+    "That a workload starts with its image's environment overlaid by its input targets, and " +
+      'that the runtime adds nothing but PATH, HOME or HOSTNAME where neither sets them, is a ' +
+      'runtime obligation; a fixture carries no image, so resolution observes only the input ' +
+      'targets (platform-api#1443)',
+  ],
+  [
+    'COMP-PROBE-006',
+    'How the prober runs a TCP, gRPC or exec probe, that probe headers ride on probes only, ' +
+      'and that a header holding CR, LF or NUL is never sent are runtime obligations of the ' +
+      'prober; no document phase or behavioural operation sends a request or runs a command',
+  ],
+  [
+    'COMP-FILE-004',
+    "A file's bytes, mode, owner, its rewriting at every start and its sensitivity are " +
+      'runtime obligations of the platform; no document phase or behavioural operation ' +
+      'observes a container filesystem',
+  ],
+  [
+    'COMP-COMPUTE-003',
+    "A node's profile is judged against the component's minimum by blueprint admission, " +
+      "against compute figures the admission context's platform.computeProfiles does not " +
+      'carry yet; blueprint pins it when it adds that rule and its code',
+  ],
+  [
+    'COMP-SECURITY-005',
+    'Applying the admitted security settings, never running privileged, setting ' +
+      'no-new-privileges and the default seccomp profile and capability set are runtime ' +
+      'obligations of the platform; no document phase or behavioural operation observes a ' +
+      'container',
+  ],
+  [
     'COMP-EP-017',
     'That a probe carries no viewer identity, carries Forwarded and X-Forwarded-For naming ' +
       'one non-loopback address of the probing host, and under HEADER arrives from a peer ' +

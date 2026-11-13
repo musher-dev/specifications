@@ -1,0 +1,10 @@
+{
+  "id": "structural-302-entrypoint-as-a-string",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#workload",
+  "requirements": [
+    "COMP-CMD-002"
+  ],
+  "summary": "An entrypoint written as a string is rejected: it is exec form."
+}

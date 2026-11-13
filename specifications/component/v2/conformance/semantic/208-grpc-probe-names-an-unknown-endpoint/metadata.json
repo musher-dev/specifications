@@ -1,0 +1,10 @@
+{
+  "id": "semantic-208-grpc-probe-names-an-unknown-endpoint",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#health",
+  "requirements": [
+    "COMP-PROBE-002"
+  ],
+  "summary": "A gRPC probe naming an undeclared endpoint is rejected."
+}

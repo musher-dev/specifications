@@ -1,0 +1,10 @@
+{
+  "id": "structural-303-empty-entrypoint",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#workload",
+  "requirements": [
+    "COMP-CMD-002"
+  ],
+  "summary": "An empty entrypoint is rejected."
+}

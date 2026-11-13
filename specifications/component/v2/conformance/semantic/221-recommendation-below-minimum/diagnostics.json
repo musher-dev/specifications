@@ -1,0 +1,6 @@
+[
+  {
+    "code": "ERR_INVALID_COMPUTE",
+    "path": "/spec/workload/compute/recommended/memoryMiB"
+  }
+]
