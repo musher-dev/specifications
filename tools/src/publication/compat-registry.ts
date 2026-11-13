@@ -21,7 +21,10 @@
  *   claimed.
  * - **Protocols.** Every released protocol and category survives, each
  *   released capability survives, each released member is unchanged, a new
- *   member is never required, and a category's conventions never change.
+ *   member is never required, and a category's conventions never change. A
+ *   released protocol keeps its `introduced`, and a protocol the release did
+ *   not deliver is `introduced` in a later version: naming the release, or
+ *   an earlier one, claims the release delivered a file its tag lacks.
  * - **Interface schemas.** Every released subschema with properties keeps them,
  *   `required` never grows, an enum keeps every released value, and no
  *   `type`, `pattern`, bound, `const` or `additionalProperties` narrows. The
@@ -38,7 +41,7 @@
  *
  * NON-NORMATIVE, like everything under tools/.
  */
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { listTreeFiles, readBlobAtRef } from '../lib/git.ts'
 import {
   DIAGNOSTICS_REGISTRY_FILE,
@@ -224,6 +227,11 @@ export function compareProtocol(released: Json, current: Json): string[] {
   const id = String(was.id)
   if (is.id !== was.id) problems.push(`protocol ${id} is now ${String(is.id)}`)
   if (is.category !== was.category) problems.push(`protocol ${id} changed category`)
+  if (is.introduced !== was.introduced) {
+    problems.push(
+      `protocol ${id} changed introduced from ${String(was.introduced)} to ${String(is.introduced)}`,
+    )
+  }
   const lostCapabilities = missing(strings(was.capabilities), strings(is.capabilities))
   if (lostCapabilities.length > 0) {
     problems.push(`protocol ${id} lost capabilities ${lostCapabilities.join(', ')}`)
@@ -243,6 +251,28 @@ export function compareProtocol(released: Json, current: Json): string[] {
     }
   }
   return problems
+}
+
+/**
+ * A protocol record the newest release of its family version did not deliver:
+ * its `introduced` is a version later than that release, because the release
+ * is tagged and its tree lacks the file. The category list, which has no
+ * `members`, has no `introduced`.
+ */
+export function checkNewProtocol(current: Json, releasedVersion: string): string[] {
+  const is = asObject(current)
+  if (is.members === undefined) return []
+  const id = String(is.id)
+  const introduced = is.introduced
+  if (typeof introduced !== 'string' || !/^\d+\.\d+\.\d+$/.test(introduced)) {
+    return [`protocol ${id} has no introduced version`]
+  }
+  return compareVersions(introduced, releasedVersion) > 0
+    ? []
+    : [
+        `protocol ${id} says introduced ${introduced}, but ${releasedVersion} is released ` +
+          `without it. A new protocol is introduced after ${releasedVersion}.`,
+      ]
 }
 
 /** The node at a JSON Pointer, or undefined. */
@@ -420,8 +450,10 @@ export function compareFamily(
     const files = hasPart(release.family, release.major, part, release.version)
       ? requireTreeAtRef(repoRoot, release.tag, released[part], `${release.tag} ${part}`)
       : listTreeFiles(repoRoot, release.tag, released[part])
+    const delivered = new Set<string>()
     for (const file of files.filter((f) => f.endsWith('.json'))) {
       const rel = file.slice(released[part].length + 1)
+      delivered.add(rel)
       const bytes = readBlobAtRef(repoRoot, release.tag, file)
       if (bytes === null)
         throw new LayoutError(`${release.tag}: listed ${file} but could not read it`)
@@ -439,6 +471,20 @@ export function compareFamily(
         parse(readFileSync(now), label),
       )) {
         failures.add(`${label}: ${problem}, since ${release.tag}`)
+      }
+    }
+    if (part !== 'protocols') continue
+    const dir = inRepo(repoRoot, working[part])
+    const added = existsSync(dir)
+      ? readdirSync(dir).filter((name) => name.endsWith('.json') && !delivered.has(name))
+      : []
+    for (const name of added.sort()) {
+      const label = `${working[part]}/${name}`
+      for (const problem of checkNewProtocol(
+        parse(readFileSync(`${dir}/${name}`), label),
+        release.version,
+      )) {
+        failures.add(`${label}: ${problem}`)
       }
     }
   }
