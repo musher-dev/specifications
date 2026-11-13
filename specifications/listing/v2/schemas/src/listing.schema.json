@@ -96,7 +96,7 @@
           "type": "string"
         },
         "displayName": {
-          "description": "Title of the catalog item in the storefront.",
+          "description": "Title of the catalog item in the storefront, at most 200 characters (spec.md §4).",
           "maxLength": 200,
           "minLength": 1,
           "type": "string"
@@ -169,7 +169,7 @@
           "type": "string"
         },
         "summary": {
-          "description": "One-line plain-text tagline, never rendered as Markdown.",
+          "description": "One-line plain-text tagline of at most 280 characters, never rendered as Markdown (spec.md §4).",
           "maxLength": 280,
           "minLength": 1,
           "type": "string"
