@@ -80,6 +80,8 @@ export const URL_ADDRESSED = ['HTTP', 'HTTPS', 'WS', 'GRPC']
 export const PORT_ADDRESSED = ['TCP', 'UDP']
 export const HTTP_ROUTED = ['HTTP', 'HTTPS', 'WS']
 export const HTTP_PROBE = ['HTTP', 'HTTPS']
+/** Component §5.4 COMP-PROBE-001: carried over TCP, and cleartext on the hop to the workload. */
+export const TCP_PROBE = ['TCP', 'HTTP', 'WS', 'GRPC']
 const VIEWER = HTTP_ROUTED
 const publicHTTP = {
   protocols: URL_ADDRESSED,
@@ -260,7 +262,8 @@ export function componentObligations(document: Json, { metadata = true } = {}): 
         else if (!Object.keys(workload.endpoints).length)
           obligation('ERR_ENDPOINT_REQUIRED', '/spec/workload/endpoints')
       }
-      if (type === 'JOB' && workload.command === undefined)
+      // COMP-TYPE-007: either names what a JOB runs to completion.
+      if (type === 'JOB' && workload.command === undefined && workload.entrypoint === undefined)
         obligation('ERR_COMMAND_REQUIRED', '/spec/workload')
     }
   }
@@ -323,8 +326,36 @@ export function componentDiagnostics(document: Json): Diagnostic[] {
   if (typeof cron === 'string' && !cronIsValid(cron))
     issue(out, 'ERR_INVALID_SCHEDULE', '/spec/workload/schedule/cron')
   for (const [name, probe] of Object.entries(record(workload.health))) {
+    // COMP-PROBE-001, COMP-PROBE-002: a TCP or gRPC probe names a declared
+    // endpoint of a protocol it can connect to.
+    for (const [mechanism, protocols, code] of [
+      ['tcp', TCP_PROBE, 'ERR_ENDPOINT_NOT_TCP'],
+      ['grpc', ['GRPC'], 'ERR_ENDPOINT_NOT_GRPC'],
+    ] as const) {
+      const named = at(probe, mechanism, 'endpoint')
+      if (typeof named !== 'string') continue
+      const endpoint = at(workload, 'endpoints', named),
+        path = `/spec/workload/health/${token(name)}/${mechanism}/endpoint`
+      if (!endpoint) issue(out, 'ERR_UNKNOWN_ENDPOINT', path)
+      else if (!(protocols as readonly string[]).includes(String(at(endpoint, 'protocol'))))
+        issue(out, code, path)
+    }
     const http = at(probe, 'http')
     if (!isObject(http)) continue
+    // COMP-PROBE-005: a header reads an input the probe can always read, which
+    // may be sensitive.
+    for (const [header, origin] of Object.entries(record(http.headers))) {
+      const input = at(origin, 'input')
+      if (typeof input !== 'string') continue
+      read.add(input)
+      inputReferenceDiagnostics(
+        out,
+        contract,
+        input,
+        `/spec/workload/health/${token(name)}/http/headers/${token(header)}/input`,
+        false,
+      )
+    }
     const endpoint = at(workload, 'endpoints', String(at(http, 'endpoint'))),
       path = `/spec/workload/health/${token(name)}/http/endpoint`
     if (!endpoint) issue(out, 'ERR_UNKNOWN_ENDPOINT', path)
@@ -391,6 +422,39 @@ export function componentDiagnostics(document: Json): Diagnostic[] {
       issue(out, 'ERR_INVALID_MOUNT', `/spec/workload/volumes/${token(name)}/mountPath`)
     mounts.push(path)
   }
+  // COMP-FILE-002, COMP-FILE-003: a file reads an input that is always there,
+  // and its path is canonical, not the root, and neither equal to nor an
+  // ancestor of a mount or another file. Files are checked after volumes.
+  const files: string[] = []
+  const under = (child: string, parent: string) =>
+    child === parent || child.startsWith(parent === '/' ? '/' : `${parent}/`)
+  for (const [name, file] of Object.entries(record(workload.files))) {
+    const base = `/spec/workload/files/${token(name)}`
+    const input = at(file, 'content', 'input')
+    if (typeof input === 'string') {
+      read.add(input)
+      inputReferenceDiagnostics(out, contract, input, `${base}/content/input`, false)
+    }
+    const path = at(file, 'path')
+    if (typeof path !== 'string') continue
+    if (
+      path === '/' ||
+      path !== posix.normalize(path) ||
+      !path.startsWith('/') ||
+      path.endsWith('/') ||
+      mounts.some((mount) => under(mount, path)) ||
+      files.some((other) => under(other, path) || under(path, other))
+    )
+      issue(out, 'ERR_INVALID_MOUNT', `${base}/path`)
+    files.push(path)
+  }
+  // COMP-COMPUTE-002: a recommendation is at or above the minimum it sits beside.
+  const minimum = at(workload, 'compute', 'minimum'),
+    recommended = at(workload, 'compute', 'recommended')
+  if (isObject(minimum) && isObject(recommended))
+    for (const figure of ['vcpus', 'memoryMiB'])
+      if (Number(recommended[figure]) < Number(minimum[figure]))
+        issue(out, 'ERR_INVALID_COMPUTE', `/spec/workload/compute/recommended/${figure}`)
   // Component §5.3: every environment variable is an input's target, and no two
   // inputs claim one name.
   const env = new Set<string>()
@@ -950,7 +1014,8 @@ export function semanticReport(
           if (
             exposure.visibility === 'PUBLIC' &&
             URL_ADDRESSED.includes(String(at(e, 'protocol'))) &&
-            !at(workload, 'health', 'readiness', 'http')
+            // COMP-EP-003: a readiness probe, of any mechanism (§5.4).
+            !isObject(at(workload, 'health', 'readiness'))
           )
             issue(out, 'ERR_READINESS_REQUIRED', where)
           // BP-NODE-007: sign-in and a request header exist only on HTTP, HTTPS and WS.

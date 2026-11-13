@@ -1,0 +1,6 @@
+[
+  {
+    "code": "ERR_VALUE_CONSTRAINT",
+    "path": "/spec/workload/health/readiness/http/headers/x-api-key/input"
+  }
+]

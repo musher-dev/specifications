@@ -1,0 +1,10 @@
+{
+  "id": "semantic-219-file-path-with-a-dot-segment",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#files",
+  "requirements": [
+    "COMP-FILE-003"
+  ],
+  "summary": "A file path that is not canonical is rejected."
+}

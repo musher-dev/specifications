@@ -147,6 +147,102 @@
       ],
       "type": "object"
     },
+    "ComponentCapabilities": {
+      "additionalProperties": false,
+      "$comment": "spec.md §5.10 COMP-SECURITY-001. The allowlist is the OCI default capability set: a component gives privilege up freely and asks back only for what a container ordinarily holds. drop applies first, then add.",
+      "description": "Linux capabilities to drop and to add, from the OCI default set.",
+      "properties": {
+        "add": {
+          "description": "Capabilities to add after drop. The platform may refuse one at admission.",
+          "items": {
+            "enum": [
+              "AUDIT_WRITE",
+              "CHOWN",
+              "DAC_OVERRIDE",
+              "FOWNER",
+              "FSETID",
+              "KILL",
+              "MKNOD",
+              "NET_BIND_SERVICE",
+              "NET_RAW",
+              "SETFCAP",
+              "SETGID",
+              "SETPCAP",
+              "SETUID",
+              "SYS_CHROOT"
+            ],
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "drop": {
+          "description": "Capabilities to drop, or ALL.",
+          "items": {
+            "enum": [
+              "AUDIT_WRITE",
+              "CHOWN",
+              "DAC_OVERRIDE",
+              "FOWNER",
+              "FSETID",
+              "KILL",
+              "MKNOD",
+              "NET_BIND_SERVICE",
+              "NET_RAW",
+              "SETFCAP",
+              "SETGID",
+              "SETPCAP",
+              "SETUID",
+              "SYS_CHROOT",
+              "ALL"
+            ],
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        }
+      },
+      "type": "object"
+    },
+    "ComponentCompute": {
+      "additionalProperties": false,
+      "$comment": "spec.md §5.9. Figures, never a profile slug: a slug names one platform catalog's offering, and a component is deployed by many items. Blueprint judges a node's profile against the minimum (COMP-COMPUTE-003).",
+      "description": "The compute the workload needs.",
+      "properties": {
+        "minimum": {
+          "$ref": "#/$defs/ComponentComputeResources",
+          "description": "The least compute the workload runs on."
+        },
+        "recommended": {
+          "$ref": "#/$defs/ComponentComputeResources",
+          "description": "The compute a deploy form pre-selects. At or above the minimum."
+        }
+      },
+      "type": "object"
+    },
+    "ComponentComputeResources": {
+      "description": "vCPUs and memory.",
+      "additionalProperties": false,
+      "properties": {
+        "memoryMiB": {
+          "description": "Memory, in MiB.",
+          "maximum": 4194304,
+          "minimum": 64,
+          "type": "integer"
+        },
+        "vcpus": {
+          "description": "vCPUs; fractions allowed.",
+          "exclusiveMinimum": 0,
+          "maximum": 256,
+          "type": "number"
+        }
+      },
+      "required": [
+        "vcpus",
+        "memoryMiB"
+      ],
+      "type": "object"
+    },
     "ComponentConnection": {
       "$comment": "spec.md §6.4 COMP-CONNECTION-002 / COMP-CONNECTION-003 / ADR 0039 §3. The protocol fixes the members, their types and their sensitivity, so a connection input carries no schema of its own. capabilities exists only on the language-model protocols.",
       "type": "object",
@@ -452,6 +548,90 @@
       },
       "type": "object"
     },
+    "ComponentExecProbe": {
+      "additionalProperties": false,
+      "description": "A command run inside the workload’s container, with its environment and user; succeeds when it exits 0 within timeoutSeconds.",
+      "properties": {
+        "command": {
+          "description": "Arguments, as a list, with no shell.",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        }
+      },
+      "required": [
+        "command"
+      ],
+      "type": "object"
+    },
+    "ComponentFile": {
+      "additionalProperties": false,
+      "description": "A file the platform writes before the workload starts, at every start.",
+      "properties": {
+        "content": {
+          "$ref": "#/$defs/ComponentFileContent",
+          "description": "What the file holds, as UTF-8, with nothing added."
+        },
+        "mode": {
+          "$comment": "spec.md §5.8 COMP-FILE-001. A string, because YAML 1.1 reads an unquoted 0644 as octal and YAML 1.2 as decimal.",
+          "default": "0444",
+          "description": "Permission bits, as four octal digits.",
+          "pattern": "^0[0-7]{3}$",
+          "type": "string"
+        },
+        "path": {
+          "description": "Absolute path of the file in the container.",
+          "maxLength": 512,
+          "pattern": "^/",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "content"
+      ],
+      "type": "object",
+      "x-additionalPropertiesName": "fileName"
+    },
+    "ComponentFileContent": {
+      "$comment": "spec.md §5.8 COMP-FILE-001, COMP-FILE-002 / ADR 0031 §1. Where the content comes from is the key that is present. An input may be sensitive, which makes the file sensitive.",
+      "additionalProperties": false,
+      "description": "Where a file's content comes from.",
+      "oneOf": [
+        {
+          "properties": {
+            "value": true
+          },
+          "required": [
+            "value"
+          ]
+        },
+        {
+          "properties": {
+            "input": true
+          },
+          "required": [
+            "input"
+          ]
+        }
+      ],
+      "properties": {
+        "input": {
+          "description": "Own string input supplying the content; may be sensitive.",
+          "maxLength": 64,
+          "pattern": "^[a-z][a-zA-Z0-9]{0,63}$",
+          "type": "string"
+        },
+        "value": {
+          "description": "Literal content.",
+          "maxLength": 65536,
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
     "ComponentGitRef": {
       "$comment": "spec.md §5.1 COMP-SRC-001 and COMP-SRC-006. Exactly one of branch, tag and commit.",
       "additionalProperties": false,
@@ -521,6 +701,27 @@
       ],
       "type": "object"
     },
+    "ComponentGrpcProbe": {
+      "additionalProperties": false,
+      "description": "A grpc.health.v1 Health/Check call; succeeds when it answers SERVING.",
+      "properties": {
+        "endpoint": {
+          "description": "Named endpoint whose protocol is GRPC.",
+          "pattern": "^[a-z][a-z0-9]{0,19}$",
+          "type": "string"
+        },
+        "service": {
+          "default": "",
+          "description": "Service the check asks about. Empty, the whole server.",
+          "maxLength": 256,
+          "type": "string"
+        }
+      },
+      "required": [
+        "endpoint"
+      ],
+      "type": "object"
+    },
     "ComponentHealthProbes": {
       "additionalProperties": false,
       "description": "Health probes: startup, readiness and liveness.",
@@ -569,6 +770,33 @@
           "description": "Absolute HTTP path the platform requests.",
           "type": "string",
           "pattern": "^/"
+        },
+        "headers": {
+          "$comment": "spec.md §5.4 COMP-PROBE-004. Header names compare case-insensitively, so they are written in lower case and a mapping key is unique exactly when the header is. The reserved names are the ones the platform, auth or the request framing sets.",
+          "additionalProperties": {
+            "$ref": "#/$defs/ComponentProbeHeader"
+          },
+          "description": "Request headers the probe sends, each a literal or one of the component’s own inputs. Sent on the probe only.",
+          "maxProperties": 16,
+          "propertyNames": {
+            "pattern": "^[a-z][a-z0-9-]{0,63}$",
+            "not": {
+              "enum": [
+                "host",
+                "authorization",
+                "forwarded",
+                "x-forwarded-for",
+                "content-length",
+                "transfer-encoding",
+                "connection",
+                "te",
+                "upgrade",
+                "cookie"
+              ]
+            }
+          },
+          "type": "object",
+          "x-additionalPropertiesName": "headerName"
         }
       },
       "required": [
@@ -693,10 +921,10 @@
       "additionalProperties": false,
       "properties": {
         "envVar": {
-          "description": "Environment variable the resolved value is written to (for example ADMIN_EMAIL). Uppercase letters, digits and underscores; never starting with a digit.",
+          "description": "Environment variable the resolved value is written to (for example ADMIN_EMAIL). Letters, digits and underscores, never starting with a digit; case-sensitive. It replaces an image variable of the same name.",
           "maxLength": 128,
           "minLength": 1,
-          "pattern": "^[A-Z_][A-Z0-9_]*$",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
           "type": "string"
         }
       },
@@ -894,7 +1122,7 @@
       "type": "object"
     },
     "ComponentProbe": {
-      "$comment": "spec.md §5.4. The mechanism is the key that is present, as in a Kubernetes probe. HTTP is the only mechanism in v2; another is added as a sibling key.",
+      "$comment": "spec.md §5.4 COMP-EP-002. The mechanism is the key that is present, as in a Kubernetes probe: exactly one of http, tcp, grpc and exec.",
       "additionalProperties": false,
       "properties": {
         "failureThreshold": {
@@ -929,12 +1157,52 @@
           "description": "Seconds to wait for a probe response.",
           "type": "integer",
           "minimum": 1
+        },
+        "tcp": {
+          "$ref": "#/$defs/ComponentTcpProbe"
+        },
+        "grpc": {
+          "$ref": "#/$defs/ComponentGrpcProbe"
+        },
+        "exec": {
+          "$ref": "#/$defs/ComponentExecProbe"
         }
       },
-      "required": [
-        "http"
-      ],
-      "type": "object"
+      "type": "object",
+      "oneOf": [
+        {
+          "properties": {
+            "http": true
+          },
+          "required": [
+            "http"
+          ]
+        },
+        {
+          "properties": {
+            "tcp": true
+          },
+          "required": [
+            "tcp"
+          ]
+        },
+        {
+          "properties": {
+            "grpc": true
+          },
+          "required": [
+            "grpc"
+          ]
+        },
+        {
+          "properties": {
+            "exec": true
+          },
+          "required": [
+            "exec"
+          ]
+        }
+      ]
     },
     "ComponentProbeAuth": {
       "$comment": "spec.md §5.4 COMP-EP-009 / ADR 0031 §1. The mechanism is the key that is present. Exactly one.",
@@ -1007,6 +1275,45 @@
       },
       "type": "object"
     },
+    "ComponentProbeHeader": {
+      "$comment": "spec.md §5.4 COMP-PROBE-004, COMP-PROBE-005 / ADR 0031 §1. Where the value comes from is the key that is present, as in a probe credential. A sensitive input makes the header sensitive.",
+      "additionalProperties": false,
+      "description": "Where one probe header's value comes from.",
+      "oneOf": [
+        {
+          "properties": {
+            "value": true
+          },
+          "required": [
+            "value"
+          ]
+        },
+        {
+          "properties": {
+            "input": true
+          },
+          "required": [
+            "input"
+          ]
+        }
+      ],
+      "properties": {
+        "input": {
+          "description": "Own string input supplying the value; may be sensitive.",
+          "maxLength": 64,
+          "pattern": "^[a-z][a-zA-Z0-9]{0,63}$",
+          "type": "string"
+        },
+        "value": {
+          "description": "Literal value: visible ASCII, spaces and tabs.",
+          "maxLength": 1024,
+          "minLength": 1,
+          "pattern": "^[\t -~]+$",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
     "ComponentSchedule": {
       "additionalProperties": false,
       "properties": {
@@ -1021,6 +1328,62 @@
       "required": [
         "cron"
       ],
+      "type": "object"
+    },
+    "ComponentSecurity": {
+      "additionalProperties": false,
+      "$comment": "spec.md §5.10. Each setting is valid as written and may be refused at admission by a platform whose runtime cannot grant it (COMP-SECURITY-002 to COMP-SECURITY-004), as COMP-EP-019 refuses a privileged port.",
+      "description": "Container settings, within this specification's allowlists.",
+      "properties": {
+        "capabilities": {
+          "$ref": "#/$defs/ComponentCapabilities"
+        },
+        "readOnlyRootFilesystem": {
+          "default": false,
+          "description": "True when the root filesystem is read-only. Volumes, files and /dev/shm are as declared.",
+          "type": "boolean"
+        },
+        "seccompProfile": {
+          "default": "RUNTIME_DEFAULT",
+          "description": "RUNTIME_DEFAULT, the runtime's default filter, or UNCONFINED, no filter, which the platform may refuse.",
+          "enum": [
+            "RUNTIME_DEFAULT",
+            "UNCONFINED"
+          ],
+          "type": "string"
+        },
+        "shmSizeMiB": {
+          "description": "Size of /dev/shm, in MiB. Counts against the workload's memory. Absent, at least 64.",
+          "maximum": 65536,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "sysctls": {
+          "additionalProperties": {
+            "description": "Decimal integers separated by single spaces.",
+            "maxLength": 64,
+            "pattern": "^[0-9]+(?: [0-9]+)*$",
+            "type": "string"
+          },
+          "description": "Namespaced sysctls, from the allowlist. The platform may refuse one at admission.",
+          "propertyNames": {
+            "enum": [
+              "kernel.shm_rmid_forced",
+              "net.core.somaxconn",
+              "net.ipv4.ip_local_port_range",
+              "net.ipv4.ip_unprivileged_port_start",
+              "net.ipv4.ping_group_range",
+              "net.ipv4.tcp_fin_timeout",
+              "net.ipv4.tcp_keepalive_intvl",
+              "net.ipv4.tcp_keepalive_probes",
+              "net.ipv4.tcp_keepalive_time",
+              "net.ipv4.tcp_syncookies"
+            ]
+          },
+          "type": "object",
+          "x-additionalPropertiesName": "sysctlName"
+        }
+      },
       "type": "object"
     },
     "ComponentSource": {
@@ -1172,6 +1535,21 @@
       },
       "required": [
         "type"
+      ],
+      "type": "object"
+    },
+    "ComponentTcpProbe": {
+      "additionalProperties": false,
+      "description": "A TCP connection to the endpoint’s targetPort; succeeds when it is established. Nothing is sent. The endpoint is TCP, HTTP, WS or GRPC.",
+      "properties": {
+        "endpoint": {
+          "description": "Named endpoint whose protocol is TCP, HTTP, WS or GRPC.",
+          "pattern": "^[a-z][a-z0-9]{0,19}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "endpoint"
       ],
       "type": "object"
     },
@@ -1597,6 +1975,34 @@
         "build": {
           "$ref": "#/$defs/ComponentBuild",
           "description": "The build recipe for a git or upload source. Required beside one, forbidden beside an image."
+        },
+        "entrypoint": {
+          "$comment": "spec.md §5 COMP-CMD-002. Exec form, as `command`. It replaces the image ENTRYPOINT, and the image CMD is then not used: `command` supplies the arguments. What `entrypoint` means in Docker and Compose.",
+          "description": "Program the workload runs, as a list, with no shell. Replaces the image ENTRYPOINT; the image CMD is then not used, and `command` supplies the arguments.",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "files": {
+          "additionalProperties": {
+            "$ref": "#/$defs/ComponentFile"
+          },
+          "description": "Files the platform writes into the container before the workload starts, keyed by a name in the DNS-label grammar.",
+          "maxProperties": 32,
+          "propertyNames": {
+            "x-musher-grammar": "dns-label"
+          },
+          "type": "object"
+        },
+        "compute": {
+          "$ref": "#/$defs/ComponentCompute",
+          "description": "The compute the workload needs: a minimum and a recommendation, in vCPUs and memory."
+        },
+        "security": {
+          "$ref": "#/$defs/ComponentSecurity",
+          "description": "Container settings within this specification's allowlists: /dev/shm size, a read-only root, capabilities, seccomp profile and sysctls."
         }
       },
       "type": "object",

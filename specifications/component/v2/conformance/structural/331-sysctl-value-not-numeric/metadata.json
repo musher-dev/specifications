@@ -1,0 +1,10 @@
+{
+  "id": "structural-331-sysctl-value-not-numeric",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#workload-security",
+  "requirements": [
+    "COMP-SECURITY-001"
+  ],
+  "summary": "A sysctl value that is not decimal integers is rejected."
+}

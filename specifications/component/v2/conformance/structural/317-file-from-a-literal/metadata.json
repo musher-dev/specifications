@@ -1,0 +1,13 @@
+{
+  "id": "structural-317-file-from-a-literal",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#files",
+  "requirements": [
+    "COMP-FILE-001"
+  ],
+  "summary": "A file may hold literal content, and its mode defaults to 0444.",
+  "effective": {
+    "/spec/workload/files/settings/mode": "0444"
+  }
+}

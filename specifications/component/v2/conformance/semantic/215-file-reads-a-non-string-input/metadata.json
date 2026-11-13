@@ -1,0 +1,10 @@
+{
+  "id": "semantic-215-file-reads-a-non-string-input",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#files",
+  "requirements": [
+    "COMP-FILE-002"
+  ],
+  "summary": "A file reading an input that is not a string is rejected."
+}

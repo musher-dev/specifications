@@ -1,0 +1,11 @@
+{
+  "id": "semantic-201-env-vars-differing-in-case",
+  "phase": "semantic",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#env-vars",
+  "requirements": [
+    "COMP-ENVVAR-004",
+    "COMP-ENVVAR-002"
+  ],
+  "summary": "Two inputs targeting names that differ only in case claim two variables."
+}

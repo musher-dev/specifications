@@ -1,0 +1,10 @@
+{
+  "id": "structural-307-tcp-probe-without-an-endpoint",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#health",
+  "requirements": [
+    "COMP-PROBE-001"
+  ],
+  "summary": "A TCP probe without an endpoint is rejected."
+}

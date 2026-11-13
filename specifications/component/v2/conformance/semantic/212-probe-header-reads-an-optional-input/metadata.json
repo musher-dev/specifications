@@ -1,0 +1,10 @@
+{
+  "id": "semantic-212-probe-header-reads-an-optional-input",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#health",
+  "requirements": [
+    "COMP-PROBE-005"
+  ],
+  "summary": "A probe header reading an optional input with no default is rejected."
+}

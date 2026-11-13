@@ -1,0 +1,10 @@
+{
+  "id": "structural-306-probe-naming-two-mechanisms",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#health",
+  "requirements": [
+    "COMP-EP-002"
+  ],
+  "summary": "A probe naming two mechanisms is rejected."
+}

@@ -1,0 +1,10 @@
+{
+  "id": "semantic-210-probe-header-reads-an-unknown-input",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#health",
+  "requirements": [
+    "COMP-PROBE-005"
+  ],
+  "summary": "A probe header naming an undeclared input is rejected."
+}

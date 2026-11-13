@@ -2894,8 +2894,8 @@
       "id": "component.probe",
       "display_name": "probe",
       "context": "component",
-      "definition": "A periodic HTTP GET the platform sends to a named endpoint of a SERVICE or WORKER, over that endpoint's protocol and trust policy, from a peer inside trustedProxyCIDRs and with no viewer identity.",
-      "shortDefinition": "A periodic HTTP check of a named endpoint.",
+      "definition": "A periodic check the platform makes of a SERVICE or WORKER: an HTTP GET to a named endpoint, a TCP connection, a gRPC health check, or a command run in its container.",
+      "shortDefinition": "A periodic check of a workload.",
       "part_of": [
         "component.workload"
       ],
@@ -2915,6 +2915,9 @@
           "ComponentHealthProbes",
           "ComponentHttpProbe",
           "ComponentProbe"
+        ],
+        "requirement_prefixes": [
+          "COMP-HEALTH"
         ]
       },
       "confusables": [
@@ -3060,6 +3063,343 @@
       "tags": [
         "health",
         "sensitivity"
+      ]
+    },
+    {
+      "id": "component.tcp-probe",
+      "display_name": "TCP probe",
+      "context": "component",
+      "definition": "A probe that succeeds when a TCP connection to a named endpoint's target port is established, sending nothing, on a TCP, HTTP, WS or GRPC endpoint.",
+      "shortDefinition": "A connection check of a named endpoint.",
+      "kind_of": [
+        "component.probe"
+      ],
+      "identifiers": {
+        "fields": [
+          "tcp"
+        ],
+        "defs": [
+          "ComponentTcpProbe"
+        ],
+        "requirement_prefixes": [
+          "COMP-PROBE"
+        ],
+        "codes": [
+          "ERR_ENDPOINT_NOT_TCP"
+        ]
+      },
+      "source": [
+        "component v2 §5.4",
+        "ADR 0049"
+      ],
+      "stability": "provisional",
+      "status": "approved",
+      "tags": [
+        "health"
+      ]
+    },
+    {
+      "id": "component.grpc-probe",
+      "display_name": "gRPC probe",
+      "context": "component",
+      "definition": "A probe that succeeds when a grpc.health.v1 Check call on a named GRPC endpoint, for a service or for the whole server, answers SERVING.",
+      "shortDefinition": "A gRPC health check of a named endpoint.",
+      "kind_of": [
+        "component.probe"
+      ],
+      "identifiers": {
+        "fields": [
+          "grpc",
+          "service"
+        ],
+        "defs": [
+          "ComponentGrpcProbe"
+        ],
+        "codes": [
+          "ERR_ENDPOINT_NOT_GRPC"
+        ]
+      },
+      "source": [
+        "component v2 §5.4",
+        "ADR 0049"
+      ],
+      "stability": "provisional",
+      "status": "approved",
+      "tags": [
+        "health"
+      ]
+    },
+    {
+      "id": "component.exec-probe",
+      "display_name": "exec probe",
+      "context": "component",
+      "definition": "A probe that succeeds when an exec-form command, run inside the workload's container with its environment and user, exits 0 in time.",
+      "shortDefinition": "A command run in the container as a check.",
+      "kind_of": [
+        "component.probe"
+      ],
+      "identifiers": {
+        "fields": [
+          "exec"
+        ],
+        "defs": [
+          "ComponentExecProbe"
+        ]
+      },
+      "source": [
+        "component v2 §5.4",
+        "ADR 0049"
+      ],
+      "stability": "provisional",
+      "status": "approved",
+      "tags": [
+        "health"
+      ]
+    },
+    {
+      "id": "component.probe-header",
+      "display_name": "probe header",
+      "context": "component",
+      "definition": "A request header an HTTP probe sends, named in lower case and valued by a literal or by one of the component's own inputs, never one of the names the platform, auth or request framing sets.",
+      "shortDefinition": "A header an HTTP probe sends.",
+      "part_of": [
+        "component.probe"
+      ],
+      "identifiers": {
+        "fields": [
+          "headers"
+        ],
+        "values": [
+          "authorization",
+          "forwarded",
+          "x-forwarded-for",
+          "content-length",
+          "transfer-encoding",
+          "connection",
+          "te",
+          "upgrade",
+          "cookie"
+        ],
+        "defs": [
+          "ComponentProbeHeader"
+        ]
+      },
+      "source": [
+        "component v2 §5.4",
+        "ADR 0049"
+      ],
+      "stability": "provisional",
+      "status": "approved",
+      "tags": [
+        "health"
+      ]
+    },
+    {
+      "id": "component.entrypoint",
+      "display_name": "entrypoint",
+      "context": "component",
+      "definition": "The exec-form program a workload runs in place of the one its image names, after which the image's CMD is not used and command supplies the arguments.",
+      "shortDefinition": "Exec-form replacement for the image's program.",
+      "part_of": [
+        "component.workload"
+      ],
+      "identifiers": {
+        "fields": [
+          "entrypoint"
+        ]
+      },
+      "confusables": [
+        "Kubernetes command, which is this field, not component command."
+      ],
+      "source": [
+        "component v2 §5",
+        "ADR 0050"
+      ],
+      "stability": "provisional",
+      "status": "approved",
+      "tags": [
+        "workload"
+      ]
+    },
+    {
+      "id": "component.file",
+      "display_name": "file",
+      "context": "component",
+      "definition": "Named content the platform writes into a workload's container before every start, at a canonical absolute path, with a mode, from a literal or from one of the component's own inputs.",
+      "shortDefinition": "A file written into the container before start.",
+      "part_of": [
+        "component.workload"
+      ],
+      "identifiers": {
+        "fields": [
+          "files",
+          "content",
+          "mode"
+        ],
+        "defs": [
+          "ComponentFile",
+          "ComponentFileContent"
+        ],
+        "requirement_prefixes": [
+          "COMP-FILE"
+        ]
+      },
+      "confusables": [
+        "A volume, which is persistent storage rather than content the document supplies."
+      ],
+      "source": [
+        "component v2 §5.8",
+        "ADR 0050"
+      ],
+      "stability": "provisional",
+      "status": "approved",
+      "tags": [
+        "workload",
+        "sensitivity"
+      ]
+    },
+    {
+      "id": "component.compute-requirement",
+      "display_name": "compute requirement",
+      "context": "component",
+      "definition": "The vCPUs and memory a workload needs, as a minimum a node's profile must meet and a recommendation a deploy form pre-selects, never a profile slug.",
+      "shortDefinition": "The vCPUs and memory a workload needs.",
+      "part_of": [
+        "component.workload"
+      ],
+      "identifiers": {
+        "fields": [
+          "recommended",
+          "vcpus",
+          "memoryMiB"
+        ],
+        "defs": [
+          "ComponentCompute",
+          "ComponentComputeResources"
+        ],
+        "requirement_prefixes": [
+          "COMP-COMPUTE"
+        ],
+        "codes": [
+          "ERR_INVALID_COMPUTE"
+        ]
+      },
+      "confusables": [
+        "A blueprint node's compute profile, which this is judged against."
+      ],
+      "source": [
+        "component v2 §5.9",
+        "ADR 0051"
+      ],
+      "stability": "provisional",
+      "status": "approved",
+      "tags": [
+        "workload",
+        "compute"
+      ]
+    },
+    {
+      "id": "component.workload-security",
+      "display_name": "workload security",
+      "context": "component",
+      "definition": "The container settings a workload may adjust within this specification's allowlists: the size of /dev/shm, a read-only root, capabilities, the seccomp profile and namespaced sysctls, each of which a platform may refuse at admission.",
+      "shortDefinition": "Container settings within the allowlists.",
+      "part_of": [
+        "component.workload"
+      ],
+      "identifiers": {
+        "fields": [
+          "security",
+          "shmSizeMiB",
+          "readOnlyRootFilesystem",
+          "seccompProfile",
+          "sysctls"
+        ],
+        "values": [
+          "RUNTIME_DEFAULT",
+          "UNCONFINED",
+          "kernel.shm_rmid_forced",
+          "net.core.somaxconn",
+          "net.ipv4.ip_local_port_range",
+          "net.ipv4.ip_unprivileged_port_start",
+          "net.ipv4.ping_group_range",
+          "net.ipv4.tcp_fin_timeout",
+          "net.ipv4.tcp_keepalive_intvl",
+          "net.ipv4.tcp_keepalive_probes",
+          "net.ipv4.tcp_keepalive_time",
+          "net.ipv4.tcp_syncookies"
+        ],
+        "defs": [
+          "ComponentSecurity"
+        ],
+        "requirement_prefixes": [
+          "COMP-SECURITY"
+        ],
+        "codes": [
+          "ERR_SECCOMP_NOT_GRANTED",
+          "ERR_SYSCTL_NOT_GRANTED"
+        ]
+      },
+      "source": [
+        "component v2 §5.10",
+        "ADR 0052"
+      ],
+      "stability": "provisional",
+      "status": "approved",
+      "tags": [
+        "workload",
+        "security"
+      ]
+    },
+    {
+      "id": "component.capability",
+      "display_name": "capability",
+      "context": "component",
+      "definition": "A Linux privilege from the OCI default set that a workload drops, or adds back after dropping, where the platform's runtime grants it.",
+      "shortDefinition": "A Linux privilege from the OCI default set.",
+      "part_of": [
+        "component.workload-security"
+      ],
+      "identifiers": {
+        "fields": [
+          "add",
+          "drop"
+        ],
+        "values": [
+          "ALL",
+          "AUDIT_WRITE",
+          "CHOWN",
+          "DAC_OVERRIDE",
+          "FOWNER",
+          "FSETID",
+          "KILL",
+          "MKNOD",
+          "NET_BIND_SERVICE",
+          "NET_RAW",
+          "SETFCAP",
+          "SETGID",
+          "SETPCAP",
+          "SETUID",
+          "SYS_CHROOT"
+        ],
+        "defs": [
+          "ComponentCapabilities"
+        ],
+        "codes": [
+          "ERR_CAPABILITY_NOT_GRANTED"
+        ]
+      },
+      "confusables": [
+        "A connection protocol's capabilities, such as STREAMING."
+      ],
+      "source": [
+        "component v2 §5.10",
+        "ADR 0052"
+      ],
+      "stability": "provisional",
+      "status": "approved",
+      "tags": [
+        "security"
       ]
     },
     {

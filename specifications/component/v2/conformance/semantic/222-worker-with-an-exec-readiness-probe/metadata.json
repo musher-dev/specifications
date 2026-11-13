@@ -1,0 +1,11 @@
+{
+  "id": "semantic-222-worker-with-an-exec-readiness-probe",
+  "phase": "semantic",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#workload",
+  "requirements": [
+    "COMP-PROBE-003",
+    "COMP-TYPE-003"
+  ],
+  "summary": "A WORKER with no endpoint may be probed with exec."
+}

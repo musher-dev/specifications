@@ -1,0 +1,10 @@
+{
+  "id": "structural-310-exec-command-as-a-string",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#health",
+  "requirements": [
+    "COMP-PROBE-003"
+  ],
+  "summary": "An exec probe command written as a string is rejected."
+}

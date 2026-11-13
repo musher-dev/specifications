@@ -1,0 +1,10 @@
+{
+  "id": "structural-330-host-sysctl",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#workload-security",
+  "requirements": [
+    "COMP-SECURITY-001"
+  ],
+  "summary": "A sysctl that is not namespaced, such as vm.overcommit_memory, is rejected."
+}

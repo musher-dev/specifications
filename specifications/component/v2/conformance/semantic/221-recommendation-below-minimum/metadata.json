@@ -1,0 +1,10 @@
+{
+  "id": "semantic-221-recommendation-below-minimum",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#compute",
+  "requirements": [
+    "COMP-COMPUTE-002"
+  ],
+  "summary": "A recommended compute below the minimum is rejected."
+}

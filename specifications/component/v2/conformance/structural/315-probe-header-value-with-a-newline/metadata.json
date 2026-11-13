@@ -1,0 +1,10 @@
+{
+  "id": "structural-315-probe-header-value-with-a-newline",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#health",
+  "requirements": [
+    "COMP-PROBE-004"
+  ],
+  "summary": "A literal probe header value holding a line break is rejected."
+}

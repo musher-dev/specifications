@@ -1,0 +1,10 @@
+{
+  "id": "semantic-200-input-targets-hostname",
+  "phase": "semantic",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#env-vars",
+  "requirements": [
+    "COMP-ENVVAR-006"
+  ],
+  "summary": "An input may target HOSTNAME: no environment-variable name is reserved."
+}

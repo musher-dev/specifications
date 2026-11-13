@@ -1,0 +1,10 @@
+{
+  "id": "structural-328-repeated-capability",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#workload-security",
+  "requirements": [
+    "COMP-SECURITY-001"
+  ],
+  "summary": "A capability listed twice is rejected."
+}
