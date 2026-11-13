@@ -1,0 +1,10 @@
+{
+  "id": "structural-461-file-at-resolv-conf",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#files",
+  "requirements": [
+    "COMP-FILE-005"
+  ],
+  "summary": "A file at /etc/resolv.conf, which carries the container's network identity, is rejected."
+}

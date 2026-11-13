@@ -606,7 +606,7 @@
     },
     "ComponentFile": {
       "additionalProperties": false,
-      "description": "A file the platform writes before the workload starts, at every start.",
+      "description": "A file the platform places before the workload starts, at every start, overlaid at its path.",
       "properties": {
         "content": {
           "$ref": "#/$defs/ComponentFileContent",
@@ -620,8 +620,12 @@
           "type": "string"
         },
         "path": {
-          "description": "Absolute path of the file in the container.",
+          "$comment": "spec.md §5.8 COMP-FILE-005. The runtime mounts the kernel interfaces, the devices and the network identity files itself, so a file there would hide them or be hidden.",
+          "description": "Absolute path of the file in the container. Not /proc, /sys or /dev or below them, nor /etc/hosts, /etc/hostname or /etc/resolv.conf.",
           "maxLength": 512,
+          "not": {
+            "pattern": "^/(proc|sys|dev)(/|$)|^/etc/(hosts|hostname|resolv\\.conf)$"
+          },
           "pattern": "^/",
           "type": "string"
         }
@@ -810,11 +814,11 @@
           "pattern": "^/"
         },
         "headers": {
-          "$comment": "spec.md §5.4 COMP-PROBE-004. Header names compare case-insensitively, so they are written in lower case and a mapping key is unique exactly when the header is. The reserved names are the ones the platform, auth or the request framing sets.",
+          "$comment": "spec.md §5.4 COMP-PROBE-004. Header names compare case-insensitively, so they are written in lower case and a mapping key is unique exactly when the header is. The reserved names are the ones the platform or auth sets, a proxy reads as a credential, or the request framing uses. Viewer identity header names are the platform's choice, so COMP-PROBE-006 refuses those at runtime.",
           "additionalProperties": {
             "$ref": "#/$defs/ComponentProbeHeader"
           },
-          "description": "Request headers the probe sends, each a literal or one of the component’s own inputs. Sent on the probe only.",
+          "description": "Request headers the probe sends, each a literal or one of the component’s own inputs. Sent on the probe only. A secret should come from a sensitive input, not a literal.",
           "maxProperties": 16,
           "propertyNames": {
             "pattern": "^[a-z][a-z0-9-]{0,63}$",
@@ -822,12 +826,15 @@
               "enum": [
                 "host",
                 "authorization",
+                "proxy-authorization",
                 "forwarded",
                 "x-forwarded-for",
                 "content-length",
                 "transfer-encoding",
                 "connection",
+                "keep-alive",
                 "te",
+                "trailer",
                 "upgrade",
                 "cookie"
               ]
@@ -1581,7 +1588,7 @@
           }
         },
         {
-          "$comment": "spec.md §5. A JOB runs to completion and serves nothing, so it declares no endpoint and no probe. Only a JOB may carry a schedule or a time limit (COMP-TYPE-005, COMP-TYPE-008). Its command is a publication obligation (spec.md §5).",
+          "$comment": "spec.md §5. A JOB runs to completion and serves nothing, so it declares no endpoint and no probe. Only a JOB may carry a schedule or a time limit (COMP-TYPE-005, COMP-TYPE-008). That it carries a command or an entrypoint is a publication obligation (COMP-TYPE-007).",
           "if": {
             "properties": {
               "type": {
@@ -2037,8 +2044,8 @@
       "additionalProperties": false,
       "properties": {
         "command": {
-          "$comment": "spec.md §5. Exec form: each item is one argument and no shell parses them. It replaces the image CMD and keeps its ENTRYPOINT, which is what `command` means in Docker and Compose.",
-          "description": "Arguments the workload runs, as a list, with no shell. Replaces the image CMD and keeps its ENTRYPOINT. A published JOB carries one.",
+          "$comment": "spec.md §5. Exec form: each item is one argument and no shell parses them. It replaces the image CMD and keeps its ENTRYPOINT unless `entrypoint` is present (COMP-CMD-002), which is what `command` means in Docker and Compose.",
+          "description": "Arguments the workload runs, as a list, with no shell. Replaces the image CMD, and keeps its ENTRYPOINT unless `entrypoint` is present. A published JOB carries this or `entrypoint`.",
           "items": {
             "type": "string"
           },
@@ -2102,7 +2109,7 @@
           "additionalProperties": {
             "$ref": "#/$defs/ComponentFile"
           },
-          "description": "Files the platform writes into the container before the workload starts, keyed by a name in the DNS-label grammar.",
+          "description": "Files the platform places into the container before the workload starts, keyed by a name in the DNS-label grammar.",
           "maxProperties": 32,
           "propertyNames": {
             "x-musher-grammar": "dns-label"

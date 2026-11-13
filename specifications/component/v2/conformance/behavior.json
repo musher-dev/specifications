@@ -1278,6 +1278,9 @@
       "validationScope": "publication",
       "platform": {
         "unconfinedSeccomp": true
+      },
+      "organization": {
+        "unconfinedSeccomp": true
       }
     },
     "expect": {
@@ -1328,6 +1331,114 @@
     "expect": {
       "/status": "INCOMPLETE",
       "/deferred/1/rule": "COMP-SECURITY-003"
+    }
+  },
+  {
+    "id": "publication-rejects-an-unconfined-seccomp-profile-the-organization-refuses",
+    "suite": "resolution",
+    "operation": "validate",
+    "requirements": [
+      "COMP-SECURITY-003"
+    ],
+    "input": {
+      "specVersion": "v2",
+      "kind": "COMPONENT",
+      "metadata": {
+        "revision": 1,
+        "description": "Synthetic conformance fixture component."
+      },
+      "spec": {
+        "type": "SERVICE",
+        "workload": {
+          "source": {
+            "image": "example/worker:1"
+          },
+          "endpoints": {
+            "web": {
+              "targetPort": 8080,
+              "protocol": "HTTP"
+            }
+          },
+          "security": {
+            "seccompProfile": "UNCONFINED",
+            "shmSizeMiB": 2048
+          }
+        },
+        "contract": {
+          "inputs": {},
+          "outputs": {}
+        }
+      }
+    },
+    "context": {
+      "validationScope": "publication",
+      "platform": {
+        "unconfinedSeccomp": true
+      },
+      "organization": {
+        "unconfinedSeccomp": false
+      }
+    },
+    "expect": {
+      "/status": "INVALID",
+      "/phase": "admission"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_SECCOMP_NOT_GRANTED",
+        "path": "/spec/workload/security/seccompProfile",
+        "phase": "admission"
+      }
+    ]
+  },
+  {
+    "id": "publication-defers-an-unconfined-seccomp-profile-without-the-organization-policy",
+    "suite": "resolution",
+    "operation": "validate",
+    "requirements": [
+      "COMP-SECURITY-003"
+    ],
+    "input": {
+      "specVersion": "v2",
+      "kind": "COMPONENT",
+      "metadata": {
+        "revision": 1,
+        "description": "Synthetic conformance fixture component."
+      },
+      "spec": {
+        "type": "SERVICE",
+        "workload": {
+          "source": {
+            "image": "example/worker:1"
+          },
+          "endpoints": {
+            "web": {
+              "targetPort": 8080,
+              "protocol": "HTTP"
+            }
+          },
+          "security": {
+            "seccompProfile": "UNCONFINED",
+            "shmSizeMiB": 2048
+          }
+        },
+        "contract": {
+          "inputs": {},
+          "outputs": {}
+        }
+      }
+    },
+    "context": {
+      "validationScope": "publication",
+      "platform": {
+        "unconfinedSeccomp": true
+      }
+    },
+    "expect": {
+      "/status": "INCOMPLETE",
+      "/diagnostics": [],
+      "/deferred/1/rule": "COMP-SECURITY-003",
+      "/deferred/1/missing": "organization.unconfinedSeccomp"
     }
   },
   {

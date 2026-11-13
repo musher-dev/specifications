@@ -377,9 +377,10 @@ passed to the process verbatim, which no shell parses, splits or expands.
 Structural: a string is `ERR_INVALID_TYPE` and an empty list
 `ERR_INVALID_VALUE`, at `/spec/workload/command`.
 
-`command` replaces the image's `CMD` and keeps its `ENTRYPOINT`, which is what
-`command` means in Docker and Compose. Where `command` is omitted, the image's
-own `CMD` runs. A workload that needs a shell names one, as in
+`command` replaces the image's `CMD` and keeps its `ENTRYPOINT`, unless
+`entrypoint` is present ([`COMP-CMD-002`](#COMP-CMD-002)), which is what
+`command` means in Docker and Compose. Where both are omitted, the image's own
+`CMD` runs. A workload that needs a shell names one, as in
 `["/bin/sh", "-c", "…"]`.
 
 <a id="COMP-CMD-002"></a>**`COMP-CMD-002`**: `entrypoint` is a non-empty list
@@ -910,6 +911,14 @@ Those three are the whole of what a runtime supplies. A platform fact a
 workload needs, such as its compute ([§5.9](#compute)), enters through an
 input like any other value.
 
+Release 2.2.0 did not say which environment a workload starts with, and the
+platform set `HOSTNAME` to the replica's name whatever the image set. Once the
+platform adopts this release, an image that sets `HOSTNAME` keeps its value, so
+a workload that reads its replica's name from `HOSTNAME` either uses an image
+that leaves it unset or reads the name another way. This changes what a
+released document does at runtime, so it is declared as a correction under
+[ADR 0032](../../../docs/adr/0032-correcting-a-released-family-within-its-major.md).
+
 <a id="COMP-ENVVAR-006"></a>**`COMP-ENVVAR-006`**: No environment-variable name
 is reserved. An input MAY target any name the grammar admits, `PATH`, `HOME`
 and `HOSTNAME` included, and the workload sees the input's value. Structural:
@@ -976,7 +985,11 @@ succeeds, or, with none, once it has started. A platform MUST NOT require the
 workload to listen on any port other than a declared endpoint's `targetPort`,
 and MUST NOT fail, restart or withhold readiness from it for not listening on
 one; a check that a port is bound, where a platform applies one, applies only
-to a declared endpoint. Platform obligation; no document breaks it.
+to a declared endpoint, and, where the workload declares a startup or
+readiness probe, MUST NOT be stricter than it: it never fails, restarts or
+withholds readiness from a replica that the declared probe has passed, nor
+sooner than that probe's own thresholds would. Platform obligation; no document
+breaks it.
 
 So a `WORKER` that declares no endpoint and no probe, such as a scheduler or a
 queue consumer, is ready once its process runs, and stays so until it exits.
@@ -1013,8 +1026,8 @@ Defaults: initialDelaySeconds 10, periodSeconds 10, timeoutSeconds 5,
 successThreshold 1, failureThreshold 3. Initial delay is non-negative; every
 other numeric probe field is a positive integer.
 
-<a id="probe-requests"></a><a id="COMP-EP-017"></a>**`COMP-EP-017`**: A probe
-request MUST carry no viewer identity, and MUST carry
+<a id="probe-requests"></a><a id="COMP-EP-017"></a>**`COMP-EP-017`**: An HTTP
+probe request MUST carry no viewer identity, and MUST carry
 `Forwarded: for=<address>`
 ([RFC 7239](https://www.rfc-editor.org/rfc/rfc7239)) and
 `X-Forwarded-For: <address>`, the two naming the same address, a non-loopback
@@ -1024,7 +1037,13 @@ probe MUST also arrive from a peer address inside the endpoint's
 `trustedProxyCIDRs`, so that a workload that trusts only its proxies can tell
 it from any other request. Under every other mode, and on an endpoint no
 exposure signs viewers in to, the probe carries the same headers and its peer
-address is unconstrained. Platform obligation; no document breaks it.
+address is unconstrained. A gRPC probe's `Check` call MUST likewise carry no
+viewer identity in its metadata, and under `viewerIdentity: HEADER` MUST arrive
+from a peer address inside `trustedProxyCIDRs`. Platform obligation; no
+document breaks it.
+
+A TCP probe sends no request, and an exec probe runs inside the container, so
+neither has headers or metadata to carry.
 
 An IPv6 address in `Forwarded` is bracketed and quoted, as RFC 7239 requires:
 `for="[2001:db8::1]"`. A health path MUST answer such a request. A workload
@@ -1100,17 +1119,27 @@ readiness:
 <a id="COMP-PROBE-004"></a>**`COMP-PROBE-004`**: `http.headers` maps at most 16
 header names to exactly one origin each, a literal `value` or an `input`, as a
 probe credential does. A name matches `^[a-z][a-z0-9-]{0,63}$` and is none of
-`host`, `authorization`, `forwarded`, `x-forwarded-for`, `content-length`,
-`transfer-encoding`, `connection`, `te`, `upgrade` and `cookie`; a `value` is 1
-to 1024 characters of visible ASCII, spaces and tabs. Structural:
+`host`, `authorization`, `proxy-authorization`, `forwarded`,
+`x-forwarded-for`, `content-length`, `transfer-encoding`, `connection`,
+`keep-alive`, `te`, `trailer`, `upgrade` and `cookie`; a `value` is 1 to 1024
+characters of visible ASCII, spaces and tabs. Structural:
 `ERR_INVALID_VALUE` at `headers` for a name outside the grammar or a reserved
 one, `ERR_MISSING_FIELD` and `ERR_INVALID_VALUE` at the header for no origin and
 two, and `ERR_INVALID_VALUE` at a `value` outside its grammar.
 
 Header names compare case-insensitively, so writing them in lower case makes a
 mapping key unique exactly when the header is. The reserved names are the ones
-the platform sets ([`COMP-EP-017`](#COMP-EP-017)), the ones `auth` sets, and
-the ones that frame the request.
+the platform sets ([`COMP-EP-017`](#COMP-EP-017)), the ones `auth` sets or a
+proxy reads as a credential, and the ones that frame the request. The names of
+viewer identity headers are the platform's choice
+([blueprint `BP-ACCESS-003`](../../blueprint/v2/spec.md#BP-ACCESS-003)), so no
+schema can reserve them; [`COMP-PROBE-006`](#COMP-PROBE-006) refuses a header
+that would impersonate one.
+
+A literal `value` is valid, because most headers a health route keys on, such
+as `accept`, are not secret. A header carrying a secret SHOULD read it from a
+sensitive input ([`COMP-PROBE-005`](#COMP-PROBE-005)): a literal is stored in
+the document and shown wherever the document is.
 
 <a id="COMP-PROBE-005"></a>**`COMP-PROBE-005`**: A header's `input` MUST name
 one of the component's own string inputs that is always supplied, and MAY name
@@ -1119,7 +1148,8 @@ input that does not exist, `ERR_VALUE_CONSTRAINT` for one that is not a string,
 and `ERR_INPUT_NOT_GUARANTEED` for an optional one with no default.
 
 A header carrying a secret reads it from a sensitive input, and is then
-sensitive wherever it travels, as a probe credential is.
+sensitive wherever it travels, as a probe credential is
+([`COMP-PROBE-006`](#COMP-PROBE-006)).
 
 <a id="other-probes"></a>**TCP, gRPC and exec probes.**
 
@@ -1162,10 +1192,23 @@ mechanism as the table above says: a TCP probe sends nothing and closes the
 connection; a gRPC probe is a cleartext `Check` call whose request names
 `service`; an exec probe runs inside the workload's container with its
 environment and user, and fails when it has not exited within
-`timeoutSeconds`. Probe headers MUST be sent on the probe's request only,
-never on traffic the platform forwards, and a header whose resolved value holds
-a CR, LF or NUL MUST NOT be sent: that is a configuration error, never a failed
-probe. Platform obligation; no document breaks it.
+`timeoutSeconds`, when the platform MUST end every process it started. The
+platform MUST NOT start a probe while the previous run of the same probe still
+executes, and MUST treat an exec probe's output as sensitive: it is never shown
+in status or logs unless redacted. Probe headers MUST be sent on the probe's
+request only, never on traffic the platform forwards, and a header whose value
+comes from a sensitive input MUST be treated as sensitive wherever it travels.
+A header MUST NOT be sent when its resolved value holds a CR, LF or NUL, or
+when its name, compared case-insensitively, is one the endpoint's viewer
+identity headers use ([blueprint
+`BP-ACCESS-003`](../../blueprint/v2/spec.md#BP-ACCESS-003)): either is a
+configuration error, never a failed probe. Platform obligation; no document
+breaks it.
+
+An exec probe left running past its timeout would hold its processes for
+good, and a probe started every period beside it would exhaust the container's
+process limit within hours. Its output is whatever the command prints, which
+may echo the environment it runs with.
 
 <a id="COMP-EP-003"></a>**`COMP-EP-003`**: A URL-addressed endpoint a blueprint
 exposes `PUBLIC` requires a readiness probe. Blueprint checks it against the
@@ -1459,7 +1502,7 @@ when what it waits on succeeds, becomes ready or fails
 
 ### <a id="files"></a>5.8 Files
 
-`files` names files the platform writes into the workload's container before
+`files` names files the platform places into the workload's container before
 its process starts, such as a configuration file an image reads from a fixed
 path. Names use core's
 [DNS-label grammar](../../core/v2/spec.md#dns-label-grammar).
@@ -1507,12 +1550,28 @@ volumes.
 A file under a volume's mount is permitted, and the file is what the workload
 reads at that path.
 
-<a id="COMP-FILE-004"></a>**`COMP-FILE-004`**: The platform MUST write each
+<a id="COMP-FILE-004"></a>**`COMP-FILE-004`**: The platform MUST place each
 file before the workload's process starts, at every start, holding exactly the
 UTF-8 bytes of its content with nothing added, with the permission bits of
 `mode` and owned by the user the process runs as, and MUST treat a file whose
-content comes from a sensitive input as sensitive wherever it travels.
-Platform obligation; no document breaks it.
+content comes from a sensitive input as sensitive wherever it travels. It MUST
+overlay the file at its path, as a bind mount does, and never write its
+content into a volume's persistent data, so a file under a volume's mount hides
+the volume's copy at that path without changing it. A parent directory that
+does not exist MUST be created owned by `root` with mode `0755`. Platform obligation; no document
+breaks it.
+
+A file written into a volume at every start would overwrite whatever the
+workload saved there since, and would outlive its removal from the document.
+
+<a id="COMP-FILE-005"></a>**`COMP-FILE-005`**: A file's `path` MUST NOT be
+`/proc`, `/sys` or `/dev`, or lie under one of them, and MUST NOT be
+`/etc/hosts`, `/etc/hostname` or `/etc/resolv.conf`. Structural:
+`ERR_INVALID_VALUE` at `/spec/workload/files/<name>/path`.
+
+The runtime mounts those paths itself: the kernel's interfaces, the
+container's devices and the files that carry its network identity. A file
+there would hide what the runtime provides, or be hidden by it.
 
 ### <a id="compute"></a>5.9 Compute
 
@@ -1542,14 +1601,20 @@ many items. A deploy form SHOULD pre-select the smallest profile that meets
 `minimum`, MUST be at or above it in both figures. Semantic:
 `ERR_INVALID_COMPUTE` at each `recommended` figure below its minimum.
 
-<a id="COMP-COMPUTE-003"></a>**`COMP-COMPUTE-003`**: A node MUST NOT run the
-workload on a compute profile with fewer vCPUs or less memory than `minimum`.
-Blueprint decides it against the compute catalog when it admits a node, as it
-decides [`COMP-EP-003`](#COMP-EP-003) against exposure.
+<a id="COMP-COMPUTE-003"></a>**`COMP-COMPUTE-003`**: The platform MUST NOT run
+the workload on a compute profile with fewer vCPUs or less memory than
+`minimum`. Platform obligation; no document breaks it.
+
+No validation phase decides it yet: the admission context names no profile's
+figures, and blueprint has no rule that judges a node's profile against them.
+A platform refuses such a node before anything runs, as it refuses a setting
+its runtime cannot honour ([`COMP-SECURITY-002`](#COMP-SECURITY-002)).
 
 A workload that sizes itself from its compute, such as a thread pool, reads
 the figure through an input, like every other value; nothing is injected into
-its environment ([`COMP-ENVVAR-005`](#COMP-ENVVAR-005)).
+its environment ([`COMP-ENVVAR-005`](#COMP-ENVVAR-005)). Blueprint offers no
+deployment fact of a node's compute yet, so such an input is bound from a
+parameter.
 
 ### <a id="workload-security"></a>5.10 Workload security
 
@@ -1604,11 +1669,17 @@ rejected. Admission, against the platform's runtime:
 `ERR_CAPABILITY_NOT_GRANTED` at
 `/spec/workload/security/capabilities/add/<index>`.
 
-<a id="COMP-SECURITY-003"></a>**`COMP-SECURITY-003`**: Where the platform's
-runtime does not run a workload without a seccomp filter,
-`seccompProfile: UNCONFINED` MUST be rejected. Admission, against the
-platform's runtime: `ERR_SECCOMP_NOT_GRANTED` at
-`/spec/workload/security/seccompProfile`.
+<a id="COMP-SECURITY-003"></a>**`COMP-SECURITY-003`**: `seccompProfile:
+UNCONFINED` MUST be rejected unless the platform's runtime isolates the
+workload by other means, such as a virtual machine or a user-space kernel, and
+the policy of the organization the admission is decided for admits it.
+Admission, against the platform's runtime and the organization's policy:
+`ERR_SECCOMP_NOT_GRANTED` at `/spec/workload/security/seccompProfile`.
+
+A seccomp filter is what keeps a container's system calls off the host's
+kernel. Without one, only another boundary protects the host, and whether a
+workload may run that way is the organization's decision, not one setting for
+every tenant.
 
 <a id="COMP-SECURITY-004"></a>**`COMP-SECURITY-004`**: Where the platform's
 runtime does not set a sysctl, a `sysctls` entry naming it MUST be rejected.
@@ -1622,9 +1693,20 @@ before anything runs, never ignores it.
 <a id="COMP-SECURITY-005"></a>**`COMP-SECURITY-005`**: The platform MUST apply
 every setting of `security` it admits; MUST NOT run a workload privileged;
 MUST run it with no-new-privileges set and, unless `UNCONFINED` is admitted,
-its runtime's default seccomp profile; and MUST grant by default only
+its runtime's default seccomp profile; MUST run a workload without a seccomp
+filter only where its runtime isolates it by other means
+([`COMP-SECURITY-003`](#COMP-SECURITY-003)); and MUST grant by default only
 capabilities from the allowlist, and say which. Platform obligation; no
 document breaks it.
+
+Release 2.2.0 had no `security` and required neither no-new-privileges nor a
+seccomp profile. Once the platform adopts this release, every workload, one deployed from a released
+document included, runs with no-new-privileges and the runtime's default
+seccomp profile, so a workload that gains privilege through a setuid binary, or
+makes a system call that profile blocks, fails until its component is revised.
+This changes what a released document does at runtime, so it is declared as a
+correction under
+[ADR 0032](../../../docs/adr/0032-correcting-a-released-family-within-its-major.md).
 
 ## <a id="contract"></a>6. Component contract
 
@@ -2224,7 +2306,8 @@ the platform's runtime rather than an unwritten field:
 [`COMP-EP-019`](#COMP-EP-019), a port below 1024 that runtime cannot bind, and
 [`COMP-SECURITY-002`](#COMP-SECURITY-002) to
 [`COMP-SECURITY-004`](#COMP-SECURITY-004), a capability, seccomp profile or
-sysctl it does not grant.
+sysctl it does not grant; [`COMP-SECURITY-003`](#COMP-SECURITY-003) reads the
+organization's policy as well.
 Running a workload additionally requires blueprint resolution, the `deployment`
 scope, in which `ERR_ENV_ENCODING` and resolved `ERR_VALUE_CONSTRAINT` are
 reported.
@@ -2236,13 +2319,12 @@ The platform obligations of this document, [`COMP-BUILD-005`](#COMP-BUILD-005),
 [`COMP-PROBE-006`](#COMP-PROBE-006), [`COMP-VOL-002`](#COMP-VOL-002),
 [`COMP-JOB-001`](#COMP-JOB-001), [`COMP-JOB-004`](#COMP-JOB-004),
 [`COMP-JOB-007`](#COMP-JOB-007), [`COMP-JOB-008`](#COMP-JOB-008),
-[`COMP-FILE-004`](#COMP-FILE-004) and
+[`COMP-FILE-004`](#COMP-FILE-004), [`COMP-COMPUTE-003`](#COMP-COMPUTE-003) and
 [`COMP-SECURITY-005`](#COMP-SECURITY-005), bind what the platform does with a valid
 document, and the workload obligations, [`COMP-SEC-001`](#COMP-SEC-001) and
 [`COMP-SEC-002`](#COMP-SEC-002), bind what a workload does with what the
 platform forwards. No document breaks them, and no validation phase reports
-them. [`COMP-COMPUTE-003`](#COMP-COMPUTE-003) is decided by blueprint, against
-the node.
+them.
 
 ## <a id="diagnostics"></a>8. Diagnostics
 
@@ -2275,7 +2357,7 @@ Core diagnostics also apply.
 | `ERR_REVISION_NOT_INCREASING` | `admission` | A published component's revision is not greater than every earlier one. |
 | `ERR_PRIVILEGED_PORT` | `admission` | A `targetPort` below 1024 on a platform whose runtime cannot bind one. |
 | `ERR_CAPABILITY_NOT_GRANTED` | `admission` | A capability to add that the platform's runtime does not grant. |
-| `ERR_SECCOMP_NOT_GRANTED` | `admission` | `UNCONFINED` on a platform whose runtime does not run a workload without a seccomp filter. |
+| `ERR_SECCOMP_NOT_GRANTED` | `admission` | `UNCONFINED` where the platform's runtime does not isolate the workload by other means, or the organization's policy does not admit it. |
 | `ERR_SYSCTL_NOT_GRANTED` | `admission` | A sysctl the platform's runtime does not set. |
 | `ERR_DESCRIPTION_REQUIRED` | `admission` | Publication requires a description this document, or one of its inputs or outputs, does not carry. |
 | `ERR_WORKLOAD_REQUIRED` | `admission` | Publication requires a workload of a `SERVICE`, `WORKER` or `JOB`. |

@@ -1415,8 +1415,9 @@ const UNPINNED: ReadonlyMap<string, string> = new Map([
   ],
   [
     'COMP-HEALTH-001',
-    'When a replica has started and is ready, and that no port but a declared endpoint is ' +
-      'checked for binding, are runtime obligations of the host agent; no document phase or ' +
+    'When a replica has started and is ready, that no port but a declared endpoint is ' +
+      'checked for binding, and that such a check is no stricter than the declared startup ' +
+      'and readiness probes, are runtime obligations of the host agent; no document phase or ' +
       'behavioural operation observes a running process. The runtime test home is the host ' +
       "agent's integration suite (platform-api#1440); structural cases show an endpoint-less " +
       'WORKER is valid',
@@ -1430,34 +1431,42 @@ const UNPINNED: ReadonlyMap<string, string> = new Map([
   ],
   [
     'COMP-PROBE-006',
-    'How the prober runs a TCP, gRPC or exec probe, that probe headers ride on probes only, ' +
-      'and that a header holding CR, LF or NUL is never sent are runtime obligations of the ' +
-      'prober; no document phase or behavioural operation sends a request or runs a command',
+    'How the prober runs a TCP, gRPC or exec probe, that it ends every process of an exec ' +
+      'probe past its timeout and never overlaps two runs of one probe, that exec output and ' +
+      'a header from a sensitive input stay sensitive, that probe headers ride on probes ' +
+      'only, and that a header holding CR, LF or NUL or named as a viewer identity header is ' +
+      'never sent are runtime obligations of the prober; viewer identity header names are ' +
+      'the platform choice, so no document phase sees them, and no behavioural operation ' +
+      'sends a request or runs a command',
   ],
   [
     'COMP-FILE-004',
-    "A file's bytes, mode, owner, its rewriting at every start and its sensitivity are " +
-      'runtime obligations of the platform; no document phase or behavioural operation ' +
-      'observes a container filesystem',
+    "A file's bytes, mode, owner, its placement afresh at every start as an overlay that " +
+      'never writes into volume data, the owner and mode of the parent directories it ' +
+      'creates, and its sensitivity are runtime obligations of the platform; no document ' +
+      'phase or behavioural operation observes a container filesystem',
   ],
   [
     'COMP-COMPUTE-003',
-    "A node's profile is judged against the component's minimum by blueprint admission, " +
-      "against compute figures the admission context's platform.computeProfiles does not " +
-      'carry yet; blueprint pins it when it adds that rule and its code',
+    "That the platform never runs a workload on a profile below the component's minimum is " +
+      "a platform obligation; the admission context's platform.computeProfiles carries no " +
+      'compute figures and blueprint has no rule judging a node against them, so no document ' +
+      'phase decides it',
   ],
   [
     'COMP-SECURITY-005',
     'Applying the admitted security settings, never running privileged, setting ' +
-      'no-new-privileges and the default seccomp profile and capability set are runtime ' +
-      'obligations of the platform; no document phase or behavioural operation observes a ' +
-      'container',
+      'no-new-privileges and the default seccomp profile, running unconfined only where ' +
+      'the runtime isolates the workload by other means, and the default capability set ' +
+      'are runtime obligations of the platform; no document phase or behavioural operation ' +
+      'observes a container',
   ],
   [
     'COMP-EP-017',
-    'That a probe carries no viewer identity, carries Forwarded and X-Forwarded-For naming ' +
-      'one non-loopback address of the probing host, and under HEADER arrives from a peer ' +
-      'inside trustedProxyCIDRs is a runtime obligation of the prober; no document phase or ' +
+    'That an HTTP probe carries no viewer identity, carries Forwarded and X-Forwarded-For ' +
+      'naming one non-loopback address of the probing host, that a gRPC probe carries no ' +
+      'viewer identity, and that under HEADER either arrives from a peer inside ' +
+      'trustedProxyCIDRs is a runtime obligation of the prober; no document phase or ' +
       'behavioural operation observes a request',
   ],
 ])

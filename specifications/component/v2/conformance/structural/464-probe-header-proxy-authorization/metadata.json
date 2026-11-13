@@ -1,0 +1,10 @@
+{
+  "id": "structural-464-probe-header-proxy-authorization",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#health",
+  "requirements": [
+    "COMP-PROBE-004"
+  ],
+  "summary": "A probe header a proxy reads as a credential is rejected."
+}

@@ -1,0 +1,10 @@
+{
+  "id": "structural-460-file-under-proc",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#files",
+  "requirements": [
+    "COMP-FILE-005"
+  ],
+  "summary": "A file under /proc, which the runtime mounts itself, is rejected."
+}

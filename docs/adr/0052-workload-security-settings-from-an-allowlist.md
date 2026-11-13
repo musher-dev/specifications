@@ -68,7 +68,7 @@ without it, as `COMP-EP-019` is:
 | Rule | Refused | Code | Context |
 |---|---|---|---|
 | `COMP-SECURITY-002` | A capability in `add` the runtime does not grant | `ERR_CAPABILITY_NOT_GRANTED` at `capabilities/add/<i>` | `platform.capabilities` |
-| `COMP-SECURITY-003` | `UNCONFINED` where the runtime refuses it | `ERR_SECCOMP_NOT_GRANTED` at `seccompProfile` | `platform.unconfinedSeccomp` |
+| `COMP-SECURITY-003` | `UNCONFINED` unless the runtime isolates the workload by other means and the organization's policy admits it | `ERR_SECCOMP_NOT_GRANTED` at `seccompProfile` | `platform.unconfinedSeccomp`, `organization.unconfinedSeccomp` |
 | `COMP-SECURITY-004` | A sysctl the runtime does not set | `ERR_SYSCTL_NOT_GRANTED` at `sysctls/<name>` | `platform.sysctls` |
 
 ### 3. The defaults are a platform obligation

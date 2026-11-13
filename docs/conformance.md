@@ -539,16 +539,18 @@ the evidence down.
 ### <a id="admission-context"></a>Admission context
 
 A `validate` entry at the `publication` or `deployment` scope may supply the
-platform state the `admission` rules read, beside `validationScope` in
-`context`. Each key is optional, and an absent key defers the rules that read
-it, so the result is `INCOMPLETE`, never `VALID`.
+platform state and organization policy the `admission` rules read, beside
+`validationScope` in `context`. Each key is optional, and an absent key defers
+the rules that read it, so the result is `INCOMPLETE`, never `VALID`. A rule
+that reads two keys is decided as soon as either refuses.
 
 | Key | Shape | Read by |
 |---|---|---|
 | `licenseList` | `{licenses: [...], exceptions: [...]}`: the SPDX License List release the platform pins, deprecated identifiers included | listing `LIST-LICENSE-002` |
 | `platform.privilegedPorts` | `true` when the platform's runtime binds a port below 1024, `false` when it cannot | component `COMP-EP-019` |
 | `platform.capabilities` | The capabilities, from component §5.10's allowlist, the platform's runtime grants when a workload adds one | component `COMP-SECURITY-002` |
-| `platform.unconfinedSeccomp` | `true` when the platform's runtime runs a workload without a seccomp filter, `false` when it does not | component `COMP-SECURITY-003` |
+| `platform.unconfinedSeccomp` | `true` when the platform's runtime isolates a workload by other means, so it can run one without a seccomp filter, `false` when it cannot | component `COMP-SECURITY-003` |
+| `organization.unconfinedSeccomp` | `true` when the policy of the organization the admission is decided for admits a workload without a seccomp filter, `false` when it does not | component `COMP-SECURITY-003` |
 | `platform.sysctls` | The sysctls, from component §5.10's allowlist, the platform's runtime sets | component `COMP-SECURITY-004` |
 | `platform.region` | The region the admission is decided for | blueprint `BP-NODE-009` to `BP-NODE-012` |
 | `platform.computeProfiles` | profile slug → `{hosts: [{region, cpuArchitecture?, cpuDedication?, acceleratorMemoryGiB?, acceleratorRuntimes?, acceleratorInterconnect?, acceleratorSKUClass?, networkClass?}]}` | blueprint `BP-NODE-009`, `BP-NODE-010` |

@@ -1,0 +1,27 @@
+specVersion: v2
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: SERVICE
+  workload:
+    source:
+      image: example/web:1
+    endpoints:
+      web:
+        targetPort: 8080
+        protocol: HTTP
+    files:
+      allow:
+        path: /etc/hosts.allow
+        content:
+          value: x
+      procs:
+        path: /processes/list
+        content:
+          value: x
+      devs:
+        path: /srv/dev/x
+        content:
+          value: x
