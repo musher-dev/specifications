@@ -58,6 +58,11 @@
       "section": "workload"
     },
     {
+      "id": "COMP-TYPE-008",
+      "anchor": "COMP-TYPE-008",
+      "section": "workload"
+    },
+    {
       "id": "COMP-CMD-001",
       "anchor": "COMP-CMD-001",
       "section": "workload"
@@ -340,6 +345,26 @@
     {
       "id": "COMP-JOB-004",
       "anchor": "COMP-JOB-004",
+      "section": "jobs"
+    },
+    {
+      "id": "COMP-JOB-005",
+      "anchor": "COMP-JOB-005",
+      "section": "jobs"
+    },
+    {
+      "id": "COMP-JOB-006",
+      "anchor": "COMP-JOB-006",
+      "section": "jobs"
+    },
+    {
+      "id": "COMP-JOB-007",
+      "anchor": "COMP-JOB-007",
+      "section": "jobs"
+    },
+    {
+      "id": "COMP-JOB-008",
+      "anchor": "COMP-JOB-008",
       "section": "jobs"
     },
     {

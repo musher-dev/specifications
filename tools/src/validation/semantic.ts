@@ -219,6 +219,65 @@ export function cronIsValid(cron: string): boolean {
     })
   })
 }
+/** Component §5.7: the values one field of a valid cron expression matches, in ascending order. */
+function cronValues(field: string, [min, max]: readonly [number, number]): number[] {
+  const values = new Set<number>()
+  for (const element of field.split(',')) {
+    const [base = '', step] = element.split('/')
+    const [first = '', last] = base.split('-')
+    // `*` is the whole range, and `n/s` means `n-max/s`.
+    const from = base === '*' ? min : Number(first)
+    const to = base === '*' ? max : last !== undefined ? Number(last) : step ? max : from
+    for (let value = from; value <= to; value += Number(step ?? 1)) values.add(value)
+  }
+  return [...values].sort((a, b) => a - b)
+}
+/** 400 Gregorian years in days: exactly 20871 weeks, after which the calendar repeats. */
+export const GREGORIAN_CYCLE_DAYS = 146097
+/**
+ * Component §5.7: a schedule's period in seconds, the shortest interval between
+ * two consecutive times it falls due, or undefined for one that never does.
+ *
+ * The times a schedule falls due repeat every 146097 days, and every day it
+ * falls due on holds the same times, so the period is the shorter of the
+ * shortest interval within one day and the interval from the last time of one
+ * due day to the first time of the nearest next one. This walks one cycle, from
+ * 2000-01-01, a Saturday, and counts the gap from its last due day to the first
+ * one of the next cycle.
+ */
+export function cronPeriodSeconds(cron: string): number | undefined {
+  const fields = cron.split(/[ \t]+/)
+  if (fields.length !== CRON_FIELDS.length || !cronIsValid(cron)) return undefined
+  const [minutes = [], hours = [], dates = [], months = [], weekdays = []] = fields.map(
+    (field, i) => cronValues(field, CRON_FIELDS[i] ?? [0, 0]),
+  )
+  // COMP-JOB-002: when both day fields are restricted, a day matches either.
+  const either = fields[2] !== '*' && fields[4] !== '*'
+  const due: number[] = []
+  let day = 0
+  for (let year = 2000; year < 2400; year++) {
+    const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0)
+    for (let month = 1; month <= 12; month++) {
+      const length = month === 2 ? (leap ? 29 : 28) : [4, 6, 9, 11].includes(month) ? 30 : 31
+      for (let date = 1; date <= length; date++, day++) {
+        if (!months.includes(month)) continue
+        const byDate = dates.includes(date)
+        const byWeekday = weekdays.includes((day + 6) % 7)
+        if (either ? byDate || byWeekday : byDate && byWeekday) due.push(day)
+      }
+    }
+  }
+  const [firstDay, lastDay] = [due[0], due.at(-1)]
+  if (firstDay === undefined || lastDay === undefined) return undefined
+  let fewestDays = firstDay + GREGORIAN_CYCLE_DAYS - lastDay
+  for (let i = 1; i < due.length; i++)
+    fewestDays = Math.min(fewestDays, Number(due[i]) - Number(due[i - 1]))
+  const times = hours.flatMap((hour) => minutes.map((minute) => 60 * hour + minute))
+  let shortest = 1440 * fewestDays - (Number(times.at(-1)) - Number(times[0]))
+  for (let i = 1; i < times.length; i++)
+    shortest = Math.min(shortest, Number(times[i]) - Number(times[i - 1]))
+  return 60 * shortest
+}
 export function sourceEndpoints(from: Json): { endpoint: string; property: string }[] {
   const s = record(from)
   if (typeof s.endpoint === 'string')
@@ -392,6 +451,13 @@ export function componentDiagnostics(document: Json): Diagnostic[] {
   const cron = at(workload, 'schedule', 'cron')
   if (typeof cron === 'string' && !cronIsValid(cron))
     issue(out, 'ERR_INVALID_SCHEDULE', '/spec/workload/schedule/cron')
+  // COMP-JOB-006: a scheduled JOB's time limit is shorter than its schedule's
+  // period. A schedule that never falls due, or whose cron is invalid, has none.
+  const limit = workload.timeLimitSeconds
+  const period =
+    typeof limit === 'number' && typeof cron === 'string' ? cronPeriodSeconds(cron) : undefined
+  if (typeof limit === 'number' && period !== undefined && limit >= period)
+    issue(out, 'ERR_TIME_LIMIT_NOT_UNDER_SCHEDULE', '/spec/workload/timeLimitSeconds')
   for (const [name, probe] of Object.entries(record(workload.health))) {
     // COMP-PROBE-001, COMP-PROBE-002: a TCP or gRPC probe names a declared
     // endpoint of a protocol it can connect to.

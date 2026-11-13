@@ -1234,6 +1234,13 @@ const UNPINNED: ReadonlyMap<string, string> = new Map([
       'scheduler; no document phase or behavioural operation observes a run',
   ],
   [
+    'COMP-JOB-008',
+    'Stopping a run that is still executing when its time limit passes, and recording it as ' +
+      'failed, is a runtime obligation of the platform; no document phase or behavioural ' +
+      'operation observes a run. The limit it enforces is pinned where a document can break ' +
+      'it (COMP-JOB-005, COMP-JOB-006)',
+  ],
+  [
     'BP-ACCESS-002',
     'Authenticating and authorizing a viewer before forwarding, and refusing when that ' +
       'state is unavailable, are runtime obligations of the platform edge; no document ' +

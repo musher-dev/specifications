@@ -334,6 +334,16 @@
       "declaredBy": "component"
     },
     {
+      "code": "ERR_TIME_LIMIT_NOT_UNDER_SCHEDULE",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "component"
+    },
+    {
       "code": "ERR_UNKNOWN_INPUT",
       "phases": [
         "semantic"

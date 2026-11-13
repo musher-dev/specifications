@@ -61,7 +61,7 @@ authoritative list is the "Normative dependencies" table in
 | `COMP-EP` | Endpoints, probes, and the fields naming them | [§5.2](v2/spec.md#endpoints), [§5.4](v2/spec.md#health) |
 | `COMP-ENVVAR` | Environment variables | [§5.3](v2/spec.md#env-vars) |
 | `COMP-VOL` | Volume mount paths, and whether replicas share a volume | [§5.5](v2/spec.md#volumes) |
-| `COMP-JOB` | When a job runs, and its schedule | [§5.7](v2/spec.md#jobs) |
+| `COMP-JOB` | When a job runs, its schedule, and the time limit that stops a run | [§5.7](v2/spec.md#jobs) |
 | `COMP-CONTRACT` | Input and output names | [§6](v2/spec.md#contract) |
 | `COMP-DESC` | Component, input and output descriptions | [§4](v2/spec.md#metadata), [§6](v2/spec.md#contract) |
 | `COMP-INPUT` | Inputs with no environment target | [§6.1](v2/spec.md#inputs) |

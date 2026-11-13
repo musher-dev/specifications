@@ -1,0 +1,27 @@
+specVersion: v2
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Search index refresh that runs every 15 minutes, and is stopped and recorded as failed if a run takes longer than 10.
+spec:
+  type: JOB
+  workload:
+    source:
+      image: ghcr.io/musher-dev/search-indexer:2.3.0
+    command:
+      - /bin/reindex
+      - --changed-since-last-run
+    schedule:
+      cron: "*/15 * * * *"
+    timeLimitSeconds: 600
+  contract:
+    inputs:
+      databaseURL:
+        description: Connection URL of the database the search index is built from.
+        schema:
+          type: string
+        presentationHint: CONNECTION_STRING
+        sensitive: true
+        target:
+          envVar: DATABASE_URL
+    outputs: {}

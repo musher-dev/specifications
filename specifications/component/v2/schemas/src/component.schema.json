@@ -1581,7 +1581,7 @@
           }
         },
         {
-          "$comment": "spec.md §5. A JOB runs to completion and serves nothing, so it declares no endpoint and no probe. Only a JOB may carry a schedule. Its command is a publication obligation (spec.md §5).",
+          "$comment": "spec.md §5. A JOB runs to completion and serves nothing, so it declares no endpoint and no probe. Only a JOB may carry a schedule or a time limit (COMP-TYPE-005, COMP-TYPE-008). Its command is a publication obligation (spec.md §5).",
           "if": {
             "properties": {
               "type": {
@@ -1611,7 +1611,8 @@
             "properties": {
               "workload": {
                 "properties": {
-                  "schedule": false
+                  "schedule": false,
+                  "timeLimitSeconds": false
                 }
               }
             }
@@ -2066,6 +2067,13 @@
         "source": {
           "$ref": "#/$defs/ComponentSource",
           "description": "Where the workload’s content comes from: an image, a Git commit or an uploaded archive. A published workload carries one."
+        },
+        "timeLimitSeconds": {
+          "$comment": "spec.md §5.7 COMP-JOB-005 / COMP-TYPE-008. No default keyword: an omitted limit is the platform's default for the run (COMP-JOB-007), 900 seconds or one second less than the schedule's period, and a schema default could not depend on the schedule. That a scheduled JOB's limit is shorter than its schedule's period is a semantic rule (COMP-JOB-006, ERR_TIME_LIMIT_NOT_UNDER_SCHEDULE).",
+          "description": "Longest a run of the JOB executes, in seconds, before the platform stops it and records it as failed. A scheduled JOB's is shorter than its schedule's period, the shortest interval between two times it falls due. Omitted, 900 (15 minutes), or one second less than the period when that is shorter. Forbidden on every other type.",
+          "maximum": 604800,
+          "minimum": 1,
+          "type": "integer"
         },
         "volumes": {
           "additionalProperties": {

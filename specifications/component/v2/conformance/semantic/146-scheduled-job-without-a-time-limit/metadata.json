@@ -1,0 +1,11 @@
+{
+  "id": "semantic-146-scheduled-job-without-a-time-limit",
+  "phase": "semantic",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#jobs",
+  "requirements": [
+    "COMP-JOB-006",
+    "COMP-JOB-007"
+  ],
+  "summary": "A JOB due every minute that declares no time limit validates; the default limit is the platform’s, 59 seconds here, and no document breaks it."
+}

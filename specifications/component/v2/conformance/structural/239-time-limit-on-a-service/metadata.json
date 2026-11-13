@@ -1,0 +1,10 @@
+{
+  "id": "structural-239-time-limit-on-a-service",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#workload",
+  "requirements": [
+    "COMP-TYPE-008"
+  ],
+  "summary": "A time limit on a SERVICE is rejected; only a JOB has runs to limit."
+}

@@ -193,6 +193,34 @@ stops validating. What a consumer adopts:
   catalog. Glossaries adopt both terms; validation does not change
   ([ADR 0046](adr/0046-the-catalog-is-curated-and-an-organization-publishes-to-its-library.md)).
 
+## <a id="adopting-220"></a>Adopting 2.2.0
+
+Component `2.2.0` gives every run of a `JOB` a time limit (#226). Core `2.2.0`
+carries its two new term records, and blueprint `2.2.0` carries component's new
+code in its diagnostics registry. No document that validated at `2.1.0` stops
+validating. What a consumer adopts:
+
+- **Validate the time limit.** `spec.workload.timeLimitSeconds` is an integer
+  from 1 to 604800 seconds, on a `JOB` only. A scheduled job's limit is shorter
+  than its schedule's period, the shortest interval between two times the
+  schedule falls due; otherwise `ERR_TIME_LIMIT_NOT_UNDER_SCHEDULE`, in the
+  `semantic` phase. The specification says how to compute the period exactly
+  ([component v2 §5.7](../specifications/component/v2/spec.md#computing-the-period)).
+  Regenerate SDK types from the bundle.
+- **Stop every run at its limit** (platform-api). A run's limit is
+  `timeLimitSeconds`, or by default 900 seconds (15 minutes), or one second
+  less than the schedule's period when that is shorter
+  ([`COMP-JOB-007`](../specifications/component/v2/spec.md#COMP-JOB-007)). A
+  run still executing at its limit is stopped and recorded as failed
+  ([`COMP-JOB-008`](../specifications/component/v2/spec.md#COMP-JOB-008)), so a
+  hung run never blocks its schedule, and anything waiting for a run to end
+  waits no longer than its limit.
+- **Declare a limit on a long job.** The 15-minute default is the platform
+  operator's decision of 2026-11-13, so that every job has a limit. A job that
+  declares none and runs longer than 15 minutes is stopped at 15 minutes once
+  the platform adopts 2.2.0. A catalog item whose job needs longer declares
+  `timeLimitSeconds`.
+
 ## musher-cli
 
 - Write and validate v2 documents only, with the v2 bundles, and report the v2
