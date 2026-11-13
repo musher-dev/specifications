@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.1](https://github.com/musher-dev/specifications/compare/listing/v2.1.0...listing/v2.1.1) (2026-11-13)
+
+
+### Specification prose
+
+* **listing:** state the title and tagline length bounds in the schema ([#233](https://github.com/musher-dev/specifications/issues/233)) ([fe84ecd](https://github.com/musher-dev/specifications/commit/fe84ecd80c5a13b7f899fb688722c223151e7efb))
+
 ## [2.1.0](https://github.com/musher-dev/specifications/compare/listing/v2.0.0...listing/v2.1.0) (2026-11-07)
 
 
