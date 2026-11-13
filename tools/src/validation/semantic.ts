@@ -353,13 +353,63 @@ export function componentObligations(document: Json, { metadata = true } = {}): 
  * reads one of the component's own inputs reads a string input that is always
  * supplied, and a secret one reads a sensitive input.
  */
+/** The endpoint protocol each locator scheme speaks on the private hop (component §5.2). */
+const LOCATOR_SCHEME_PROTOCOL: Readonly<Record<string, string>> = { http: 'HTTP', https: 'HTTPS' }
+
+/**
+ * Component §6.5 COMP-CONNECTION-005: a locator output is a `template` that is
+ * `http://` or `https://`, then exactly the private authority of one of the
+ * component's own endpoints whose protocol speaks that scheme, then an
+ * optional fixed path. The authority is `privateAddress`, or `privateHostname`
+ * optionally followed by `:` and the same endpoint's `privatePort`; nothing
+ * else, so no literal host, user information, query or fragment can point the
+ * consumer's credential somewhere else.
+ */
+export function locatorReadsOwnEndpoint(
+  from: Json | undefined,
+  endpoints: Readonly<Record<string, Json>>,
+): boolean {
+  const template = at(from, 'template')
+  if (typeof template !== 'string') return false
+  const scanned = scanReferences(template, ['self'])
+  const scheme = /^([A-Za-z]+):\/\//.exec(template)
+  const [host, port] = scanned.references
+  if (scanned.failures.length || !scheme || !host || host.offset !== scheme[0].length) return false
+  const [kind, endpoint, property] = host.path
+  if (kind !== 'endpoints' || host.path.length !== 3 || endpoint === undefined) return false
+  const protocol = LOCATOR_SCHEME_PROTOCOL[(scheme[1] ?? '').toLowerCase()]
+  if (protocol === undefined || at(endpoints, endpoint, 'protocol') !== protocol) return false
+  let end = host.offset + host.raw.length
+  let used = 1
+  if (property === 'privateHostname') {
+    if (
+      port !== undefined &&
+      port.offset === end + 1 &&
+      template[end] === ':' &&
+      port.path.join('.') === `endpoints.${endpoint}.privatePort`
+    ) {
+      end = port.offset + port.raw.length
+      used = 2
+    }
+  } else if (property !== 'privateAddress') return false
+  const path = template.slice(end)
+  return (
+    scanned.references.length === used &&
+    (path === '' || (path.startsWith('/') && !/[?#]/.test(path)))
+  )
+}
+
 /**
  * Component §6.5 COMP-CONNECTION-005: a provided connection maps every
  * required member of its protocol, and only members it supplies, each to an
- * output that can carry it; its locator reads one of the component's own
- * endpoints. A protocol the registry does not define was rejected structurally.
+ * output that can carry it; its locator is a private address of one of the
+ * component's own endpoints ({@link locatorReadsOwnEndpoint}). A protocol the
+ * registry does not define was rejected structurally.
  */
-function providedConnectionDiagnostics(contract: Record<string, Json>): Diagnostic[] {
+function providedConnectionDiagnostics(
+  contract: Record<string, Json>,
+  endpoints: Record<string, Json>,
+): Diagnostic[] {
   const out: Diagnostic[] = []
   for (const [name, provided] of Object.entries(record(contract.providedConnections))) {
     const base = `/spec/contract/providedConnections/${token(name)}`
@@ -379,11 +429,6 @@ function providedConnectionDiagnostics(contract: Record<string, Json>): Diagnost
       const path = `${base}/members/${token(member)}`
       const c = Object.hasOwn(contracts, member) ? contracts[member] : undefined
       const output = record(at(contract, 'outputs', String(outputName)))
-      const from = record(output.from)
-      const readsEndpoint =
-        typeof from.endpoint === 'string' ||
-        (typeof from.template === 'string' &&
-          scanReferences(from.template, ['self']).references.length > 0)
       if (
         !c ||
         c.derived === true ||
@@ -391,7 +436,7 @@ function providedConnectionDiagnostics(contract: Record<string, Json>): Diagnost
         !Object.hasOwn(record(contract.outputs), outputName) ||
         at(output.schema, 'type') !== c.type ||
         (c.sensitive && output.sensitive !== true) ||
-        (c.role === 'locator' && !readsEndpoint)
+        (c.role === 'locator' && !locatorReadsOwnEndpoint(output.from, endpoints))
       )
         issue(out, 'ERR_INVALID_PROVIDED_CONNECTION', path)
     }
@@ -703,7 +748,7 @@ export function componentDiagnostics(document: Json): Diagnostic[] {
       }
     }
   }
-  out.push(...providedConnectionDiagnostics(contract))
+  out.push(...providedConnectionDiagnostics(contract, record(workload.endpoints)))
   // COMP-INPUT-001: a workload input with no target never reaches the
   // environment, so something else reads it or it is declared for nothing.
   const type = at(document, 'spec', 'type')

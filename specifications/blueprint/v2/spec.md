@@ -1943,10 +1943,13 @@ absolute `http` URL as well as an `https` one, without user information,
 query or fragment. Resolution: a member that does not is `ERR_VALUE_CONSTRAINT`
 at the binding.
 
-The locator may be `http` because it reads an endpoint of the providing node
+The locator may be `http` because its authority is exactly the private
+address of an `HTTP` endpoint of the providing node, never a literal host
 ([component `COMP-CONNECTION-005`](../../component/v2/spec.md#COMP-CONNECTION-005)),
-which only nodes of the same deployment reach
-([`BP-ACCESS-011`](#BP-ACCESS-011)). There is no acquisition: no selection, no
+and only nodes of the same deployment reach that address
+([`BP-ACCESS-011`](#BP-ACCESS-011)). A member such as `apiKey` therefore
+travels in cleartext only on that private hop, as any `HTTP` endpoint's
+traffic does. There is no acquisition: no selection, no
 scoped credential, no `permittedBaseURLs` and nothing persisted in the
 snapshot. The members are the provider's outputs, pinned by the provider node,
 and they change only when its outputs do. A member's sensitivity is its

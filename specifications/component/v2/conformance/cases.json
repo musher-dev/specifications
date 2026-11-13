@@ -1558,6 +1558,26 @@
       "path": "semantic/309-provided-connection-output-mismatch"
     },
     {
+      "id": "semantic-440-provided-connection-locator-to-another-host",
+      "phase": "semantic",
+      "path": "semantic/440-provided-connection-locator-to-another-host"
+    },
+    {
+      "id": "semantic-441-provided-connection-locator-on-a-public-property",
+      "phase": "semantic",
+      "path": "semantic/441-provided-connection-locator-on-a-public-property"
+    },
+    {
+      "id": "semantic-442-provided-connection-locator-on-the-wrong-protocol",
+      "phase": "semantic",
+      "path": "semantic/442-provided-connection-locator-on-the-wrong-protocol"
+    },
+    {
+      "id": "semantic-443-provided-connection-locator-forms",
+      "phase": "semantic",
+      "path": "semantic/443-provided-connection-locator-forms"
+    },
+    {
       "id": "structural-339-exact-and-prefix-exempt-paths",
       "phase": "structural",
       "path": "structural/339-exact-and-prefix-exempt-paths"

@@ -4,7 +4,7 @@
   "category": "LANGUAGE_MODEL",
   "description": "The Embeddings wire protocol, spoken by OpenAI and by every service compatible with it.",
   "status": "stable",
-  "introduced": "2.2.0",
+  "introduced": "2.3.0",
   "references": [
     {
       "title": "OpenAI API reference: Embeddings",

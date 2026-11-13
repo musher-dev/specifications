@@ -2185,12 +2185,28 @@ can carry it. Semantic, each `ERR_INVALID_PROVIDED_CONNECTION`:
 | A mapped member names no output of the component | `members/<member>` |
 | The output's schema `type` is not the member's logical type | `members/<member>` |
 | A sensitive member is mapped to an output not declared `sensitive: true` | `members/<member>` |
-| The locator is mapped to an output that reads none of the component's own endpoints: neither an `endpoint` origin nor a `template` holding a placeholder | `members/<member>` |
+| The locator is mapped to an output that is not a private URL of one of the component's own endpoints, as below | `members/<member>` |
 
 Each path is under `/spec/contract/providedConnections/<name>`. An optional
-member may be left out: a consumer then receives its default, or nothing. The
-locator rule keeps a provided connection pointing at its provider, which is
-what lets blueprint accept an `http` locator from it
+member may be left out: a consumer then receives its default, or nothing.
+
+A locator's output is a `template` of three parts and nothing else. It starts
+with the scheme, `http://` or `https://` in any case. Its authority follows at
+once and is exactly one placeholder of one endpoint `<e>` of the component:
+`${{ self.endpoints.<e>.privateAddress }}`, or
+`${{ self.endpoints.<e>.privateHostname }}` optionally followed by `:` and
+`${{ self.endpoints.<e>.privatePort }}`. It ends with an optional path that
+starts with `/` and holds no placeholder, `?` or `#`. The endpoint's
+`protocol` is the one that scheme speaks on the private hop
+([§5.2](#tls)): `HTTP` for `http`, `HTTPS` for `https`. So
+`http://${{ self.endpoints.api.privateAddress }}/v1` over an `HTTP` endpoint
+is a locator. `http://evil.example/?${{ self.endpoints.api.privatePort }}`,
+an `endpoint` origin, a public property such as `publicHostname`, and an
+`https` URL of an `HTTP` endpoint are not.
+
+The locator rule keeps a provided connection pointing at its provider, over
+the hop its endpoint speaks. That is what lets blueprint accept an `http`
+locator from it
 ([blueprint `BP-CONNECTION-005`](../../blueprint/v2/spec.md#BP-CONNECTION-005)).
 
 ## <a id="validation-layers"></a><a id="validation-phases"></a>7. Validation phases
@@ -2248,7 +2264,7 @@ Core diagnostics also apply.
 | `ERR_TIME_LIMIT_NOT_UNDER_SCHEDULE` | `semantic` | A scheduled `JOB`'s `timeLimitSeconds` is not shorter than its schedule's [period](#period). |
 | `ERR_UNKNOWN_INPUT` | `semantic` | A field names an input the component does not declare, or an output names a connection input without a `member` or a value input with one. |
 | `ERR_UNKNOWN_CONNECTION_MEMBER` | `semantic` | An output reads a member the input's protocol does not define. |
-| `ERR_INVALID_PROVIDED_CONNECTION` | `semantic` | A provided connection leaves a required member unmapped, maps a member its protocol does not supply, or maps one to an output that cannot carry it ([`COMP-CONNECTION-005`](#COMP-CONNECTION-005)). |
+| `ERR_INVALID_PROVIDED_CONNECTION` | `semantic` | A provided connection leaves a required member unmapped, maps a member its protocol does not supply, or maps one to an output that cannot carry it, or maps the locator to anything but a private URL of one of its own endpoints ([`COMP-CONNECTION-005`](#COMP-CONNECTION-005)). |
 | `ERR_INPUT_NOT_GUARANTEED` | `semantic` | An output, trust bundle, probe credential, probe header, file or build secret reads an input that may be absent, or an output reads a connection member that may be absent. |
 | `ERR_UNUSED_INPUT` | `semantic` | A workload input has no target and nothing reads it. |
 | `ERR_INVALID_MOUNT` | `semantic` | A mount or file path is not canonical or overlaps another. |
