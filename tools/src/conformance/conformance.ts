@@ -1296,6 +1296,12 @@ const UNPINNED: ReadonlyMap<string, string> = new Map([
       'connection',
   ],
   [
+    'BP-ACCESS-012',
+    'That an exemption takes effect only once a rollout carrying it is active, and that ' +
+      'exempt requests require sign-in until then, is a runtime obligation of the platform ' +
+      'edge; no document phase or behavioural operation observes a request or a rollout',
+  ],
+  [
     'BP-ORDER-004',
     'Holding a node until the conditions its startAfter names hold, reporting it as waiting ' +
       'and failing a rollout whose condition cannot hold are runtime obligations of the ' +

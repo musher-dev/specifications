@@ -798,13 +798,30 @@ platform matches the path after decoding percent-encoded unreserved characters
 and removing dot segments (RFC 3986 §6.2.2), forwards the path it matched, and
 MUST NOT exempt a request whose path holds `;`, an encoded `/` or `\`, a `\`, a
 NUL or an empty segment. The platform serves its own sign-in under `/.musher`
-on an endpoint whose access is `RESTRICTED`, and no exemption reaches it.
+on an endpoint whose access is `RESTRICTED`, and no exemption reaches it. An
+exempt path is exempt only once [`BP-ACCESS-012`](#BP-ACCESS-012) lets it be.
 
 <a id="BP-ACCESS-010"></a>**`BP-ACCESS-010`**: Under `BEARER`, the platform MUST
 forward a request that carries no valid viewer session and an `Authorization`
 header of the `Bearer` scheme, with no identity, claim or assertion header, for
 the workload to judge. A request that carries a valid session is authenticated,
-admitted and identified as any other is, whatever else it carries.
+admitted and identified as any other is, whatever else it carries. The
+exemption takes effect only once [`BP-ACCESS-012`](#BP-ACCESS-012) lets it.
+
+<a id="BP-ACCESS-012"></a>**`BP-ACCESS-012`**: An exemption on a `RESTRICTED`
+endpoint, `PATHS` or `BEARER`, MUST take effect only once a rollout that carries
+it is active ([`BP-ORDER-005`](#BP-ORDER-005)): every `SERVICE` and `WORKER`
+node ready, and every ordered job succeeded, such as a job that claims the
+application's first administrator account. Until the deployment's first rollout
+is active, and, for an exemption a later rollout adds, until that rollout is,
+the platform MUST authenticate and admit every request on the endpoint as
+[`BP-ACCESS-002`](#BP-ACCESS-002) says, an exempt one included. An exemption an
+active rollout carries stays in effect while a later rollout that keeps it
+starts. Endpoints without an exemption are unaffected: a `RESTRICTED` one
+signs every viewer in from the start, and an `OPEN` one is reachable as soon as
+its node is ready
+([ADR 0049](../../../docs/adr/0049-a-node-starts-after-the-nodes-it-names.md)
+§4).
 
 <a id="private-endpoints"></a><a id="BP-ACCESS-011"></a>**`BP-ACCESS-011`**: The
 platform MUST make a `PRIVATE` endpoint reachable only from the nodes of the
@@ -1727,6 +1744,14 @@ opens every route to any request that presents a bearer token, valid or not, so
 the endpoint is then exactly as strong as the workload's own token check. Prefer
 `PATHS`. A cross-origin preflight to a route that is not exempt carries no
 credentials, and is refused.
+
+An application that hands ownership to whoever completes its first-run setup is
+exposed from the moment its setup route is reachable without a viewer. A
+blueprint closes that window with an ordered job that claims the instance over
+the node's private endpoint ([§4.6](#start-order)): no exemption takes effect
+until the job has succeeded ([`BP-ACCESS-012`](#BP-ACCESS-012)). An `OPEN`
+endpoint has no such window to close, because it is reachable as soon as its
+node is ready, so its setup route belongs behind `RESTRICTED`.
 
 A hash is not the secret, but it can be attacked offline, so it is sensitive
 and never published ([§5.2](#origins)). The generated parameter a hash is
