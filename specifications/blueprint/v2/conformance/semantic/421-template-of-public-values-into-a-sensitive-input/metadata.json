@@ -1,0 +1,12 @@
+{
+  "id": "semantic-421-template-of-public-values-into-a-sensitive-input",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#bindings",
+  "requirements": [
+    "BP-BIND-012",
+    "BP-BIND-009"
+  ],
+  "summary": "A template that interpolates only public outputs holds its secret in its text, and cannot supply a sensitive input.",
+  "document": "app/blueprint.yaml"
+}

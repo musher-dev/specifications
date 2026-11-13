@@ -1,0 +1,27 @@
+specVersion: v2
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: WORKER
+  workload:
+    source:
+      image: example/worker:1
+  contract:
+    inputs:
+      model:
+        description: Model the worker loads
+        schema:
+          type: string
+          maxLength: 32
+        target:
+          envVar: MODEL
+      encryptionKey:
+        description: Key the worker encrypts its data with
+        schema:
+          type: string
+        sensitive: true
+        target:
+          envVar: ENCRYPTION_KEY
+    outputs: {}

@@ -1,0 +1,10 @@
+{
+  "id": "structural-327-capability-outside-the-allowlist",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#workload-security",
+  "requirements": [
+    "COMP-SECURITY-001"
+  ],
+  "summary": "Adding a capability outside the OCI default set is rejected."
+}

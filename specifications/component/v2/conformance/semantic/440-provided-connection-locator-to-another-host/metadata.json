@@ -1,0 +1,10 @@
+{
+  "id": "semantic-440-provided-connection-locator-to-another-host",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#provided-connections",
+  "requirements": [
+    "COMP-CONNECTION-005"
+  ],
+  "summary": "A provided connection whose locator names a literal host and reads its own endpoint only in the query is rejected at the locator."
+}

@@ -143,6 +143,48 @@ export const PARAMETER_ORIGIN_NAMESPACES = ['variables', 'connections', 'deploym
 export const DEPLOYMENT_FACT_PATHS = ['creator.identity', 'creator.email', 'creator.name']
 export type ParameterOriginNamespace = (typeof PARAMETER_ORIGIN_NAMESPACES)[number]
 /**
+ * BP-PARAM-011: the deployment facts a blueprint's deployment-fact parameters
+ * read, acquired once per parameter and anchored at that parameter's `from`. An
+ * absent fact is not yet acquired, so deferred; `null` is one the platform knows
+ * it lacks. `malformed` is evidence of the wrong shape as a whole. A parameter
+ * given a submitted value is skipped: BP-PARAM-013 already rejected it.
+ */
+export function deploymentFacts(
+  parameters: Readonly<Record<string, Json>>,
+  deployment: Json | undefined,
+  submitted: Readonly<Record<string, unknown>> = {},
+): {
+  malformed: boolean
+  facts: Map<string, string>
+  diagnostics: Diagnostic[]
+  deferred: { rule: string; path: string; missing: string }[]
+} {
+  const facts = new Map<string, string>(),
+    diagnostics: Diagnostic[] = [],
+    deferred: { rule: string; path: string; missing: string }[] = []
+  const creator = record(at(deployment, 'creator'))
+  const malformed =
+    (deployment !== undefined &&
+      (!isObject(deployment) || Object.keys(deployment).some((key) => key !== 'creator'))) ||
+    Object.keys(creator).some((key) => !DEPLOYMENT_FACT_PATHS.includes(`creator.${key}`))
+  if (malformed) return { malformed, facts, diagnostics, deferred }
+  const fail = (code: string, path: string) =>
+    diagnostics.push({ code, path, message: code, phase: 'resolution', stage: 'parameters' })
+  for (const [name, p] of Object.entries(parameters)) {
+    const source = parameterOrigin(p)
+    if (source?.namespace !== 'deployment' || Object.hasOwn(submitted, name)) continue
+    const path = `/spec/parameters/${token(name)}/from`,
+      field = source.key.slice('creator.'.length),
+      fact = Object.hasOwn(creator, field) ? creator[field] : undefined
+    if (fact === undefined)
+      deferred.push({ rule: 'BP-PARAM-011', path, missing: `deployment:${source.key}` })
+    else if (fact === null) fail('ERR_DEPLOYMENT_FACT_UNAVAILABLE', path)
+    else if (typeof fact !== 'string' || !fact) fail('ERR_INVALID_RESOLUTION_CONTEXT', path)
+    else facts.set(name, fact)
+  }
+  return { malformed, facts, diagnostics, deferred }
+}
+/**
  * BP-PLACEHOLDER-001: a parameter's `from` is one whole placeholder, and its
  * namespace says what it names. Undefined when the parameter has no `from` or
  * it is not one whole permitted placeholder.
@@ -206,9 +248,12 @@ export function connectionBindingDiagnostics(
         path = `/spec/nodes/${token(node)}/bindings/${token(name)}`
       // An undeclared parameter is ERR_UNKNOWN_PARAMETER, and nothing more.
       if (typeof parameter === 'string' && !Object.hasOwn(parameters, parameter)) continue
+      // BP-CONNECTION-004: a node's provided connection is the other origin a
+      // connection input takes.
       const connection =
-        typeof parameter === 'string' &&
-        parameterOrigin(parameters[parameter])?.namespace === 'connections'
+        (typeof parameter === 'string' &&
+          parameterOrigin(parameters[parameter])?.namespace === 'connections') ||
+        (typeof at(binding, 'node') === 'string' && typeof at(binding, 'connection') === 'string')
       if (isConnectionInput(inputs[name]) !== connection)
         out.push(
           diagnostic(
@@ -262,6 +307,41 @@ function memberValueValid(p: ConnectionProtocol, name: string, value: Json | und
   }
   if (!validate(value)) return false
   return name !== 'host' || validHost(String(value))
+}
+/**
+ * Blueprint BP-CONNECTION-005: the members an input bound to a provided
+ * connection receives, from the provider's resolved outputs, keyed by member.
+ * An optional member the provided connection leaves out takes its default, a
+ * derived `url` is composed, and every member must satisfy its protocol's
+ * schema, except that a locator may be an `http` URL as well as an `https`
+ * one. Undefined when a member does not.
+ */
+export function providedMembers(
+  protocol: ConnectionProtocol,
+  supplied: Readonly<Record<string, Json>>,
+): Record<string, Json> | undefined {
+  const contracts = CONNECTION_PROTOCOL_MEMBERS[protocol] ?? {}
+  const members: Record<string, Json> = Object.create(null)
+  for (const [name, contract] of Object.entries(contracts)) {
+    if (contract.derived === true) continue
+    const value = Object.hasOwn(supplied, name) ? supplied[name] : contract.default
+    if (value === undefined) {
+      if (contract.required) return
+      continue
+    }
+    const valid =
+      contract.role === 'locator'
+        ? typeof value === 'string' && absoluteURL(value, ['http:', 'https:'])
+        : memberValueValid(protocol, name, value)
+    if (!valid) return
+    members[name] = value
+  }
+  if (Object.values(contracts).some((c) => c.derived === true)) {
+    const url = composeConnectionURL(protocol, members)
+    if (url === undefined) return
+    members.url = url
+  }
+  return members
 }
 /**
  * BP-CONNECTION-002: one protocol view. It holds the protocol's members other

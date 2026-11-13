@@ -1,0 +1,10 @@
+{
+  "id": "structural-312-probe-headers",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#health",
+  "requirements": [
+    "COMP-PROBE-004"
+  ],
+  "summary": "An HTTP probe may send literal request headers."
+}

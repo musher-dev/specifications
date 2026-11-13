@@ -1,0 +1,85 @@
+specVersion: v2
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: SERVICE
+  workload:
+    source:
+      image: example/embeddings:1
+    endpoints:
+      api:
+        targetPort: 8080
+        protocol: HTTP
+      secure:
+        targetPort: 8443
+        protocol: HTTPS
+        tls:
+          verify: NONE
+  contract:
+    inputs:
+      apiKey:
+        description: Key the API checks
+        schema:
+          type: string
+        sensitive: true
+        target:
+          envVar: API_KEY
+      model:
+        description: Model the server loads
+        schema:
+          type: string
+        target:
+          envVar: MODEL_ID
+    outputs:
+      baseURL:
+        description: URL the API answers at inside the deployment
+        schema:
+          type: string
+        from:
+          template: HTTP://${{ self.endpoints.api.privateHostname }}:${{ self.endpoints.api.privatePort }}/v1
+      tlsURL:
+        description: URL the API answers at over TLS
+        schema:
+          type: string
+        from:
+          template: https://${{ self.endpoints.secure.privateHostname }}
+      apiKey:
+        description: Key the API checks
+        schema:
+          type: string
+        sensitive: true
+        from:
+          input: apiKey
+      model:
+        description: Model the server loads
+        schema:
+          type: string
+        from:
+          input: model
+      dimensions:
+        description: Length of the vectors the model returns
+        schema:
+          type: integer
+        from:
+          value: 384
+    providedConnections:
+      embeddings:
+        description: The embeddings API this server answers
+        connection:
+          protocol: OPENAI_EMBEDDINGS
+        members:
+          baseURL: baseURL
+          apiKey: apiKey
+          model: model
+          dimensions: dimensions
+      tlsEmbeddings:
+        description: The embeddings API this server answers over TLS
+        connection:
+          protocol: OPENAI_EMBEDDINGS
+        members:
+          baseURL: tlsURL
+          apiKey: apiKey
+          model: model
+          dimensions: dimensions

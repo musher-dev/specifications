@@ -7,6 +7,7 @@ import { CORE_FAMILY, Failures, familyPaths, type Json, registrySchemaDir } from
 import { FixtureRepo } from '../testing/fixture.ts'
 import { Pipeline } from '../testing/pipeline.ts'
 import {
+  checkNewProtocol,
   compareDiagnostics,
   compareInterfaceSchema,
   compareProtocol,
@@ -119,6 +120,35 @@ describe('the comparisons', () => {
     expect(
       compareProtocol({ categories: [{ id: 'CACHE' }, { id: 'DATABASE' }] }, { categories: [] }),
     ).toEqual(['categories CACHE, DATABASE were removed'])
+  })
+
+  test('a released protocol keeps its introduced version', () => {
+    const released = { id: 'POSTGRES', category: 'DATABASE', introduced: '2.0.0', members: [] }
+    expect(compareProtocol(released, released)).toEqual([])
+    expect(compareProtocol(released, { ...released, introduced: '2.1.0' })).toEqual([
+      'protocol POSTGRES changed introduced from 2.0.0 to 2.1.0',
+    ])
+  })
+
+  test('a protocol the release lacks is introduced after it', () => {
+    const record = (introduced?: string): Json => ({
+      id: 'OPENAI_EMBEDDINGS',
+      category: 'LANGUAGE_MODEL',
+      ...(introduced === undefined ? {} : { introduced }),
+      members: [],
+    })
+    expect(checkNewProtocol(record('2.3.0'), '2.2.0')).toEqual([])
+    expect(checkNewProtocol(record('3.0.0'), '2.2.0')).toEqual([])
+    expect(checkNewProtocol(record('2.2.0'), '2.2.0')).toEqual([
+      'protocol OPENAI_EMBEDDINGS says introduced 2.2.0, but 2.2.0 is released without it. ' +
+        'A new protocol is introduced after 2.2.0.',
+    ])
+    expect(checkNewProtocol(record('2.1.0'), '2.2.0')).toHaveLength(1)
+    expect(checkNewProtocol(record(), '2.2.0')).toEqual([
+      'protocol OPENAI_EMBEDDINGS has no introduced version',
+    ])
+    // The category list carries no introduced version.
+    expect(checkNewProtocol({ categories: [] }, '2.2.0')).toEqual([])
   })
 
   test('a protocol keeps its capabilities', () => {

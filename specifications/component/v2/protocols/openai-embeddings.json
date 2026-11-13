@@ -1,0 +1,63 @@
+{
+  "id": "OPENAI_EMBEDDINGS",
+  "title": "OpenAI Embeddings",
+  "category": "LANGUAGE_MODEL",
+  "description": "The Embeddings wire protocol, spoken by OpenAI and by every service compatible with it.",
+  "status": "stable",
+  "introduced": "2.3.0",
+  "references": [
+    {
+      "title": "OpenAI API reference: Embeddings",
+      "url": "https://platform.openai.com/docs/api-reference/embeddings"
+    }
+  ],
+  "capabilities": [],
+  "members": [
+    {
+      "name": "baseURL",
+      "role": "locator",
+      "presence": "required",
+      "sensitive": false,
+      "schema": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^[Hh][Tt][Tt][Pp][Ss]://"
+      },
+      "description": "HTTPS base URL a client sends Embeddings requests to."
+    },
+    {
+      "name": "apiKey",
+      "role": "credential",
+      "presence": "required",
+      "sensitive": true,
+      "schema": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "API key the client authenticates with."
+    },
+    {
+      "name": "model",
+      "role": "parameter",
+      "presence": "required",
+      "sensitive": false,
+      "schema": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "Model the client names in each request."
+    },
+    {
+      "name": "dimensions",
+      "role": "parameter",
+      "presence": "required",
+      "sensitive": false,
+      "schema": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 65536
+      },
+      "description": "Length of every embedding vector the client receives."
+    }
+  ]
+}

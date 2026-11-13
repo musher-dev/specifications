@@ -1,0 +1,10 @@
+{
+  "id": "structural-318-file-mode-without-a-leading-zero",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#files",
+  "requirements": [
+    "COMP-FILE-001"
+  ],
+  "summary": "A file mode that is not four octal digits beginning with 0 is rejected."
+}

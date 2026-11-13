@@ -1,0 +1,10 @@
+{
+  "id": "structural-463-file-beside-a-reserved-path",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#files",
+  "requirements": [
+    "COMP-FILE-005"
+  ],
+  "summary": "A path that only begins with the characters of a reserved one is valid."
+}

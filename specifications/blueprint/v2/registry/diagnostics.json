@@ -264,6 +264,26 @@
       "declaredBy": "component"
     },
     {
+      "code": "ERR_ENDPOINT_NOT_TCP",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "component"
+    },
+    {
+      "code": "ERR_ENDPOINT_NOT_GRPC",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "component"
+    },
+    {
       "code": "ERR_ENDPOINT_NOT_HTTP",
       "phases": [
         "semantic"
@@ -344,6 +364,16 @@
       "declaredBy": "component"
     },
     {
+      "code": "ERR_INVALID_PROVIDED_CONNECTION",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "component"
+    },
+    {
       "code": "ERR_INPUT_NOT_GUARANTEED",
       "phases": [
         "semantic"
@@ -365,6 +395,16 @@
     },
     {
       "code": "ERR_INVALID_MOUNT",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "component"
+    },
+    {
+      "code": "ERR_INVALID_COMPUTE",
       "phases": [
         "semantic"
       ],
@@ -416,6 +456,36 @@
     },
     {
       "code": "ERR_PRIVILEGED_PORT",
+      "phases": [
+        "admission"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "component"
+    },
+    {
+      "code": "ERR_CAPABILITY_NOT_GRANTED",
+      "phases": [
+        "admission"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "component"
+    },
+    {
+      "code": "ERR_SECCOMP_NOT_GRANTED",
+      "phases": [
+        "admission"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "component"
+    },
+    {
+      "code": "ERR_SYSCTL_NOT_GRANTED",
       "phases": [
         "admission"
       ],
@@ -707,7 +777,27 @@
       "declaredBy": "blueprint"
     },
     {
+      "code": "ERR_INVALID_HOST_MOUNT",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
       "code": "ERR_EXEMPTION_NOT_DECLARED",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_INVALID_API_KEY_PARAMETER",
       "phases": [
         "semantic"
       ],
@@ -797,7 +887,47 @@
       "declaredBy": "blueprint"
     },
     {
+      "code": "ERR_START_CYCLE",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_INVALID_START_ORDER",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
       "code": "ERR_INVALID_CONNECTION_BINDING",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_UNKNOWN_PROVIDED_CONNECTION",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_INVALID_TEMPLATE",
       "phases": [
         "semantic"
       ],
@@ -885,6 +1015,17 @@
         "ERROR"
       ],
       "declaredBy": "blueprint"
+    },
+    {
+      "code": "WARN_GENERATOR_OUTSIDE_SCHEMA",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "WARNING"
+      ],
+      "declaredBy": "blueprint",
+      "requirement": "BP-PARAM-017"
     }
   ]
 }

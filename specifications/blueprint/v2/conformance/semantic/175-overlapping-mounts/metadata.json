@@ -1,0 +1,11 @@
+{
+  "id": "semantic-175-overlapping-mounts",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#public-hosts",
+  "requirements": [
+    "BP-HOST-003"
+  ],
+  "summary": "Two mounts on one host whose paths overlap would claim the same request.",
+  "document": "app/blueprint.yaml"
+}

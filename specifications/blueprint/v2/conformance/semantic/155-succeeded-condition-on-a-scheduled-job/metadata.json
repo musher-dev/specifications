@@ -1,0 +1,11 @@
+{
+  "id": "semantic-155-succeeded-condition-on-a-scheduled-job",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#start-order",
+  "requirements": [
+    "BP-ORDER-002"
+  ],
+  "summary": "SUCCEEDED names a scheduled JOB, which a rollout does not run.",
+  "document": "app/blueprint.yaml"
+}

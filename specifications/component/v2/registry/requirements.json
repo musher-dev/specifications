@@ -68,6 +68,11 @@
       "section": "workload"
     },
     {
+      "id": "COMP-CMD-002",
+      "anchor": "COMP-CMD-002",
+      "section": "workload"
+    },
+    {
       "id": "COMP-SRC-001",
       "anchor": "COMP-SRC-001",
       "section": "source"
@@ -178,6 +183,11 @@
       "section": "endpoints"
     },
     {
+      "id": "COMP-EP-021",
+      "anchor": "COMP-EP-021",
+      "section": "endpoints"
+    },
+    {
       "id": "COMP-EP-005",
       "anchor": "COMP-EP-005",
       "section": "endpoints"
@@ -203,6 +213,16 @@
       "section": "env-vars"
     },
     {
+      "id": "COMP-ENVVAR-005",
+      "anchor": "COMP-ENVVAR-005",
+      "section": "env-vars"
+    },
+    {
+      "id": "COMP-ENVVAR-006",
+      "anchor": "COMP-ENVVAR-006",
+      "section": "env-vars"
+    },
+    {
       "id": "COMP-ENVVAR-002",
       "anchor": "COMP-ENVVAR-002",
       "section": "env-vars"
@@ -211,6 +231,11 @@
       "id": "COMP-ENVVAR-003",
       "anchor": "COMP-ENVVAR-003",
       "section": "env-vars"
+    },
+    {
+      "id": "COMP-HEALTH-001",
+      "anchor": "COMP-HEALTH-001",
+      "section": "health"
     },
     {
       "id": "COMP-EP-002",
@@ -240,6 +265,36 @@
     {
       "id": "COMP-EP-011",
       "anchor": "COMP-EP-011",
+      "section": "health"
+    },
+    {
+      "id": "COMP-PROBE-004",
+      "anchor": "COMP-PROBE-004",
+      "section": "health"
+    },
+    {
+      "id": "COMP-PROBE-005",
+      "anchor": "COMP-PROBE-005",
+      "section": "health"
+    },
+    {
+      "id": "COMP-PROBE-001",
+      "anchor": "COMP-PROBE-001",
+      "section": "health"
+    },
+    {
+      "id": "COMP-PROBE-002",
+      "anchor": "COMP-PROBE-002",
+      "section": "health"
+    },
+    {
+      "id": "COMP-PROBE-003",
+      "anchor": "COMP-PROBE-003",
+      "section": "health"
+    },
+    {
+      "id": "COMP-PROBE-006",
+      "anchor": "COMP-PROBE-006",
       "section": "health"
     },
     {
@@ -311,6 +366,71 @@
       "id": "COMP-JOB-008",
       "anchor": "COMP-JOB-008",
       "section": "jobs"
+    },
+    {
+      "id": "COMP-FILE-001",
+      "anchor": "COMP-FILE-001",
+      "section": "files"
+    },
+    {
+      "id": "COMP-FILE-002",
+      "anchor": "COMP-FILE-002",
+      "section": "files"
+    },
+    {
+      "id": "COMP-FILE-003",
+      "anchor": "COMP-FILE-003",
+      "section": "files"
+    },
+    {
+      "id": "COMP-FILE-004",
+      "anchor": "COMP-FILE-004",
+      "section": "files"
+    },
+    {
+      "id": "COMP-FILE-005",
+      "anchor": "COMP-FILE-005",
+      "section": "files"
+    },
+    {
+      "id": "COMP-COMPUTE-001",
+      "anchor": "COMP-COMPUTE-001",
+      "section": "compute"
+    },
+    {
+      "id": "COMP-COMPUTE-002",
+      "anchor": "COMP-COMPUTE-002",
+      "section": "compute"
+    },
+    {
+      "id": "COMP-COMPUTE-003",
+      "anchor": "COMP-COMPUTE-003",
+      "section": "compute"
+    },
+    {
+      "id": "COMP-SECURITY-001",
+      "anchor": "COMP-SECURITY-001",
+      "section": "workload-security"
+    },
+    {
+      "id": "COMP-SECURITY-002",
+      "anchor": "COMP-SECURITY-002",
+      "section": "workload-security"
+    },
+    {
+      "id": "COMP-SECURITY-003",
+      "anchor": "COMP-SECURITY-003",
+      "section": "workload-security"
+    },
+    {
+      "id": "COMP-SECURITY-004",
+      "anchor": "COMP-SECURITY-004",
+      "section": "workload-security"
+    },
+    {
+      "id": "COMP-SECURITY-005",
+      "anchor": "COMP-SECURITY-005",
+      "section": "workload-security"
     },
     {
       "id": "COMP-CONTRACT-001",
@@ -401,6 +521,16 @@
       "id": "COMP-CONNECTION-003",
       "anchor": "COMP-CONNECTION-003",
       "section": "connection-requirements"
+    },
+    {
+      "id": "COMP-CONNECTION-004",
+      "anchor": "COMP-CONNECTION-004",
+      "section": "provided-connections"
+    },
+    {
+      "id": "COMP-CONNECTION-005",
+      "anchor": "COMP-CONNECTION-005",
+      "section": "provided-connections"
     },
     {
       "id": "COMP-SEC-003",

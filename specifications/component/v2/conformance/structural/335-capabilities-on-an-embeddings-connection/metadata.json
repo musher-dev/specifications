@@ -1,0 +1,10 @@
+{
+  "id": "structural-335-capabilities-on-an-embeddings-connection",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#connection-requirements",
+  "requirements": [
+    "COMP-CONNECTION-003"
+  ],
+  "summary": "Connection capabilities on an OPENAI_EMBEDDINGS input are rejected; only the conversational protocols take them."
+}

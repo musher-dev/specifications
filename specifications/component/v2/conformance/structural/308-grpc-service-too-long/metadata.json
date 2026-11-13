@@ -1,0 +1,10 @@
+{
+  "id": "structural-308-grpc-service-too-long",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#health",
+  "requirements": [
+    "COMP-PROBE-002"
+  ],
+  "summary": "A gRPC probe service name longer than 256 characters is rejected."
+}

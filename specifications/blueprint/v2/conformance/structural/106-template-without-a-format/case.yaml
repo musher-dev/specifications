@@ -1,0 +1,18 @@
+specVersion: v2
+kind: BLUEPRINT
+metadata:
+  slug: app
+  revision: 1
+  description: Synthetic conformance fixture blueprint.
+spec:
+  parameters:
+    dbPassword:
+      generator: {}
+  nodes:
+    app:
+      componentRef: ./components/app.yaml
+      compute:
+        profile: general.standard.small
+      bindings:
+        databaseURL:
+          template: postgres://app:${{ parameters.dbPassword }}@${{ nodes.db.outputs.host }}:${{ nodes.db.outputs.port }}/app

@@ -1,0 +1,11 @@
+{
+  "id": "semantic-314-api-key-naming-an-undeclared-parameter",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#access",
+  "requirements": [
+    "BP-ACCESS-016"
+  ],
+  "summary": "An API key naming a parameter the blueprint does not declare is rejected.",
+  "document": "app/blueprint.yaml"
+}

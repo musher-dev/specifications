@@ -1,0 +1,10 @@
+{
+  "id": "structural-313-api-key-without-a-parameter",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#access",
+  "requirements": [
+    "BP-ACCESS-016"
+  ],
+  "summary": "An API key names the generated parameter that holds it."
+}

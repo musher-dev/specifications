@@ -1,0 +1,11 @@
+{
+  "id": "semantic-424-options-for-a-sensitive-parameter",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#bindings",
+  "requirements": [
+    "BP-BIND-012"
+  ],
+  "summary": "Each option of a parameter bound to a sensitive input is an authored literal, and is rejected.",
+  "document": "app/blueprint.yaml"
+}

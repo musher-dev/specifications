@@ -1,0 +1,10 @@
+{
+  "id": "semantic-218-file-above-another-file",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#files",
+  "requirements": [
+    "COMP-FILE-003"
+  ],
+  "summary": "A file whose path is an ancestor of another file is rejected."
+}

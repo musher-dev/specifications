@@ -18,7 +18,9 @@
  *    its context fails as well.
  * 3. **Defined terms.** Every term a `spec.md` bold-defines, in its "Terms"
  *    section or as "A **term** is", has a record whose `source` cites that
- *    section, and every `source` a record gives resolves.
+ *    section, and every `source` a record gives resolves. A record is not
+ *    `stable` while the ADR that introduces it, the lowest-numbered one its
+ *    `source` cites, is Proposed.
  *
  * Prose scope is Vale's: `task docs` projects the prose-scope aliases into the
  * MusherSpecifications style (`tools/src/render/terminology.ts`).
@@ -49,6 +51,7 @@ import {
   TERMINOLOGY_SCHEMA_FILE,
 } from '../lib/layout.ts'
 import { REQUIREMENT_ID, readOutline } from '../lib/outline.ts'
+import { headerLines, STATUS } from './adr.ts'
 
 // -----------------------------------------------------------------------------
 // The record shape, as the schema states it.
@@ -785,6 +788,40 @@ export function checkSources(terms: readonly Term[], repoRoot: string = REPO_ROO
   return problems
 }
 
+/**
+ * One message per `stable` term whose introducing ADR, the lowest-numbered one
+ * its `source` cites, is still Proposed. A stable term is one only a breaking
+ * change may alter, and a Proposed decision may still change in review, so a
+ * term it introduces stays `provisional` until the ADR is Accepted.
+ */
+export function checkStability(terms: readonly Term[], repoRoot: string = REPO_ROOT): string[] {
+  const dir = inRepo(repoRoot, ADR_DIR)
+  const files = existsSync(dir) ? readdirSync(dir) : []
+  const statuses = new Map<string, string | null>()
+  const statusOf = (number: string): string | null => {
+    if (!statuses.has(number)) {
+      const file = files.find((name) => name.startsWith(`${number}-`))
+      const header = file === undefined ? [] : headerLines(readFileSync(`${dir}/${file}`, 'utf8'))
+      const line = header.map((l) => STATUS.exec(l)).find((m) => m !== null)
+      statuses.set(number, line?.[1] ?? null)
+    }
+    return statuses.get(number) ?? null
+  }
+  const problems: string[] = []
+  for (const term of terms) {
+    if (term.stability !== 'stable') continue
+    const introducing = (term.source ?? [])
+      .map((source) => ADR_SOURCE.exec(source)?.[1])
+      .filter((number): number is string => number !== undefined)
+      .sort()[0]
+    if (introducing !== undefined && statusOf(introducing) === 'Proposed')
+      problems.push(
+        `${term.id}: stability is stable, but ADR ${introducing}, which introduces it, is Proposed; mark it provisional until the ADR is Accepted`,
+      )
+  }
+  return problems
+}
+
 // -----------------------------------------------------------------------------
 // The command line.
 // -----------------------------------------------------------------------------
@@ -824,6 +861,7 @@ export function runTerms(repoRoot: string = REPO_ROOT): TermsReport {
       ...identifiers.unclaimed,
       ...checkDefinedTerms(terms, collectDefinedTerms(repoRoot)),
       ...checkSources(terms, repoRoot),
+      ...checkStability(terms, repoRoot),
     ],
     warnings: identifiers.discouraged,
   }

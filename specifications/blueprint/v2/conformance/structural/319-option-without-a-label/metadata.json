@@ -1,0 +1,10 @@
+{
+  "id": "structural-319-option-without-a-label",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#deploy-form",
+  "requirements": [
+    "BP-UI-006"
+  ],
+  "summary": "Each option pairs a value with the label a form shows."
+}

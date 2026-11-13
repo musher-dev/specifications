@@ -1,0 +1,14 @@
+[
+  {
+    "code": "ERR_INVALID_PROVIDED_CONNECTION",
+    "path": "/spec/contract/providedConnections/embeddings/members"
+  },
+  {
+    "code": "ERR_INVALID_PROVIDED_CONNECTION",
+    "path": "/spec/contract/providedConnections/embeddings/members/host"
+  },
+  {
+    "code": "ERR_INVALID_PROVIDED_CONNECTION",
+    "path": "/spec/contract/providedConnections/embeddings/members/url"
+  }
+]

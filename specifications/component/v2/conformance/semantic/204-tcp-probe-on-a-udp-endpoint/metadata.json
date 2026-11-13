@@ -1,0 +1,10 @@
+{
+  "id": "semantic-204-tcp-probe-on-a-udp-endpoint",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#health",
+  "requirements": [
+    "COMP-PROBE-001"
+  ],
+  "summary": "A TCP probe of a UDP endpoint is rejected."
+}

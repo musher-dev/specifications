@@ -1,0 +1,11 @@
+{
+  "id": "semantic-305-provided-connection-into-a-value-input",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#connections",
+  "requirements": [
+    "BP-CONNECTION-001"
+  ],
+  "summary": "A provided connection binds only a connection input, never a value input.",
+  "document": "app/blueprint.yaml"
+}

@@ -1,0 +1,30 @@
+specVersion: v2
+kind: BLUEPRINT
+metadata:
+  slug: app
+  revision: 1
+  description: Synthetic conformance fixture blueprint.
+spec:
+  parameters:
+    model:
+      ui:
+        label: Model
+        enumLabels: { small: Small }
+        options:
+          - { value: small, label: Small }
+    encryptionKey:
+      generator:
+        byteLength: 32
+      ui:
+        label: Encryption key
+        disclosed: true
+  nodes:
+    web:
+      componentRef: ./components/web.yaml
+      compute:
+        profile: general.standard.small
+      bindings:
+        model:
+          parameter: model
+        encryptionKey:
+          parameter: encryptionKey

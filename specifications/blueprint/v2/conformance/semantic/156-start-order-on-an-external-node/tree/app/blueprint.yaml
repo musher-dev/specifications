@@ -1,0 +1,21 @@
+specVersion: v2
+kind: BLUEPRINT
+metadata:
+  slug: app
+  revision: 1
+  description: Synthetic conformance fixture blueprint.
+spec:
+  parameters: {}
+  nodes:
+    web:
+      componentRef: ./components/web.yaml
+      compute:
+        profile: general.standard.small
+    llm:
+      componentRef: ./components/llm.yaml
+      bindings:
+        baseURL:
+          value: https://models.example.invalid/v1
+      startAfter:
+      - node: web
+        condition: READY

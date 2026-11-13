@@ -58,6 +58,26 @@
       "section": "bindings"
     },
     {
+      "id": "BP-BIND-009",
+      "anchor": "BP-BIND-009",
+      "section": "bindings"
+    },
+    {
+      "id": "BP-BIND-010",
+      "anchor": "BP-BIND-010",
+      "section": "bindings"
+    },
+    {
+      "id": "BP-BIND-011",
+      "anchor": "BP-BIND-011",
+      "section": "bindings"
+    },
+    {
+      "id": "BP-BIND-012",
+      "anchor": "BP-BIND-012",
+      "section": "bindings"
+    },
+    {
       "id": "BP-NODE-001",
       "anchor": "BP-NODE-001",
       "section": "node-compute"
@@ -168,9 +188,94 @@
       "section": "access"
     },
     {
+      "id": "BP-ACCESS-012",
+      "anchor": "BP-ACCESS-012",
+      "section": "access"
+    },
+    {
       "id": "BP-ACCESS-011",
       "anchor": "BP-ACCESS-011",
       "section": "access"
+    },
+    {
+      "id": "BP-ACCESS-013",
+      "anchor": "BP-ACCESS-013",
+      "section": "access"
+    },
+    {
+      "id": "BP-ACCESS-014",
+      "anchor": "BP-ACCESS-014",
+      "section": "access"
+    },
+    {
+      "id": "BP-ACCESS-015",
+      "anchor": "BP-ACCESS-015",
+      "section": "access"
+    },
+    {
+      "id": "BP-ACCESS-016",
+      "anchor": "BP-ACCESS-016",
+      "section": "access"
+    },
+    {
+      "id": "BP-ACCESS-017",
+      "anchor": "BP-ACCESS-017",
+      "section": "access"
+    },
+    {
+      "id": "BP-ACCESS-018",
+      "anchor": "BP-ACCESS-018",
+      "section": "access"
+    },
+    {
+      "id": "BP-ORDER-001",
+      "anchor": "BP-ORDER-001",
+      "section": "start-order"
+    },
+    {
+      "id": "BP-ORDER-002",
+      "anchor": "BP-ORDER-002",
+      "section": "start-order"
+    },
+    {
+      "id": "BP-ORDER-003",
+      "anchor": "BP-ORDER-003",
+      "section": "start-order"
+    },
+    {
+      "id": "BP-ORDER-004",
+      "anchor": "BP-ORDER-004",
+      "section": "start-order"
+    },
+    {
+      "id": "BP-ORDER-005",
+      "anchor": "BP-ORDER-005",
+      "section": "start-order"
+    },
+    {
+      "id": "BP-HOST-001",
+      "anchor": "BP-HOST-001",
+      "section": "public-hosts"
+    },
+    {
+      "id": "BP-HOST-002",
+      "anchor": "BP-HOST-002",
+      "section": "public-hosts"
+    },
+    {
+      "id": "BP-HOST-003",
+      "anchor": "BP-HOST-003",
+      "section": "public-hosts"
+    },
+    {
+      "id": "BP-HOST-004",
+      "anchor": "BP-HOST-004",
+      "section": "public-hosts"
+    },
+    {
+      "id": "BP-HOST-005",
+      "anchor": "BP-HOST-005",
+      "section": "public-hosts"
     },
     {
       "id": "BP-PARAM-010",
@@ -205,6 +310,11 @@
     {
       "id": "BP-PARAM-004",
       "anchor": "BP-PARAM-004",
+      "section": "value-sources"
+    },
+    {
+      "id": "BP-PARAM-017",
+      "anchor": "BP-PARAM-017",
       "section": "value-sources"
     },
     {
@@ -248,6 +358,16 @@
       "section": "value-sources"
     },
     {
+      "id": "BP-PARAM-015",
+      "anchor": "BP-PARAM-015",
+      "section": "value-sources"
+    },
+    {
+      "id": "BP-PARAM-016",
+      "anchor": "BP-PARAM-016",
+      "section": "value-sources"
+    },
+    {
       "id": "BP-RESOLVE-001",
       "anchor": "BP-RESOLVE-001",
       "section": "value-sources"
@@ -265,6 +385,16 @@
     {
       "id": "BP-CONNECTION-003",
       "anchor": "BP-CONNECTION-003",
+      "section": "connections"
+    },
+    {
+      "id": "BP-CONNECTION-004",
+      "anchor": "BP-CONNECTION-004",
+      "section": "connections"
+    },
+    {
+      "id": "BP-CONNECTION-005",
+      "anchor": "BP-CONNECTION-005",
       "section": "connections"
     },
     {
@@ -290,6 +420,26 @@
     {
       "id": "BP-UI-005",
       "anchor": "BP-UI-005",
+      "section": "deploy-form"
+    },
+    {
+      "id": "BP-UI-006",
+      "anchor": "BP-UI-006",
+      "section": "deploy-form"
+    },
+    {
+      "id": "BP-UI-007",
+      "anchor": "BP-UI-007",
+      "section": "deploy-form"
+    },
+    {
+      "id": "BP-UI-008",
+      "anchor": "BP-UI-008",
+      "section": "deploy-form"
+    },
+    {
+      "id": "BP-UI-009",
+      "anchor": "BP-UI-009",
       "section": "deploy-form"
     }
   ]

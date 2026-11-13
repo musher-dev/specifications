@@ -1,0 +1,13 @@
+{
+  "id": "semantic-206-grpc-probe",
+  "phase": "semantic",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#health",
+  "requirements": [
+    "COMP-PROBE-002"
+  ],
+  "summary": "A gRPC probe checks the whole server unless it names a service.",
+  "effective": {
+    "/spec/workload/health/readiness/grpc/service": ""
+  }
+}

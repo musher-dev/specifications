@@ -1,0 +1,10 @@
+{
+  "id": "structural-306-binding-with-output-and-connection",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#connections",
+  "requirements": [
+    "BP-CONNECTION-004"
+  ],
+  "summary": "A binding naming both an output and a provided connection names two origins."
+}

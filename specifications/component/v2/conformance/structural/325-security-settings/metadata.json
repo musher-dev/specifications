@@ -1,0 +1,14 @@
+{
+  "id": "structural-325-security-settings",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#workload-security",
+  "requirements": [
+    "COMP-SECURITY-001"
+  ],
+  "summary": "A workload may set /dev/shm, a read-only root, capabilities and sysctls from the allowlists.",
+  "effective": {
+    "/spec/workload/security/seccompProfile": "RUNTIME_DEFAULT",
+    "/spec/workload/security/readOnlyRootFilesystem": true
+  }
+}

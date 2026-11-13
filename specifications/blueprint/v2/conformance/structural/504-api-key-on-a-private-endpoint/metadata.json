@@ -1,0 +1,10 @@
+{
+  "id": "structural-504-api-key-on-a-private-endpoint",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#access",
+  "requirements": [
+    "BP-ACCESS-016"
+  ],
+  "summary": "A private endpoint is behind no platform sign-in, so the platform checks no key for it."
+}

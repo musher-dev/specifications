@@ -1,0 +1,11 @@
+{
+  "id": "structural-106-template-without-a-format",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#bindings",
+  "requirements": [
+    "BP-BIND-003",
+    "BP-BIND-010"
+  ],
+  "summary": "A template without a format is rejected: the encoding is never inferred."
+}

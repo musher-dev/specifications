@@ -1,0 +1,10 @@
+{
+  "id": "structural-342-exempt-path-with-an-unknown-match",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#endpoints",
+  "requirements": [
+    "COMP-EP-021"
+  ],
+  "summary": "An exempt path matches by prefix or exactly; suffix matching does not exist."
+}

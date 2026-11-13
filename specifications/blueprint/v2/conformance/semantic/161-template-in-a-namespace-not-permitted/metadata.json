@@ -1,0 +1,11 @@
+{
+  "id": "semantic-161-template-in-a-namespace-not-permitted",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#bindings",
+  "requirements": [
+    "BP-BIND-009"
+  ],
+  "summary": "A template names an organization variable, which only a parameter's from may name.",
+  "document": "app/blueprint.yaml"
+}

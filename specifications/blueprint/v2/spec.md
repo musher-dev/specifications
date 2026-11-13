@@ -71,7 +71,10 @@ deployment.
   Its **deployer** is the person who creates or changes it, and its **creator**
   is the person who created it.
 - A **rollout** is one applied generation of a deployment: the workloads
-  started from one resolution record.
+  started from one resolution record. A rollout is **active** once every
+  `SERVICE` and `WORKER` node it runs is ready and every ordered job has
+  succeeded in it, and has **completed** once it is active or has failed
+  ([`BP-ORDER-005`](#BP-ORDER-005)).
 - A **deployment parameter** is a named value the deployment takes from outside
   the documents ([§5](#parameters)).
 - A **connection** is component's term
@@ -341,6 +344,7 @@ nodes:
 | `compute` | The compute profile and its placement constraints | [§4.3](#node-compute), [§4.4](#placement-constraints) |
 | `volumes` | The storage allocated to each volume | [§4.3](#node-compute) |
 | `exposure` | The exposure of each endpoint, and who may reach it | [§4.3](#node-compute), [§4.5](#access) |
+| `startAfter` | The nodes this node waits for before it starts | [§4.6](#start-order) |
 
 ### <a id="component-reference"></a>4.1 Component reference
 
@@ -412,15 +416,19 @@ node. The map key names an input of the node's component
 |---|---|---|
 | `parameter` | `parameter` | A named deployment parameter ([§5](#parameters)) |
 | `node` | `node`, `output` | An output of another node |
+| `node` | `node`, `connection` | A connection another node provides, for a connection input ([§5.3](#provided-connections)) |
 | `value` | `value` | A logical literal value, never for a sensitive input ([`BP-BIND-008`](#BP-BIND-008)) |
+| `template` | `template`, `format` | A string composed of literal text, parameters and node outputs ([§4.2.1](#templates)) |
 
 <a id="BP-BIND-003"></a>**`BP-BIND-003`**: A binding names exactly one origin:
-`parameter`, `node` with `output`, or `value`. Structural: a binding naming no
-origin is `ERR_MISSING_FIELD` at the binding, and one carrying members of two
-origins is `ERR_INVALID_VALUE` there. `node` and `output` go together: `node`
-without `output` and `output` without `node` are both `ERR_MISSING_FIELD` at the
-binding. Duplicate input keys fail during parsing, and there is no override
-priority between origins.
+`parameter`, `node` with `output`, `node` with `connection`, `value`, or
+`template` with `format`. Structural: a binding naming no origin is
+`ERR_MISSING_FIELD` at the binding, and one carrying members of two origins is
+`ERR_INVALID_VALUE` there. `node` goes with `output` or `connection`, and
+`template` with `format`: `node` without `output` or `connection`, `output` or
+`connection` without `node`, and `template` or `format` without the other are
+each `ERR_MISSING_FIELD` at the binding. Duplicate input keys fail during
+parsing, and there is no override priority between origins.
 
 ```yaml
 bindings:
@@ -456,6 +464,105 @@ discovery cycle is permitted. Semantic: a value cycle is `ERR_VALUE_CYCLE` at
 Coverage by matching names is rejected: an input is supplied only by its own
 binding, so adding an unrelated node MUST NOT change what an existing input
 receives.
+
+#### <a id="templates"></a>4.2.1 Templates
+
+A **template** binding composes a string from literal text and placeholders
+([core v2 §5.2](../../core/v2/spec.md#placeholder-grammar)), for the inputs that
+take one string where the documents hold its parts: a connection URL with a
+generated password inside it, or a value with a fixed prefix
+([ADR 0056](../../../docs/adr/0056-a-binding-composes-a-string-and-encodes-what-it-interpolates.md)).
+`format` says how each placeholder's value is written into the text:
+
+```yaml
+bindings:
+  cacheURL:
+    template: "redis://:${{ parameters.cachePassword }}@${{ nodes.cache.outputs.address }}/0"
+    format: URL
+  neo4jAuth:
+    template: "neo4j/${{ parameters.graphPassword }}"
+    format: TEXT
+```
+
+<a id="BP-BIND-009"></a>**`BP-BIND-009`**: A binding's `template` permits two
+namespaces. `${{ parameters.<parameter> }}` names a deployment parameter, and
+`${{ nodes.<node>.outputs.<output> }}` an output of a node; any other path in
+them names neither explicitly. A placeholder yields the string form of a scalar
+value: a string as it is, a number as its shortest round-trip JSON text, and a
+boolean as `true` or `false`. Substitution is single-pass, as core says. A
+`template` is a composition position under
+[core's placeholder rule](../../core/v2/spec.md#placeholder-yield): it
+produces a string, even when it is one whole placeholder. Semantic, each at the
+binding's `template`:
+
+| Condition | Diagnostic |
+|---|---|
+| A placeholder outside core's grammar, or naming a namespace other than these two | Core's code ([`CORE-PLACEHOLDER-001`](../../core/v2/spec.md#CORE-PLACEHOLDER-001) to [`CORE-PLACEHOLDER-003`](../../core/v2/spec.md#CORE-PLACEHOLDER-003)) |
+| A `parameters` path that is not one declared parameter | `ERR_UNKNOWN_PARAMETER` |
+| A `nodes` path whose node does not exist | `ERR_UNKNOWN_NODE` |
+| A `nodes` path that is not `<node>.outputs.<output>`, or names no output of the node's component | `ERR_UNKNOWN_OUTPUT` |
+| A connection parameter, which is not a value ([§5.3](#connections)) | `ERR_INVALID_CONNECTION_BINDING` |
+| An output whose value schema is not a scalar's, or an input whose value schema is not a string's | `ERR_INCOMPATIBLE_TYPE` |
+
+A template is a binding of each parameter it names: it counts for
+[`BP-PARAM-001`](#BP-PARAM-001), and the input it supplies counts for whether a
+parameter is optional ([`BP-PARAM-005`](#BP-PARAM-005),
+[`BP-UI-005`](#BP-UI-005)) and for its sensitivity
+([`BP-BIND-012`](#BP-BIND-012), [`BP-UI-004`](#BP-UI-004)). It adds no value
+schema to the parameter: [`BP-PARAM-002`](#BP-PARAM-002) intersects only the
+inputs a `parameter` binding names, and a parameter only templates name is
+offered as text, or concealed when a sensitive input is among them. Each node
+output a template names is a value dependency of the input
+([`BP-BIND-002`](#BP-BIND-002)). A template without a placeholder is a
+statically known string, and is checked against the input as a literal is
+([`BP-PARAM-008`](#BP-PARAM-008)).
+
+<a id="BP-BIND-010"></a>**`BP-BIND-010`**: `format` is `URL` or `TEXT`, and is
+REQUIRED: how a value is written is never inferred.
+
+- `TEXT` writes each value's string form as it is.
+- `URL` reads the template as an RFC 3986 absolute URI, its scheme literal text
+  before the first placeholder. Each placeholder lies in one component, decided
+  by the literal text around it: the user information before a literal `@` in
+  the authority, the host and port after it, the path, the query or the
+  fragment. A value in the user information, the path, the query or the
+  fragment is percent-encoded, every UTF-8 octet but the unreserved characters
+  (RFC 3986 §2.3), so no value can end its component, add one or be read two
+  ways. A value in the host and port is written as it is, and holds only
+  unreserved characters, `:`, `[` and `]`.
+
+Semantic: a `URL` template whose scheme is not literal text before its first
+placeholder, or whose literal text holds a character RFC 3986 does not, is
+`ERR_INVALID_TEMPLATE` at the binding's `template`. Resolution, in the `values`
+stage, at the binding: a placeholder whose value is not a scalar, and a host and
+port value holding another character, are `ERR_VALUE_CONSTRAINT`, as is a
+composed string the input's value schema rejects.
+
+<a id="BP-BIND-011"></a>**`BP-BIND-011`**: A composed string is sensitive when
+any value it interpolates is, or the input it supplies is, and it is concealed
+wherever a sensitive value is ([§10](#security)). A diagnostic about a template
+quotes its placeholders, never a value. When a value a template names is absent,
+an optional parameter without a default, the input the template supplies is
+absent too, as an unbound optional input is.
+
+<a id="BP-BIND-012"></a>**`BP-BIND-012`**: An authored literal MUST NOT reach
+a sensitive input, because the document publishes it. A parameter reaches every
+input a `parameter` binding or a template names it into.
+[`BP-BIND-008`](#BP-BIND-008) refuses a `value` binding and
+[`BP-PARAM-014`](#BP-PARAM-014) a parameter's `default`. A template supplying a
+sensitive input MUST interpolate a parameter or a sensitive node output, and a
+parameter that reaches a sensitive input MUST NOT offer `options`. Semantic:
+`ERR_SENSITIVE_LITERAL` at:
+
+| Literal | Path |
+|---|---|
+| A template supplying a sensitive input that interpolates no parameter and no sensitive output, so all it holds is its text and public values | The binding's `template` |
+| The `default` of a parameter a template names, once for each sensitive input such a template supplies | `/spec/parameters/<name>/default` |
+| Each option of a parameter that reaches a sensitive input | `/spec/parameters/<name>/ui/options/<index>/value` |
+
+A template's own text beside such a value is not refused: a scheme, a host or a
+user name around a password is not the secret. A default beside it is, because
+the template makes the parameter sensitive ([`BP-BIND-011`](#BP-BIND-011)).
 
 ### <a id="node-compute"></a>4.3 Compute, storage and exposure
 
@@ -539,7 +646,7 @@ visibility, whichever form states it, and the component constrains the choice:
 |---|---|
 | The key names no endpoint of the component | `ERR_UNKNOWN_ENDPOINT` |
 | A `WORKER` endpoint is `PUBLIC`: a worker is not request-driven, and its endpoints serve the platform and sibling nodes ([component `COMP-TYPE-003`](../../component/v2/spec.md#COMP-TYPE-003)) | `ERR_ENDPOINT_NOT_EXPOSABLE` |
-| A `PUBLIC` URL-addressed endpoint (`HTTP`, `HTTPS`, `WS`, `GRPC`) of a `SERVICE` has no readiness probe ([component `COMP-EP-003`](../../component/v2/spec.md#COMP-EP-003)) | `ERR_READINESS_REQUIRED` |
+| A `PUBLIC` URL-addressed endpoint (`HTTP`, `HTTPS`, `WS`, `GRPC`) of a `SERVICE` has no readiness probe, of any mechanism ([component `COMP-EP-003`](../../component/v2/spec.md#COMP-EP-003)) | `ERR_READINESS_REQUIRED` |
 | An output the component derives from a public property of an endpoint (`publicHostname`, `publicPort`, `publicAddress` or `publicURL`, [component §5.2](../../component/v2/spec.md#endpoints)) reads an endpoint that is not `PUBLIC` | `ERR_ENDPOINT_NOT_PUBLIC` |
 
 Semantic. Each diagnostic anchors at `exposure/<endpoint>`, except that
@@ -609,8 +716,10 @@ exposure:
 | `visibility` | `PUBLIC`, `PRIVATE` | REQUIRED |
 | `access` | `OPEN`: every request is forwarded. `RESTRICTED`: only viewers who sign in and whom the deployment's access policy admits | `OPEN` |
 | `viewerIdentity` | `NONE`: nothing is forwarded about the viewer. `HEADER`: the viewer's identity, in a request header. `ASSERTION`: a signed token naming the viewer, in a request header. `OIDC`: the workload signs viewers in itself, as an OpenID Connect client of the platform | `NONE` |
-| `viewerClaims` | A unique, non-empty list of `EMAIL`, the viewer's verified email address, and `NAME`, their display name | Only the identity |
+| `viewerClaims` | A unique, non-empty list of `EMAIL`, the viewer's verified email address, `NAME`, their display name, and `ROLE`, their standing in the organization ([role claims](#role-claims)) | Only the identity |
 | `accessExemptions` | A unique, non-empty list of `PATHS` and `BEARER`: the requests, among those the component's `exemptibleRequests` offers, that pass without a viewer ([`BP-NODE-008`](#BP-NODE-008)) | None |
+| `apiKey` | The generated parameter whose value the platform checks as a bearer token ([API keys](#api-keys)) | No key |
+| `mount` | The public endpoint whose host serves this one, and the path it is served under ([§4.7](#public-hosts)) | A host of its own |
 
 Bare `PUBLIC` is `{ visibility: PUBLIC }`, and so
 `{ visibility: PUBLIC, access: OPEN, viewerIdentity: NONE }`; bare `PRIVATE` is
@@ -626,7 +735,7 @@ requires `visibility`. Structural:
 |---|---|
 | `visibility` is absent | `ERR_MISSING_FIELD` at the endpoint's exposure |
 | An unknown member | `ERR_UNKNOWN_FIELD` at the endpoint's exposure |
-| `access`, `viewerIdentity`, `viewerClaims` or `accessExemptions` under `PRIVATE`: every member but `visibility` applies only to `PUBLIC` | `ERR_INVALID_VALUE` at that member |
+| `access`, `viewerIdentity`, `viewerClaims`, `accessExemptions` or `mount` under `PRIVATE`: every member but `visibility` applies only to `PUBLIC` | `ERR_INVALID_VALUE` at that member |
 | A `viewerIdentity` other than `NONE` without `access: RESTRICTED` | `ERR_INVALID_VALUE` at `viewerIdentity` |
 | `accessExemptions` without `access: RESTRICTED` | `ERR_INVALID_VALUE` at `accessExemptions` |
 | `viewerClaims` without a `viewerIdentity` other than `NONE`: a claim needs a mode to travel in | `ERR_INVALID_VALUE` at `viewerClaims` |
@@ -710,8 +819,9 @@ coverage exceptions ([conformance](../../../docs/conformance.md#requirements)).
 
 <a id="BP-ACCESS-002"></a>**`BP-ACCESS-002`**: The platform MUST authenticate
 the viewer, and admit them under the deployment's access policy, before it
-forwards any request an exemption does not cover
-([`BP-ACCESS-009`](#BP-ACCESS-009), [`BP-ACCESS-010`](#BP-ACCESS-010)), on HTTP
+forwards any request an exemption or a checked API key does not cover
+([`BP-ACCESS-009`](#BP-ACCESS-009), [`BP-ACCESS-010`](#BP-ACCESS-010),
+[`BP-ACCESS-018`](#BP-ACCESS-018)), on HTTP
 requests and WebSocket upgrades alike. The access policy belongs to the
 deployment and is managed through the platform API: a v2 document names no
 principal, role or policy, and v2 defines no default membership
@@ -793,16 +903,50 @@ assertion header, and with inbound copies of them removed as
 equals it, or begins with it followed by `/`, so `/webhook` covers
 `/webhook/abc` and never `/webhooks`. The query takes no part in matching. The
 platform matches the path after decoding percent-encoded unreserved characters
-and removing dot segments (RFC 3986 §6.2.2), forwards the path it matched, and
-MUST NOT exempt a request whose path holds `;`, an encoded `/` or `\`, a `\`, a
-NUL or an empty segment. The platform serves its own sign-in under `/.musher`
-on an endpoint whose access is `RESTRICTED`, and no exemption reaches it.
+and removing dot segments (RFC 3986 §6.2.2), decoding once and never again,
+forwards the path it matched, and MUST NOT exempt a request whose path holds
+`;`, an encoded `/`, `\` or `%` (`%2F`, `%5C` or `%25`, in either letter case),
+a `\`, a NUL or an empty segment. An encoded `%` is refused because a workload
+that decodes again would see another path than the one the platform matched.
+No document breaks this: an endpoint path holds no `%`
+([component `COMP-EP-016`](../../component/v2/spec.md#COMP-EP-016)). The
+platform serves its own sign-in under `/.musher` on an endpoint whose access is
+`RESTRICTED`, and no exemption reaches it. An
+exempt path is exempt only once [`BP-ACCESS-012`](#BP-ACCESS-012) lets it be.
 
 <a id="BP-ACCESS-010"></a>**`BP-ACCESS-010`**: Under `BEARER`, the platform MUST
 forward a request that carries no valid viewer session and an `Authorization`
 header of the `Bearer` scheme, with no identity, claim or assertion header, for
 the workload to judge. A request that carries a valid session is authenticated,
-admitted and identified as any other is, whatever else it carries.
+admitted and identified as any other is, whatever else it carries. The
+exemption takes effect only once [`BP-ACCESS-012`](#BP-ACCESS-012) lets it.
+
+<a id="BP-ACCESS-012"></a>**`BP-ACCESS-012`**: An exemption on a `RESTRICTED`
+endpoint MUST take effect path by path: an exempt path under `PATHS`, or the
+endpoint under `BEARER`, is exempt only once a rollout that exempts it is
+active ([`BP-ORDER-005`](#BP-ORDER-005)): every `SERVICE` and `WORKER` node
+ready, and every ordered job succeeded, such as a job that claims the
+application's first administrator account. In a deployment whose blueprint
+carries no `startAfter`, and so orders no job, it MUST instead take effect once
+the node that exposes the endpoint is ready in a rollout that exempts it. Until
+then the platform MUST authenticate and admit every request on the endpoint as
+[`BP-ACCESS-002`](#BP-ACCESS-002) says, an exempt one included. A path an
+active rollout exempts stays exempt while a later rollout that keeps it starts,
+and a path the later rollout newly exempts waits for that rollout. Endpoints
+without an exemption are unaffected: a `RESTRICTED` one signs every viewer in
+from the start, and an `OPEN` one is reachable as soon as its node is ready
+([ADR 0055](../../../docs/adr/0055-a-node-starts-after-the-nodes-it-names.md)
+§4).
+
+The gate is per path, not per exemption, so a later rollout that exempts one
+more path cannot open it before the job that guards it has run, while the
+paths already open stay open. Release 2.2.0 put no condition on when an
+exemption takes effect, so it did as soon as its node served. Once the
+platform adopts this release, a released document, which carries no
+`startAfter`, keeps that meaning in all but one point: an exempt path opens
+once the node that exposes it is ready in the rollout that exempts it. Another
+node of the deployment, such as a worker that keeps crashing, does not hold it
+closed. A blueprint that adds `startAfter` gains the whole gate.
 
 <a id="private-endpoints"></a><a id="BP-ACCESS-011"></a>**`BP-ACCESS-011`**: The
 platform MUST make a `PRIVATE` endpoint reachable only from the nodes of the
@@ -813,6 +957,299 @@ peer that learns or guesses the endpoint's private hostname or address still
 cannot open a network connection to it. Two deployments of one blueprint in one
 organization are as separate as two organizations are: a private endpoint is
 private to its deployment, not to its blueprint or its owner.
+
+<a id="role-claims"></a>**Role claims.** A node may also release the
+viewer's standing, so that an app can grant its own administrator role
+without matching an email address. `viewerClaims` takes `ROLE` beside `EMAIL`
+and `NAME`
+([ADR 0060](../../../docs/adr/0060-role-claims-and-client-secret-rotation-for-oidc-apps.md)):
+
+```yaml
+exposure:
+  web: { visibility: PUBLIC, access: RESTRICTED, viewerIdentity: OIDC, viewerClaims: [EMAIL, ROLE] }
+```
+
+<a id="BP-ACCESS-013"></a>**`BP-ACCESS-013`**: `ROLE` is released only under
+`viewerIdentity: ASSERTION` or `OIDC`, whose token carries it. Structural:
+`ROLE` in the `viewerClaims` of an exposure whose `viewerIdentity` is `HEADER`
+is `ERR_INVALID_VALUE` at that list entry. Every other rule of
+[`BP-NODE-006`](#BP-NODE-006) applies to it as to any claim.
+
+<a id="BP-ACCESS-014"></a>**`BP-ACCESS-014`**: Under a released `ROLE`, the
+platform MUST set two claims in every viewer assertion
+([`BP-ACCESS-007`](#BP-ACCESS-007)), and in the ID token and user information
+it issues for the endpoint's client ([`BP-ACCESS-008`](#BP-ACCESS-008)),
+whatever scope the client asks for:
+
+| Claim | Value |
+|---|---|
+| `musher_role` | The viewer's role in the organization that owns the deployment when the token is issued: `owner`, `admin`, `member` or `viewer`. Absent for a viewer the access policy admits who holds no role in that organization |
+| `musher_deployment_creator` | The JSON boolean `true` when the viewer is the deployment's creator, whose identity is `deployment.creator.identity` ([`BP-PARAM-011`](#BP-PARAM-011)), and holds a role in the organization that owns the deployment when the token is issued; `false` otherwise, for a creator who no longer holds one included |
+
+Each value is the fact when the token is issued. A changed role reaches an
+assertion within its lifetime and a client at the viewer's next sign-in; this
+specification does not require an app to revoke the sessions it holds.
+
+<a id="BP-ACCESS-015"></a>**`BP-ACCESS-015`**: The platform MUST apply a
+rotated client secret of an endpoint whose mode is `OIDC` as a rollout of the
+deployment, as it applies an update: every node that reads `oidcClientSecret`
+starts with the new secret, and every `JOB` without a `schedule` runs again
+([component `COMP-JOB-001`](../../component/v2/spec.md#COMP-JOB-001)). The
+issuer MUST keep accepting the previous secret until that rollout has
+completed, by becoming active or by failing
+([`BP-ORDER-005`](#BP-ORDER-005)), and MUST NOT accept it afterwards. An app that stores its client,
+rather than reading it from its environment, registers it again from such a
+`JOB`.
+
+<a id="api-keys"></a>**API keys the platform checks.** A machine client
+has no viewer session, and the `BEARER` exemption passes its token on
+unchecked, which is safe only for a workload that checks every token itself.
+An exposure whose access is `RESTRICTED` may instead name, in `apiKey`, a
+generated parameter whose value the platform checks
+([ADR 0061](../../../docs/adr/0061-a-platform-checked-api-key-and-exact-exempt-paths.md)):
+
+```yaml
+parameters:
+  apiKey: { generator: { byteLength: 32 }, ui: { label: API key } }
+nodes:
+  api:
+    componentRef: ./components/api.yaml
+    compute: { profile: general.standard.small }
+    exposure:
+      api: { visibility: PUBLIC, access: RESTRICTED, apiKey: { parameter: apiKey } }
+```
+
+<a id="BP-ACCESS-016"></a>**`BP-ACCESS-016`**: `apiKey` is closed and requires
+`parameter`, which names a generated parameter of the blueprint. It belongs
+only to an exposure whose access is `RESTRICTED`, and never beside a `BEARER`
+exemption, which answers the same bearer token another way. Structural, at
+the exposure's `apiKey`: `ERR_INVALID_VALUE` under `PRIVATE`, without
+`access: RESTRICTED` and beside `BEARER` in `accessExemptions`;
+`ERR_MISSING_FIELD` without `parameter`; `ERR_UNKNOWN_FIELD` for another
+member. Semantic, at `apiKey/parameter`: `ERR_UNKNOWN_PARAMETER` for a
+parameter the blueprint does not declare, and
+`ERR_INVALID_API_KEY_PARAMETER` for one that is not generated.
+
+A parameter an `apiKey` names is used, so it needs no binding of its own
+([`BP-PARAM-001`](#BP-PARAM-001)), and the resolution record lists it among
+its credentials as it lists a bound generated parameter
+([§5.2](#resolution-record)). A `ui` on it lets the people who manage the
+deployment read the key ([`BP-PARAM-012`](#BP-PARAM-012)).
+
+<a id="BP-ACCESS-017"></a>**`BP-ACCESS-017`**: Under `PATHS`, an exempt path
+the component gives as `{ exact: <path> }` covers a request only when the
+request's path, normalised as [`BP-ACCESS-009`](#BP-ACCESS-009) says, equals
+it; one given as `{ prefix: <path> }`, or as the bare path, covers a request
+as [`BP-ACCESS-009`](#BP-ACCESS-009) says, so `/status` covers `/status` and
+`/status/x` and never `/status-page`. The platform MUST match case-sensitively,
+and the query takes no part in matching. Every other rule of
+[`BP-ACCESS-009`](#BP-ACCESS-009) holds for both forms: a path it refuses to
+exempt, one holding an encoded `%` among them, is not exempt, whichever form
+names it, and no exempt path reaches
+`/.musher`. Either form takes effect only once
+[`BP-ACCESS-012`](#BP-ACCESS-012) lets it.
+
+<a id="BP-ACCESS-018"></a>**`BP-ACCESS-018`**: Under `apiKey`, the platform MUST
+forward a request that carries no valid viewer session and an `Authorization`
+header of the `Bearer` scheme whose token equals the value of the current
+rotation generation of the named parameter, compared in constant time. After
+the parameter rotates, the platform MUST also accept the previous generation
+until the rollout that applies the rotation has completed, as
+[`BP-ACCESS-015`](#BP-ACCESS-015) says of a client secret, and MUST NOT accept
+it afterwards, so a client has that long to take the new key. It forwards the
+request as an exempt request: without authenticating a viewer, with no
+identity, claim or assertion header, and with inbound copies of them removed as
+[`BP-ACCESS-003`](#BP-ACCESS-003) says. It MUST refuse, without forwarding, any
+other request that carries no valid viewer session and that no `PATHS`
+exemption covers, one with a wrong key included. A request that carries a
+valid session is authenticated, admitted and identified as any other is.
+Whatever else the request carries, a session or an exempt path included, the
+platform MUST remove an `Authorization` header whose `Bearer` token equals a
+generation it accepts before it forwards the request, so the key never reaches
+the workload or its logs. The key takes effect only when
+[`BP-ACCESS-012`](#BP-ACCESS-012) would let an exemption on the endpoint take
+effect, and until then the platform MUST authenticate and admit a request that
+carries it as [`BP-ACCESS-002`](#BP-ACCESS-002) says.
+
+A later revision can name a parameter whose value is already disclosed or
+bound to another node, and the key reaches every route of the endpoint,
+setup routes included, so it waits as an exemption does. That costs a
+blueprint nothing: a bootstrap job reaches the node over its private endpoint,
+which no key gates.
+
+### <a id="start-order"></a>4.6 Start order
+
+A node may wait for other nodes before it starts. `startAfter` lists the nodes
+it waits for, each with the condition it waits on
+([ADR 0055](../../../docs/adr/0055-a-node-starts-after-the-nodes-it-names.md)):
+
+```yaml
+nodes:
+  db:
+    componentRef: ./components/postgres.yaml
+    compute: { profile: general.standard.small }
+  migrate:
+    componentRef: ./components/migrate.yaml
+    compute: { profile: general.economy.nano }
+    startAfter: [{ node: db, condition: READY }]
+  web:
+    componentRef: ./components/web.yaml
+    compute: { profile: general.standard.small }
+    startAfter:
+      - { node: db, condition: READY }
+      - { node: migrate, condition: SUCCEEDED }
+  claim-admin:
+    componentRef: ./components/claim-admin.yaml
+    compute: { profile: general.economy.nano }
+    startAfter: [{ node: web, condition: READY }]
+```
+
+| Condition | Holds once | Names |
+|---|---|---|
+| `READY` | The node has a ready replica in the rollout: its readiness probe passes or, without one, its startup probe has succeeded or, without either, its workload has started ([component §5.4](../../component/v2/spec.md#health)) | A `SERVICE` or a `WORKER` |
+| `SUCCEEDED` | The node's run in the rollout has exited 0 before its time limit ([component `COMP-JOB-008`](../../component/v2/spec.md#COMP-JOB-008)) | A `JOB` without `schedule` |
+
+<a id="BP-ORDER-001"></a>**`BP-ORDER-001`**: `startAfter` is a non-empty list
+without repeats, and each entry is closed and requires `node` and `condition`.
+Structural: `ERR_MISSING_FIELD` at an entry without one of them,
+`ERR_UNKNOWN_FIELD` at one with another member, and `ERR_INVALID_VALUE` at an
+empty or repeating list and at a `condition` outside the table.
+
+<a id="BP-ORDER-002"></a>**`BP-ORDER-002`**: Each entry MUST name a node of
+the blueprint that its condition fits, and only a node a rollout starts MAY
+wait. Semantic:
+
+| Condition | Diagnostic |
+|---|---|
+| `node` names no node | `ERR_UNKNOWN_NODE` at `startAfter/<i>/node` |
+| `READY` names a node that is not a `SERVICE` or a `WORKER`, or `SUCCEEDED` one that is not a `JOB` without `schedule` | `ERR_INVALID_START_ORDER` at `startAfter/<i>/condition` |
+| `startAfter` on an `EXTERNAL` node, which runs nothing, or on a `JOB` with `schedule`, which its schedule starts and a rollout does not | `ERR_INVALID_START_ORDER` at `startAfter` |
+
+Both read the component a node deploys, and are deferred while it is
+unavailable ([`BP-REF-002`](#BP-REF-002)).
+
+<a id="BP-ORDER-003"></a>**`BP-ORDER-003`**: The **start graph**, the nodes and
+the edges their `startAfter` draws, MUST be acyclic, and a node that names
+itself is a cycle. Semantic: `ERR_START_CYCLE` at `/spec/nodes`. Traversal MUST
+terminate. The start graph is not the value-dependency graph of
+[`BP-BIND-002`](#BP-BIND-002): a value dependency is on allocated addresses and
+resolved values, which exist before any workload starts, so it orders no start,
+and a start order adds no value dependency.
+
+<a id="BP-ORDER-004"></a>**`BP-ORDER-004`**: In each rollout, the platform MUST
+NOT start a node's workload until every condition its `startAfter` names holds
+in that rollout, and MUST report a node that waits as waiting, together with
+the conditions it still waits on, never as failed or degraded. For a node the
+rollout does not change, its current ready replica is a ready replica in the
+rollout. A condition that can no longer hold, because the `JOB` it names
+failed, leaves the node not started and the rollout failed, as the platform API
+reports; v2 defines no retry. A run stopped at its time limit has failed
+([component `COMP-JOB-008`](../../component/v2/spec.md#COMP-JOB-008)), so
+`SUCCEEDED` on it can no longer hold. A run the platform ends to move it to
+another host, rather than at its limit, has not failed: the run that replaces
+it decides the condition. v2 sets no deadline on a wait: every wait ends when
+what it waits on succeeds, becomes ready or fails. Ordering governs only when
+a node starts: a node that later stops being ready neither stops nor restarts
+the nodes that waited for it. A `JOB` without `schedule` that neither carries
+`startAfter` nor is named by one keeps
+[component `COMP-JOB-001`](../../component/v2/spec.md#COMP-JOB-001)'s meaning,
+ordered against no other node; `startAfter` is the exception that rule names,
+and how a blueprint orders one.
+Platform obligation; no document breaks it.
+
+<a id="BP-ORDER-005"></a>**`BP-ORDER-005`**: A rollout is **active** once every
+`SERVICE` and `WORKER` node it runs is `READY` and every **ordered job**, a
+`JOB` without `schedule` that carries `startAfter` or that a `startAfter`
+names, has `SUCCEEDED` in it. A rollout whose ordered job fails, a run stopped
+at its time limit included, has failed and is never active, so no exemption
+that only it carries takes effect ([`BP-ACCESS-012`](#BP-ACCESS-012)). A
+rollout has **completed** once it is active or has failed. The platform MUST
+NOT report a deployment active before its first rollout is. Until a later
+rollout is active, the previous active rollout keeps serving, and the
+deployment stays reported active while the later one starts. A `JOB` that
+neither carries `startAfter` nor is named by one does not hold activation: its
+outcome is recorded, and blocks nothing. Platform obligation; no document
+breaks it.
+
+An ordered job runs again in every rollout
+([component `COMP-JOB-001`](../../component/v2/spec.md#COMP-JOB-001)), so it
+should be written to succeed when its work is already done: a job that claims
+the first administrator account succeeds, and changes nothing, when the account
+is already claimed.
+
+### <a id="public-hosts"></a>4.7 Public hosts
+
+Each `PUBLIC` endpoint is reached at a public host, and a deployment may have
+more than one: a node may expose more than one endpoint, and more than one node may
+expose one
+([ADR 0057](../../../docs/adr/0057-a-deployment-has-many-public-hosts-and-one-sign-in.md)).
+An HTTP-routed endpoint may instead be served under a path of another
+endpoint's host, by `mount`:
+
+```yaml
+nodes:
+  app:
+    exposure:
+      web: { visibility: PUBLIC, access: RESTRICTED }
+  realtime:
+    exposure:
+      socket:
+        visibility: PUBLIC
+        access: RESTRICTED
+        mount: { node: app, endpoint: web, path: /socket.io }
+```
+
+<a id="BP-HOST-001"></a>**`BP-HOST-001`**: The platform MUST allocate each
+`PUBLIC` endpoint that carries no `mount` a public hostname of its own, distinct
+from that of every other endpoint of every deployment, however many such
+endpoints a node or a deployment has. Platform obligation; no document breaks
+it.
+
+<a id="BP-HOST-002"></a>**`BP-HOST-002`**: `mount` is closed, and requires
+`node`, `endpoint` and `path`. `path` is an absolute path of one or more
+segments of unreserved characters (RFC 3986 §2.3), without a trailing `/`, of at
+most 256 characters. Structural: `ERR_MISSING_FIELD` at a `mount` without one of
+them, `ERR_UNKNOWN_FIELD` at one with another member, and `ERR_INVALID_VALUE` at
+a `path` outside the grammar and at a `mount` under `PRIVATE`.
+
+<a id="BP-HOST-003"></a>**`BP-HOST-003`**: A mount MUST name a host that can
+serve it, and no two mounts on one host may claim the same request. Semantic:
+
+| Condition | Diagnostic |
+|---|---|
+| `mount.node` names no node | `ERR_UNKNOWN_NODE` at `mount/node` |
+| `mount.endpoint` names no endpoint of that node's component | `ERR_UNKNOWN_ENDPOINT` at `mount/endpoint` |
+| The mounted endpoint or the host endpoint is not HTTP-routed (`HTTP`, `HTTPS`, `WS`); the host endpoint is not `PUBLIC`, is itself mounted, or is the mounted endpoint | `ERR_INVALID_HOST_MOUNT` at `mount` |
+| `path` holds a `.` or `..` segment, or lies under `/.musher`, where the platform serves its own sign-in ([`BP-ACCESS-009`](#BP-ACCESS-009)) | `ERR_INVALID_HOST_MOUNT` at `mount` |
+| Two mounts on one host whose paths are equal, or one lies under the other as [`BP-ACCESS-009`](#BP-ACCESS-009) defines it | `ERR_INVALID_HOST_MOUNT` at the `mount` that comes second by node name, then endpoint name, each in UTF-8 order |
+
+The checks that read a component are deferred while it is unavailable
+([`BP-REF-002`](#BP-REF-002)).
+
+<a id="BP-HOST-004"></a>**`BP-HOST-004`**: The platform MUST forward a request
+to a host whose path lies under a mount's `path` to the mounted endpoint, with
+the path unchanged, and every other request to the host endpoint. It decides
+whether a path lies under a mount's `path` as
+[`BP-ACCESS-009`](#BP-ACCESS-009) decides it for an exempt path, after the same
+normalisation, decoded once, and forwards the path it matched, so the edge and
+the workload never disagree about which endpoint a request reached. A mounted
+endpoint's `publicHostname` and `publicPort` are its host endpoint's, and its
+`publicURL` is the host endpoint's followed by `path`. Its own `access`,
+`viewerIdentity`, `viewerClaims` and `accessExemptions` apply to the requests it
+receives, and an exempt path is matched against the whole request path.
+Platform obligation; no document breaks it.
+
+<a id="BP-HOST-005"></a>**`BP-HOST-005`**: A viewer signed in on any public
+host of a deployment MUST be signed in on every `RESTRICTED` endpoint of that
+deployment, whatever its host, without signing in again, and on no endpoint of
+another deployment. A cross-origin request or WebSocket upgrade, one whose
+`Origin` is not the host it is sent to, carries that sign-in only when its
+`Origin` is one of the deployment's own public hosts, with its scheme and port.
+One whose `Origin` is any other origin is handled as a request without a
+session, so another site cannot act as the viewer. Signing out on one host
+signs the viewer out on all of them, within the bound
+[`BP-ACCESS-005`](#BP-ACCESS-005) documents. Platform obligation; no document
+breaks it.
 
 ## <a id="parameters"></a><a id="deployment-parameters"></a>5. Deployment parameters
 
@@ -874,12 +1311,45 @@ the parameter. The one exception is a generated parameter that carries `ui` and
 that a hash names: it reaches the deployer through disclosure
 ([`BP-PARAM-012`](#BP-PARAM-012)) without a binding of its own.
 
-<a id="BP-PARAM-002"></a>**`BP-PARAM-002`**: The inputs one parameter binds MUST
-declare equal value schemas, ignoring mapping order. Semantic: otherwise
-`ERR_CONFLICTING_INPUT_SCHEMA` at `/spec/parameters/<name>`. Descriptions,
-targets and input defaults do not
-make inputs different. Sensitivity is the union of the receiving inputs and the
-value supplied.
+<a id="BP-PARAM-002"></a><a id="intersection"></a>**`BP-PARAM-002`**: A
+parameter's value MUST satisfy the value schema of every input it binds, so the
+parameter's value schema is their **intersection**. Inputs that declare
+different schemas MAY share a parameter, a consumer stricter than its producer
+among them, as long as some value satisfies them all
+([ADR 0054](../../../docs/adr/0054-a-parameter-satisfies-every-input-it-binds.md)).
+Semantic: `ERR_CONFLICTING_INPUT_SCHEMA` at `/spec/parameters/<name>` when the
+inputs it binds declare different schemas and the intersection is empty by one
+of these conditions, each decided keyword by keyword and through `items` and
+`properties`. Inputs that all declare one schema are not compared, even when
+that schema admits no value: a resolved value it rejects is
+`ERR_VALUE_CONSTRAINT` ([`BP-PARAM-008`](#BP-PARAM-008)), as it was before
+inputs could differ.
+
+| Condition | Keywords it names |
+|---|---|
+| Two inputs declare different types, other than `integer` beside `number`, whose intersection is `integer` | `type` |
+| No member of an input's `enum` satisfies every other input's schema | `enum` |
+| The greatest lower bound exceeds the least upper bound, meets it where either is exclusive, or, for `integer`, leaves no integer between them | The two bounds |
+| The greatest `minLength` exceeds the least `maxLength` | `minLength`, `maxLength` |
+| The greatest `minItems` exceeds the least `maxItems`, or the arrays must hold an item and their `items` intersect to nothing | `minItems`, `maxItems`, or the item's keywords |
+| An input requires a property another does not declare, which no closed object can hold, or a required property's schemas intersect to nothing | `required`, `properties`, or the property's keywords |
+| A generated parameter whose inputs declare different schemas can produce a value, among those [`BP-PARAM-004`](#BP-PARAM-004)'s output language holds, that fails one of them | The keywords that value fails |
+
+`pattern` is compared with nothing but the members of an `enum` and a
+generator's output language: whether two patterns share a string is not decided
+before resolution, and a resolved value that misses one is
+`ERR_VALUE_CONSTRAINT` ([`BP-PARAM-008`](#BP-PARAM-008)). The diagnostic carries
+one `related` location for each input the parameter binds, whose `artifact` is
+that node's `componentRef` and whose `path` is
+`/spec/contract/inputs/<input>/schema`, and its message SHOULD name the
+keywords whose constraints cannot hold together, such as `minLength` and
+`maxLength`.
+
+Two value schemas are the same schema when they differ only in mapping order or
+in the order of a set: `required` and `enum` are sets. Descriptions, targets and
+input defaults are not part of a value schema, and do not make inputs
+different. Sensitivity is the union of the receiving inputs and the value
+supplied.
 
 <a id="BP-PARAM-003"></a>**`BP-PARAM-003`**: An input without a binding uses its
 component default, remains absent if optional, or is unsatisfied. Semantic: a
@@ -909,6 +1379,26 @@ that many cryptographically secure random bytes. `encoding` defaults to `HEX`
 URL-safe alphabet without padding. Custom alphabets are not supported. The
 generated string must satisfy every receiving value schema; failing a
 constraint must not regenerate it.
+
+A generator's **output language** is every string of its encoded length,
+`2 × byteLength` characters in `HEX`, `4 × ⌈byteLength / 3⌉` in `BASE64` and
+`⌈4 × byteLength / 3⌉` in `BASE64URL`, whose characters are drawn from its
+encoding's alphabet, with `BASE64`'s `=` padding in its fixed last positions.
+It is a superset of what the encoding can emit, and it is what
+[`BP-PARAM-002`](#BP-PARAM-002) and [`BP-PARAM-017`](#BP-PARAM-017) compare,
+so that every implementation decides them alike.
+
+<a id="BP-PARAM-017"></a>**`BP-PARAM-017`**: Every string in a generator's
+output language SHOULD satisfy the value schema of every input the parameter
+binds. Where those inputs declare different schemas, `BP-PARAM-002` makes this
+a MUST. Where they declare one schema, a generator whose output language holds
+a string that fails it is reported in the semantic phase as
+`WARN_GENERATOR_OUTSIDE_SCHEMA` at `/spec/parameters/<name>/generator`, whose
+message SHOULD name the keywords such a string fails. It is a warning, not an
+error, because 2.1.0 and 2.2.0 accepted such a document, and validation never becomes
+stricter within a major version
+([core v2 §3](../../core/v2/spec.md#compatibility)). A generated value that
+fails at resolution is still `ERR_VALUE_CONSTRAINT`.
 
 <a id="BP-PARAM-012"></a>**`BP-PARAM-012`**: A `hash` names, in `parameter`, a
 generated parameter of the same blueprint. bcrypt reads at most 72 bytes and
@@ -954,10 +1444,11 @@ parameter that a binding reads, with no submitted value and no default, is
 [optional parameter](#terms), whose receiving inputs are then absent.
 
 <a id="BP-PARAM-014"></a>**`BP-PARAM-014`**: A parameter `default` MUST NOT
-reach a sensitive input, because a default is an authored literal published with
-the document. Semantic: `ERR_SENSITIVE_LITERAL` at
+reach a sensitive input, through a `parameter` binding or a template that names
+it, because a default is an authored literal published with the document
+([`BP-BIND-012`](#BP-BIND-012)). Semantic: `ERR_SENSITIVE_LITERAL` at
 `/spec/parameters/<name>/default`, once for each sensitive input the parameter
-binds.
+reaches.
 
 <a id="BP-PARAM-008"></a>**`BP-PARAM-008`**: Every statically known value MUST
 satisfy the inputs that receive it, and dynamic values are checked after
@@ -1032,8 +1523,38 @@ public inspection, previews and diagnostics all the same. Resolution, in the
 | Condition | Outcome |
 |---|---|
 | Acquisition has not supplied the fact | INCOMPLETE |
-| The platform knows it lacks the fact, such as the email address of a deployment a service principal created; waiting would never supply it | `ERR_DEPLOYMENT_FACT_UNAVAILABLE` |
+| The platform knows it lacks the fact, such as the display name of a creator who never set one; waiting would never supply it | `ERR_DEPLOYMENT_FACT_UNAVAILABLE` |
 | The fact is malformed | `ERR_INVALID_RESOLUTION_CONTEXT` |
+
+<a id="BP-PARAM-015"></a>**`BP-PARAM-015`**: A deployment created with an
+organization API key has a creator: the user who created the key.
+`deployment.creator.*` resolves to that user's facts, captured when the
+deployment is created as any creator's are, and revoking or deleting the key
+later changes none of them. The platform MUST record the key's own identity
+beside the creator's, so an audit can tell a deploy made with the key from one
+the person made. A key acts with its creator's standing as it is when each
+deploy or update is made, never as it was when the key was created. A key
+whose creator has been deactivated, has been removed from the organization or
+holds no role in it deploys nothing: the platform MUST refuse every deploy and
+update made with it, as it refuses an unauthorized caller, before resolution
+reads any fact, and a `deployment`-scope validation made with it is refused the
+same way
+([ADR 0053](../../../docs/adr/0053-an-organization-api-key-deploys-as-the-user-who-created-it.md)).
+Platform obligation; no document breaks it.
+
+<a id="BP-PARAM-016"></a>**`BP-PARAM-016`**: A `deployment`-scope validation
+treats its caller as the creator of the deployment it describes: the person who
+calls or, for an organization API key, the user who created the key. It
+resolves every deployment fact the blueprint reads from that caller, in the
+`resolution` phase at stage `parameters`, at `/spec/parameters/<name>/from`,
+under the table above. A fact the caller lacks is
+`ERR_DEPLOYMENT_FACT_UNAVAILABLE`, not a deferred obligation, so a validation
+the deploy call would refuse for that reason is never INCOMPLETE without a
+diagnostic. A validation of a change to an existing deployment reads the
+creator facts that deployment captured ([`BP-PARAM-011`](#BP-PARAM-011)), not
+the caller's, as the update itself does. The rest of resolution stays deferred
+under [`BP-RESOLVE-001`](#BP-RESOLVE-001). A validation at any narrower scope
+has no caller to read, and reports no deployment fact.
 
 <a id="BP-RESOLVE-001"></a>**`BP-RESOLVE-001`**: Resolution MUST complete these
 stages, in this order ([core v2 §6.4](../../core/v2/spec.md#resolution-stages)),
@@ -1238,13 +1759,17 @@ runs it. A bot that receives events at a webhook does so at that node's own
 [component v2 §6.4](../../component/v2/spec.md#event-delivery)).
 
 <a id="BP-CONNECTION-001"></a>**`BP-CONNECTION-001`**: A connection input MUST be
-bound only by a `parameter` binding naming a connection parameter, and a
-connection parameter MUST bind only connection inputs. Semantic, each
+bound only by a `parameter` binding naming a connection parameter, or by a
+`node` binding naming a provided connection
+([`BP-CONNECTION-004`](#BP-CONNECTION-004)), and a connection parameter MUST
+bind only connection inputs. Semantic, each
 `ERR_INVALID_CONNECTION_BINDING`:
 
 | Condition | At |
 |---|---|
-| A `value` or `node` binding to a connection input | The binding |
+| A `value` or `template` binding, or a `node` binding naming an `output`, to a connection input | The binding |
+| A `node` binding naming a `connection`, to a value input | The binding |
+| A `template` naming a connection parameter | The binding's `template` |
 | A `parameter` binding to a connection input naming a parameter that is not a connection parameter | The binding's `parameter` |
 | A `parameter` binding to a value input naming a connection parameter | The binding's `parameter` |
 
@@ -1304,6 +1829,7 @@ language-model view also carries its capabilities:
 | Protocol | Credential member | View members | Optional view members |
 |---|---|---|---|
 | `OPENAI_CHAT_COMPLETIONS`, `ANTHROPIC_MESSAGES` | `apiKey` | `baseURL`, `model`, `capabilities` | none |
+| `OPENAI_EMBEDDINGS` | `apiKey` | `baseURL`, `model`, `dimensions` | none |
 | `POSTGRES` | `password` | `host`, `port`, `database`, `username`, `sslMode` | none |
 | `REDIS` | `password`, when the server requires authentication | `host`, `port`, `tls` | `database`, `username` |
 | `S3` | `secretAccessKey` | `endpointURL`, `region`, `bucket`, `accessKeyID` | `pathStyle` |
@@ -1393,6 +1919,72 @@ persistence are platform responsibilities. A real client integration must
 verify client paths, authentication, streaming, tool calls and errors. Synthetic
 fixture credentials establish no production access.
 
+<a id="provided-connections"></a>**Connections a node provides.** A node
+whose component serves a connection
+([component v2 §6.5](../../component/v2/spec.md#provided-connections)) can fill
+a sibling's connection input in place of a connection parameter. The binding
+names the node and, in `connection`, the provided connection, as a binding
+naming an output names the node and the `output`
+([ADR 0059](../../../docs/adr/0059-an-embeddings-protocol-and-connections-a-node-provides.md)):
+
+```yaml
+nodes:
+  tei:
+    componentRef: ./components/tei.yaml
+    compute: { profile: gpu.standard.small }
+  embedder:
+    componentRef: ./components/embeddings.yaml
+    bindings:
+      embeddings: { node: tei, connection: embeddings }
+  app:
+    componentRef: ./components/app.yaml
+    compute: { profile: general.standard.small }
+    bindings:
+      embeddingsURL: { node: embedder, output: baseURL }
+```
+
+`embedder` is the same `EXTERNAL` node a blueprint fills with
+`${{ connections.embeddings.default }}` when the organization's connection
+answers instead.
+
+<a id="BP-CONNECTION-004"></a>**`BP-CONNECTION-004`**: A binding carries
+`connection` only beside `node`, and never beside `output`. It names a
+provided connection of the node's component whose protocol is the input's,
+and which declares every capability the input requires. The input then
+depends on each output the provided connection maps, for
+[`BP-BIND-002`](#BP-BIND-002). Structural: `ERR_INVALID_VALUE` at a binding
+with both `output` and `connection`, and `ERR_MISSING_FIELD` at one with
+`connection` and no `node`. Semantic:
+
+| Condition | Diagnostic |
+|---|---|
+| `node` names no node | `ERR_UNKNOWN_NODE` at the binding's `node` |
+| `connection` names no provided connection of that node's component | `ERR_UNKNOWN_PROVIDED_CONNECTION` at the binding's `connection` |
+| The provided connection's protocol is not the input's, or it lacks a capability the input requires | `ERR_INVALID_CONNECTION_BINDING` at the binding's `connection` |
+
+<a id="BP-CONNECTION-005"></a>**`BP-CONNECTION-005`**: In the `values` stage,
+an input bound to a provided connection receives each member the provided
+connection maps, the value of its output on the providing node; the default of
+each optional member it does not map; and, for `POSTGRES` and `REDIS`, the
+`url` composed from them
+([component v2 §6.4](../../component/v2/spec.md#derived-urls)). Every member
+MUST satisfy its protocol's value schema, except that a locator MAY be an
+absolute `http` URL as well as an `https` one, without user information,
+query or fragment. Resolution: a member that does not is `ERR_VALUE_CONSTRAINT`
+at the binding.
+
+The locator may be `http` because its authority is exactly the private
+address of an `HTTP` endpoint of the providing node, never a literal host
+([component `COMP-CONNECTION-005`](../../component/v2/spec.md#COMP-CONNECTION-005)),
+and only nodes of the same deployment reach that address
+([`BP-ACCESS-011`](#BP-ACCESS-011)). A member such as `apiKey` therefore
+travels in cleartext only on that private hop, as any `HTTP` endpoint's
+traffic does. There is no acquisition: no selection, no
+scoped credential, no `permittedBaseURLs` and nothing persisted in the
+snapshot. The members are the provider's outputs, pinned by the provider node,
+and they change only when its outputs do. A member's sensitivity is its
+output's.
+
 ### <a id="deploy-form"></a><a id="install-form"></a>5.4 Deploy form
 
 <a id="BP-UI-001"></a>**`BP-UI-001`**: `ui` is optional. One that is supplied
@@ -1420,7 +2012,9 @@ offered: the deployment acquires its default selection without a form field.
 
 For any other parameter, a form conceals sensitive values first; then offers
 enum choices, string-array item choices, boolean controls, structured JSON
-editing, or scalar text entry, in that order. UI examples are never submitted.
+editing, or scalar text entry, in that order. A parameter is sensitive when an
+input it reaches, through a `parameter` binding or a template, is
+([`BP-BIND-011`](#BP-BIND-011)). UI examples are never submitted.
 
 <a id="BP-UI-005"></a>**`BP-UI-005`**: A submitted parameter that declares
 neither `ui` nor `default` MUST NOT bind a required input. The form never offers
@@ -1435,9 +2029,86 @@ optional, which a form deployment leaves absent.
 Fields are ordered by ascending `ui.order`, unspecified orders last, then by
 parameter name in UTF-8 order. For a parameter bound to more than one input, help
 text is the description of the first receiver by node name then input name;
-this ordering does not affect validation. Clients validate logical values;
-server admission MUST validate them independently as well. Labels and
-descriptions do not override value schemas.
+this ordering does not affect validation. A form validates a value against the
+intersection of its receivers' schemas ([`BP-PARAM-002`](#BP-PARAM-002)), and
+chooses its control from it: an `enum` any receiver declares offers the members
+every receiver accepts, in the order of the first receiver that declares one.
+Clients validate logical values; server admission MUST validate them
+independently as well. Labels and descriptions do not override value schemas.
+
+<a id="options"></a>**Options.** A form can offer a submitted parameter's
+likely values without closing the value schema of the inputs it binds.
+`ui.options` lists them, each a `value` and the `label` a form shows, and
+`ui.editable: true` lets the deployer type a value that is not among them
+([ADR 0062](../../../docs/adr/0062-a-parameter-offers-options-and-a-generated-secret-can-be-disclosed.md)):
+
+```yaml
+parameters:
+  model:
+    default: "llama3.2:1b"
+    ui:
+      label: Model
+      options:
+        - { value: "llama3.2:1b", label: Llama 3.2 1B }
+        - { value: "qwen2.5:0.5b", label: Qwen 2.5 0.5B }
+      editable: true
+```
+
+<a id="BP-UI-006"></a>**`BP-UI-006`**: `options` is a non-empty list of at most
+256 closed objects, each requiring `value`, a logical value, and `label`, a
+non-empty string, with no two options sharing a value. `editable` is a
+boolean, and requires `options`. Neither belongs to the `ui` of a generated
+parameter or one with `from`, and `options` never sits beside `enumLabels`.
+Structural, under the parameter's `ui`: `ERR_INVALID_VALUE` at `options` or
+`editable` on a generated parameter or one with `from`, at `options` beside
+`enumLabels`, at an empty, overlong or repeating list, and at an empty
+`label`; `ERR_MISSING_FIELD` at an option without `value` or `label`, and
+at `ui` with `editable` and without `options`; `ERR_UNKNOWN_FIELD` at an
+option with another member. Semantic: `ERR_VALUE_CONSTRAINT` at
+`ui/options/<index>/value` of an option whose value, compared as JSON, an
+earlier option already has.
+
+<a id="BP-UI-007"></a>**`BP-UI-007`**: Every option's `value` MUST satisfy the
+value schema of every input the parameter binds, and the `default` of a
+parameter whose options are not `editable` MUST be one of their values.
+Semantic: `ERR_VALUE_CONSTRAINT` at `ui/options/<index>/value`, and at the
+parameter's `default`.
+
+<a id="BP-UI-008"></a>**`BP-UI-008`**: A deploy form MUST offer a parameter
+that declares `options` as a choice among their labels, in their order, and
+when it is `editable` MUST also accept a value typed in. A value outside
+options that are not `editable` MUST NOT be submitted. Resolution, in the
+`parameters` stage: a submitted value that is not one of the values of
+options that are not `editable` is `ERR_VALUE_CONSTRAINT` at
+`/spec/parameters/<name>`.
+
+Options belong to the form, not the value schema: the receiving inputs keep
+their own schemas, and an `editable` value is held to them as any submitted
+value is. A schema `enum` is labelled with `enumLabels` instead. A sensitive
+parameter offers no options ([`BP-BIND-012`](#BP-BIND-012)), and a form
+conceals it.
+
+<a id="disclosure"></a>**Disclosure.** A generated parameter whose `ui` sets
+`disclosed: true` holds a value the deployer is expected to keep, such as a key
+that encrypts data a backup holds.
+
+<a id="BP-UI-009"></a>**`BP-UI-009`**: `disclosed` is a boolean, and belongs
+only to the `ui` of a generated parameter. Structural: `ERR_INVALID_VALUE` at
+`ui/disclosed` on any other parameter. The platform MUST disclose the value of
+a parameter whose `ui` sets `disclosed: true` to the people who manage the
+deployment, behind an explicit reveal, apart from the deploy form, and say
+that it is to be kept. The privacy rules of
+[`BP-PARAM-012`](#BP-PARAM-012)'s disclosure apply to it. The people who
+manage the deployment are those the platform API lets change it; a person whose
+only role in the organization is `viewer`
+([`BP-ACCESS-014`](#BP-ACCESS-014)), and a viewer the access policy merely
+admits, never reveal a value. The platform MUST record every reveal for audit:
+who revealed which parameter's value, of which rotation generation, and when,
+and never the value. A reveal names the generation it shows. After the
+parameter rotates, the platform MUST let the previous generation be disclosed
+for as long as it still accepts that generation anywhere, such as an API key's
+overlap ([`BP-ACCESS-018`](#BP-ACCESS-018)), and afterwards MUST say that the
+earlier value is gone and when it was rotated, rather than show nothing.
 
 ## <a id="validation-phases"></a><a id="validation-layers"></a>6. Validation phases
 
@@ -1473,12 +2144,14 @@ Core and component diagnostics apply, with these additions:
 | `ERR_UNKNOWN_PARAMETER` | `semantic`, `resolution` | A binding, a hash or a submitted value names no parameter. |
 | `ERR_INCOMPATIBLE_TYPE` | `semantic` | An output's type cannot supply the input a binding joins it to. |
 | `ERR_UNREFERENCED_COMPONENT` | `semantic` | The item contains a component document no node references. |
-| `ERR_CONFLICTING_INPUT_SCHEMA` | `semantic` | The inputs one parameter binds disagree. |
+| `ERR_CONFLICTING_INPUT_SCHEMA` | `semantic` | No value satisfies every input one parameter binds. |
 | `ERR_UNBOUND_PARAMETER` | `semantic` | No binding names the parameter. |
 | `ERR_UNSATISFIED_REQUIRED_INPUT` | `semantic` | A required input has no binding or default. |
 | `ERR_ENDPOINT_NOT_PUBLIC` | `semantic` | An output reads a public property of an endpoint the blueprint does not expose. |
 | `ERR_VIEWER_IDENTITY_NOT_FORWARDED` | `semantic` | An output reads a viewer identity property of an endpoint whose exposure does not forward that property's mode or claim. |
+| `ERR_INVALID_HOST_MOUNT` | `semantic` | A mount names a host that cannot serve it, or overlaps another mount on its host. |
 | `ERR_EXEMPTION_NOT_DECLARED` | `semantic` | An exposure lets through requests without a viewer that the component does not offer in `exemptibleRequests`. |
+| `ERR_INVALID_API_KEY_PARAMETER` | `semantic` | An exposure's `apiKey` names a parameter that is not generated. |
 | `ERR_UNKNOWN_ENUM_MEMBER` | `semantic` | A UI label names no enum member. |
 | `ERR_PARAMETER_NOT_OFFERED` | `semantic` | A submitted parameter with neither `ui` nor `default` binds a required input, so no form can supply it. |
 | `ERR_INVALID_PARAMETER_ORIGIN` | `semantic` | A parameter's `from` is not one whole placeholder. |
@@ -1487,7 +2160,11 @@ Core and component diagnostics apply, with these additions:
 | `ERR_INVALID_VOLUME_ALLOCATION` | `semantic` | A volume allocation is absent, unknown or below the minimum. |
 | `ERR_READINESS_REQUIRED` | `semantic` | A public URL-addressed service endpoint has no readiness probe. |
 | `ERR_VALUE_CYCLE` | `semantic` | Value dependencies contain a cycle. |
-| `ERR_INVALID_CONNECTION_BINDING` | `semantic` | A connection input is bound by something other than a connection parameter, or a connection parameter binds a value input. |
+| `ERR_START_CYCLE` | `semantic` | The start graph contains a cycle. |
+| `ERR_INVALID_START_ORDER` | `semantic` | A start condition does not fit the node it names, or a node a rollout does not start waits for another. |
+| `ERR_INVALID_CONNECTION_BINDING` | `semantic` | A connection input is bound by something other than a connection parameter or a provided connection of its protocol and capabilities, or a connection parameter or provided connection binds a value input, or a connection parameter is named by a template. |
+| `ERR_UNKNOWN_PROVIDED_CONNECTION` | `semantic` | A binding names no provided connection of the node's component. |
+| `ERR_INVALID_TEMPLATE` | `semantic` | A `URL` template is not an absolute URI with a literal scheme. |
 | `ERR_PARAMETER_NOT_SUBMITTABLE` | `resolution` | A submitted value names a generated, hash, variable, deployment-fact or connection parameter. |
 | `ERR_MISSING_PARAMETER_VALUE` | `resolution` | A required submitted value is absent. |
 | `ERR_VARIABLE_NOT_AUTHORIZED` | `resolution` | The deployment cannot read the organization variable. |
@@ -1496,6 +2173,16 @@ Core and component diagnostics apply, with these additions:
 | `ERR_CONNECTION_NOT_FOUND` | `resolution` | Authorized acquisition confirms no selected default exists. |
 | `ERR_CONNECTION_DENIED` | `resolution` | Acquisition denies permission to use the connection. |
 | `ERR_CONNECTION_INCOMPATIBLE` | `resolution` | The selection cannot satisfy the required protocol, capabilities or members. |
+
+### <a id="warnings"></a>7.1 Warnings
+
+These codes are reported at `WARNING` ([core v2 §7](../../core/v2/spec.md#diagnostics)).
+Each reports a SHOULD the document does not meet. A warning never changes a
+result's status, so no document is rejected for one.
+
+| Code | Requirement | Phase | Meaning |
+|---|---|---|---|
+| `WARN_GENERATOR_OUTSIDE_SCHEMA` | [`BP-PARAM-017`](#BP-PARAM-017) | `semantic` | A generator can produce a value the one schema its inputs declare rejects. Reported at the parameter's `generator`. |
 
 ## <a id="conformance"></a>8. Conformance
 
@@ -1513,21 +2200,47 @@ evidence.
 | Not supported | How it would close |
 |---|---|
 | Component instances shared across deployments | A new origin kind for a binding |
+| Reaching another deployment's `PRIVATE` endpoint, in the same organization | An export and an import, [draft](#draft-exports) below |
 | Conditional node sets, including swapping a self-hosted `SERVICE` for a connection at deployment ([ADR 0019](../../../docs/adr/0019-external-component-node.md)) | A new optional field on a node |
 | Outputs produced by a job at run time | A new output origin, in component |
-| Startup ordering between nodes | A new optional field on a node |
 | Recursive templates, and provider-specific maps | A new optional field |
+| Functions in a template, such as trimming a suffix or taking a URL's origin | A placeholder expression, [core v2 §10](../../core/v2/spec.md#not-supported) |
+| A component output template that reads the component's own inputs | A new `self` path in component's `template` |
 | A document naming the principals, roles or policy a `RESTRICTED` endpoint admits, or a default membership; the policy is the deployment's, managed through the platform API | A new optional member of the exposure object |
 | `RESTRICTED` access to a `GRPC`, `TCP` or `UDP` endpoint | Permit `RESTRICTED` on those protocols |
-| Role or group claims | A new `viewerClaims` value |
+| Group claims, or a role beyond the viewer's standing in the deployment's organization | A new `viewerClaims` value |
 | A viewer identity mode under `access: OPEN` | Permit the combination |
-| Machine tokens the platform itself accepts | A new `accessExemptions` value |
+| More than one platform-checked API key on an exposure, or keys scoped to some paths | A new optional member of `apiKey` |
 | Exemptions by request method | A new `accessExemptions` value |
 | Hashes of submitted values, and other hash algorithms or parameters | A new `hash.algorithm` value, or permit a submitted parameter under `hash` |
 | `deployment` facts beyond the creator's | A new path in the `deployment` namespace |
 | Choosing a plan or size for a provisioned connection | A new optional field on the connection parameter |
 | `capabilities` for a protocol other than a language model's | Permit `capabilities` on that protocol, in component |
 | Registering an endpoint's URL with a messaging service, such as a Telegram webhook or a Slack request URL | A new optional member of the exposure object |
+
+### <a id="draft-exports"></a>9.1 Draft: exported endpoints
+
+> **Draft, not normative.** This subsection records the shape
+> [ADR 0058](../../../docs/adr/0058-a-deployment-exports-a-private-endpoint-to-a-named-consumer.md)
+> decides, so that implementations can plan for it. It declares no requirement
+> ID, and no validator applies it: a document using any of it is rejected
+> today, as [`BP-ACCESS-011`](#BP-ACCESS-011) and the schema require.
+
+A deployment would reach another deployment's `PRIVATE` endpoint only through
+both sides declaring it. The exporting blueprint names the endpoint it exports
+and the consumers it admits, each by a stable identity the organization assigns.
+The consuming blueprint declares a parameter whose `from` names the export, and
+binds the private host, port and address it yields to its nodes like any other
+parameter. Acquiring an import would be authorized, persisted and recorded as a
+connection selection is ([§5.3](#connections)): a deployment that is not a named
+consumer is denied, and revoking an export denies new connections at once. Both
+deployments belong to one organization. Isolation would still hold at the
+network level, for the exported endpoint alone.
+
+Open before this becomes normative: whether an import is a connection protocol
+whose provider is a deployment, or a parameter kind of its own; how a consumer
+identity is named; and what a consumer sees when the exporting deployment is
+redeployed or deleted.
 
 ## <a id="security"></a>10. Security considerations
 
@@ -1562,6 +2275,14 @@ opens every route to any request that presents a bearer token, valid or not, so
 the endpoint is then exactly as strong as the workload's own token check. Prefer
 `PATHS`. A cross-origin preflight to a route that is not exempt carries no
 credentials, and is refused.
+
+An application that hands ownership to whoever completes its first-run setup is
+exposed from the moment its setup route is reachable without a viewer. A
+blueprint closes that window with an ordered job that claims the instance over
+the node's private endpoint ([§4.6](#start-order)): no exemption takes effect
+until the job has succeeded ([`BP-ACCESS-012`](#BP-ACCESS-012)). An `OPEN`
+endpoint has no such window to close, because it is reachable as soon as its
+node is ready, so its setup route belongs behind `RESTRICTED`.
 
 A hash is not the secret, but it can be attacked offline, so it is sensitive
 and never published ([§5.2](#origins)). The generated parameter a hash is

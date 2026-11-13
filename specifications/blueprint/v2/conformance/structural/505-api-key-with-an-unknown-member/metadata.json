@@ -1,0 +1,10 @@
+{
+  "id": "structural-505-api-key-with-an-unknown-member",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#access",
+  "requirements": [
+    "BP-ACCESS-016"
+  ],
+  "summary": "apiKey is closed: a member other than parameter is rejected."
+}

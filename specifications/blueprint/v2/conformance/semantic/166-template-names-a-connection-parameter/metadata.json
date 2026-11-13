@@ -1,0 +1,11 @@
+{
+  "id": "semantic-166-template-names-a-connection-parameter",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#bindings",
+  "requirements": [
+    "BP-BIND-009"
+  ],
+  "summary": "A template names a connection parameter, which is a whole selection and not a value.",
+  "document": "app/blueprint.yaml"
+}

@@ -1,0 +1,11 @@
+{
+  "id": "semantic-165-template-into-an-integer-input",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#bindings",
+  "requirements": [
+    "BP-BIND-009"
+  ],
+  "summary": "A template produces a string, which an integer input cannot take.",
+  "document": "app/blueprint.yaml"
+}

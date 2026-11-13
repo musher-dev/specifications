@@ -1,0 +1,10 @@
+{
+  "id": "structural-323-compute-figure-missing",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#compute",
+  "requirements": [
+    "COMP-COMPUTE-001"
+  ],
+  "summary": "A compute statement lacking a figure is rejected."
+}

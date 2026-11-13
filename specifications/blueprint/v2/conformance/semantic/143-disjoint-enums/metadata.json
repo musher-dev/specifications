@@ -1,0 +1,11 @@
+{
+  "id": "semantic-143-disjoint-enums",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#recipients",
+  "requirements": [
+    "BP-PARAM-002"
+  ],
+  "summary": "No member of one input's enum is a member of the other's.",
+  "document": "app/blueprint.yaml"
+}

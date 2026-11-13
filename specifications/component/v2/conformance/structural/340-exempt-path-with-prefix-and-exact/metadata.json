@@ -1,0 +1,10 @@
+{
+  "id": "structural-340-exempt-path-with-prefix-and-exact",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#endpoints",
+  "requirements": [
+    "COMP-EP-021"
+  ],
+  "summary": "An exempt path object holds exactly one of prefix and exact."
+}

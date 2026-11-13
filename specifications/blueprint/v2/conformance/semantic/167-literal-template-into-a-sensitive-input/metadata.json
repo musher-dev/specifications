@@ -1,0 +1,13 @@
+{
+  "id": "semantic-167-literal-template-into-a-sensitive-input",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#bindings",
+  "requirements": [
+    "BP-BIND-012",
+    "BP-BIND-009",
+    "BP-BIND-008"
+  ],
+  "summary": "A template without a placeholder is a literal, and cannot supply a sensitive input.",
+  "document": "app/blueprint.yaml"
+}

@@ -1,0 +1,11 @@
+{
+  "id": "structural-316-parameter-options-and-a-disclosed-key",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/blueprint/v2/spec.md#deploy-form",
+  "requirements": [
+    "BP-UI-006",
+    "BP-UI-009"
+  ],
+  "summary": "A submitted parameter offers editable options, and a generated key is marked disclosed."
+}

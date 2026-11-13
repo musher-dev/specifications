@@ -1,0 +1,10 @@
+{
+  "id": "structural-501-options-on-a-parameter-from-the-deployment",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#deploy-form",
+  "requirements": [
+    "BP-UI-006"
+  ],
+  "summary": "A parameter with from is never an editable field, so it offers no options."
+}

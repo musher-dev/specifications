@@ -1,0 +1,10 @@
+{
+  "id": "semantic-308-provided-connection-member-mapping",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#provided-connections",
+  "requirements": [
+    "COMP-CONNECTION-005"
+  ],
+  "summary": "A provided connection that omits a required member, maps a member of another protocol and a derived one, is rejected at each."
+}

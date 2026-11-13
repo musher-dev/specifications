@@ -1,0 +1,11 @@
+{
+  "id": "semantic-156-start-order-on-an-external-node",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#start-order",
+  "requirements": [
+    "BP-ORDER-002"
+  ],
+  "summary": "An EXTERNAL node runs nothing, so it cannot wait for another.",
+  "document": "app/blueprint.yaml"
+}

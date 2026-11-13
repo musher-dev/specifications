@@ -1,0 +1,11 @@
+{
+  "id": "semantic-142-lengths-that-cannot-meet",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#recipients",
+  "requirements": [
+    "BP-PARAM-002"
+  ],
+  "summary": "One input's minimum length exceeds the other's maximum, so no value satisfies both.",
+  "document": "app/blueprint.yaml"
+}

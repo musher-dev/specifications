@@ -1235,10 +1235,11 @@ const UNPINNED: ReadonlyMap<string, string> = new Map([
   ],
   [
     'COMP-JOB-008',
-    'Stopping a run that is still executing when its time limit passes, and recording it as ' +
-      'failed, is a runtime obligation of the platform; no document phase or behavioural ' +
-      'operation observes a run. The limit it enforces is pinned where a document can break ' +
-      'it (COMP-JOB-005, COMP-JOB-006)',
+    "Counting a run's time limit from its command's start, stopping a run still executing " +
+      "when it passes with the image's stop signal and at least 10 seconds before a forced " +
+      'end, and recording it as failed whatever it then exits with, are runtime obligations ' +
+      'of the platform; no document phase or behavioural operation observes a run. The limit ' +
+      'it enforces is pinned where a document can break it (COMP-JOB-005, COMP-JOB-006)',
   ],
   [
     'BP-ACCESS-002',
@@ -1285,9 +1286,10 @@ const UNPINNED: ReadonlyMap<string, string> = new Map([
   ],
   [
     'BP-ACCESS-009',
-    'Matching a request path against exempt paths, and refusing to exempt one it could ' +
-      'read two ways, is a runtime obligation of the platform edge; the path grammar is ' +
-      'pinned by component cases (COMP-EP-016), but no operation observes a request',
+    'Matching a request path against exempt paths, decoded once, and refusing to exempt one it ' +
+      'could read two ways, an encoded % included, is a runtime obligation of the platform ' +
+      'edge; the path grammar is pinned by component cases (COMP-EP-016), but no operation ' +
+      'observes a request',
   ],
   [
     'BP-ACCESS-010',
@@ -1301,6 +1303,83 @@ const UNPINNED: ReadonlyMap<string, string> = new Map([
       "platform's probing host, at the network level whatever DNS resolves, is a fact of " +
       'the platform network; no document phase or behavioural operation opens a network ' +
       'connection',
+  ],
+  [
+    'BP-ACCESS-012',
+    'That an exempt path takes effect only once a rollout that exempts it is active, or, ' +
+      'without startAfter, once the node that exposes it is ready, and that exempt requests ' +
+      'require sign-in until then, is a runtime obligation of the platform edge; no document ' +
+      'phase or behavioural operation observes a request or a rollout',
+  ],
+  [
+    'BP-ACCESS-014',
+    'Issuing musher_role and musher_deployment_creator in a viewer assertion, an ID token and ' +
+      'user information is a runtime obligation of the platform edge and its OpenID Connect ' +
+      'issuer; no document phase or behavioural operation observes a token',
+  ],
+  [
+    'BP-ACCESS-015',
+    'Applying a rotated OIDC client secret as a rollout, and accepting the previous secret until ' +
+      'it completes, are runtime obligations of the platform; no document phase or behavioural ' +
+      'operation observes a rollout or the issuer',
+  ],
+  [
+    'BP-ACCESS-017',
+    'Matching a normalised request path exactly or by segment-bounded prefix, ' +
+      'case-sensitively and without the query, is a runtime obligation of the platform edge; ' +
+      'the exempt path forms are pinned by component cases (COMP-EP-021), but no operation ' +
+      'observes a request',
+  ],
+  [
+    'BP-ACCESS-018',
+    'Checking a bearer token against the API key and its previous generation in constant time ' +
+      'once the rollout is active, forwarding a match without identity headers, removing a ' +
+      'matching Authorization header from every request and refusing any other request without ' +
+      'a session, are runtime obligations of the platform edge; the apiKey declaration is pinned ' +
+      'by blueprint cases (BP-ACCESS-016), but no operation observes a request',
+  ],
+  [
+    'BP-HOST-001',
+    'That every unmounted PUBLIC endpoint is allocated a hostname of its own is a fact of ' +
+      'the platform edge; resolution reads the allocations it is given but no operation ' +
+      'allocates one',
+  ],
+  [
+    'BP-HOST-004',
+    "Forwarding a request under a mount's normalised path to the mounted endpoint, path " +
+      'unchanged, is a ' +
+      'runtime obligation of the platform edge; the semantic phase pins what a mount may name ' +
+      '(BP-HOST-003), but no operation observes a request',
+  ],
+  [
+    'BP-HOST-005',
+    "That one sign-in holds across a deployment's public hosts, and no other deployment's, and " +
+      "reaches a cross-origin request only from the deployment's own origins, is " +
+      'a runtime obligation of the platform edge; no document phase or behavioural operation ' +
+      'observes a session',
+  ],
+  [
+    'BP-ORDER-004',
+    'Holding a node until the conditions its startAfter names hold, ending every wait when ' +
+      'what it waits on succeeds, becomes ready or fails, reporting a node as waiting with ' +
+      'what it waits on, and failing a rollout whose condition cannot hold are runtime ' +
+      'obligations of the platform; the semantic phase pins what a document may name ' +
+      '(BP-ORDER-002, BP-ORDER-003), but no operation observes a rollout',
+  ],
+  [
+    'BP-ORDER-005',
+    'When a rollout becomes active, every SERVICE and WORKER ready and every ordered or named ' +
+      'job succeeded, that one whose job fails has failed and is never active, and that the ' +
+      'previous rollout serves until then, are runtime observations of the platform; no ' +
+      'document phase or behavioural operation observes a rollout',
+  ],
+  [
+    'BP-PARAM-015',
+    'That a deployment an organization API key creates takes the user who created the key ' +
+      'as its creator, records the key, and refuses a key whose creator holds no role, is a fact ' +
+      'of the platform identity service; resolution and validation ' +
+      'read the creator facts they are given (BP-PARAM-011, BP-PARAM-016) but no operation ' +
+      'observes a key',
   ],
   [
     'COMP-VOL-002',
@@ -1339,10 +1418,59 @@ const UNPINNED: ReadonlyMap<string, string> = new Map([
       'operation runs a build',
   ],
   [
+    'COMP-HEALTH-001',
+    'When a replica has started and is ready, that no port but a declared endpoint is ' +
+      'checked for binding, and that such a check is no stricter than the declared startup ' +
+      'and readiness probes, are runtime obligations of the host agent; no document phase or ' +
+      'behavioural operation observes a running process. The runtime test home is the host ' +
+      "agent's integration suite (platform-api#1440); structural cases show an endpoint-less " +
+      'WORKER is valid',
+  ],
+  [
+    'COMP-ENVVAR-005',
+    "That a workload starts with its image's environment overlaid by its input targets, and " +
+      'that the runtime adds nothing but PATH, HOME or HOSTNAME where neither sets them, is a ' +
+      'runtime obligation; a fixture carries no image, so resolution observes only the input ' +
+      'targets (platform-api#1443)',
+  ],
+  [
+    'COMP-PROBE-006',
+    'How the prober runs a TCP, gRPC or exec probe, that it ends every process of an exec ' +
+      'probe past its timeout and never overlaps two runs of one probe, that exec output and ' +
+      'a header from a sensitive input stay sensitive, that probe headers ride on probes ' +
+      'only, and that a header holding CR, LF or NUL or named as a viewer identity header is ' +
+      'never sent are runtime obligations of the prober; viewer identity header names are ' +
+      'the platform choice, so no document phase sees them, and no behavioural operation ' +
+      'sends a request or runs a command',
+  ],
+  [
+    'COMP-FILE-004',
+    "A file's bytes, mode, owner, its placement afresh at every start as an overlay that " +
+      'never writes into volume data, the owner and mode of the parent directories it ' +
+      'creates, and its sensitivity are runtime obligations of the platform; no document ' +
+      'phase or behavioural operation observes a container filesystem',
+  ],
+  [
+    'COMP-COMPUTE-003',
+    "That the platform never runs a workload on a profile below the component's minimum is " +
+      "a platform obligation; the admission context's platform.computeProfiles carries no " +
+      'compute figures and blueprint has no rule judging a node against them, so no document ' +
+      'phase decides it',
+  ],
+  [
+    'COMP-SECURITY-005',
+    'Applying the admitted security settings, never running privileged, setting ' +
+      'no-new-privileges and the default seccomp profile, running unconfined only where ' +
+      'the runtime isolates the workload by other means, and the default capability set ' +
+      'are runtime obligations of the platform; no document phase or behavioural operation ' +
+      'observes a container',
+  ],
+  [
     'COMP-EP-017',
-    'That a probe carries no viewer identity, carries Forwarded and X-Forwarded-For naming ' +
-      'one non-loopback address of the probing host, and under HEADER arrives from a peer ' +
-      'inside trustedProxyCIDRs is a runtime obligation of the prober; no document phase or ' +
+    'That an HTTP probe carries no viewer identity, carries Forwarded and X-Forwarded-For ' +
+      'naming one non-loopback address of the probing host, that a gRPC probe carries no ' +
+      'viewer identity, and that under HEADER either arrives from a peer inside ' +
+      'trustedProxyCIDRs is a runtime obligation of the prober; no document phase or ' +
       'behavioural operation observes a request',
   ],
 ])

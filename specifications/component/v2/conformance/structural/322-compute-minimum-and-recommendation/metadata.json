@@ -1,0 +1,10 @@
+{
+  "id": "structural-322-compute-minimum-and-recommendation",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#compute",
+  "requirements": [
+    "COMP-COMPUTE-001"
+  ],
+  "summary": "A component may state a minimum and a recommended compute."
+}

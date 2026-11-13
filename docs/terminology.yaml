@@ -1233,10 +1233,10 @@ terms:
       input one of the connection protocols, which fixes its members.
     shortDefinition: The vendor-neutral wire contract a client speaks.
     identifiers:
-      fields: [protocol, OPENAI_CHAT_COMPLETIONS, ANTHROPIC_MESSAGES, POSTGRES, REDIS, S3, TELEGRAM_BOT, SLACK_APP, DISCORD_BOT]
-      values: [HTTP, HTTPS, WS, GRPC, TCP, UDP, OPENAI_CHAT_COMPLETIONS, ANTHROPIC_MESSAGES, POSTGRES, REDIS, S3, TELEGRAM_BOT, SLACK_APP, DISCORD_BOT]
+      fields: [protocol, OPENAI_CHAT_COMPLETIONS, ANTHROPIC_MESSAGES, OPENAI_EMBEDDINGS, POSTGRES, REDIS, S3, TELEGRAM_BOT, SLACK_APP, DISCORD_BOT]
+      values: [HTTP, HTTPS, WS, GRPC, TCP, UDP, OPENAI_CHAT_COMPLETIONS, ANTHROPIC_MESSAGES, OPENAI_EMBEDDINGS, POSTGRES, REDIS, S3, TELEGRAM_BOT, SLACK_APP, DISCORD_BOT]
     example: "A connection input with protocol POSTGRES receives host, port, database, username, password and sslMode, and a url composed from them."
-    source: [component v2 §5.2, component v2 §6.4, ADR 0039, ADR 0045]
+    source: [component v2 §5.2, component v2 §6.4, ADR 0039, ADR 0045, ADR 0059]
     stability: stable
     status: approved
     tags: [networking, connections]
@@ -1395,18 +1395,19 @@ terms:
     context: component
     definition: >-
       An endpoint's statement of which requests it can safely take without a
-      signed-in viewer: the paths that serve machines, and whether every
-      route checks the bearer token a request carries.
+      signed-in viewer: the paths that serve machines, each matched as a
+      prefix or exactly, and whether every route checks the bearer token a
+      request carries.
     shortDefinition: The requests an endpoint can take without a viewer.
     part_of: [component.endpoint]
     associated:
       - { relation: is-granted-by, term: blueprint.access-exemption }
-    identifiers: { fields: [exemptibleRequests, paths, bearerToken], defs: [ComponentEndpointExemptibleRequests] }
+    identifiers: { fields: [exemptibleRequests, paths, bearerToken, prefix, exact], defs: [ComponentEndpointExemptibleRequests, ComponentExemptPath] }
     confusables: ["Access exemptions on a blueprint exposure: the grant, where this is the offer.", "A probe's bearer credential."]
     aliases:
       - { text: accessExemptions, status: banned, scope: [identifier], suggest: exemptibleRequests, note: "Blueprint keeps accessExemptions for the grant." }
       - { text: ComponentEndpointAccessExemptions, status: banned, scope: [identifier], suggest: ComponentEndpointExemptibleRequests }
-    source: [component v2 §5.2, ADR 0038]
+    source: [component v2 §5.2, ADR 0038, ADR 0061]
     stability: stable
     status: approved
     tags: [viewer, access]
@@ -1430,14 +1431,15 @@ terms:
     display_name: probe
     context: component
     definition: >-
-      A periodic HTTP GET the platform sends to a named endpoint of a SERVICE
-      or WORKER, over that endpoint's protocol and trust policy, from a peer
-      inside trustedProxyCIDRs and with no viewer identity.
-    shortDefinition: A periodic HTTP check of a named endpoint.
+      A periodic check the platform makes of a SERVICE or WORKER: an HTTP GET
+      to a named endpoint, a TCP connection, a gRPC health check, or a command
+      run in its container.
+    shortDefinition: A periodic check of a workload.
     part_of: [component.workload]
     identifiers:
       fields: [health, http, path, expectedStatuses, initialDelaySeconds, periodSeconds, timeoutSeconds, successThreshold, failureThreshold]
       defs: [ComponentHealthProbes, ComponentHttpProbe, ComponentProbe]
+      requirement_prefixes: [COMP-HEALTH]
     confusables: ["Kubernetes probes, which these follow."]
     aliases:
       - { text: health stage, status: banned, scope: [prose], suggest: probe }
@@ -1507,6 +1509,155 @@ terms:
     stability: stable
     status: approved
     tags: [health, sensitivity]
+
+  - id: component.tcp-probe
+    display_name: TCP probe
+    context: component
+    definition: >-
+      A probe that succeeds when a TCP connection to a named endpoint's target
+      port is established, sending nothing, on a TCP, HTTP, WS or GRPC
+      endpoint.
+    shortDefinition: A connection check of a named endpoint.
+    kind_of: [component.probe]
+    identifiers: { fields: [tcp], defs: [ComponentTcpProbe], requirement_prefixes: [COMP-PROBE], codes: [ERR_ENDPOINT_NOT_TCP] }
+    source: [component v2 §5.4, ADR 0049]
+    stability: provisional
+    status: approved
+    tags: [health]
+
+  - id: component.grpc-probe
+    display_name: gRPC probe
+    context: component
+    definition: >-
+      A probe that succeeds when a grpc.health.v1 Check call on a named GRPC
+      endpoint, for a service or for the whole server, answers SERVING.
+    shortDefinition: A gRPC health check of a named endpoint.
+    kind_of: [component.probe]
+    identifiers: { fields: [grpc, service], defs: [ComponentGrpcProbe], codes: [ERR_ENDPOINT_NOT_GRPC] }
+    source: [component v2 §5.4, ADR 0049]
+    stability: provisional
+    status: approved
+    tags: [health]
+
+  - id: component.exec-probe
+    display_name: exec probe
+    context: component
+    definition: >-
+      A probe that succeeds when an exec-form command, run inside the
+      workload's container with its environment and user, exits 0 in time.
+    shortDefinition: A command run in the container as a check.
+    kind_of: [component.probe]
+    identifiers: { fields: [exec], defs: [ComponentExecProbe] }
+    source: [component v2 §5.4, ADR 0049]
+    stability: provisional
+    status: approved
+    tags: [health]
+
+  - id: component.probe-header
+    display_name: probe header
+    context: component
+    definition: >-
+      A request header an HTTP probe sends, named in lower case and valued by
+      a literal or by one of the component's own inputs, never one of the
+      names the platform, auth or request framing sets.
+    shortDefinition: A header an HTTP probe sends.
+    part_of: [component.probe]
+    identifiers:
+      fields: [headers]
+      values: [authorization, forwarded, x-forwarded-for, content-length, transfer-encoding, connection, te, upgrade, cookie, proxy-authorization, keep-alive, trailer]
+      defs: [ComponentProbeHeader]
+    source: [component v2 §5.4, ADR 0049]
+    stability: provisional
+    status: approved
+    tags: [health]
+
+  - id: component.entrypoint
+    display_name: entrypoint
+    context: component
+    definition: >-
+      The exec-form program a workload runs in place of the one its image
+      names, after which the image's CMD is not used and command supplies the
+      arguments.
+    shortDefinition: Exec-form replacement for the image's program.
+    part_of: [component.workload]
+    identifiers: { fields: [entrypoint] }
+    confusables: ["Kubernetes command, which is this field, not component command."]
+    source: [component v2 §5, ADR 0050]
+    stability: provisional
+    status: approved
+    tags: [workload]
+
+  - id: component.file
+    display_name: file
+    context: component
+    definition: >-
+      Named content the platform writes into a workload's container before
+      every start, at a canonical absolute path, with a mode, from a literal
+      or from one of the component's own inputs.
+    shortDefinition: A file written into the container before start.
+    part_of: [component.workload]
+    identifiers: { fields: [files, content, mode], defs: [ComponentFile, ComponentFileContent, ComponentFilePath], requirement_prefixes: [COMP-FILE] }
+    confusables: ["A volume, which is persistent storage rather than content the document supplies."]
+    source: [component v2 §5.8, ADR 0050]
+    stability: provisional
+    status: approved
+    tags: [workload, sensitivity]
+
+  - id: component.compute-requirement
+    display_name: compute requirement
+    context: component
+    definition: >-
+      The vCPUs and memory a workload needs, as a minimum a node's profile must
+      meet and a recommendation a deploy form pre-selects, never a profile
+      slug.
+    shortDefinition: The vCPUs and memory a workload needs.
+    part_of: [component.workload]
+    identifiers: { fields: [recommended, vcpus, memoryMiB], defs: [ComponentCompute, ComponentComputeResources], requirement_prefixes: [COMP-COMPUTE], codes: [ERR_INVALID_COMPUTE] }
+    confusables: ["A blueprint node's compute profile, which this is judged against."]
+    source: [component v2 §5.9, ADR 0051]
+    stability: provisional
+    status: approved
+    tags: [workload, compute]
+
+  - id: component.workload-security
+    display_name: workload security
+    context: component
+    definition: >-
+      The container settings a workload may adjust within this specification's
+      allowlists: the size of /dev/shm, a read-only root, capabilities, the
+      seccomp profile and namespaced sysctls, each of which a platform may
+      refuse at admission.
+    shortDefinition: Container settings within the allowlists.
+    part_of: [component.workload]
+    identifiers:
+      fields: [security, shmSizeMiB, readOnlyRootFilesystem, seccompProfile, sysctls]
+      values: [RUNTIME_DEFAULT, UNCONFINED, kernel.shm_rmid_forced, net.core.somaxconn, net.ipv4.ip_local_port_range, net.ipv4.ip_unprivileged_port_start, net.ipv4.ping_group_range, net.ipv4.tcp_fin_timeout, net.ipv4.tcp_keepalive_intvl, net.ipv4.tcp_keepalive_probes, net.ipv4.tcp_keepalive_time, net.ipv4.tcp_syncookies]
+      defs: [ComponentSecurity]
+      requirement_prefixes: [COMP-SECURITY]
+      codes: [ERR_SECCOMP_NOT_GRANTED, ERR_SYSCTL_NOT_GRANTED]
+    source: [component v2 §5.10, ADR 0052]
+    stability: provisional
+    status: approved
+    tags: [workload, security]
+
+  - id: component.capability
+    display_name: capability
+    context: component
+    definition: >-
+      A Linux privilege from the OCI default set that a workload drops, or
+      adds back after dropping, where the platform's runtime grants it.
+    shortDefinition: A Linux privilege from the OCI default set.
+    part_of: [component.workload-security]
+    identifiers:
+      fields: [add, drop]
+      values: [ALL, AUDIT_WRITE, CHOWN, DAC_OVERRIDE, FOWNER, FSETID, KILL, MKNOD, NET_BIND_SERVICE, NET_RAW, SETFCAP, SETGID, SETPCAP, SETUID, SYS_CHROOT]
+      defs: [ComponentCapabilities]
+      codes: [ERR_CAPABILITY_NOT_GRANTED]
+    confusables: ["A connection protocol's capabilities, such as STREAMING."]
+    source: [component v2 §5.10, ADR 0052]
+    stability: provisional
+    status: approved
+    tags: [security]
 
   - id: component.volume
     display_name: volume
@@ -1656,6 +1807,26 @@ terms:
     status: approved
     tags: [values, connections]
 
+  - id: component.provided-connection
+    display_name: provided connection
+    context: component
+    definition: >-
+      A connection a SERVICE or WORKER serves, declared in its contract by a
+      protocol and a map from each member it supplies to one of its own
+      outputs, which a blueprint binds to a sibling's connection input.
+    shortDefinition: A connection a workload serves from its outputs.
+    associated:
+      - { relation: fills, term: component.connection-input }
+    identifiers:
+      fields: [providedConnections, members]
+      defs: [ComponentProvidedConnection]
+      codes: [ERR_INVALID_PROVIDED_CONNECTION]
+    confusables: ["A connection parameter, which the organization's connection configuration answers rather than a node."]
+    source: [component v2 §6.5, ADR 0059]
+    stability: provisional
+    status: approved
+    tags: [values, connections]
+
   - id: component.connection-capability
     display_name: connection capability
     context: component
@@ -1683,8 +1854,8 @@ terms:
     shortDefinition: One value a protocol fixes, such as host or apiKey.
     part_of: [blueprint.connection]
     identifiers:
-      fields: [member, baseURL, apiKey, model, host, port, database, username, password, sslMode, url, tls, endpointURL, region, bucket, accessKeyID, secretAccessKey, pathStyle, botToken, appToken, signingSecret, applicationID, publicKey]
-      values: [baseURL, apiKey, model, host, port, database, username, password, sslMode, url, tls, endpointURL, region, bucket, accessKeyID, secretAccessKey, pathStyle, botToken, appToken, signingSecret, applicationID, publicKey, disable, allow, prefer, require, verify-ca, verify-full]
+      fields: [member, baseURL, apiKey, model, dimensions, host, port, database, username, password, sslMode, url, tls, endpointURL, region, bucket, accessKeyID, secretAccessKey, pathStyle, botToken, appToken, signingSecret, applicationID, publicKey]
+      values: [baseURL, apiKey, model, dimensions, host, port, database, username, password, sslMode, url, tls, endpointURL, region, bucket, accessKeyID, secretAccessKey, pathStyle, botToken, appToken, signingSecret, applicationID, publicKey, disable, allow, prefer, require, verify-ca, verify-full]
       codes: [ERR_UNKNOWN_CONNECTION_MEMBER]
     confusables:
       - "endpointURL is AWS's term for an S3 API address without the bucket, not a component endpoint."
@@ -1999,6 +2170,49 @@ terms:
     status: approved
     tags: [composition, values]
 
+  - id: blueprint.start-order
+    display_name: start order
+    context: blueprint
+    definition: >-
+      The nodes a node waits for before it starts in a rollout, each with the
+      condition it waits on, READY for a SERVICE or WORKER and SUCCEEDED for a
+      JOB without a schedule, which together MUST form no cycle.
+    shortDefinition: What a node waits for before it starts.
+    part_of: [blueprint.node-graph]
+    identifiers: { fields: [startAfter, node, condition], values: [READY, SUCCEEDED], defs: [BlueprintStartCondition], codes: [ERR_START_CYCLE, ERR_INVALID_START_ORDER], requirement_prefixes: [BP-ORDER] }
+    confusables: ["A value dependency, which orders no start.", "Compose's depends_on, which this follows."]
+    source: [blueprint v2 §4.6, ADR 0055]
+    stability: provisional
+    status: approved
+    tags: [composition, lifecycle]
+
+  - id: blueprint.active
+    display_name: active
+    context: blueprint
+    definition: >-
+      A rollout whose every SERVICE and WORKER node is ready and whose every
+      ordered job, a JOB without a schedule that carries startAfter or that a
+      startAfter names, has succeeded; one whose ordered job fails never is.
+    shortDefinition: A rollout that has finished starting.
+    part_of: [blueprint.node-graph]
+    source: [blueprint v2 §1.1, blueprint v2 §4.6, ADR 0055]
+    stability: provisional
+    status: approved
+    tags: [lifecycle]
+
+  - id: blueprint.completed
+    display_name: completed
+    context: blueprint
+    definition: >-
+      A rollout that has become active or has failed, after which nothing of it
+      is still starting.
+    shortDefinition: A rollout that is active or has failed.
+    part_of: [blueprint.node-graph]
+    source: [blueprint v2 §1.1, blueprint v2 §4.6, ADR 0055]
+    stability: provisional
+    status: approved
+    tags: [lifecycle]
+
   - id: blueprint.document-reference
     display_name: document reference
     context: blueprint
@@ -2109,6 +2323,22 @@ terms:
     identifiers: { fields: [parameter] }
     source: [blueprint v2 §4.2]
     stability: stable
+    status: approved
+    tags: [values]
+
+  - id: blueprint.template-binding
+    display_name: template
+    context: blueprint
+    definition: >-
+      A binding whose origin is a string composed of literal text and
+      placeholders naming deployment parameters and node outputs, written into
+      the text as its format says.
+    shortDefinition: "Binds { template, format }."
+    kind_of: [blueprint.binding]
+    identifiers: { fields: [template, format], values: [URL, TEXT], codes: [ERR_INVALID_TEMPLATE] }
+    confusables: ["A component output template, which reads only the component's own endpoint properties."]
+    source: [blueprint v2 §4.2, ADR 0056]
+    stability: provisional
     status: approved
     tags: [values]
 
@@ -2411,15 +2641,31 @@ terms:
     context: blueprint
     definition: >-
       A fact about the viewer released to the workload beside their identity,
-      EMAIL or NAME, never by default.
-    shortDefinition: EMAIL or NAME, released on request.
+      EMAIL, NAME or ROLE, never by default; ROLE, the viewer's organization
+      role and whether they created the deployment, travels only in a token.
+    shortDefinition: EMAIL, NAME or ROLE, released on request.
     part_of: [blueprint.exposure]
-    identifiers: { fields: [viewerClaims], values: [EMAIL, NAME] }
-    confusables: ["An OIDC claim in general; only these two are released."]
-    source: [blueprint v2 §4.5]
+    identifiers: { fields: [viewerClaims], values: [EMAIL, NAME, ROLE] }
+    confusables: ["An OIDC claim in general; only these three are released."]
+    source: [blueprint v2 §4.5, ADR 0035, ADR 0060]
     stability: stable
     status: approved
     tags: [viewer]
+
+  - id: blueprint.mount
+    display_name: mount
+    context: blueprint
+    definition: >-
+      A public endpoint served under a path of another public endpoint's host
+      rather than on a host of its own, with the path forwarded unchanged.
+    shortDefinition: An endpoint served under another's host and path.
+    part_of: [blueprint.exposure]
+    identifiers: { fields: [mount, node, endpoint, path], defs: [BlueprintMount], codes: [ERR_INVALID_HOST_MOUNT], requirement_prefixes: [BP-HOST] }
+    confusables: ["A custom domain, which v2 does not support."]
+    source: [blueprint v2 §4.7, ADR 0057]
+    stability: provisional
+    status: approved
+    tags: [networking, access]
 
   - id: blueprint.access-exemption
     display_name: access exemption
@@ -2432,6 +2678,22 @@ terms:
     identifiers: { fields: [accessExemptions], values: [PATHS, BEARER], codes: [ERR_EXEMPTION_NOT_DECLARED] }
     source: [blueprint v2 §4.5]
     stability: stable
+    status: approved
+    tags: [access]
+
+  - id: blueprint.checked-api-key
+    display_name: checked API key
+    context: blueprint
+    definition: >-
+      A generated parameter an exposure names in apiKey, whose value the
+      platform accepts as the bearer token of a request without a viewer
+      session on a RESTRICTED endpoint, and checks before forwarding it.
+    shortDefinition: A generated key the platform checks for machine clients.
+    part_of: [blueprint.exposure]
+    identifiers: { defs: [BlueprintExposureApiKey], codes: [ERR_INVALID_API_KEY_PARAMETER] }
+    confusables: ["The BEARER exemption, which passes any bearer token on for the workload to check.", "The apiKey member of a language-model connection."]
+    source: [blueprint v2 §4.5, ADR 0061]
+    stability: provisional
     status: approved
     tags: [access]
 
@@ -2512,7 +2774,7 @@ terms:
       encoding.
     shortDefinition: A persisted random credential.
     kind_of: [blueprint.deployment-parameter]
-    identifiers: { fields: [generator, byteLength, encoding], values: [HEX, BASE64, BASE64URL], defs: [BlueprintParameterGenerator] }
+    identifiers: { fields: [generator, byteLength, encoding], values: [HEX, BASE64, BASE64URL], defs: [BlueprintParameterGenerator], codes: [WARN_GENERATOR_OUTSIDE_SCHEMA] }
     source: [blueprint v2 §5.2]
     stability: stable
     status: approved
@@ -2593,7 +2855,7 @@ terms:
     kind_of: [blueprint.deployment-parameter]
     associated:
       - { relation: selects, term: blueprint.connection }
-    identifiers: { codes: [ERR_INVALID_CONNECTION_BINDING] }
+    identifiers: { codes: [ERR_INVALID_CONNECTION_BINDING, ERR_UNKNOWN_PROVIDED_CONNECTION] }
     source: [blueprint v2 §5.3, ADR 0030]
     stability: stable
     status: approved
@@ -2742,7 +3004,7 @@ terms:
     part_of: [blueprint.selection]
     identifiers:
       fields: [views]
-      defs: [OpenaiChatCompletionsView, AnthropicMessagesView, PostgresView, RedisView, S3View, TelegramBotView, SlackAppView, DiscordBotView]
+      defs: [OpenaiChatCompletionsView, AnthropicMessagesView, OpenaiEmbeddingsView, PostgresView, RedisView, S3View, TelegramBotView, SlackAppView, DiscordBotView]
     source: [blueprint v2 §5.3, ADR 0045]
     stability: stable
     status: approved
@@ -2841,6 +3103,39 @@ terms:
       - { text: install-form, status: banned, scope: [prose], suggest: deploy form }
     source: [blueprint v2 §1.1, blueprint v2 §5.4, ADR 0038]
     stability: stable
+    status: approved
+    tags: [parameters, presentation]
+
+  - id: blueprint.parameter-option
+    display_name: parameter option
+    context: blueprint
+    definition: >-
+      A value a deploy form offers for a submitted parameter, with the label it
+      shows, in a list that is closed unless it is editable, when the deployer
+      may also type a value in.
+    shortDefinition: A value and label a deploy form offers.
+    part_of: [blueprint.deploy-form]
+    identifiers:
+      fields: [options, editable]
+      defs: [BlueprintParameterOption]
+    confusables: ["An enum in the receiving input's value schema, which closes the value for every blueprint and is labelled with enumLabels."]
+    source: [blueprint v2 §5.4, ADR 0062]
+    stability: provisional
+    status: approved
+    tags: [parameters, presentation]
+
+  - id: blueprint.disclosed-value
+    display_name: disclosed value
+    context: blueprint
+    definition: >-
+      A generated parameter's value that the platform shows the people who
+      manage the deployment, behind an explicit reveal and apart from the
+      deploy form, as one to keep, such as a key that encrypts backed-up data.
+    shortDefinition: A generated value the deployer is shown and keeps.
+    part_of: [blueprint.deploy-form]
+    identifiers: { fields: [disclosed] }
+    source: [blueprint v2 §5.4, ADR 0062]
+    stability: provisional
     status: approved
     tags: [parameters, presentation]
 

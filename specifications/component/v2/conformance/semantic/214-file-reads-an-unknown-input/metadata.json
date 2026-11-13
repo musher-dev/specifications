@@ -1,0 +1,10 @@
+{
+  "id": "semantic-214-file-reads-an-unknown-input",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#files",
+  "requirements": [
+    "COMP-FILE-002"
+  ],
+  "summary": "A file naming an undeclared input is rejected."
+}

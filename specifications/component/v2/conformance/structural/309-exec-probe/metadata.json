@@ -1,0 +1,14 @@
+{
+  "id": "structural-309-exec-probe",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#health",
+  "requirements": [
+    "COMP-PROBE-003"
+  ],
+  "summary": "An exec probe runs a command in the container.",
+  "effective": {
+    "/spec/workload/health/readiness/periodSeconds": 10,
+    "/spec/workload/health/readiness/timeoutSeconds": 5
+  }
+}

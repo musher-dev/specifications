@@ -1,0 +1,11 @@
+{
+  "id": "semantic-176-public-service-with-an-exec-readiness-probe",
+  "phase": "semantic",
+  "expected": "pass",
+  "clause": "specifications/blueprint/v2/spec.md#node-graph",
+  "requirements": [
+    "BP-NODE-005"
+  ],
+  "summary": "A readiness probe of any mechanism, here an exec probe, meets the readiness a PUBLIC URL-addressed endpoint requires.",
+  "document": "app/blueprint.yaml"
+}

@@ -1,0 +1,10 @@
+[
+  {
+    "code": "ERR_VALUE_CONSTRAINT",
+    "path": "/spec/parameters/model/ui/options/1/value"
+  },
+  {
+    "code": "ERR_VALUE_CONSTRAINT",
+    "path": "/spec/parameters/model/default"
+  }
+]

@@ -14,8 +14,10 @@ import { canonicalJson, type Family, isObject, type Json } from '../lib/layout.t
 import { scanReferences } from '../lib/references.ts'
 import {
   CONNECTION_MEMBERS,
+  CONNECTION_PROTOCOL_MEMBERS,
   guaranteedMember,
   isConnectionInput,
+  isConnectionProtocol,
   protocolMember,
 } from './connections.ts'
 import { type Diagnostic, parseDocumentBytes } from './document.ts'
@@ -26,7 +28,21 @@ import {
   parameterOrigin,
   parameterOriginDiagnostics,
 } from './selections.ts'
-import { compatible, schemaProblem, valueFits } from './values.ts'
+import {
+  isSensitive,
+  parameterReceivers,
+  scanTemplate,
+  templateTarget,
+  urlComponents,
+} from './templates.ts'
+import {
+  compatible,
+  generatorConflicts,
+  intersectionConflicts,
+  schemaKey,
+  schemaProblem,
+  valueFits,
+} from './values.ts'
 
 export type { Diagnostic }
 export interface DeferredObligation {
@@ -80,6 +96,8 @@ export const URL_ADDRESSED = ['HTTP', 'HTTPS', 'WS', 'GRPC']
 export const PORT_ADDRESSED = ['TCP', 'UDP']
 export const HTTP_ROUTED = ['HTTP', 'HTTPS', 'WS']
 export const HTTP_PROBE = ['HTTP', 'HTTPS']
+/** Component §5.4 COMP-PROBE-001: carried over TCP, and cleartext on the hop to the workload. */
+export const TCP_PROBE = ['TCP', 'HTTP', 'WS', 'GRPC']
 const VIEWER = HTTP_ROUTED
 const publicHTTP = {
   protocols: URL_ADDRESSED,
@@ -319,7 +337,8 @@ export function componentObligations(document: Json, { metadata = true } = {}): 
         else if (!Object.keys(workload.endpoints).length)
           obligation('ERR_ENDPOINT_REQUIRED', '/spec/workload/endpoints')
       }
-      if (type === 'JOB' && workload.command === undefined)
+      // COMP-TYPE-007: either names what a JOB runs to completion.
+      if (type === 'JOB' && workload.command === undefined && workload.entrypoint === undefined)
         obligation('ERR_COMMAND_REQUIRED', '/spec/workload')
     }
   }
@@ -334,6 +353,108 @@ export function componentObligations(document: Json, { metadata = true } = {}): 
  * reads one of the component's own inputs reads a string input that is always
  * supplied, and a secret one reads a sensitive input.
  */
+/** The endpoint protocol each locator scheme speaks on the private hop (component §5.2). */
+const LOCATOR_SCHEME_PROTOCOL: Readonly<Record<string, string>> = { http: 'HTTP', https: 'HTTPS' }
+
+/**
+ * Component §6.5 COMP-CONNECTION-005: a locator output is a `template` that is
+ * `http://` or `https://`, then exactly the private authority of one of the
+ * component's own endpoints whose protocol speaks that scheme, then an
+ * optional fixed path. The authority is `privateAddress`, or `privateHostname`
+ * optionally followed by `:` and the same endpoint's `privatePort`; nothing
+ * else, so no literal host, user information, query or fragment can point the
+ * consumer's credential somewhere else.
+ */
+export function locatorReadsOwnEndpoint(
+  from: Json | undefined,
+  endpoints: Readonly<Record<string, Json>>,
+): boolean {
+  const template = at(from, 'template')
+  if (typeof template !== 'string') return false
+  const scanned = scanReferences(template, ['self'])
+  const scheme = /^([A-Za-z]+):\/\//.exec(template)
+  const [host, port] = scanned.references
+  if (scanned.failures.length || !scheme || !host || host.offset !== scheme[0].length) return false
+  const [kind, endpoint, property] = host.path
+  if (kind !== 'endpoints' || host.path.length !== 3 || endpoint === undefined) return false
+  const protocol = LOCATOR_SCHEME_PROTOCOL[(scheme[1] ?? '').toLowerCase()]
+  if (protocol === undefined || at(endpoints, endpoint, 'protocol') !== protocol) return false
+  let end = host.offset + host.raw.length
+  let used = 1
+  if (property === 'privateHostname') {
+    if (
+      port !== undefined &&
+      port.offset === end + 1 &&
+      template[end] === ':' &&
+      port.path.join('.') === `endpoints.${endpoint}.privatePort`
+    ) {
+      end = port.offset + port.raw.length
+      used = 2
+    }
+  } else if (property !== 'privateAddress') return false
+  const path = template.slice(end)
+  return (
+    scanned.references.length === used &&
+    (path === '' || (path.startsWith('/') && !/[?#]/.test(path)))
+  )
+}
+
+/**
+ * Component §6.5 COMP-CONNECTION-005: a provided connection maps every
+ * required member of its protocol, and only members it supplies, each to an
+ * output that can carry it; its locator is a private address of one of the
+ * component's own endpoints ({@link locatorReadsOwnEndpoint}). A protocol the
+ * registry does not define was rejected structurally.
+ */
+function providedConnectionDiagnostics(
+  contract: Record<string, Json>,
+  endpoints: Record<string, Json>,
+): Diagnostic[] {
+  const out: Diagnostic[] = []
+  for (const [name, provided] of Object.entries(record(contract.providedConnections))) {
+    const base = `/spec/contract/providedConnections/${token(name)}`
+    const protocol = at(provided, 'connection', 'protocol')
+    const contracts = isConnectionProtocol(protocol)
+      ? CONNECTION_PROTOCOL_MEMBERS[protocol]
+      : undefined
+    if (!contracts) continue
+    const members = record(at(provided, 'members'))
+    if (
+      Object.entries(contracts).some(
+        ([member, c]) => c.required && c.derived !== true && !Object.hasOwn(members, member),
+      )
+    )
+      issue(out, 'ERR_INVALID_PROVIDED_CONNECTION', `${base}/members`)
+    for (const [member, outputName] of Object.entries(members)) {
+      const path = `${base}/members/${token(member)}`
+      const c = Object.hasOwn(contracts, member) ? contracts[member] : undefined
+      const output = record(at(contract, 'outputs', String(outputName)))
+      if (
+        !c ||
+        c.derived === true ||
+        typeof outputName !== 'string' ||
+        !Object.hasOwn(record(contract.outputs), outputName) ||
+        at(output.schema, 'type') !== c.type ||
+        (c.sensitive && output.sensitive !== true) ||
+        (c.role === 'locator' && !locatorReadsOwnEndpoint(output.from, endpoints))
+      )
+        issue(out, 'ERR_INVALID_PROVIDED_CONNECTION', path)
+    }
+  }
+  return out
+}
+
+/** Blueprint BP-ACCESS-016: the parameters the exposures' `apiKey`s name. */
+export function apiKeyParameters(nodes: Readonly<Record<string, Json>>): Set<string> {
+  const names = new Set<string>()
+  for (const n of Object.values(nodes))
+    for (const exposure of Object.values(record(at(n, 'exposure')))) {
+      const key = at(exposure, 'apiKey', 'parameter')
+      if (typeof key === 'string') names.add(key)
+    }
+  return names
+}
+
 function inputReferenceDiagnostics(
   out: Diagnostic[],
   contract: Record<string, Json>,
@@ -389,8 +510,36 @@ export function componentDiagnostics(document: Json): Diagnostic[] {
   if (typeof limit === 'number' && period !== undefined && limit >= period)
     issue(out, 'ERR_TIME_LIMIT_NOT_UNDER_SCHEDULE', '/spec/workload/timeLimitSeconds')
   for (const [name, probe] of Object.entries(record(workload.health))) {
+    // COMP-PROBE-001, COMP-PROBE-002: a TCP or gRPC probe names a declared
+    // endpoint of a protocol it can connect to.
+    for (const [mechanism, protocols, code] of [
+      ['tcp', TCP_PROBE, 'ERR_ENDPOINT_NOT_TCP'],
+      ['grpc', ['GRPC'], 'ERR_ENDPOINT_NOT_GRPC'],
+    ] as const) {
+      const named = at(probe, mechanism, 'endpoint')
+      if (typeof named !== 'string') continue
+      const endpoint = at(workload, 'endpoints', named),
+        path = `/spec/workload/health/${token(name)}/${mechanism}/endpoint`
+      if (!endpoint) issue(out, 'ERR_UNKNOWN_ENDPOINT', path)
+      else if (!(protocols as readonly string[]).includes(String(at(endpoint, 'protocol'))))
+        issue(out, code, path)
+    }
     const http = at(probe, 'http')
     if (!isObject(http)) continue
+    // COMP-PROBE-005: a header reads an input the probe can always read, which
+    // may be sensitive.
+    for (const [header, origin] of Object.entries(record(http.headers))) {
+      const input = at(origin, 'input')
+      if (typeof input !== 'string') continue
+      read.add(input)
+      inputReferenceDiagnostics(
+        out,
+        contract,
+        input,
+        `/spec/workload/health/${token(name)}/http/headers/${token(header)}/input`,
+        false,
+      )
+    }
     const endpoint = at(workload, 'endpoints', String(at(http, 'endpoint'))),
       path = `/spec/workload/health/${token(name)}/http/endpoint`
     if (!endpoint) issue(out, 'ERR_UNKNOWN_ENDPOINT', path)
@@ -457,6 +606,39 @@ export function componentDiagnostics(document: Json): Diagnostic[] {
       issue(out, 'ERR_INVALID_MOUNT', `/spec/workload/volumes/${token(name)}/mountPath`)
     mounts.push(path)
   }
+  // COMP-FILE-002, COMP-FILE-003: a file reads an input that is always there,
+  // and its path is canonical, not the root, and neither equal to nor an
+  // ancestor of a mount or another file. Files are checked after volumes.
+  const files: string[] = []
+  const under = (child: string, parent: string) =>
+    child === parent || child.startsWith(parent === '/' ? '/' : `${parent}/`)
+  for (const [name, file] of Object.entries(record(workload.files))) {
+    const base = `/spec/workload/files/${token(name)}`
+    const input = at(file, 'content', 'input')
+    if (typeof input === 'string') {
+      read.add(input)
+      inputReferenceDiagnostics(out, contract, input, `${base}/content/input`, false)
+    }
+    const path = at(file, 'path')
+    if (typeof path !== 'string') continue
+    if (
+      path === '/' ||
+      path !== posix.normalize(path) ||
+      !path.startsWith('/') ||
+      path.endsWith('/') ||
+      mounts.some((mount) => under(mount, path)) ||
+      files.some((other) => under(other, path) || under(path, other))
+    )
+      issue(out, 'ERR_INVALID_MOUNT', `${base}/path`)
+    files.push(path)
+  }
+  // COMP-COMPUTE-002: a recommendation is at or above the minimum it sits beside.
+  const minimum = at(workload, 'compute', 'minimum'),
+    recommended = at(workload, 'compute', 'recommended')
+  if (isObject(minimum) && isObject(recommended))
+    for (const figure of ['vcpus', 'memoryMiB'])
+      if (Number(recommended[figure]) < Number(minimum[figure]))
+        issue(out, 'ERR_INVALID_COMPUTE', `/spec/workload/compute/recommended/${figure}`)
   // Component §5.3: every environment variable is an input's target, and no two
   // inputs claim one name.
   const env = new Set<string>()
@@ -566,6 +748,7 @@ export function componentDiagnostics(document: Json): Diagnostic[] {
       }
     }
   }
+  out.push(...providedConnectionDiagnostics(contract, record(workload.endpoints)))
   // COMP-INPUT-001: a workload input with no target never reaches the
   // environment, so something else reads it or it is declared for nothing.
   const type = at(document, 'spec', 'type')
@@ -979,7 +1162,79 @@ export function semanticReport(
       if (at(readDocument(path), 'kind') === 'COMPONENT')
         issue(out, 'ERR_UNREFERENCED_COMPONENT', '/spec/nodes')
     }
+  /** Parameters a template names, with the inputs those templates bind (BP-BIND-009). */
+  const templated = new Map<string, Record<string, Json>[]>()
+  // BP-BIND-009 and BP-BIND-010: what a template binding names, and where.
+  const templateDiagnostics = (
+    binding: Record<string, Json>,
+    where: string,
+    consumer: Record<string, Json>,
+    declared: boolean,
+  ) => {
+    const text = String(binding.template),
+      scan = scanTemplate(text)
+    for (const failure of scan.failures)
+      issue(
+        out,
+        failure.kind === 'malformed'
+          ? 'ERR_MALFORMED_PLACEHOLDER'
+          : failure.kind === 'unknown-namespace'
+            ? 'ERR_UNKNOWN_PLACEHOLDER_NAMESPACE'
+            : 'ERR_NAMESPACE_NOT_PERMITTED',
+        where,
+      )
+    if (scan.failures.length) return
+    // A template produces a string, so the input it binds takes one.
+    if (declared && !isConnectionInput(consumer) && at(consumer.schema, 'type') !== 'string')
+      issue(out, 'ERR_INCOMPATIBLE_TYPE', where)
+    for (const target of scan.references.map(templateTarget)) {
+      if (target.kind === 'unknown-parameter') issue(out, 'ERR_UNKNOWN_PARAMETER', where)
+      else if (target.kind === 'unknown-output') issue(out, 'ERR_UNKNOWN_OUTPUT', where)
+      else if (target.kind === 'parameter') {
+        const p = Object.hasOwn(parameters, target.parameter)
+          ? parameters[target.parameter]
+          : undefined
+        if (p === undefined) issue(out, 'ERR_UNKNOWN_PARAMETER', where)
+        else if (parameterOrigin(p)?.namespace === 'connections')
+          issue(out, 'ERR_INVALID_CONNECTION_BINDING', where)
+        else {
+          const list = templated.get(target.parameter) ?? []
+          if (declared) list.push(consumer)
+          templated.set(target.parameter, list)
+        }
+      } else if (!Object.hasOwn(nodes, target.node)) issue(out, 'ERR_UNKNOWN_NODE', where)
+      else {
+        const producer = resolved.get(target.node),
+          output = at(producer, 'spec', 'contract', 'outputs', target.output)
+        if (producer && !output) issue(out, 'ERR_UNKNOWN_OUTPUT', where)
+        // A placeholder yields the string form of a scalar (BP-BIND-009).
+        if (
+          output &&
+          !['string', 'integer', 'number', 'boolean'].includes(String(at(output, 'schema', 'type')))
+        )
+          issue(out, 'ERR_INCOMPATIBLE_TYPE', where)
+      }
+    }
+    if (binding.format === 'URL' && !urlComponents(text, scan.references))
+      issue(out, 'ERR_INVALID_TEMPLATE', where)
+    // BP-BIND-012: a template supplying a sensitive input interpolates a parameter
+    // or a sensitive output; otherwise all it holds is authored text and public
+    // values. A placeholder already refused, or whose producer is unavailable, is
+    // not judged.
+    if (
+      declared &&
+      consumer.sensitive === true &&
+      scan.references.map(templateTarget).every((target) => {
+        if (target.kind !== 'output') return false
+        const output = at(resolved.get(target.node), 'spec', 'contract', 'outputs', target.output)
+        return output !== undefined && at(output, 'sensitive') !== true
+      })
+    )
+      issue(out, 'ERR_SENSITIVE_LITERAL', where)
+  }
+  /** Each parameter's receiving inputs, with where each is declared (BP-PARAM-002). */
   const consumers = new Map<string, Record<string, Json>[]>()
+  const receiving = new Map<string, { node: string; input: string; componentRef: string }[]>()
   const dependencies = new Map<string, string[]>()
   for (const [name, node] of Object.entries(nodes)) {
     const n = record(node),
@@ -1009,6 +1264,14 @@ export function semanticReport(
         const e = at(workload, 'endpoints', endpoint)
         const exposure = effectiveExposure(n.exposure, endpoint)
         const where = `${base}/exposure/${token(endpoint)}`
+        // BP-ACCESS-016: the key the platform checks is a generated parameter.
+        const key = at(record(n.exposure)[endpoint], 'apiKey', 'parameter')
+        if (typeof key === 'string') {
+          if (!Object.hasOwn(parameters, key))
+            issue(out, 'ERR_UNKNOWN_PARAMETER', `${where}/apiKey/parameter`)
+          else if (at(parameters[key], 'generator') === undefined)
+            issue(out, 'ERR_INVALID_API_KEY_PARAMETER', `${where}/apiKey/parameter`)
+        }
         if (!e) issue(out, 'ERR_UNKNOWN_ENDPOINT', where)
         else if (exposure.visibility === 'PUBLIC' && category === 'WORKER')
           issue(out, 'ERR_ENDPOINT_NOT_EXPOSABLE', where)
@@ -1016,7 +1279,8 @@ export function semanticReport(
           if (
             exposure.visibility === 'PUBLIC' &&
             URL_ADDRESSED.includes(String(at(e, 'protocol'))) &&
-            !at(workload, 'health', 'readiness', 'http')
+            // COMP-EP-003: a readiness probe, of any mechanism (§5.4).
+            !isObject(at(workload, 'health', 'readiness'))
           )
             issue(out, 'ERR_READINESS_REQUIRED', where)
           // BP-NODE-007: sign-in and a request header exist only on HTTP, HTTPS and WS.
@@ -1095,9 +1359,24 @@ export function semanticReport(
         path = `${base}/bindings/${token(input)}`,
         consumer = record(inputs[input])
       if (component && !inputs[input]) issue(out, 'ERR_UNKNOWN_INPUT', path)
+      // BP-BIND-002: a node binding, and each node output a template names, is a
+      // value dependency of the input. BP-CONNECTION-004: an input bound to a
+      // provided connection depends on every output the provided connection maps.
+      const provided =
+        typeof s.node === 'string' && typeof s.connection === 'string'
+          ? at(resolved.get(s.node), 'spec', 'contract', 'providedConnections', s.connection)
+          : undefined
       dependencies.set(
         `${name}:in:${input}`,
-        typeof s.node === 'string' ? [`${s.node}:out:${s.output}`] : [],
+        typeof s.node === 'string'
+          ? typeof s.connection === 'string'
+            ? Object.values(record(at(provided, 'members'))).map((o) => `${s.node}:out:${o}`)
+            : [`${s.node}:out:${s.output}`]
+          : typeof s.template === 'string'
+            ? scanTemplate(s.template)
+                .references.map(templateTarget)
+                .flatMap((t) => (t.kind === 'output' ? [`${t.node}:out:${t.output}`] : []))
+            : [],
       )
       if (typeof s.parameter === 'string') {
         const p = parameters[s.parameter]
@@ -1112,6 +1391,9 @@ export function semanticReport(
           const receivers = consumers.get(String(s.parameter)) ?? []
           receivers.push(consumer)
           consumers.set(String(s.parameter), receivers)
+          const where = receiving.get(String(s.parameter)) ?? []
+          where.push({ node: name, input, componentRef: String(n.componentRef) })
+          receiving.set(String(s.parameter), where)
           const value = at(p, 'default')
           if (
             value !== undefined &&
@@ -1129,6 +1411,28 @@ export function semanticReport(
               'ERR_SENSITIVE_LITERAL',
               `/spec/parameters/${token(String(s.parameter))}/default`,
             )
+        }
+      } else if (typeof s.node === 'string' && typeof s.connection === 'string') {
+        // BP-CONNECTION-004: a provided connection of the node's component, of the
+        // input's protocol, offering every capability the input requires. A value
+        // input bound this way is BP-CONNECTION-001's.
+        if (!nodes[s.node]) issue(out, 'ERR_UNKNOWN_NODE', `${path}/node`)
+        const producer = resolved.get(s.node)
+        if (producer && !isObject(provided))
+          issue(out, 'ERR_UNKNOWN_PROVIDED_CONNECTION', `${path}/connection`)
+        else if (isObject(provided) && isConnectionInput(consumer)) {
+          const offered = at(provided, 'connection'),
+            wanted = at(consumer, 'connection'),
+            capabilities = at(offered, 'capabilities')
+          if (
+            at(offered, 'protocol') !== at(wanted, 'protocol') ||
+            [
+              ...(Array.isArray(at(wanted, 'capabilities'))
+                ? (at(wanted, 'capabilities') as Json[])
+                : []),
+            ].some((c) => !(Array.isArray(capabilities) && capabilities.includes(c)))
+          )
+            issue(out, 'ERR_INVALID_CONNECTION_BINDING', `${path}/connection`)
         }
       } else if (typeof s.node === 'string') {
         if (!nodes[s.node]) issue(out, 'ERR_UNKNOWN_NODE', `${path}/node`)
@@ -1152,6 +1456,8 @@ export function semanticReport(
           !valueFits(consumer.schema, literal)
         )
           issue(out, 'ERR_VALUE_CONSTRAINT', path)
+      } else if (typeof s.template === 'string') {
+        templateDiagnostics(s, `${path}/template`, consumer, Boolean(inputs[input]))
       } else if (Object.hasOwn(s, 'value') && inputs[input]) {
         if (
           consumer.schema !== undefined &&
@@ -1163,15 +1469,132 @@ export function semanticReport(
       }
     }
   }
+  // BP-HOST-003: a mounted endpoint is served under a path of another node's
+  // public, HTTP-routed endpoint, which has a host of its own, and no two mounts
+  // on one host overlap. Each reads the components, so it is decided only for
+  // those that are available. Nodes, then endpoints, are walked by name in UTF-8
+  // order, never in authored key order, so an overlap is reported at the mount
+  // that comes second by name, wherever the document lists it.
+  const mounts = new Map<string, { path: string; where: string }[]>()
+  const protocolOf = (node: string, endpoint: string) =>
+    String(at(resolved.get(node), 'spec', 'workload', 'endpoints', endpoint, 'protocol'))
+  const byName = ([a]: [string, unknown], [b]: [string, unknown]) =>
+    Buffer.compare(Buffer.from(a), Buffer.from(b))
+  for (const [name, node] of Object.entries(nodes).sort(byName))
+    for (const [endpoint, exposure] of Object.entries(record(at(node, 'exposure'))).sort(byName)) {
+      const mount = at(exposure, 'mount')
+      if (!isObject(mount)) continue
+      const where = `/spec/nodes/${token(name)}/exposure/${token(endpoint)}/mount`
+      const host = asString(mount.node) ?? '',
+        hostEndpoint = asString(mount.endpoint) ?? '',
+        path = asString(mount.path) ?? ''
+      if (!Object.hasOwn(nodes, host)) {
+        issue(out, 'ERR_UNKNOWN_NODE', `${where}/node`)
+        continue
+      }
+      const target = record(at(nodes[host], 'exposure'))[hostEndpoint]
+      const hostComponent = resolved.get(host)
+      if (hostComponent && !at(hostComponent, 'spec', 'workload', 'endpoints', hostEndpoint)) {
+        issue(out, 'ERR_UNKNOWN_ENDPOINT', `${where}/endpoint`)
+        continue
+      }
+      const segments = path.split('/').slice(1)
+      if (
+        (host === name && hostEndpoint === endpoint) ||
+        effectiveExposure(at(nodes[host], 'exposure'), hostEndpoint).visibility !== 'PUBLIC' ||
+        at(target, 'mount') !== undefined ||
+        segments.some((segment) => segment === '.' || segment === '..') ||
+        segments[0] === '.musher' ||
+        (resolved.get(name) && !HTTP_ROUTED.includes(protocolOf(name, endpoint))) ||
+        (hostComponent && !HTTP_ROUTED.includes(protocolOf(host, hostEndpoint)))
+      ) {
+        issue(out, 'ERR_INVALID_HOST_MOUNT', where)
+        continue
+      }
+      const key = `${host}\u0000${hostEndpoint}`,
+        siblings = mounts.get(key) ?? []
+      const under = (a: string, b: string) => a === b || a.startsWith(`${b}/`)
+      if (siblings.some((other) => under(path, other.path) || under(other.path, path)))
+        issue(out, 'ERR_INVALID_HOST_MOUNT', where)
+      siblings.push({ path, where })
+      mounts.set(key, siblings)
+    }
+  // BP-ORDER-002: a start condition fits the node it names, and only a node a
+  // rollout starts waits. Each reads a component, so it is decided only for one
+  // that is available.
+  const startEdges = new Map<string, string[]>()
+  const starts = (component: Json | undefined) => {
+    const type = at(component, 'spec', 'type')
+    return type === 'SERVICE' || type === 'WORKER'
+      ? 'READY'
+      : type === 'JOB' && at(component, 'spec', 'workload', 'schedule') === undefined
+        ? 'SUCCEEDED'
+        : undefined
+  }
+  for (const [name, node] of Object.entries(nodes)) {
+    const order = at(node, 'startAfter')
+    if (!Array.isArray(order)) continue
+    const base = `/spec/nodes/${token(name)}/startAfter`,
+      own = resolved.get(name)
+    if (own && starts(own) === undefined) issue(out, 'ERR_INVALID_START_ORDER', base)
+    const edges: string[] = []
+    order.forEach((entry, i) => {
+      const target = asString(at(entry, 'node'))
+      if (target === undefined) return
+      if (!Object.hasOwn(nodes, target)) {
+        issue(out, 'ERR_UNKNOWN_NODE', `${base}/${i}/node`)
+        return
+      }
+      edges.push(target)
+      const component = resolved.get(target)
+      if (component && starts(component) !== at(entry, 'condition'))
+        issue(out, 'ERR_INVALID_START_ORDER', `${base}/${i}/condition`)
+    })
+    startEdges.set(name, edges)
+  }
+  // BP-ORDER-003: the start graph is acyclic. Kahn's ordering terminates, and
+  // what it cannot order lies on a cycle.
+  {
+    const done = new Set<string>()
+    let progressed = true
+    while (progressed) {
+      progressed = false
+      for (const [n, edges] of startEdges) {
+        if (done.has(n)) continue
+        if (edges.every((e) => done.has(e) || !startEdges.has(e))) {
+          done.add(n)
+          progressed = true
+        }
+      }
+    }
+    if (done.size !== startEdges.size) issue(out, 'ERR_START_CYCLE', '/spec/nodes')
+  }
+  // BP-BIND-012: every input each parameter reaches, through either binding.
+  const reaches = parameterReceivers(nodes, (node, input) =>
+    at(resolved.get(node), 'spec', 'contract', 'inputs', input),
+  )
   for (const [name, p] of Object.entries(parameters)) {
     const receivers = consumers.get(name) ?? [],
       path = `/spec/parameters/${token(name)}`
+    // BP-BIND-012 and BP-PARAM-014: no authored literal of the parameter reaches a
+    // sensitive input. A `parameter` binding's default is reported where it binds.
+    const sensitive = (reaches.get(name) ?? []).filter((r) => isSensitive(r.declaration))
+    if (at(p, 'default') !== undefined)
+      for (const r of sensitive)
+        if (r.via === 'template') issue(out, 'ERR_SENSITIVE_LITERAL', `${path}/default`)
+    const offered = at(p, 'ui', 'options')
+    if (sensitive.length && Array.isArray(offered))
+      for (const i of offered.keys())
+        issue(out, 'ERR_SENSITIVE_LITERAL', `${path}/ui/options/${i}/value`)
     // BP-PARAM-001: a generated value a hash names, and that carries `ui`, reaches
     // the deployer through disclosure without a binding of its own.
     const used =
       Object.values(nodes).some((n) =>
         Object.values(record(at(n, 'bindings'))).some((b) => at(b, 'parameter') === name),
       ) ||
+      templated.has(name) ||
+      // BP-ACCESS-016: an exposure's apiKey uses the parameter it names.
+      apiKeyParameters(nodes).has(name) ||
       (at(p, 'generator') !== undefined &&
         at(p, 'ui') !== undefined &&
         Object.values(parameters).some((other) => at(other, 'hash', 'parameter') === name))
@@ -1180,7 +1603,7 @@ export function semanticReport(
     // default, cannot reach a required input through a form deployment.
     if (
       ['generator', 'hash', 'from', 'ui', 'default'].every((key) => at(p, key) === undefined) &&
-      receivers.some((v) => v.required !== false)
+      [...receivers, ...(templated.get(name) ?? [])].some((v) => v.required !== false)
     )
       issue(out, 'ERR_PARAMETER_NOT_OFFERED', path)
     out.push(...parameterOriginDiagnostics(name, p))
@@ -1197,19 +1620,58 @@ export function semanticReport(
       )
         issue(out, 'ERR_INVALID_HASHED_PARAMETER', `${path}/hash/algorithm`)
     }
+    // BP-PARAM-002: the parameter's value schema is the intersection of its
+    // receivers'. Schemas that differ only in mapping order or in the order of a
+    // set (`required`, `enum`) are the same schema.
+    const schemas = receivers.map((v) => v.schema ?? null)
+    const differ = schemas.some((v) => schemaKey(v) !== schemaKey(schemas[0]))
+    const conflicts = new Set(differ ? intersectionConflicts(schemas) : [])
+    // BP-PARAM-002 and BP-PARAM-017: every string a generator can produce lies in
+    // the intersection. Where the receivers declare one schema, which 2.1.0
+    // accepted, a generator outside it is a warning rather than an error.
+    const generator = at(p, 'generator')
     if (
-      receivers.length > 1 &&
-      receivers.some(
-        (v) => canonicalJson(v.schema ?? null) !== canonicalJson(receivers[0]?.schema ?? null),
-      )
+      generator !== undefined &&
+      schemas.length &&
+      schemas.every((v) => at(v, 'type') === 'string')
+    ) {
+      const failing = [...new Set(schemas.flatMap((v) => generatorConflicts(generator, v)))]
+      if (differ) for (const keyword of failing) conflicts.add(keyword)
+      else if (failing.length)
+        out.push({
+          code: 'WARN_GENERATOR_OUTSIDE_SCHEMA',
+          path: `${path}/generator`,
+          message: `a generated value can fail ${failing.join(', ')}`,
+          phase: 'semantic',
+          severity: 'WARNING',
+        })
+    }
+    if (conflicts.size)
+      out.push({
+        code: 'ERR_CONFLICTING_INPUT_SCHEMA',
+        path,
+        message: `no value satisfies every input the parameter binds: ${[...conflicts].join(', ')}`,
+        phase: 'semantic',
+        related: (receiving.get(name) ?? []).map((r) => ({
+          artifact: r.componentRef,
+          path: `/spec/contract/inputs/${token(r.input)}/schema`,
+        })),
+      })
+    // BP-UI-003: the enum a form offers is the intersection's, in the order of
+    // the first receiver declaring one.
+    const enumOf = (v: Json | undefined) =>
+      Array.isArray(at(v, 'enum'))
+        ? (at(v, 'enum') as Json[])
+        : Array.isArray(at(v, 'items', 'enum'))
+          ? (at(v, 'items', 'enum') as Json[])
+          : undefined
+    const declaring = schemas.find((v) => enumOf(v) !== undefined)
+    const members = (enumOf(declaring) ?? []).filter((member) =>
+      schemas.every((v) => {
+        const own = enumOf(v)
+        return own === undefined || own.some((m) => schemaKey(m) === schemaKey(member))
+      }),
     )
-      issue(out, 'ERR_CONFLICTING_INPUT_SCHEMA', path)
-    const schema = record(receivers[0]?.schema)
-    const members = Array.isArray(schema.enum)
-      ? schema.enum
-      : Array.isArray(at(schema.items, 'enum'))
-        ? (at(schema.items, 'enum') as Json[])
-        : []
     for (const member of Object.keys(record(at(p, 'ui', 'enumLabels'))))
       if (
         receivers.length &&
@@ -1220,6 +1682,32 @@ export function semanticReport(
         )
       )
         issue(out, 'ERR_UNKNOWN_ENUM_MEMBER', `${path}/ui/enumLabels/${token(member)}`)
+    // BP-UI-007: every option fits every receiver, and a closed list holds the default.
+    const options = at(p, 'ui', 'options')
+    if (Array.isArray(options)) {
+      const seen = new Set<string>()
+      options.forEach((option, i) => {
+        const value = at(option, 'value')
+        // BP-UI-006: no two options share a value, whatever their labels.
+        if (value !== undefined) {
+          const key = canonicalJson(value)
+          if (seen.has(key)) issue(out, 'ERR_VALUE_CONSTRAINT', `${path}/ui/options/${i}/value`)
+          seen.add(key)
+        }
+        if (
+          value !== undefined &&
+          receivers.some((v) => v.schema !== undefined && !valueFits(v.schema, value))
+        )
+          issue(out, 'ERR_VALUE_CONSTRAINT', `${path}/ui/options/${i}/value`)
+      })
+      const fallback = at(p, 'default')
+      if (
+        fallback !== undefined &&
+        at(p, 'ui', 'editable') !== true &&
+        !options.some((o) => canonicalJson(at(o, 'value') ?? null) === canonicalJson(fallback))
+      )
+        issue(out, 'ERR_VALUE_CONSTRAINT', `${path}/default`)
+    }
     for (const supply of ['generator', 'hash'])
       if (at(p, supply) !== undefined && receivers.some((v) => at(v.schema, 'type') !== 'string'))
         issue(out, 'ERR_VALUE_CONSTRAINT', `${path}/${supply}`)
@@ -1259,6 +1747,8 @@ export function semanticReport(
     const binding =
       direction === 'in' ? record(at(nodes[node], 'bindings', name)) : record(definition.from)
     let value: Json | undefined
+    // A provided connection is several members, never one known value.
+    if (typeof binding.connection === 'string') continue
     if (Object.hasOwn(binding, 'value')) value = binding.value
     else if (typeof binding.template === 'string') value = constantTemplate(binding)
     else if (typeof binding.parameter === 'string')

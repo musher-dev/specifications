@@ -1,0 +1,10 @@
+{
+  "id": "semantic-202-tcp-probe-on-a-tcp-endpoint",
+  "phase": "semantic",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#health",
+  "requirements": [
+    "COMP-PROBE-001"
+  ],
+  "summary": "A TCP probe may connect to a TCP endpoint."
+}

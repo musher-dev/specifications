@@ -1,0 +1,10 @@
+[
+  {
+    "code": "ERR_SENSITIVE_LITERAL",
+    "path": "/spec/parameters/databaseURL/ui/options/0/value"
+  },
+  {
+    "code": "ERR_SENSITIVE_LITERAL",
+    "path": "/spec/parameters/databaseURL/ui/options/1/value"
+  }
+]

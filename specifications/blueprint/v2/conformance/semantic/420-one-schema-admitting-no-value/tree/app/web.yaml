@@ -1,0 +1,29 @@
+specVersion: v2
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: WORKER
+  workload:
+    source:
+      image: example/worker:1
+  contract:
+    inputs:
+      primary:
+        description: Code the worker reads first
+        schema:
+          type: string
+          minLength: 10
+          maxLength: 5
+        target:
+          envVar: PRIMARY
+      secondary:
+        description: Code the worker reads second
+        schema:
+          type: string
+          minLength: 10
+          maxLength: 5
+        target:
+          envVar: SECONDARY
+    outputs: {}

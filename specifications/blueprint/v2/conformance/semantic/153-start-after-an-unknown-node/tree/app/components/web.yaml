@@ -1,0 +1,17 @@
+specVersion: v2
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: SERVICE
+  workload:
+    source:
+      image: example/service:1
+    endpoints:
+      primary:
+        targetPort: 8080
+        protocol: TCP
+  contract:
+    inputs: {}
+    outputs: {}

@@ -1,0 +1,10 @@
+{
+  "id": "semantic-303-embeddings-dimensions-into-a-string",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#outputs",
+  "requirements": [
+    "COMP-OUT-004"
+  ],
+  "summary": "The integer dimensions member forwarded into a string output is rejected."
+}

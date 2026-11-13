@@ -264,6 +264,26 @@
       "declaredBy": "component"
     },
     {
+      "code": "ERR_ENDPOINT_NOT_TCP",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "component"
+    },
+    {
+      "code": "ERR_ENDPOINT_NOT_GRPC",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "component"
+    },
+    {
       "code": "ERR_ENDPOINT_NOT_HTTP",
       "phases": [
         "semantic"
@@ -344,6 +364,16 @@
       "declaredBy": "component"
     },
     {
+      "code": "ERR_INVALID_PROVIDED_CONNECTION",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "component"
+    },
+    {
       "code": "ERR_INPUT_NOT_GUARANTEED",
       "phases": [
         "semantic"
@@ -365,6 +395,16 @@
     },
     {
       "code": "ERR_INVALID_MOUNT",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "component"
+    },
+    {
+      "code": "ERR_INVALID_COMPUTE",
       "phases": [
         "semantic"
       ],
@@ -416,6 +456,36 @@
     },
     {
       "code": "ERR_PRIVILEGED_PORT",
+      "phases": [
+        "admission"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "component"
+    },
+    {
+      "code": "ERR_CAPABILITY_NOT_GRANTED",
+      "phases": [
+        "admission"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "component"
+    },
+    {
+      "code": "ERR_SECCOMP_NOT_GRANTED",
+      "phases": [
+        "admission"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "component"
+    },
+    {
+      "code": "ERR_SYSCTL_NOT_GRANTED",
       "phases": [
         "admission"
       ],

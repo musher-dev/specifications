@@ -1,0 +1,11 @@
+{
+  "id": "semantic-140-stricter-consumer-shares-a-parameter",
+  "phase": "semantic",
+  "expected": "pass",
+  "clause": "specifications/blueprint/v2/spec.md#recipients",
+  "requirements": [
+    "BP-PARAM-002"
+  ],
+  "summary": "A parameter binds a plain string input and a stricter one: their intersection is not empty.",
+  "document": "app/blueprint.yaml"
+}

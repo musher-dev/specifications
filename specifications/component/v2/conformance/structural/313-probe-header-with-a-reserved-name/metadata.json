@@ -1,0 +1,10 @@
+{
+  "id": "structural-313-probe-header-with-a-reserved-name",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#health",
+  "requirements": [
+    "COMP-PROBE-004"
+  ],
+  "summary": "A probe header the platform sets itself is rejected."
+}

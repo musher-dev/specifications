@@ -1,0 +1,10 @@
+{
+  "id": "semantic-217-file-at-a-volume-mount",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#files",
+  "requirements": [
+    "COMP-FILE-003"
+  ],
+  "summary": "A file at a volume mount path is rejected."
+}

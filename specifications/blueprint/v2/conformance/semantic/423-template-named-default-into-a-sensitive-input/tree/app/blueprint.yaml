@@ -1,0 +1,26 @@
+specVersion: v2
+kind: BLUEPRINT
+metadata:
+  slug: app
+  revision: 1
+  description: Synthetic conformance fixture blueprint.
+spec:
+  parameters:
+    password:
+      default: hunter2
+  nodes:
+    db:
+      componentRef: ./components/db.yaml
+      bindings:
+        host:
+          value: db.internal
+        port:
+          value: 5432
+    app:
+      componentRef: ./components/app.yaml
+      compute:
+        profile: general.standard.small
+      bindings:
+        databaseURL:
+          template: postgres://app:${{ parameters.password }}@${{ nodes.db.outputs.host }}/app
+          format: URL

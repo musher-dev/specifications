@@ -1,0 +1,6 @@
+[
+  {
+    "code": "ERR_INVALID_HOST_MOUNT",
+    "path": "/spec/nodes/realtime/exposure/socket/mount"
+  }
+]

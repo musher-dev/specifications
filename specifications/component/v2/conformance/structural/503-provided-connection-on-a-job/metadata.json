@@ -1,0 +1,10 @@
+{
+  "id": "structural-503-provided-connection-on-a-job",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#provided-connections",
+  "requirements": [
+    "COMP-CONNECTION-004"
+  ],
+  "summary": "A job exits, so it cannot provide a connection other nodes reach."
+}
