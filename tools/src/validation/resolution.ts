@@ -19,7 +19,7 @@ import { connectionMemberContract, isConnectionInput } from './connections.ts'
 import { type Diagnostic, type Phase, parseDocumentBytes, reported } from './document.ts'
 import {
   type ConnectionsContext,
-  DEPLOYMENT_FACT_PATHS,
+  deploymentFacts,
   parameterOrigin,
   resolveConnections,
 } from './selections.ts'
@@ -460,32 +460,21 @@ export function resolveDeployment(
   }
   // BP-PARAM-011: a deployment fact is acquired once per parameter, and its
   // failures anchor at that parameter's `from`.
-  const facts = new Map<string, ResolvedValue>()
-  const creator = record(at(context.deployment as Json | undefined, 'creator'))
-  if (
-    (context.deployment !== undefined &&
-      (!isObject(context.deployment as unknown as Json) ||
-        Object.keys(context.deployment).some((key) => key !== 'creator'))) ||
-    Object.keys(creator).some((key) => !DEPLOYMENT_FACT_PATHS.includes(`creator.${key}`))
-  ) {
+  const acquired = deploymentFacts(
+    parameters,
+    context.deployment as Json | undefined,
+    context.parameters ?? {},
+  )
+  if (acquired.malformed) {
     fail('ERR_INVALID_RESOLUTION_CONTEXT', '/spec/parameters', 'parameters')
     return result()
   }
-  for (const [name, p] of Object.entries(parameters)) {
-    const source = parameterOrigin(p)
-    if (source?.namespace !== 'deployment' || Object.hasOwn(context.parameters ?? {}, name))
-      continue
-    const path = `/spec/parameters/${token(name)}/from`,
-      field = source.key.slice('creator.'.length),
-      fact = Object.hasOwn(creator, field) ? creator[field] : undefined
-    if (fact === undefined)
-      deferred.push({ rule: 'BP-PARAM-011', path, missing: `deployment:${source.key}` })
-    else if (fact === null) fail('ERR_DEPLOYMENT_FACT_UNAVAILABLE', path, 'parameters')
-    else if (typeof fact !== 'string' || !fact)
-      fail('ERR_INVALID_RESOLUTION_CONTEXT', path, 'parameters')
-    // Personal data, not a secret, and concealed as one.
-    else facts.set(name, { value: fact, sensitive: true })
-  }
+  diagnostics.push(...acquired.diagnostics)
+  deferred.push(...acquired.deferred)
+  // Personal data, not a secret, and concealed as one.
+  const facts = new Map<string, ResolvedValue>(
+    [...acquired.facts].map(([name, value]) => [name, { value, sensitive: true }]),
+  )
   function endpoint(
     node: string,
     name: string,

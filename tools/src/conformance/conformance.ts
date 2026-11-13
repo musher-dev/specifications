@@ -1296,6 +1296,13 @@ const UNPINNED: ReadonlyMap<string, string> = new Map([
       'connection',
   ],
   [
+    'BP-PARAM-015',
+    'That a deployment an organization API key creates takes the user who created the key ' +
+      'as its creator is a fact of the platform identity service; resolution and validation ' +
+      'read the creator facts they are given (BP-PARAM-011, BP-PARAM-016) but no operation ' +
+      'observes a key',
+  ],
+  [
     'COMP-VOL-002',
     'That a non-shared volume is mounted into at most one replica at a time is a runtime ' +
       'obligation of the platform; no document phase or behavioural operation observes a mount',

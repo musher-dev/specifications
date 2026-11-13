@@ -143,6 +143,48 @@ export const PARAMETER_ORIGIN_NAMESPACES = ['variables', 'connections', 'deploym
 export const DEPLOYMENT_FACT_PATHS = ['creator.identity', 'creator.email', 'creator.name']
 export type ParameterOriginNamespace = (typeof PARAMETER_ORIGIN_NAMESPACES)[number]
 /**
+ * BP-PARAM-011: the deployment facts a blueprint's deployment-fact parameters
+ * read, acquired once per parameter and anchored at that parameter's `from`. An
+ * absent fact is not yet acquired, so deferred; `null` is one the platform knows
+ * it lacks. `malformed` is evidence of the wrong shape as a whole. A parameter
+ * given a submitted value is skipped: BP-PARAM-013 already rejected it.
+ */
+export function deploymentFacts(
+  parameters: Readonly<Record<string, Json>>,
+  deployment: Json | undefined,
+  submitted: Readonly<Record<string, unknown>> = {},
+): {
+  malformed: boolean
+  facts: Map<string, string>
+  diagnostics: Diagnostic[]
+  deferred: { rule: string; path: string; missing: string }[]
+} {
+  const facts = new Map<string, string>(),
+    diagnostics: Diagnostic[] = [],
+    deferred: { rule: string; path: string; missing: string }[] = []
+  const creator = record(at(deployment, 'creator'))
+  const malformed =
+    (deployment !== undefined &&
+      (!isObject(deployment) || Object.keys(deployment).some((key) => key !== 'creator'))) ||
+    Object.keys(creator).some((key) => !DEPLOYMENT_FACT_PATHS.includes(`creator.${key}`))
+  if (malformed) return { malformed, facts, diagnostics, deferred }
+  const fail = (code: string, path: string) =>
+    diagnostics.push({ code, path, message: code, phase: 'resolution', stage: 'parameters' })
+  for (const [name, p] of Object.entries(parameters)) {
+    const source = parameterOrigin(p)
+    if (source?.namespace !== 'deployment' || Object.hasOwn(submitted, name)) continue
+    const path = `/spec/parameters/${token(name)}/from`,
+      field = source.key.slice('creator.'.length),
+      fact = Object.hasOwn(creator, field) ? creator[field] : undefined
+    if (fact === undefined)
+      deferred.push({ rule: 'BP-PARAM-011', path, missing: `deployment:${source.key}` })
+    else if (fact === null) fail('ERR_DEPLOYMENT_FACT_UNAVAILABLE', path)
+    else if (typeof fact !== 'string' || !fact) fail('ERR_INVALID_RESOLUTION_CONTEXT', path)
+    else facts.set(name, fact)
+  }
+  return { malformed, facts, diagnostics, deferred }
+}
+/**
  * BP-PLACEHOLDER-001: a parameter's `from` is one whole placeholder, and its
  * namespace says what it names. Undefined when the parameter has no `from` or
  * it is not one whole permitted placeholder.

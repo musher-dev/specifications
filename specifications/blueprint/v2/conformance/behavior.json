@@ -4188,6 +4188,68 @@
     }
   },
   {
+    "id": "validation-deployment-scope-caller-lacks-a-fact",
+    "suite": "resolution",
+    "operation": "validate",
+    "requirements": [
+      "BP-PARAM-016",
+      "BP-PARAM-011"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v2\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"ownerEmail\":{\"from\":\"${{ deployment.creator.email }}\"},\"ownerIdentity\":{\"from\":\"${{ deployment.creator.identity }}\"}},\"nodes\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"email\":{\"parameter\":\"ownerEmail\"},\"identity\":{\"parameter\":\"ownerIdentity\"}}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v2\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/service:1\"},\"endpoints\":{\"web\":{\"targetPort\":8080,\"protocol\":\"HTTP\"}},\"health\":{\"readiness\":{\"http\":{\"endpoint\":\"web\",\"path\":\"/healthz\"}}}},\"contract\":{\"inputs\":{\"email\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVar\":\"OWNER_EMAIL\"}},\"identity\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVar\":\"OWNER_ID\"}}},\"outputs\":{}}}}"
+    },
+    "document": "app/blueprint.yaml",
+    "context": {
+      "validationScope": "deployment",
+      "deployment": {
+        "creator": {
+          "identity": "user-1",
+          "email": null
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID",
+      "/phase": "resolution"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_DEPLOYMENT_FACT_UNAVAILABLE",
+        "path": "/spec/parameters/ownerEmail/from",
+        "phase": "resolution",
+        "stage": "parameters"
+      }
+    ]
+  },
+  {
+    "id": "validation-deployment-scope-resolves-the-callers-facts",
+    "suite": "resolution",
+    "operation": "validate",
+    "requirements": [
+      "BP-PARAM-016"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v2\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"ownerEmail\":{\"from\":\"${{ deployment.creator.email }}\"},\"ownerIdentity\":{\"from\":\"${{ deployment.creator.identity }}\"}},\"nodes\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"email\":{\"parameter\":\"ownerEmail\"},\"identity\":{\"parameter\":\"ownerIdentity\"}}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v2\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/service:1\"},\"endpoints\":{\"web\":{\"targetPort\":8080,\"protocol\":\"HTTP\"}},\"health\":{\"readiness\":{\"http\":{\"endpoint\":\"web\",\"path\":\"/healthz\"}}}},\"contract\":{\"inputs\":{\"email\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVar\":\"OWNER_EMAIL\"}},\"identity\":{\"description\":\"Synthetic input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVar\":\"OWNER_ID\"}}},\"outputs\":{}}}}"
+    },
+    "document": "app/blueprint.yaml",
+    "context": {
+      "validationScope": "deployment",
+      "deployment": {
+        "creator": {
+          "identity": "user-1",
+          "email": "ada@example.invalid"
+        }
+      }
+    },
+    "expect": {
+      "/status": "INCOMPLETE",
+      "/phase": "resolution",
+      "/diagnostics": []
+    }
+  },
+  {
     "id": "resolution-creator-fact-absent",
     "suite": "resolution",
     "operation": "resolve",

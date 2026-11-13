@@ -1032,8 +1032,30 @@ public inspection, previews and diagnostics all the same. Resolution, in the
 | Condition | Outcome |
 |---|---|
 | Acquisition has not supplied the fact | INCOMPLETE |
-| The platform knows it lacks the fact, such as the email address of a deployment a service principal created; waiting would never supply it | `ERR_DEPLOYMENT_FACT_UNAVAILABLE` |
+| The platform knows it lacks the fact, such as the display name of a creator who never set one; waiting would never supply it | `ERR_DEPLOYMENT_FACT_UNAVAILABLE` |
 | The fact is malformed | `ERR_INVALID_RESOLUTION_CONTEXT` |
+
+<a id="BP-PARAM-015"></a>**`BP-PARAM-015`**: A deployment created with an
+organization API key has a creator: the user who created the key.
+`deployment.creator.*` resolves to that user's facts, captured when the
+deployment is created as any creator's are, and revoking or deleting the key
+later changes none of them. A key whose creator the platform no longer knows,
+such as a user removed from the organization, supplies no fact, and each fact a
+blueprint reads is then `ERR_DEPLOYMENT_FACT_UNAVAILABLE`
+([ADR 0047](../../../docs/adr/0047-an-organization-api-key-deploys-as-the-user-who-created-it.md)).
+Platform obligation; no document breaks it.
+
+<a id="BP-PARAM-016"></a>**`BP-PARAM-016`**: A `deployment`-scope validation
+treats its caller as the creator of the deployment it describes: the person who
+calls or, for an organization API key, the user who created the key. It
+resolves every deployment fact the blueprint reads from that caller, in the
+`resolution` phase at stage `parameters`, at `/spec/parameters/<name>/from`,
+under the table above. A fact the caller lacks is
+`ERR_DEPLOYMENT_FACT_UNAVAILABLE`, not a deferred obligation, so a validation
+the deploy call would refuse for that reason is never INCOMPLETE without a
+diagnostic. The rest of resolution stays deferred under
+[`BP-RESOLVE-001`](#BP-RESOLVE-001). A validation at any narrower scope has no
+caller to read, and reports no deployment fact.
 
 <a id="BP-RESOLVE-001"></a>**`BP-RESOLVE-001`**: Resolution MUST complete these
 stages, in this order ([core v2 §6.4](../../core/v2/spec.md#resolution-stages)),
