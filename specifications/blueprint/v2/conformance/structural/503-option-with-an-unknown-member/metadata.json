@@ -1,0 +1,10 @@
+{
+  "id": "structural-503-option-with-an-unknown-member",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#deploy-form",
+  "requirements": [
+    "BP-UI-006"
+  ],
+  "summary": "An option is closed: a member other than value and label is rejected."
+}

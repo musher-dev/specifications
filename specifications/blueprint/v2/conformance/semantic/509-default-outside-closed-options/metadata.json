@@ -1,0 +1,11 @@
+{
+  "id": "semantic-509-default-outside-closed-options",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#deploy-form",
+  "requirements": [
+    "BP-UI-007"
+  ],
+  "summary": "A default that is not one of options that are not editable is rejected.",
+  "document": "app/blueprint.yaml"
+}

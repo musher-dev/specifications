@@ -1,0 +1,11 @@
+{
+  "id": "semantic-502-mount-under-itself",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#public-hosts",
+  "requirements": [
+    "BP-HOST-003"
+  ],
+  "summary": "An endpoint cannot be mounted under its own host.",
+  "document": "app/blueprint.yaml"
+}

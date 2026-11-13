@@ -1156,6 +1156,86 @@
       "id": "semantic-324-option-outside-the-input-schema",
       "phase": "semantic",
       "path": "semantic/324-option-outside-the-input-schema"
+    },
+    {
+      "id": "semantic-500-mount-names-an-unknown-endpoint",
+      "phase": "semantic",
+      "path": "semantic/500-mount-names-an-unknown-endpoint"
+    },
+    {
+      "id": "semantic-501-mount-under-a-mounted-endpoint",
+      "phase": "semantic",
+      "path": "semantic/501-mount-under-a-mounted-endpoint"
+    },
+    {
+      "id": "semantic-502-mount-under-itself",
+      "phase": "semantic",
+      "path": "semantic/502-mount-under-itself"
+    },
+    {
+      "id": "semantic-503-mount-path-with-a-dot-dot-segment",
+      "phase": "semantic",
+      "path": "semantic/503-mount-path-with-a-dot-dot-segment"
+    },
+    {
+      "id": "semantic-504-start-order-on-a-scheduled-job",
+      "phase": "semantic",
+      "path": "semantic/504-start-order-on-a-scheduled-job"
+    },
+    {
+      "id": "semantic-505-template-names-an-unknown-node",
+      "phase": "semantic",
+      "path": "semantic/505-template-names-an-unknown-node"
+    },
+    {
+      "id": "semantic-506-template-names-a-non-scalar-output",
+      "phase": "semantic",
+      "path": "semantic/506-template-names-a-non-scalar-output"
+    },
+    {
+      "id": "semantic-507-url-template-with-a-character-outside-rfc-3986",
+      "phase": "semantic",
+      "path": "semantic/507-url-template-with-a-character-outside-rfc-3986"
+    },
+    {
+      "id": "semantic-508-two-options-with-one-value",
+      "phase": "semantic",
+      "path": "semantic/508-two-options-with-one-value"
+    },
+    {
+      "id": "semantic-509-default-outside-closed-options",
+      "phase": "semantic",
+      "path": "semantic/509-default-outside-closed-options"
+    },
+    {
+      "id": "structural-500-repeated-start-condition",
+      "phase": "structural",
+      "path": "structural/500-repeated-start-condition"
+    },
+    {
+      "id": "structural-501-options-on-a-parameter-from-the-deployment",
+      "phase": "structural",
+      "path": "structural/501-options-on-a-parameter-from-the-deployment"
+    },
+    {
+      "id": "structural-502-too-many-options",
+      "phase": "structural",
+      "path": "structural/502-too-many-options"
+    },
+    {
+      "id": "structural-503-option-with-an-unknown-member",
+      "phase": "structural",
+      "path": "structural/503-option-with-an-unknown-member"
+    },
+    {
+      "id": "structural-504-api-key-on-a-private-endpoint",
+      "phase": "structural",
+      "path": "structural/504-api-key-on-a-private-endpoint"
+    },
+    {
+      "id": "structural-505-api-key-with-an-unknown-member",
+      "phase": "structural",
+      "path": "structural/505-api-key-with-an-unknown-member"
     }
   ]
 }

@@ -61,9 +61,10 @@ value-schema pattern profile of component `COMP-VAL-007` is a bounded search.
 ### 4. Where the generator check is an error, and where it is a warning
 
 A generator outside the intersection is an error where the parameter's inputs
-declare different schemas: 2.1.0 rejected every such document, so rejecting
-some of them still is no stricter. Where the inputs declare one schema, 2.1.0
-accepted the document, and core v2 §3 forbids rejecting it now. That case is
+declare different schemas: 2.1.0 and 2.2.0 rejected every such document, so
+rejecting some of them still is no stricter. Where the inputs declare one
+schema, 2.1.0 and 2.2.0 accepted the document, and core v2 §3 forbids
+rejecting it now. That case is
 `WARN_GENERATOR_OUTSIDE_SCHEMA`, under the SHOULD `BP-PARAM-017`, until a major
 version can make it an error.
 
@@ -87,7 +88,7 @@ validator for a case a generator's output language, and resolution, already
 catch.
 
 **An error for every generator outside its schema.** Cleaner, and stricter than
-2.1.0 for a document 2.1.0 accepted. It waits for a major version.
+2.1.0 and 2.2.0 for a document they accepted. It waits for a major version.
 
 ## Consequences
 

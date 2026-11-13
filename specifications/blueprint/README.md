@@ -54,6 +54,8 @@ dependencies" table in [§2](v2/spec.md#envelope).
 | `BP-BIND` | Bindings, what they name, and the value-dependency graph | [§4.2](v2/spec.md#bindings), [§5.1](v2/spec.md#recipients) |
 | `BP-NODE` | Node compute, storage, placement and exposure | [§4.3](v2/spec.md#node-compute), [§4.4](v2/spec.md#placement-constraints), [§4.5](v2/spec.md#access) |
 | `BP-ACCESS` | What the platform does for an exposure | [§4.5](v2/spec.md#access) |
+| `BP-ORDER` | Start order, and when a rollout is active | [§4.6](v2/spec.md#start-order) |
+| `BP-HOST` | Public hosts and mounts | [§4.7](v2/spec.md#public-hosts) |
 | `BP-PARAM` | Deployment parameters, their recipients and origins | [§5](v2/spec.md#parameters) |
 | `BP-PLACEHOLDER` | A parameter's `from` | [§5.2](v2/spec.md#value-sources) |
 | `BP-RESOLVE` | Resolution, its stages and the resolution record | [§5.2](v2/spec.md#value-sources) |

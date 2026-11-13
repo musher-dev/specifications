@@ -691,8 +691,9 @@ exposure:
 | `visibility` | `PUBLIC`, `PRIVATE` | REQUIRED |
 | `access` | `OPEN`: every request is forwarded. `RESTRICTED`: only viewers who sign in and whom the deployment's access policy admits | `OPEN` |
 | `viewerIdentity` | `NONE`: nothing is forwarded about the viewer. `HEADER`: the viewer's identity, in a request header. `ASSERTION`: a signed token naming the viewer, in a request header. `OIDC`: the workload signs viewers in itself, as an OpenID Connect client of the platform | `NONE` |
-| `viewerClaims` | A unique, non-empty list of `EMAIL`, the viewer's verified email address, and `NAME`, their display name | Only the identity |
+| `viewerClaims` | A unique, non-empty list of `EMAIL`, the viewer's verified email address, `NAME`, their display name, and `ROLE`, their standing in the organization ([role claims](#role-claims)) | Only the identity |
 | `accessExemptions` | A unique, non-empty list of `PATHS` and `BEARER`: the requests, among those the component's `exemptibleRequests` offers, that pass without a viewer ([`BP-NODE-008`](#BP-NODE-008)) | None |
+| `apiKey` | The generated parameter whose value the platform checks as a bearer token ([API keys](#api-keys)) | No key |
 | `mount` | The public endpoint whose host serves this one, and the path it is served under ([§4.7](#public-hosts)) | A host of its own |
 
 Bare `PUBLIC` is `{ visibility: PUBLIC }`, and so
@@ -1302,7 +1303,7 @@ a MUST. Where they declare one schema, a generator whose output language holds
 a string that fails it is reported in the semantic phase as
 `WARN_GENERATOR_OUTSIDE_SCHEMA` at `/spec/parameters/<name>/generator`, whose
 message SHOULD name the keywords such a string fails. It is a warning, not an
-error, because 2.1.0 accepted such a document, and validation never becomes
+error, because 2.1.0 and 2.2.0 accepted such a document, and validation never becomes
 stricter within a major version
 ([core v2 §3](../../core/v2/spec.md#compatibility)). A generated value that
 fails at resolution is still `ERR_VALUE_CONSTRAINT`.
@@ -1949,7 +1950,7 @@ parameters:
 
 <a id="BP-UI-006"></a>**`BP-UI-006`**: `options` is a non-empty list of at most
 256 closed objects, each requiring `value`, a logical value, and `label`, a
-non-empty string, with no two objects equal. `editable` is a
+non-empty string, with no two options sharing a value. `editable` is a
 boolean, and requires `options`. Neither belongs to the `ui` of a generated
 parameter or one with `from`, and `options` never sits beside `enumLabels`.
 Structural, under the parameter's `ui`: `ERR_INVALID_VALUE` at `options` or
@@ -1957,7 +1958,9 @@ Structural, under the parameter's `ui`: `ERR_INVALID_VALUE` at `options` or
 `enumLabels`, at an empty, overlong or repeating list, and at an empty
 `label`; `ERR_MISSING_FIELD` at an option without `value` or `label`, and
 at `ui` with `editable` and without `options`; `ERR_UNKNOWN_FIELD` at an
-option with another member.
+option with another member. Semantic: `ERR_VALUE_CONSTRAINT` at
+`ui/options/<index>/value` of an option whose value, compared as JSON, an
+earlier option already has.
 
 <a id="BP-UI-007"></a>**`BP-UI-007`**: Every option's `value` MUST satisfy the
 value schema of every input the parameter binds, and the `default` of a
@@ -2088,9 +2091,9 @@ evidence.
 | A component output template that reads the component's own inputs | A new `self` path in component's `template` |
 | A document naming the principals, roles or policy a `RESTRICTED` endpoint admits, or a default membership; the policy is the deployment's, managed through the platform API | A new optional member of the exposure object |
 | `RESTRICTED` access to a `GRPC`, `TCP` or `UDP` endpoint | Permit `RESTRICTED` on those protocols |
-| Role or group claims | A new `viewerClaims` value |
+| Group claims, or a role beyond the viewer's standing in the deployment's organization | A new `viewerClaims` value |
 | A viewer identity mode under `access: OPEN` | Permit the combination |
-| Machine tokens the platform itself accepts | A new `accessExemptions` value |
+| More than one platform-checked API key on an exposure, or keys scoped to some paths | A new optional member of `apiKey` |
 | Exemptions by request method | A new `accessExemptions` value |
 | Hashes of submitted values, and other hash algorithms or parameters | A new `hash.algorithm` value, or permit a submitted parameter under `hash` |
 | `deployment` facts beyond the creator's | A new path in the `deployment` namespace |

@@ -1,0 +1,30 @@
+specVersion: v2
+kind: BLUEPRINT
+metadata:
+  slug: app
+  revision: 1
+  description: Synthetic conformance fixture blueprint.
+spec:
+  parameters:
+    dbPassword:
+      generator:
+        byteLength: 24
+        encoding: BASE64
+  nodes:
+    db:
+      componentRef: ./components/db.yaml
+      bindings:
+        host:
+          value: db.internal
+        port:
+          value: 5432
+        options:
+          value: [sslmode=require]
+    app:
+      componentRef: ./components/app.yaml
+      compute:
+        profile: general.standard.small
+      bindings:
+        databaseURL:
+          template: postgres://app:${{ parameters.dbPassword }}@${{ nodes.db.outputs.host }}:${{ nodes.db.outputs.port }}/app?${{ nodes.db.outputs.options }}
+          format: URL

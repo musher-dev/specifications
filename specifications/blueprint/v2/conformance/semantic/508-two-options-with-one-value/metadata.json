@@ -1,0 +1,11 @@
+{
+  "id": "semantic-508-two-options-with-one-value",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#deploy-form",
+  "requirements": [
+    "BP-UI-006"
+  ],
+  "summary": "Two options offering one value under different labels are rejected.",
+  "document": "app/blueprint.yaml"
+}

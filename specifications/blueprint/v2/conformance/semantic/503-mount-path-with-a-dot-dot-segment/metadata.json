@@ -1,0 +1,11 @@
+{
+  "id": "semantic-503-mount-path-with-a-dot-dot-segment",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#public-hosts",
+  "requirements": [
+    "BP-HOST-003"
+  ],
+  "summary": "A mount path holding a .. segment would claim requests outside it once normalised.",
+  "document": "app/blueprint.yaml"
+}

@@ -1605,8 +1605,15 @@ export function semanticReport(
     // BP-UI-007: every option fits every receiver, and a closed list holds the default.
     const options = at(p, 'ui', 'options')
     if (Array.isArray(options)) {
+      const seen = new Set<string>()
       options.forEach((option, i) => {
         const value = at(option, 'value')
+        // BP-UI-006: no two options share a value, whatever their labels.
+        if (value !== undefined) {
+          const key = canonicalJson(value)
+          if (seen.has(key)) issue(out, 'ERR_VALUE_CONSTRAINT', `${path}/ui/options/${i}/value`)
+          seen.add(key)
+        }
         if (
           value !== undefined &&
           receivers.some((v) => v.schema !== undefined && !valueFits(v.schema, value))

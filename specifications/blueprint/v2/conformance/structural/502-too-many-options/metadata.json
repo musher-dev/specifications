@@ -1,0 +1,10 @@
+{
+  "id": "structural-502-too-many-options",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#deploy-form",
+  "requirements": [
+    "BP-UI-006"
+  ],
+  "summary": "More than 256 options are rejected."
+}

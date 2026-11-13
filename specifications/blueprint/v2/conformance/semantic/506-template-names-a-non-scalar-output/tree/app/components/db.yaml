@@ -1,0 +1,44 @@
+specVersion: v2
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: EXTERNAL
+  contract:
+    inputs:
+      host:
+        schema:
+          type: string
+        description: Host the database answers on.
+      port:
+        schema:
+          type: integer
+        description: Port the database answers on.
+      options:
+        schema:
+          type: array
+          items:
+            type: string
+        description: Connection options.
+    outputs:
+      options:
+        schema:
+          type: array
+          items:
+            type: string
+        description: Connection options.
+        from:
+          input: options
+      host:
+        schema:
+          type: string
+        description: Host the database answers on.
+        from:
+          input: host
+      port:
+        schema:
+          type: integer
+        description: Port the database answers on.
+        from:
+          input: port

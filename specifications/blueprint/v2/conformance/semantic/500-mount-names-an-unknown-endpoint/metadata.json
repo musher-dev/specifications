@@ -1,0 +1,11 @@
+{
+  "id": "semantic-500-mount-names-an-unknown-endpoint",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#public-hosts",
+  "requirements": [
+    "BP-HOST-003"
+  ],
+  "summary": "A mount naming an endpoint the host node does not declare is rejected.",
+  "document": "app/blueprint.yaml"
+}
