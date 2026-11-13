@@ -3185,7 +3185,10 @@
           "connection",
           "te",
           "upgrade",
-          "cookie"
+          "cookie",
+          "proxy-authorization",
+          "keep-alive",
+          "trailer"
         ],
         "defs": [
           "ComponentProbeHeader"
@@ -3245,7 +3248,8 @@
         ],
         "defs": [
           "ComponentFile",
-          "ComponentFileContent"
+          "ComponentFileContent",
+          "ComponentFilePath"
         ],
         "requirement_prefixes": [
           "COMP-FILE"
@@ -4640,6 +4644,26 @@
       "context": "blueprint",
       "definition": "A rollout whose every SERVICE and WORKER node is ready and whose every ordered job, a JOB without a schedule that carries startAfter or that a startAfter names, has succeeded; one whose ordered job fails never is.",
       "shortDefinition": "A rollout that has finished starting.",
+      "part_of": [
+        "blueprint.node-graph"
+      ],
+      "source": [
+        "blueprint v2 §1.1",
+        "blueprint v2 §4.6",
+        "ADR 0055"
+      ],
+      "stability": "provisional",
+      "status": "approved",
+      "tags": [
+        "lifecycle"
+      ]
+    },
+    {
+      "id": "blueprint.completed",
+      "display_name": "completed",
+      "context": "blueprint",
+      "definition": "A rollout that has become active or has failed, after which nothing of it is still starting.",
+      "shortDefinition": "A rollout that is active or has failed.",
       "part_of": [
         "blueprint.node-graph"
       ],

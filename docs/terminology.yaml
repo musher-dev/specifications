@@ -1564,7 +1564,7 @@ terms:
     part_of: [component.probe]
     identifiers:
       fields: [headers]
-      values: [authorization, forwarded, x-forwarded-for, content-length, transfer-encoding, connection, te, upgrade, cookie]
+      values: [authorization, forwarded, x-forwarded-for, content-length, transfer-encoding, connection, te, upgrade, cookie, proxy-authorization, keep-alive, trailer]
       defs: [ComponentProbeHeader]
     source: [component v2 §5.4, ADR 0049]
     stability: provisional
@@ -1596,7 +1596,7 @@ terms:
       or from one of the component's own inputs.
     shortDefinition: A file written into the container before start.
     part_of: [component.workload]
-    identifiers: { fields: [files, content, mode], defs: [ComponentFile, ComponentFileContent], requirement_prefixes: [COMP-FILE] }
+    identifiers: { fields: [files, content, mode], defs: [ComponentFile, ComponentFileContent, ComponentFilePath], requirement_prefixes: [COMP-FILE] }
     confusables: ["A volume, which is persistent storage rather than content the document supplies."]
     source: [component v2 §5.8, ADR 0050]
     stability: provisional
@@ -2194,6 +2194,19 @@ terms:
       ordered job, a JOB without a schedule that carries startAfter or that a
       startAfter names, has succeeded; one whose ordered job fails never is.
     shortDefinition: A rollout that has finished starting.
+    part_of: [blueprint.node-graph]
+    source: [blueprint v2 §1.1, blueprint v2 §4.6, ADR 0055]
+    stability: provisional
+    status: approved
+    tags: [lifecycle]
+
+  - id: blueprint.completed
+    display_name: completed
+    context: blueprint
+    definition: >-
+      A rollout that has become active or has failed, after which nothing of it
+      is still starting.
+    shortDefinition: A rollout that is active or has failed.
     part_of: [blueprint.node-graph]
     source: [blueprint v2 §1.1, blueprint v2 §4.6, ADR 0055]
     stability: provisional

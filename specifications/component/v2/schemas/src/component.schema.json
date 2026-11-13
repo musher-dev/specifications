@@ -620,14 +620,8 @@
           "type": "string"
         },
         "path": {
-          "$comment": "spec.md §5.8 COMP-FILE-005. The runtime mounts the kernel interfaces, the devices and the network identity files itself, so a file there would hide them or be hidden.",
-          "description": "Absolute path of the file in the container. Not /proc, /sys or /dev or below them, nor /etc/hosts, /etc/hostname or /etc/resolv.conf.",
-          "maxLength": 512,
-          "not": {
-            "pattern": "^/(proc|sys|dev)(/|$)|^/etc/(hosts|hostname|resolv\\.conf)$"
-          },
-          "pattern": "^/",
-          "type": "string"
+          "$ref": "#/$defs/ComponentFilePath",
+          "description": "Absolute path of the file in the container."
         }
       },
       "required": [
@@ -636,6 +630,16 @@
       ],
       "type": "object",
       "x-additionalPropertiesName": "fileName"
+    },
+    "ComponentFilePath": {
+      "$comment": "spec.md §5.8 COMP-FILE-005. Lookahead-free, so it compiles under RE2 as well as ECMA-262; the not excludes what the runtime mounts itself, the kernel interfaces, the devices and the network identity files, which a file would hide or be hidden by.",
+      "description": "Absolute path of a file in the container. Not /proc, /sys or /dev or below them, nor /etc/hosts, /etc/hostname or /etc/resolv.conf.",
+      "maxLength": 512,
+      "not": {
+        "pattern": "^/(?:proc|sys|dev)(?:/|$)|^/etc/(?:hosts|hostname|resolv\\.conf)$"
+      },
+      "pattern": "^/",
+      "type": "string"
     },
     "ComponentFileContent": {
       "$comment": "spec.md §5.8 COMP-FILE-001, COMP-FILE-002 / ADR 0031 §1. Where the content comes from is the key that is present. An input may be sensitive, which makes the file sensitive.",

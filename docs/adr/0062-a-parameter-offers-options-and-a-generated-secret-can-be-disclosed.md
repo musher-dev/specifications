@@ -72,7 +72,7 @@ public response, a preview or a diagnostic.
 
 Only a person the platform API lets change the deployment reveals it, never
 one whose only role is `viewer`. Every reveal is recorded for audit, without
-the value. After a rotation, the earlier generation stays disclosable while
+the value. After a rotation, the earlier generation can still be disclosed while
 anything still accepts it, and afterwards the platform says it is gone rather
 than show nothing, because data encrypted under it may still need it.
 

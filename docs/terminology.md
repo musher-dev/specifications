@@ -10,7 +10,7 @@ it. `task check:terms` holds the records, the schemas and the prose together,
 and the words to avoid are enforced in prose by the generated
 `MusherSpecifications` Vale style.
 
-238 record(s). A record marked *proposed* is an open item, not yet a decision.
+239 record(s). A record marked *proposed* is an open item, not yet a decision.
 
 ## Index
 
@@ -43,6 +43,7 @@ and the words to avoid are enforced in prose by the generated
 | [category](#listing-category) | listing | The closed-vocabulary shelf of a listing. |
 | [checked API key](#blueprint-checked-api-key) | blueprint | A generated key the platform checks for machine clients. |
 | [command](#component-command) | component | Exec-form CMD replacement. |
+| [completed](#blueprint-completed) | blueprint | A rollout that is active or has failed. |
 | [component](#component-component) | component | A reusable, versioned definition a node deploys. |
 | [component contract](#component-component-contract) | component | A component's inputs and outputs. |
 | [component description](#component-description) | component | Plain text for the person composing a blueprint. |
@@ -287,6 +288,7 @@ blueprint [blueprint.blueprint] (a kind of core.musher-document)
       - storage class [blueprint.storage-class]
   - node graph [blueprint.node-graph]
     - active [blueprint.active]
+    - completed [blueprint.completed]
     - start order [blueprint.start-order]
     - value dependency [blueprint.value-dependency]
 
@@ -1390,7 +1392,8 @@ the component's own inputs.
 
 - **Part of:** [workload](#component-workload)
 - **Identifiers:** fields: `files`, `content`, `mode`; requirement prefixes:
-  `COMP-FILE`; defs: `ComponentFile`, `ComponentFileContent`
+  `COMP-FILE`; defs: `ComponentFile`, `ComponentFileContent`,
+  `ComponentFilePath`
 - **Not to be confused with:** A volume, which is persistent storage rather than
   content the document supplies.
 - **Source:** [component v2 §5.8](../specifications/component/v2/spec.md#files),
@@ -1669,7 +1672,8 @@ platform, auth or request framing sets.
 - **Part of:** [probe](#component-probe)
 - **Identifiers:** fields: `headers`; values: `authorization`, `forwarded`,
   `x-forwarded-for`, `content-length`, `transfer-encoding`, `connection`, `te`,
-  `upgrade`, `cookie`; defs: `ComponentProbeHeader`
+  `upgrade`, `cookie`, `proxy-authorization`, `keep-alive`, `trailer`; defs:
+  `ComponentProbeHeader`
 - **Source:** [component v2
   §5.4](../specifications/component/v2/spec.md#health), [ADR
   0049](adr/0049-tcp-exec-and-grpc-probes-and-probe-headers.md)
@@ -2259,6 +2263,17 @@ RESTRICTED endpoint, and checks before forwarding it.
   §4.5](../specifications/blueprint/v2/spec.md#access), [ADR
   0061](adr/0061-a-platform-checked-api-key-and-exact-exempt-paths.md)
 - **Status:** approved, provisional. Tags: access.
+
+#### <a id="blueprint-completed"></a>completed
+
+A rollout that has become active or has failed, after which nothing of it is
+still starting.
+
+- **Part of:** [node graph](#blueprint-node-graph)
+- **Source:** [blueprint v2 §1.1](../specifications/blueprint/v2/spec.md#terms),
+  [blueprint v2 §4.6](../specifications/blueprint/v2/spec.md#start-order), [ADR
+  0055](adr/0055-a-node-starts-after-the-nodes-it-names.md)
+- **Status:** approved, provisional. Tags: lifecycle.
 
 #### <a id="blueprint-compute"></a>compute
 

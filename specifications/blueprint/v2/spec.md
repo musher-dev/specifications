@@ -511,7 +511,8 @@ parameter is optional ([`BP-PARAM-005`](#BP-PARAM-005),
 ([`BP-BIND-012`](#BP-BIND-012), [`BP-UI-004`](#BP-UI-004)). It adds no value
 schema to the parameter: [`BP-PARAM-002`](#BP-PARAM-002) intersects only the
 inputs a `parameter` binding names, and a parameter only templates name is
-offered as text, or concealed when a sensitive input is among them. Each node output a template names is a value dependency of the input
+offered as text, or concealed when a sensitive input is among them. Each node
+output a template names is a value dependency of the input
 ([`BP-BIND-002`](#BP-BIND-002)). A template without a placeholder is a
 statically known string, and is checked against the input as a literal is
 ([`BP-PARAM-008`](#BP-PARAM-008)).
@@ -2104,7 +2105,7 @@ only role in the organization is `viewer`
 admits, never reveal a value. The platform MUST record every reveal for audit:
 who revealed which parameter's value, of which rotation generation, and when,
 and never the value. A reveal names the generation it shows. After the
-parameter rotates, the platform MUST keep the previous generation disclosable
+parameter rotates, the platform MUST let the previous generation be disclosed
 for as long as it still accepts that generation anywhere, such as an API key's
 overlap ([`BP-ACCESS-018`](#BP-ACCESS-018)), and afterwards MUST say that the
 earlier value is gone and when it was rotated, rather than show nothing.
