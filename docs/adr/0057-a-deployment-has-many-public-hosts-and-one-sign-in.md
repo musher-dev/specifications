@@ -1,4 +1,4 @@
-# ADR 0051: A deployment has many public hosts and one sign-in
+# ADR 0057: A deployment has many public hosts and one sign-in
 
 - **Status:** Proposed
 - **Date:** 2026-11-13

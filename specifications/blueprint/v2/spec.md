@@ -466,7 +466,7 @@ A **template** binding composes a string from literal text and placeholders
 ([core v2 §5.2](../../core/v2/spec.md#placeholder-grammar)), for the inputs that
 take one string where the documents hold its parts: a connection URL with a
 generated password inside it, or a value with a fixed prefix
-([ADR 0050](../../../docs/adr/0050-a-binding-composes-a-string-and-encodes-what-it-interpolates.md)).
+([ADR 0056](../../../docs/adr/0056-a-binding-composes-a-string-and-encodes-what-it-interpolates.md)).
 `format` says how each placeholder's value is written into the text:
 
 ```yaml
@@ -898,7 +898,7 @@ active rollout carries stays in effect while a later rollout that keeps it
 starts. Endpoints without an exemption are unaffected: a `RESTRICTED` one
 signs every viewer in from the start, and an `OPEN` one is reachable as soon as
 its node is ready
-([ADR 0049](../../../docs/adr/0049-a-node-starts-after-the-nodes-it-names.md)
+([ADR 0055](../../../docs/adr/0055-a-node-starts-after-the-nodes-it-names.md)
 §4).
 
 <a id="private-endpoints"></a><a id="BP-ACCESS-011"></a>**`BP-ACCESS-011`**: The
@@ -915,7 +915,7 @@ private to its deployment, not to its blueprint or its owner.
 
 A node may wait for other nodes before it starts. `startAfter` lists the nodes
 it waits for, each with the condition it waits on
-([ADR 0049](../../../docs/adr/0049-a-node-starts-after-the-nodes-it-names.md)):
+([ADR 0055](../../../docs/adr/0055-a-node-starts-after-the-nodes-it-names.md)):
 
 ```yaml
 nodes:
@@ -994,7 +994,7 @@ blocks nothing. Platform obligation; no document breaks it.
 Each `PUBLIC` endpoint is reached at a public host, and a deployment may have
 more than one: a node may expose more than one endpoint, and more than one node may
 expose one
-([ADR 0051](../../../docs/adr/0051-a-deployment-has-many-public-hosts-and-one-sign-in.md)).
+([ADR 0057](../../../docs/adr/0057-a-deployment-has-many-public-hosts-and-one-sign-in.md)).
 An HTTP-routed endpoint may instead be served under a path of another
 endpoint's host, by `mount`:
 
@@ -1121,7 +1121,7 @@ parameter's value MUST satisfy the value schema of every input it binds, so the
 parameter's value schema is their **intersection**. Inputs that declare
 different schemas MAY share a parameter, a consumer stricter than its producer
 among them, as long as some value satisfies them all
-([ADR 0048](../../../docs/adr/0048-a-parameter-satisfies-every-input-it-binds.md)).
+([ADR 0054](../../../docs/adr/0054-a-parameter-satisfies-every-input-it-binds.md)).
 Semantic: `ERR_CONFLICTING_INPUT_SCHEMA` at `/spec/parameters/<name>` when the
 intersection is empty by one of these conditions, each decided keyword by
 keyword and through `items` and `properties`:
@@ -1333,7 +1333,7 @@ deployment is created as any creator's are, and revoking or deleting the key
 later changes none of them. A key whose creator the platform no longer knows,
 such as a user removed from the organization, supplies no fact, and each fact a
 blueprint reads is then `ERR_DEPLOYMENT_FACT_UNAVAILABLE`
-([ADR 0047](../../../docs/adr/0047-an-organization-api-key-deploys-as-the-user-who-created-it.md)).
+([ADR 0053](../../../docs/adr/0053-an-organization-api-key-deploys-as-the-user-who-created-it.md)).
 Platform obligation; no document breaks it.
 
 <a id="BP-PARAM-016"></a>**`BP-PARAM-016`**: A `deployment`-scope validation
@@ -1865,7 +1865,7 @@ evidence.
 ### <a id="draft-exports"></a>9.1 Draft: exported endpoints
 
 > **Draft, not normative.** This subsection records the shape
-> [ADR 0052](../../../docs/adr/0052-a-deployment-exports-a-private-endpoint-to-a-named-consumer.md)
+> [ADR 0058](../../../docs/adr/0058-a-deployment-exports-a-private-endpoint-to-a-named-consumer.md)
 > decides, so that implementations can plan for it. It declares no requirement
 > ID, and no validator applies it: a document using any of it is rejected
 > today, as [`BP-ACCESS-011`](#BP-ACCESS-011) and the schema require.

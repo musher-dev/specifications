@@ -1,4 +1,4 @@
-# ADR 0052: A deployment exports a private endpoint to a named consumer
+# ADR 0058: A deployment exports a private endpoint to a named consumer
 
 - **Status:** Proposed
 - **Date:** 2026-11-13

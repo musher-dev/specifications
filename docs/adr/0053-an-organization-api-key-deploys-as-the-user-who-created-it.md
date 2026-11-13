@@ -1,4 +1,4 @@
-# ADR 0047: An organization API key deploys as the user who created it
+# ADR 0053: An organization API key deploys as the user who created it
 
 - **Status:** Proposed
 - **Date:** 2026-11-13

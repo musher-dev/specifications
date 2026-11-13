@@ -1,4 +1,4 @@
-# ADR 0048: A parameter satisfies every input it binds
+# ADR 0054: A parameter satisfies every input it binds
 
 - **Status:** Proposed
 - **Date:** 2026-11-13

@@ -34,7 +34,7 @@
   "type": "object",
   "$defs": {
     "BlueprintBinding": {
-      "$comment": "spec.md §4.2 BP-BIND-003, BP-BIND-009 / ADR 0031 §1 / ADR 0050. The key that is present names the binding's origin: a deployment parameter, another node's output, a literal value, or a template composed of literal text and placeholders. Exactly one; `node` goes with `output`, and `template` with `format`. Values from outside the documents enter only through parameters.",
+      "$comment": "spec.md §4.2 BP-BIND-003, BP-BIND-009 / ADR 0031 §1 / ADR 0056. The key that is present names the binding's origin: a deployment parameter, another node's output, a literal value, or a template composed of literal text and placeholders. Exactly one; `node` goes with `output`, and `template` with `format`. Values from outside the documents enter only through parameters.",
       "additionalProperties": false,
       "dependentRequired": {
         "format": [
@@ -313,7 +313,7 @@
       "type": "object"
     },
     "BlueprintMount": {
-      "$comment": "spec.md §4.7 BP-HOST-002 / ADR 0051. Whether the node and endpoint exist, are public and HTTP-routed, and whether two mounts overlap are semantic checks (BP-HOST-003).",
+      "$comment": "spec.md §4.7 BP-HOST-002 / ADR 0057. Whether the node and endpoint exist, are public and HTTP-routed, and whether two mounts overlap are semantic checks (BP-HOST-003).",
       "additionalProperties": false,
       "description": "The public endpoint whose host serves this endpoint, and the path prefix it is served under.",
       "properties": {
@@ -426,7 +426,7 @@
           "type": "integer"
         },
         "startAfter": {
-          "$comment": "spec.md §4.6 BP-ORDER-001 / ADR 0049. Whether the condition fits the node it names, and whether the start graph is acyclic, are semantic checks against the components (BP-ORDER-002, BP-ORDER-003).",
+          "$comment": "spec.md §4.6 BP-ORDER-001 / ADR 0055. Whether the condition fits the node it names, and whether the start graph is acyclic, are semantic checks against the components (BP-ORDER-002, BP-ORDER-003).",
           "description": "The nodes this node waits for before it starts in a rollout, each with the condition it waits on.",
           "items": {
             "$ref": "#/$defs/BlueprintStartCondition"

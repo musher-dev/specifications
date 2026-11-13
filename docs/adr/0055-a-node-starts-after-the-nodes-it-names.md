@@ -1,4 +1,4 @@
-# ADR 0049: A node starts after the nodes it names
+# ADR 0055: A node starts after the nodes it names
 
 - **Status:** Proposed
 - **Date:** 2026-11-13

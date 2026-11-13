@@ -1,4 +1,4 @@
-# ADR 0050: A binding composes a string, and encodes what it interpolates
+# ADR 0056: A binding composes a string, and encodes what it interpolates
 
 - **Status:** Proposed
 - **Date:** 2026-11-13
