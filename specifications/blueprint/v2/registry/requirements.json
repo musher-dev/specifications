@@ -193,6 +193,36 @@
       "section": "access"
     },
     {
+      "id": "BP-ACCESS-013",
+      "anchor": "BP-ACCESS-013",
+      "section": "access"
+    },
+    {
+      "id": "BP-ACCESS-014",
+      "anchor": "BP-ACCESS-014",
+      "section": "access"
+    },
+    {
+      "id": "BP-ACCESS-015",
+      "anchor": "BP-ACCESS-015",
+      "section": "access"
+    },
+    {
+      "id": "BP-ACCESS-016",
+      "anchor": "BP-ACCESS-016",
+      "section": "access"
+    },
+    {
+      "id": "BP-ACCESS-017",
+      "anchor": "BP-ACCESS-017",
+      "section": "access"
+    },
+    {
+      "id": "BP-ACCESS-018",
+      "anchor": "BP-ACCESS-018",
+      "section": "access"
+    },
+    {
       "id": "BP-ORDER-001",
       "anchor": "BP-ORDER-001",
       "section": "start-order"
@@ -353,6 +383,16 @@
       "section": "connections"
     },
     {
+      "id": "BP-CONNECTION-004",
+      "anchor": "BP-CONNECTION-004",
+      "section": "connections"
+    },
+    {
+      "id": "BP-CONNECTION-005",
+      "anchor": "BP-CONNECTION-005",
+      "section": "connections"
+    },
+    {
       "id": "BP-UI-001",
       "anchor": "BP-UI-001",
       "section": "deploy-form"
@@ -375,6 +415,26 @@
     {
       "id": "BP-UI-005",
       "anchor": "BP-UI-005",
+      "section": "deploy-form"
+    },
+    {
+      "id": "BP-UI-006",
+      "anchor": "BP-UI-006",
+      "section": "deploy-form"
+    },
+    {
+      "id": "BP-UI-007",
+      "anchor": "BP-UI-007",
+      "section": "deploy-form"
+    },
+    {
+      "id": "BP-UI-008",
+      "anchor": "BP-UI-008",
+      "section": "deploy-form"
+    },
+    {
+      "id": "BP-UI-009",
+      "anchor": "BP-UI-009",
       "section": "deploy-form"
     }
   ]

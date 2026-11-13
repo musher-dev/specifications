@@ -10,7 +10,7 @@ it. `task check:terms` holds the records, the schemas and the prose together,
 and the words to avoid are enforced in prose by the generated
 `MusherSpecifications` Vale style.
 
-228 record(s). A record marked *proposed* is an open item, not yet a decision.
+236 record(s). A record marked *proposed* is an open item, not yet a decision.
 
 ## Index
 
@@ -21,6 +21,7 @@ and the words to avoid are enforced in prose by the generated
 | [access policy](#blueprint-access-policy) | blueprint | Which viewers a RESTRICTED endpoint admits. |
 | [acquisition](#deployment-acquisition) | deployment | Obtaining external context, with authority. |
 | [acquisition status](#blueprint-acquisition-status) | blueprint | NOT_ACQUIRED, NOT_FOUND, DENIED, INCOMPATIBLE or SELECTED. |
+| [active](#blueprint-active) | blueprint | A rollout that has finished starting. |
 | [admission phase](#core-admission-phase) | core | Publisher and platform checks that need published documents or policy. |
 | [allocation](#deployment-allocation) | deployment | A concrete resource assigned to a deployment. |
 | [allocation stage](#deployment-allocation-stage) | deployment | Selects compute and allocates addresses. |
@@ -40,6 +41,7 @@ and the words to avoid are enforced in prose by the generated
 | [catalog reference](#blueprint-catalog-reference) | blueprint | A UUID and a revision naming a published component. |
 | [catalog value](#blueprint-catalog-value) | blueprint | A value from a catalog-versioned vocabulary. |
 | [category](#listing-category) | listing | The closed-vocabulary shelf of a listing. |
+| [checked API key](#blueprint-checked-api-key) | blueprint | A generated key the platform checks for machine clients. |
 | [command](#component-command) | component | Exec-form CMD replacement. |
 | [component](#component-component) | component | A reusable, versioned definition a node deploys. |
 | [component contract](#component-component-contract) | component | A component's inputs and outputs. |
@@ -77,6 +79,7 @@ and the words to avoid are enforced in prose by the generated
 | [diagnostic](#core-diagnostic) | core | Code, severity, phase and path of one condition. |
 | [diagnostic code](#core-diagnostic-code) | core | The stable name of one condition. |
 | [diagnostic registry](#core-diagnostic-registry) | core | Every code a family may report, with its phases. |
+| [disclosed value](#blueprint-disclosed-value) | blueprint | A generated value the deployer is shown and keeps. |
 | [display name](#listing-display-name) | listing | The item's storefront title. |
 | [DNS-label grammar](#core-dns-label-grammar) | core | The lowercase DNS label, 2 to 63 characters. |
 | [document reference](#blueprint-document-reference) | blueprint | componentRef, item-local or catalog. |
@@ -128,6 +131,7 @@ and the words to avoid are enforced in prose by the generated
 | [media path](#listing-media-path) | listing | A path to an image under media/. |
 | [member role](#component-member-role) | component | credential, secret, locator, parameter or derived. |
 | [metadata](#core-metadata) | core | Identity and description. |
+| [mount](#blueprint-mount) | blueprint | An endpoint served under another's host and path. |
 | [Musher document](#core-musher-document) | core | A document of one family, in the shared envelope. |
 | [Musher YAML profile](#core-yaml-profile) | core | The restricted YAML 1.2.2 every document is written in. |
 | [namespace](#core-placeholder-namespace) | core | The closed set of first segments of `${{ }}`. |
@@ -149,6 +153,7 @@ and the words to avoid are enforced in prose by the generated
 | [overview Markdown profile](#listing-overview-markdown-profile) | listing | CommonMark with no raw HTML and local images only. |
 | [parameter binding](#blueprint-parameter-binding) | blueprint | Binds { parameter }. |
 | [parameter from](#blueprint-parameter-from) | blueprint | One whole placeholder in variables, deployment or connections. |
+| [parameter option](#blueprint-parameter-option) | blueprint | A value and label a deploy form offers. |
 | [parameter origin](#blueprint-parameter-origin) | blueprint | How a parameter's value is obtained. |
 | [parameters stage](#deployment-parameters-stage) | deployment | Obtains every parameter's value. |
 | [parser phase](#core-parser-phase) | core | Reads bytes under the YAML profile. |
@@ -164,6 +169,7 @@ and the words to avoid are enforced in prose by the generated
 | [protocol](#component-protocol) | component | The vendor-neutral wire contract a client speaks. |
 | [protocol category](#component-protocol-category) | component | LANGUAGE_MODEL, DATABASE, CACHE, OBJECT_STORAGE or MESSAGING. |
 | [protocol registry](#component-protocol-registry) | component | One normative JSON record per connection protocol. |
+| [provided connection](#component-provided-connection) | component | A connection a workload serves from its outputs. |
 | [provisioned](#blueprint-provisioned) | blueprint | Created on first acquisition, released at deletion. |
 | [public address](#component-public-address) | component | The allocated host:port of a TCP or UDP endpoint. |
 | [public port](#component-public-port) | component | The allocated publicPort of a TCP or UDP endpoint. |
@@ -204,6 +210,7 @@ and the words to avoid are enforced in prose by the generated
 | [specification releases](#deployment-specification-releases) | deployment | The exact family releases a resolution used. |
 | [specVersion](#core-spec-version) | core | The major version a document declares. |
 | [stage](#deployment-resolution-stage) | deployment | One ordered step of resolution. |
+| [start order](#blueprint-start-order) | blueprint | What a node waits for before it starts. |
 | [startup probe](#component-startup-probe) | component | Gates initialization. |
 | [storage class](#blueprint-storage-class) | blueprint | What kind of storage serves an allocation. |
 | [storefront](#catalog-storefront) | catalog | The UI that renders listings. |
@@ -213,6 +220,7 @@ and the words to avoid are enforced in prose by the generated
 | [tag](#listing-tag) | listing | An open, kebab-case discovery key. |
 | [target port](#component-target-port) | component | The port the workload listens on. |
 | [TCP probe](#component-tcp-probe) | component | A connection check of a named endpoint. |
+| [template](#blueprint-template-binding) | blueprint | Binds { template, format }. |
 | [template](#component-template) | component | A string with self placeholders substituted. |
 | [term record](#repository-term-record) | repository | One concept in one context, in docs/terminology.yaml. |
 | [trust policy](#component-trust-policy) | component | How the platform verifies an HTTPS endpoint's certificate. |
@@ -232,7 +240,7 @@ and the words to avoid are enforced in prose by the generated
 | [versioned identity](#deployment-versioned-identity) | deployment | An opaque identity and an immutable version. |
 | [view](#blueprint-view) | blueprint | One protocol's members of a selection, for one consumer. |
 | [viewer](#blueprint-viewer) | blueprint | A person reaching a public endpoint. |
-| [viewer claim](#blueprint-viewer-claim) | blueprint | EMAIL or NAME, released on request. |
+| [viewer claim](#blueprint-viewer-claim) | blueprint | EMAIL, NAME or ROLE, released on request. |
 | [viewer identity mode](#blueprint-viewer-identity-mode) | blueprint | NONE, HEADER, ASSERTION or OIDC. |
 | [viewer identity property](#component-viewer-identity-property) | component | An endpoint property for a viewer identity mode. |
 | [visibility](#blueprint-visibility) | blueprint | PUBLIC or PRIVATE. |
@@ -268,12 +276,16 @@ blueprint [blueprint.blueprint] (a kind of core.musher-document)
     - exposure [blueprint.exposure]
       - access [blueprint.access]
       - access exemption [blueprint.access-exemption]
+      - checked API key [blueprint.checked-api-key]
+      - mount [blueprint.mount]
       - viewer claim [blueprint.viewer-claim]
       - viewer identity mode [blueprint.viewer-identity-mode]
       - visibility [blueprint.visibility]
     - volume allocation [blueprint.volume-allocation]
       - storage class [blueprint.storage-class]
   - node graph [blueprint.node-graph]
+    - active [blueprint.active]
+    - start order [blueprint.start-order]
     - value dependency [blueprint.value-dependency]
 
 catalog item [catalog.catalog-item]
@@ -344,6 +356,10 @@ connection input [component.connection-input] (a kind of component.input)
 core [core.core] (a kind of core.family)
   - what a family fixes [core.family-parameter]
   - what belongs in core [core.membership-test]
+
+deploy form [blueprint.deploy-form]
+  - disclosed value [blueprint.disclosed-value]
+  - parameter option [blueprint.parameter-option]
 
 deployment [deployment.deployment]
   - deployment snapshot [deployment.deployment-snapshot]
@@ -1203,16 +1219,16 @@ optional without one, or derived, as the url resolution composes is, and
 forwarded through an output's member.
 
 - **Part of:** [connection](#blueprint-connection)
-- **Identifiers:** fields: `member`, `baseURL`, `apiKey`, `model`, `host`,
+- **Identifiers:** fields: `member`, `baseURL`, `apiKey`, `model`, `dimensions`,
+  `host`, `port`, `database`, `username`, `password`, `sslMode`, `url`, `tls`,
+  `endpointURL`, `region`, `bucket`, `accessKeyID`, `secretAccessKey`,
+  `pathStyle`, `botToken`, `appToken`, `signingSecret`, `applicationID`,
+  `publicKey`; values: `baseURL`, `apiKey`, `model`, `dimensions`, `host`,
   `port`, `database`, `username`, `password`, `sslMode`, `url`, `tls`,
   `endpointURL`, `region`, `bucket`, `accessKeyID`, `secretAccessKey`,
   `pathStyle`, `botToken`, `appToken`, `signingSecret`, `applicationID`,
-  `publicKey`; values: `baseURL`, `apiKey`, `model`, `host`, `port`, `database`,
-  `username`, `password`, `sslMode`, `url`, `tls`, `endpointURL`, `region`,
-  `bucket`, `accessKeyID`, `secretAccessKey`, `pathStyle`, `botToken`,
-  `appToken`, `signingSecret`, `applicationID`, `publicKey`, `disable`, `allow`,
-  `prefer`, `require`, `verify-ca`, `verify-full`; codes:
-  `ERR_UNKNOWN_CONNECTION_MEMBER`
+  `publicKey`, `disable`, `allow`, `prefer`, `require`, `verify-ca`,
+  `verify-full`; codes: `ERR_UNKNOWN_CONNECTION_MEMBER`
 - **Not to be confused with:** endpointURL is AWS's term for an S3 API address
   without the bucket, not a component endpoint.
 - **Not to be confused with:** A url member is never stored: resolution composes
@@ -1320,13 +1336,14 @@ container with its environment and user, exits 0 in time.
 #### <a id="component-exemptible-requests"></a>exemptible requests
 
 An endpoint's statement of which requests it can safely take without a signed-in
-viewer: the paths that serve machines, and whether every route checks the bearer
-token a request carries.
+viewer: the paths that serve machines, each matched as a prefix or exactly, and
+whether every route checks the bearer token a request carries.
 
 - **Part of:** [endpoint](#component-endpoint)
 - **is granted by:** [access exemption](#blueprint-access-exemption)
-- **Identifiers:** fields: `exemptibleRequests`, `paths`, `bearerToken`; defs:
-  `ComponentEndpointExemptibleRequests`
+- **Identifiers:** fields: `exemptibleRequests`, `paths`, `bearerToken`,
+  `prefix`, `exact`; defs: `ComponentEndpointExemptibleRequests`,
+  `ComponentExemptPath`
 - **Not to be confused with:** Access exemptions on a blueprint exposure: the
   grant, where this is the offer.
 - **Not to be confused with:** A probe's bearer credential.
@@ -1336,7 +1353,8 @@ token a request carries.
   "ComponentEndpointExemptibleRequests".
 - **Source:** [component v2
   §5.2](../specifications/component/v2/spec.md#endpoints), [ADR
-  0038](adr/0038-v2-one-vocabulary-and-v1-retires.md)
+  0038](adr/0038-v2-one-vocabulary-and-v1-retires.md), [ADR
+  0061](adr/0061-a-platform-checked-api-key-and-exact-exempt-paths.md)
 - **Status:** approved, stable. Tags: viewer, access.
 
 #### <a id="component-external"></a>EXTERNAL
@@ -1645,17 +1663,19 @@ HTTP, HTTPS, WS, GRPC, TCP and UDP, and for a connection input one of the
 connection protocols, which fixes its members.
 
 - **Identifiers:** fields: `protocol`, `OPENAI_CHAT_COMPLETIONS`,
-  `ANTHROPIC_MESSAGES`, `POSTGRES`, `REDIS`, `S3`, `TELEGRAM_BOT`, `SLACK_APP`,
-  `DISCORD_BOT`; values: `HTTP`, `HTTPS`, `WS`, `GRPC`, `TCP`, `UDP`,
-  `OPENAI_CHAT_COMPLETIONS`, `ANTHROPIC_MESSAGES`, `POSTGRES`, `REDIS`, `S3`,
-  `TELEGRAM_BOT`, `SLACK_APP`, `DISCORD_BOT`
+  `ANTHROPIC_MESSAGES`, `OPENAI_EMBEDDINGS`, `POSTGRES`, `REDIS`, `S3`,
+  `TELEGRAM_BOT`, `SLACK_APP`, `DISCORD_BOT`; values: `HTTP`, `HTTPS`, `WS`,
+  `GRPC`, `TCP`, `UDP`, `OPENAI_CHAT_COMPLETIONS`, `ANTHROPIC_MESSAGES`,
+  `OPENAI_EMBEDDINGS`, `POSTGRES`, `REDIS`, `S3`, `TELEGRAM_BOT`, `SLACK_APP`,
+  `DISCORD_BOT`
 - **Example:** A connection input with protocol POSTGRES receives host, port,
   database, username, password and sslMode, and a url composed from them.
 - **Source:** [component v2
   §5.2](../specifications/component/v2/spec.md#endpoints), [component v2
   §6.4](../specifications/component/v2/spec.md#connection-requirements), [ADR
   0039](adr/0039-provenance-is-chosen-at-deployment.md), [ADR
-  0045](adr/0045-connection-protocols-are-a-registry.md)
+  0045](adr/0045-connection-protocols-are-a-registry.md), [ADR
+  0059](adr/0059-an-embeddings-protocol-and-connections-a-node-provides.md)
 - **Status:** approved, stable. Tags: networking, connections.
 
 #### <a id="component-protocol-category"></a>protocol category
@@ -1686,6 +1706,22 @@ and the member and view tables are generated.
   §6.4](../specifications/component/v2/spec.md#connection-requirements), [ADR
   0045](adr/0045-connection-protocols-are-a-registry.md)
 - **Status:** approved, provisional. Tags: connections, registry.
+
+#### <a id="component-provided-connection"></a>provided connection
+
+A connection a SERVICE or WORKER serves, declared in its contract by a protocol
+and a map from each member it supplies to one of its own outputs, which a
+blueprint binds to a sibling's connection input.
+
+- **fills:** [connection input](#component-connection-input)
+- **Identifiers:** fields: `providedConnections`, `members`; codes:
+  `ERR_INVALID_PROVIDED_CONNECTION`; defs: `ComponentProvidedConnection`
+- **Not to be confused with:** A connection parameter, which the organization's
+  connection configuration answers rather than a node.
+- **Source:** [component v2
+  §6.5](../specifications/component/v2/spec.md#provided-connections), [ADR
+  0059](adr/0059-an-embeddings-protocol-and-connections-a-node-provides.md)
+- **Status:** approved, provisional. Tags: values, connections.
 
 #### <a id="component-public-address"></a>public address
 
@@ -2064,6 +2100,17 @@ whether resolution defers, rejects or reads a persisted selection.
   0045](adr/0045-connection-protocols-are-a-registry.md)
 - **Status:** approved, provisional. Tags: connections.
 
+#### <a id="blueprint-active"></a>active
+
+A rollout whose every SERVICE and WORKER node is ready and whose every ordered
+job, a JOB without a schedule that carries startAfter, has succeeded.
+
+- **Part of:** [node graph](#blueprint-node-graph)
+- **Source:** [blueprint v2 §1.1](../specifications/blueprint/v2/spec.md#terms),
+  [blueprint v2 §4.6](../specifications/blueprint/v2/spec.md#start-order), [ADR
+  0055](adr/0055-a-node-starts-after-the-nodes-it-names.md)
+- **Status:** approved, stable. Tags: lifecycle.
+
 #### <a id="blueprint-binding"></a>binding
 
 The authored edge that supplies one input of one node from exactly one origin: a
@@ -2158,6 +2205,23 @@ or a network class, written in a placement constraint or a volume allocation.
   0038](adr/0038-v2-one-vocabulary-and-v1-retires.md), [ADR
   0046](adr/0046-the-catalog-is-curated-and-an-organization-publishes-to-its-library.md)
 - **Status:** approved, stable. Tags: compute, catalog.
+
+#### <a id="blueprint-checked-api-key"></a>checked API key
+
+A generated parameter an exposure names in apiKey, whose value the platform
+accepts as the bearer token of a request without a viewer session on a
+RESTRICTED endpoint, and checks before forwarding it.
+
+- **Part of:** [exposure](#blueprint-exposure)
+- **Identifiers:** codes: `ERR_INVALID_API_KEY_PARAMETER`; defs:
+  `BlueprintExposureApiKey`
+- **Not to be confused with:** The BEARER exemption, which passes any bearer
+  token on for the workload to check.
+- **Not to be confused with:** The apiKey member of a language-model connection.
+- **Source:** [blueprint v2
+  §4.5](../specifications/blueprint/v2/spec.md#access), [ADR
+  0061](adr/0061-a-platform-checked-api-key-and-exact-exempt-paths.md)
+- **Status:** approved, provisional. Tags: access.
 
 #### <a id="blueprint-compute"></a>compute
 
@@ -2271,7 +2335,8 @@ connection the organization has configured, which binds only connection inputs.
 
 - **Kind of:** [deployment parameter](#blueprint-deployment-parameter)
 - **selects:** [connection](#blueprint-connection)
-- **Identifiers:** codes: `ERR_INVALID_CONNECTION_BINDING`
+- **Identifiers:** codes: `ERR_INVALID_CONNECTION_BINDING`,
+  `ERR_UNKNOWN_PROVIDED_CONNECTION`
 - **Source:** [blueprint v2
   §5.3](../specifications/blueprint/v2/spec.md#connections), [ADR
   0030](adr/0030-atomic-named-connections.md)
@@ -2343,6 +2408,19 @@ deployment.creator.<fact> }}`.
   §5.2](../specifications/blueprint/v2/spec.md#value-sources)
 - **Status:** approved, stable. Tags: parameters.
 
+#### <a id="blueprint-disclosed-value"></a>disclosed value
+
+A generated parameter's value that the platform shows the people who manage the
+deployment, behind an explicit reveal and apart from the deploy form, as one to
+keep, such as a key that encrypts backed-up data.
+
+- **Part of:** [deploy form](#blueprint-deploy-form)
+- **Identifiers:** fields: `disclosed`
+- **Source:** [blueprint v2
+  §5.4](../specifications/blueprint/v2/spec.md#deploy-form), [ADR
+  0062](adr/0062-a-parameter-offers-options-and-a-generated-secret-can-be-disclosed.md)
+- **Status:** approved, provisional. Tags: parameters, presentation.
+
 #### <a id="blueprint-document-reference"></a>document reference
 
 A node's componentRef naming the component document it deploys, either as an
@@ -2384,7 +2462,8 @@ persisted random credential of a fixed byte length and encoding.
 
 - **Kind of:** [deployment parameter](#blueprint-deployment-parameter)
 - **Identifiers:** fields: `generator`, `byteLength`, `encoding`; values: `HEX`,
-  `BASE64`, `BASE64URL`; defs: `BlueprintParameterGenerator`
+  `BASE64`, `BASE64URL`; codes: `WARN_GENERATOR_OUTSIDE_SCHEMA`; defs:
+  `BlueprintParameterGenerator`
 - **Source:** [blueprint v2
   §5.2](../specifications/blueprint/v2/spec.md#value-sources)
 - **Status:** approved, stable. Tags: parameters, sensitivity.
@@ -2454,6 +2533,20 @@ decides whether the connection is granted or provisioned.
   §5.3](../specifications/blueprint/v2/spec.md#connections), [ADR
   0039](adr/0039-provenance-is-chosen-at-deployment.md)
 - **Status:** approved, stable. Tags: connections.
+
+#### <a id="blueprint-mount"></a>mount
+
+A public endpoint served under a path of another public endpoint's host rather
+than on a host of its own, with the path forwarded unchanged.
+
+- **Part of:** [exposure](#blueprint-exposure)
+- **Identifiers:** fields: `mount`, `node`, `endpoint`, `path`; codes:
+  `ERR_INVALID_MOUNT`; requirement prefixes: `BP-HOST`; defs: `BlueprintMount`
+- **Not to be confused with:** A custom domain, which v2 does not support.
+- **Source:** [blueprint v2
+  §4.7](../specifications/blueprint/v2/spec.md#public-hosts), [ADR
+  0057](adr/0057-a-deployment-has-many-public-hosts-and-one-sign-in.md)
+- **Status:** approved, stable. Tags: networking, access.
 
 #### <a id="blueprint-node"></a>node
 
@@ -2574,6 +2667,22 @@ the variables, deployment or connections namespace.
   §5.2](../specifications/blueprint/v2/spec.md#value-sources)
 - **Status:** approved, stable. Tags: parameters, placeholder.
 
+#### <a id="blueprint-parameter-option"></a>parameter option
+
+A value a deploy form offers for a submitted parameter, with the label it shows,
+in a list that is closed unless it is editable, when the deployer may also type
+a value in.
+
+- **Part of:** [deploy form](#blueprint-deploy-form)
+- **Identifiers:** fields: `options`, `editable`; defs:
+  `BlueprintParameterOption`
+- **Not to be confused with:** An enum in the receiving input's value schema,
+  which closes the value for every blueprint and is labelled with enumLabels.
+- **Source:** [blueprint v2
+  §5.4](../specifications/blueprint/v2/spec.md#deploy-form), [ADR
+  0062](adr/0062-a-parameter-offers-options-and-a-generated-secret-can-be-disclosed.md)
+- **Status:** approved, provisional. Tags: parameters, presentation.
+
 #### <a id="blueprint-parameter-origin"></a>parameter origin
 
 The way one deployment parameter's value is obtained, named by the keys present:
@@ -2676,6 +2785,23 @@ USER, a complete set the deployer supplies.
   0039](adr/0039-provenance-is-chosen-at-deployment.md)
 - **Status:** approved, stable. Tags: connections.
 
+#### <a id="blueprint-start-order"></a>start order
+
+The nodes a node waits for before it starts in a rollout, each with the
+condition it waits on, READY for a SERVICE or WORKER and SUCCEEDED for a JOB
+without a schedule, which together MUST form no cycle.
+
+- **Part of:** [node graph](#blueprint-node-graph)
+- **Identifiers:** fields: `startAfter`, `node`, `condition`; values: `READY`,
+  `SUCCEEDED`; codes: `ERR_START_CYCLE`, `ERR_INVALID_START_ORDER`; requirement
+  prefixes: `BP-ORDER`; defs: `BlueprintStartCondition`
+- **Not to be confused with:** A value dependency, which orders no start.
+- **Not to be confused with:** Compose's depends_on, which this follows.
+- **Source:** [blueprint v2
+  §4.6](../specifications/blueprint/v2/spec.md#start-order), [ADR
+  0055](adr/0055-a-node-starts-after-the-nodes-it-names.md)
+- **Status:** approved, stable. Tags: composition, lifecycle.
+
 #### <a id="blueprint-storage-class"></a>storage class
 
 The token naming what kind of storage may serve a volume allocation, such as
@@ -2700,6 +2826,22 @@ default, and the only kind a deploy form edits.
   §5](../specifications/blueprint/v2/spec.md#parameters), [blueprint v2
   §5.2](../specifications/blueprint/v2/spec.md#value-sources)
 - **Status:** approved, stable. Tags: parameters.
+
+#### <a id="blueprint-template-binding"></a>template
+
+A binding whose origin is a string composed of literal text and placeholders
+naming deployment parameters and node outputs, written into the text as its
+format says.
+
+- **Kind of:** [binding](#blueprint-binding)
+- **Identifiers:** fields: `template`, `format`; values: `URL`, `TEXT`; codes:
+  `ERR_INVALID_TEMPLATE`
+- **Not to be confused with:** A component output template, which reads only the
+  component's own endpoint properties.
+- **Source:** [blueprint v2
+  §4.2](../specifications/blueprint/v2/spec.md#bindings), [ADR
+  0056](adr/0056-a-binding-composes-a-string-and-encodes-what-it-interpolates.md)
+- **Status:** approved, stable. Tags: values.
 
 #### <a id="blueprint-user-selection"></a>USER selection
 
@@ -2755,8 +2897,8 @@ satisfy the requested protocol, capabilities and input schemas.
 
 - **Part of:** [selection](#blueprint-selection)
 - **Identifiers:** fields: `views`; defs: `OpenaiChatCompletionsView`,
-  `AnthropicMessagesView`, `PostgresView`, `RedisView`, `S3View`,
-  `TelegramBotView`, `SlackAppView`, `DiscordBotView`
+  `AnthropicMessagesView`, `OpenaiEmbeddingsView`, `PostgresView`, `RedisView`,
+  `S3View`, `TelegramBotView`, `SlackAppView`, `DiscordBotView`
 - **Source:** [blueprint v2
   §5.3](../specifications/blueprint/v2/spec.md#connections), [ADR
   0045](adr/0045-connection-protocols-are-a-registry.md)
@@ -2774,14 +2916,17 @@ platform may sign in and identify to the workload.
 
 #### <a id="blueprint-viewer-claim"></a>viewer claim
 
-A fact about the viewer released to the workload beside their identity, EMAIL or
-NAME, never by default.
+A fact about the viewer released to the workload beside their identity, EMAIL,
+NAME or ROLE, never by default; ROLE, the viewer's organization role and whether
+they created the deployment, travels only in a token.
 
 - **Part of:** [exposure](#blueprint-exposure)
-- **Identifiers:** fields: `viewerClaims`; values: `EMAIL`, `NAME`
-- **Not to be confused with:** An OIDC claim in general; only these two are
+- **Identifiers:** fields: `viewerClaims`; values: `EMAIL`, `NAME`, `ROLE`
+- **Not to be confused with:** An OIDC claim in general; only these three are
   released.
-- **Source:** [blueprint v2 §4.5](../specifications/blueprint/v2/spec.md#access)
+- **Source:** [blueprint v2
+  §4.5](../specifications/blueprint/v2/spec.md#access), [ADR
+  0060](adr/0060-role-claims-and-client-secret-rotation-for-oidc-apps.md)
 - **Status:** approved, stable. Tags: viewer.
 
 #### <a id="blueprint-viewer-identity-mode"></a>viewer identity mode
