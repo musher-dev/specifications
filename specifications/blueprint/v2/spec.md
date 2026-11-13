@@ -874,12 +874,41 @@ the parameter. The one exception is a generated parameter that carries `ui` and
 that a hash names: it reaches the deployer through disclosure
 ([`BP-PARAM-012`](#BP-PARAM-012)) without a binding of its own.
 
-<a id="BP-PARAM-002"></a>**`BP-PARAM-002`**: The inputs one parameter binds MUST
-declare equal value schemas, ignoring mapping order. Semantic: otherwise
-`ERR_CONFLICTING_INPUT_SCHEMA` at `/spec/parameters/<name>`. Descriptions,
-targets and input defaults do not
-make inputs different. Sensitivity is the union of the receiving inputs and the
-value supplied.
+<a id="BP-PARAM-002"></a><a id="intersection"></a>**`BP-PARAM-002`**: A
+parameter's value MUST satisfy the value schema of every input it binds, so the
+parameter's value schema is their **intersection**. Inputs that declare
+different schemas MAY share a parameter, a consumer stricter than its producer
+among them, as long as some value satisfies them all
+([ADR 0048](../../../docs/adr/0048-a-parameter-satisfies-every-input-it-binds.md)).
+Semantic: `ERR_CONFLICTING_INPUT_SCHEMA` at `/spec/parameters/<name>` when the
+intersection is empty by one of these conditions, each decided keyword by
+keyword and through `items` and `properties`:
+
+| Condition | Keywords it names |
+|---|---|
+| Two inputs declare different types, other than `integer` beside `number`, whose intersection is `integer` | `type` |
+| No member of an input's `enum` satisfies every other input's schema | `enum` |
+| The greatest lower bound exceeds the least upper bound, meets it where either is exclusive, or, for `integer`, leaves no integer between them | The two bounds |
+| The greatest `minLength` exceeds the least `maxLength` | `minLength`, `maxLength` |
+| The greatest `minItems` exceeds the least `maxItems`, or the arrays must hold an item and their `items` intersect to nothing | `minItems`, `maxItems`, or the item's keywords |
+| An input requires a property another does not declare, which no closed object can hold, or a required property's schemas intersect to nothing | `required`, `properties`, or the property's keywords |
+| A generated parameter whose inputs declare different schemas can produce a value, among those [`BP-PARAM-004`](#BP-PARAM-004)'s output language holds, that fails one of them | The keywords that value fails |
+
+`pattern` is compared with nothing but the members of an `enum` and a
+generator's output language: whether two patterns share a string is not decided
+before resolution, and a resolved value that misses one is
+`ERR_VALUE_CONSTRAINT` ([`BP-PARAM-008`](#BP-PARAM-008)). The diagnostic carries
+one `related` location for each input the parameter binds, whose `artifact` is
+that node's `componentRef` and whose `path` is
+`/spec/contract/inputs/<input>/schema`, and its message SHOULD name the
+keywords whose constraints cannot hold together, such as `minLength` and
+`maxLength`.
+
+Two value schemas are the same schema when they differ only in mapping order or
+in the order of a set: `required` and `enum` are sets. Descriptions, targets and
+input defaults are not part of a value schema, and do not make inputs
+different. Sensitivity is the union of the receiving inputs and the value
+supplied.
 
 <a id="BP-PARAM-003"></a>**`BP-PARAM-003`**: An input without a binding uses its
 component default, remains absent if optional, or is unsatisfied. Semantic: a
@@ -909,6 +938,26 @@ that many cryptographically secure random bytes. `encoding` defaults to `HEX`
 URL-safe alphabet without padding. Custom alphabets are not supported. The
 generated string must satisfy every receiving value schema; failing a
 constraint must not regenerate it.
+
+A generator's **output language** is every string of its encoded length,
+`2 × byteLength` characters in `HEX`, `4 × ⌈byteLength / 3⌉` in `BASE64` and
+`⌈4 × byteLength / 3⌉` in `BASE64URL`, whose characters are drawn from its
+encoding's alphabet, with `BASE64`'s `=` padding in its fixed last positions.
+It is a superset of what the encoding can emit, and it is what
+[`BP-PARAM-002`](#BP-PARAM-002) and [`BP-PARAM-017`](#BP-PARAM-017) compare,
+so that every implementation decides them alike.
+
+<a id="BP-PARAM-017"></a>**`BP-PARAM-017`**: Every string in a generator's
+output language SHOULD satisfy the value schema of every input the parameter
+binds. Where those inputs declare different schemas, `BP-PARAM-002` makes this
+a MUST. Where they declare one schema, a generator whose output language holds
+a string that fails it is reported in the semantic phase as
+`WARN_GENERATOR_OUTSIDE_SCHEMA` at `/spec/parameters/<name>/generator`, whose
+message SHOULD name the keywords such a string fails. It is a warning, not an
+error, because 2.1.0 accepted such a document, and validation never becomes
+stricter within a major version
+([core v2 §3](../../core/v2/spec.md#compatibility)). A generated value that
+fails at resolution is still `ERR_VALUE_CONSTRAINT`.
 
 <a id="BP-PARAM-012"></a>**`BP-PARAM-012`**: A `hash` names, in `parameter`, a
 generated parameter of the same blueprint. bcrypt reads at most 72 bytes and
@@ -1457,9 +1506,12 @@ optional, which a form deployment leaves absent.
 Fields are ordered by ascending `ui.order`, unspecified orders last, then by
 parameter name in UTF-8 order. For a parameter bound to more than one input, help
 text is the description of the first receiver by node name then input name;
-this ordering does not affect validation. Clients validate logical values;
-server admission MUST validate them independently as well. Labels and
-descriptions do not override value schemas.
+this ordering does not affect validation. A form validates a value against the
+intersection of its receivers' schemas ([`BP-PARAM-002`](#BP-PARAM-002)), and
+chooses its control from it: an `enum` any receiver declares offers the members
+every receiver accepts, in the order of the first receiver that declares one.
+Clients validate logical values; server admission MUST validate them
+independently as well. Labels and descriptions do not override value schemas.
 
 ## <a id="validation-phases"></a><a id="validation-layers"></a>6. Validation phases
 
@@ -1495,7 +1547,7 @@ Core and component diagnostics apply, with these additions:
 | `ERR_UNKNOWN_PARAMETER` | `semantic`, `resolution` | A binding, a hash or a submitted value names no parameter. |
 | `ERR_INCOMPATIBLE_TYPE` | `semantic` | An output's type cannot supply the input a binding joins it to. |
 | `ERR_UNREFERENCED_COMPONENT` | `semantic` | The item contains a component document no node references. |
-| `ERR_CONFLICTING_INPUT_SCHEMA` | `semantic` | The inputs one parameter binds disagree. |
+| `ERR_CONFLICTING_INPUT_SCHEMA` | `semantic` | No value satisfies every input one parameter binds. |
 | `ERR_UNBOUND_PARAMETER` | `semantic` | No binding names the parameter. |
 | `ERR_UNSATISFIED_REQUIRED_INPUT` | `semantic` | A required input has no binding or default. |
 | `ERR_ENDPOINT_NOT_PUBLIC` | `semantic` | An output reads a public property of an endpoint the blueprint does not expose. |
@@ -1518,6 +1570,16 @@ Core and component diagnostics apply, with these additions:
 | `ERR_CONNECTION_NOT_FOUND` | `resolution` | Authorized acquisition confirms no selected default exists. |
 | `ERR_CONNECTION_DENIED` | `resolution` | Acquisition denies permission to use the connection. |
 | `ERR_CONNECTION_INCOMPATIBLE` | `resolution` | The selection cannot satisfy the required protocol, capabilities or members. |
+
+### <a id="warnings"></a>7.1 Warnings
+
+These codes are reported at `WARNING` ([core v2 §7](../../core/v2/spec.md#diagnostics)).
+Each reports a SHOULD the document does not meet. A warning never changes a
+result's status, so no document is rejected for one.
+
+| Code | Requirement | Phase | Meaning |
+|---|---|---|---|
+| `WARN_GENERATOR_OUTSIDE_SCHEMA` | [`BP-PARAM-017`](#BP-PARAM-017) | `semantic` | A generator can produce a value the one schema its inputs declare rejects. Reported at the parameter's `generator`. |
 
 ## <a id="conformance"></a>8. Conformance
 

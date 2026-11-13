@@ -5214,6 +5214,9 @@
         ],
         "defs": [
           "BlueprintParameterGenerator"
+        ],
+        "codes": [
+          "WARN_GENERATOR_OUTSIDE_SCHEMA"
         ]
       },
       "source": [

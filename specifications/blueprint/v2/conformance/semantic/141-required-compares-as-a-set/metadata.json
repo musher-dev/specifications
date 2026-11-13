@@ -1,0 +1,11 @@
+{
+  "id": "semantic-141-required-compares-as-a-set",
+  "phase": "semantic",
+  "expected": "pass",
+  "clause": "specifications/blueprint/v2/spec.md#recipients",
+  "requirements": [
+    "BP-PARAM-002"
+  ],
+  "summary": "Two inputs whose object schemas differ only in the order of required and of their properties declare the same schema.",
+  "document": "app/blueprint.yaml"
+}

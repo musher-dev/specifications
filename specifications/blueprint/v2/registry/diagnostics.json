@@ -875,6 +875,17 @@
         "ERROR"
       ],
       "declaredBy": "blueprint"
+    },
+    {
+      "code": "WARN_GENERATOR_OUTSIDE_SCHEMA",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "WARNING"
+      ],
+      "declaredBy": "blueprint",
+      "requirement": "BP-PARAM-017"
     }
   ]
 }

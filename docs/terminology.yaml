@@ -2479,7 +2479,7 @@ terms:
       encoding.
     shortDefinition: A persisted random credential.
     kind_of: [blueprint.deployment-parameter]
-    identifiers: { fields: [generator, byteLength, encoding], values: [HEX, BASE64, BASE64URL], defs: [BlueprintParameterGenerator] }
+    identifiers: { fields: [generator, byteLength, encoding], values: [HEX, BASE64, BASE64URL], defs: [BlueprintParameterGenerator], codes: [WARN_GENERATOR_OUTSIDE_SCHEMA] }
     source: [blueprint v2 §5.2]
     stability: stable
     status: approved

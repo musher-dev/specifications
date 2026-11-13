@@ -16,7 +16,7 @@ import { scanReferences } from '../lib/references.ts'
 import { familyBundle } from '../schema/bundle.ts'
 import { strictAjv } from '../schema/lint.ts'
 import { connectionMemberContract, isConnectionInput } from './connections.ts'
-import { type Diagnostic, type Phase, parseDocumentBytes, reported } from './document.ts'
+import { type Diagnostic, isError, type Phase, parseDocumentBytes, reported } from './document.ts'
 import {
   type ConnectionsContext,
   deploymentFacts,
@@ -296,7 +296,8 @@ export function resolveDeployment(
       return 'value' in parsed && Boolean(compileFamily(component)(parsed.value))
     },
   })
-  const diagnostics = [...report.diagnostics],
+  // A semantic WARNING never changes a status (core v2 §7), so resolution reads errors alone.
+  const diagnostics = report.diagnostics.filter(isError),
     deferred = [...report.deferred]
   const inputs: Record<string, ResolvedValue> = Object.create(null),
     outputs: Record<string, ResolvedValue> = Object.create(null),
@@ -1082,7 +1083,8 @@ export function resolutionRecord(
   )
     throw new Error('missing immutable deployment snapshot')
   const report = semanticReport({ name: 'blueprint' }, parsed.value, context)
-  if (report.diagnostics.length || report.deferred.length) throw new Error('unresolved blueprint')
+  if (report.diagnostics.some(isError) || report.deferred.length)
+    throw new Error('unresolved blueprint')
   const nodes = record(at(parsed.value, 'spec', 'nodes'))
   const equal = (a: unknown, b: unknown) => canonicalJson(a as Json) === canonicalJson(b as Json)
   const sameKeys = (a: object, b: object) => equal(Object.keys(a).sort(), Object.keys(b).sort())

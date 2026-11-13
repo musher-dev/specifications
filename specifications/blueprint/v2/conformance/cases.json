@@ -826,6 +826,46 @@
       "id": "structural-091-uppercase-catalog-reference",
       "phase": "structural",
       "path": "structural/091-uppercase-catalog-reference"
+    },
+    {
+      "id": "semantic-140-stricter-consumer-shares-a-parameter",
+      "phase": "semantic",
+      "path": "semantic/140-stricter-consumer-shares-a-parameter"
+    },
+    {
+      "id": "semantic-141-required-compares-as-a-set",
+      "phase": "semantic",
+      "path": "semantic/141-required-compares-as-a-set"
+    },
+    {
+      "id": "semantic-142-lengths-that-cannot-meet",
+      "phase": "semantic",
+      "path": "semantic/142-lengths-that-cannot-meet"
+    },
+    {
+      "id": "semantic-143-disjoint-enums",
+      "phase": "semantic",
+      "path": "semantic/143-disjoint-enums"
+    },
+    {
+      "id": "semantic-144-integer-bounds-holding-no-integer",
+      "phase": "semantic",
+      "path": "semantic/144-integer-bounds-holding-no-integer"
+    },
+    {
+      "id": "semantic-145-generator-outside-the-intersection",
+      "phase": "semantic",
+      "path": "semantic/145-generator-outside-the-intersection"
+    },
+    {
+      "id": "semantic-146-generator-within-the-intersection",
+      "phase": "semantic",
+      "path": "semantic/146-generator-within-the-intersection"
+    },
+    {
+      "id": "semantic-147-generator-longer-than-the-intersection",
+      "phase": "semantic",
+      "path": "semantic/147-generator-longer-than-the-intersection"
     }
   ]
 }

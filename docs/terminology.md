@@ -2231,7 +2231,8 @@ persisted random credential of a fixed byte length and encoding.
 
 - **Kind of:** [deployment parameter](#blueprint-deployment-parameter)
 - **Identifiers:** fields: `generator`, `byteLength`, `encoding`; values: `HEX`,
-  `BASE64`, `BASE64URL`; defs: `BlueprintParameterGenerator`
+  `BASE64`, `BASE64URL`; codes: `WARN_GENERATOR_OUTSIDE_SCHEMA`; defs:
+  `BlueprintParameterGenerator`
 - **Source:** [blueprint v2
   §5.2](../specifications/blueprint/v2/spec.md#value-sources)
 - **Status:** approved, stable. Tags: parameters, sensitivity.

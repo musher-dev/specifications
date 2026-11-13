@@ -10,7 +10,7 @@ import {
   statSync,
 } from 'node:fs'
 import { basename, dirname, isAbsolute, join, posix, relative, resolve } from 'node:path'
-import { canonicalJson, type Family, isObject, type Json } from '../lib/layout.ts'
+import { type Family, isObject, type Json } from '../lib/layout.ts'
 import { scanReferences } from '../lib/references.ts'
 import {
   CONNECTION_MEMBERS,
@@ -26,7 +26,14 @@ import {
   parameterOrigin,
   parameterOriginDiagnostics,
 } from './selections.ts'
-import { compatible, schemaProblem, valueFits } from './values.ts'
+import {
+  compatible,
+  generatorConflicts,
+  intersectionConflicts,
+  schemaKey,
+  schemaProblem,
+  valueFits,
+} from './values.ts'
 
 export type { Diagnostic }
 export interface DeferredObligation {
@@ -913,7 +920,9 @@ export function semanticReport(
       if (at(readDocument(path), 'kind') === 'COMPONENT')
         issue(out, 'ERR_UNREFERENCED_COMPONENT', '/spec/nodes')
     }
+  /** Each parameter's receiving inputs, with where each is declared (BP-PARAM-002). */
   const consumers = new Map<string, Record<string, Json>[]>()
+  const receiving = new Map<string, { node: string; input: string; componentRef: string }[]>()
   const dependencies = new Map<string, string[]>()
   for (const [name, node] of Object.entries(nodes)) {
     const n = record(node),
@@ -1046,6 +1055,9 @@ export function semanticReport(
           const receivers = consumers.get(String(s.parameter)) ?? []
           receivers.push(consumer)
           consumers.set(String(s.parameter), receivers)
+          const where = receiving.get(String(s.parameter)) ?? []
+          where.push({ node: name, input, componentRef: String(n.componentRef) })
+          receiving.set(String(s.parameter), where)
           const value = at(p, 'default')
           if (
             value !== undefined &&
@@ -1131,19 +1143,58 @@ export function semanticReport(
       )
         issue(out, 'ERR_INVALID_HASHED_PARAMETER', `${path}/hash/algorithm`)
     }
+    // BP-PARAM-002: the parameter's value schema is the intersection of its
+    // receivers'. Schemas that differ only in mapping order or in the order of a
+    // set (`required`, `enum`) are the same schema.
+    const schemas = receivers.map((v) => v.schema ?? null)
+    const differ = schemas.some((v) => schemaKey(v) !== schemaKey(schemas[0]))
+    const conflicts = new Set(differ ? intersectionConflicts(schemas) : [])
+    // BP-PARAM-002 and BP-PARAM-017: every string a generator can produce lies in
+    // the intersection. Where the receivers declare one schema, which 2.1.0
+    // accepted, a generator outside it is a warning rather than an error.
+    const generator = at(p, 'generator')
     if (
-      receivers.length > 1 &&
-      receivers.some(
-        (v) => canonicalJson(v.schema ?? null) !== canonicalJson(receivers[0]?.schema ?? null),
-      )
+      generator !== undefined &&
+      schemas.length &&
+      schemas.every((v) => at(v, 'type') === 'string')
+    ) {
+      const failing = [...new Set(schemas.flatMap((v) => generatorConflicts(generator, v)))]
+      if (differ) for (const keyword of failing) conflicts.add(keyword)
+      else if (failing.length)
+        out.push({
+          code: 'WARN_GENERATOR_OUTSIDE_SCHEMA',
+          path: `${path}/generator`,
+          message: `a generated value can fail ${failing.join(', ')}`,
+          phase: 'semantic',
+          severity: 'WARNING',
+        })
+    }
+    if (conflicts.size)
+      out.push({
+        code: 'ERR_CONFLICTING_INPUT_SCHEMA',
+        path,
+        message: `no value satisfies every input the parameter binds: ${[...conflicts].join(', ')}`,
+        phase: 'semantic',
+        related: (receiving.get(name) ?? []).map((r) => ({
+          artifact: r.componentRef,
+          path: `/spec/contract/inputs/${token(r.input)}/schema`,
+        })),
+      })
+    // BP-UI-003: the enum a form offers is the intersection's, in the order of
+    // the first receiver declaring one.
+    const enumOf = (v: Json | undefined) =>
+      Array.isArray(at(v, 'enum'))
+        ? (at(v, 'enum') as Json[])
+        : Array.isArray(at(v, 'items', 'enum'))
+          ? (at(v, 'items', 'enum') as Json[])
+          : undefined
+    const declaring = schemas.find((v) => enumOf(v) !== undefined)
+    const members = (enumOf(declaring) ?? []).filter((member) =>
+      schemas.every((v) => {
+        const own = enumOf(v)
+        return own === undefined || own.some((m) => schemaKey(m) === schemaKey(member))
+      }),
     )
-      issue(out, 'ERR_CONFLICTING_INPUT_SCHEMA', path)
-    const schema = record(receivers[0]?.schema)
-    const members = Array.isArray(schema.enum)
-      ? schema.enum
-      : Array.isArray(at(schema.items, 'enum'))
-        ? (at(schema.items, 'enum') as Json[])
-        : []
     for (const member of Object.keys(record(at(p, 'ui', 'enumLabels'))))
       if (
         receivers.length &&

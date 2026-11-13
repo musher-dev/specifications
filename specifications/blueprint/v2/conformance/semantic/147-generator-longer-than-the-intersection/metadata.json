@@ -1,0 +1,12 @@
+{
+  "id": "semantic-147-generator-longer-than-the-intersection",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#parameters",
+  "requirements": [
+    "BP-PARAM-002",
+    "BP-PARAM-004"
+  ],
+  "summary": "A HEX generator of 32 bytes produces 64 characters, more than one of two different input schemas allows.",
+  "document": "app/blueprint.yaml"
+}

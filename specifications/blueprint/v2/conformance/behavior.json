@@ -7853,5 +7853,65 @@
       "/status": "VALID",
       "/diagnostics": []
     }
+  },
+  {
+    "id": "validation-conflicting-schema-names-each-input",
+    "suite": "resolution",
+    "operation": "validate",
+    "requirements": [
+      "BP-PARAM-002"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v2\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"secret\":{\"ui\":{\"label\":\"Secret\"}}},\"nodes\":{\"app\":{\"componentRef\":\"./components/app.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"secret\":{\"parameter\":\"secret\"}}},\"store\":{\"componentRef\":\"./components/store.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"secret\":{\"parameter\":\"secret\"}}}}}}",
+      "app/components/app.yaml": "{\"specVersion\":\"v2\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/service:1\"},\"endpoints\":{\"primary\":{\"targetPort\":8080,\"protocol\":\"TCP\"}}},\"contract\":{\"inputs\":{\"secret\":{\"schema\":{\"type\":\"string\",\"minLength\":32},\"description\":\"Synthetic input.\",\"target\":{\"envVar\":\"APP_SECRET\"}}},\"outputs\":{}}}}",
+      "app/components/store.yaml": "{\"specVersion\":\"v2\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/service:1\"},\"endpoints\":{\"primary\":{\"targetPort\":8080,\"protocol\":\"TCP\"}}},\"contract\":{\"inputs\":{\"secret\":{\"schema\":{\"type\":\"string\",\"maxLength\":16},\"description\":\"Synthetic input.\",\"target\":{\"envVar\":\"STORE_SECRET\"}}},\"outputs\":{}}}}"
+    },
+    "document": "app/blueprint.yaml",
+    "expect": {
+      "/status": "INVALID"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_CONFLICTING_INPUT_SCHEMA",
+        "path": "/spec/parameters/secret",
+        "phase": "semantic",
+        "related": [
+          {
+            "artifact": "./components/app.yaml",
+            "path": "/spec/contract/inputs/secret/schema"
+          },
+          {
+            "artifact": "./components/store.yaml",
+            "path": "/spec/contract/inputs/secret/schema"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "validation-generator-outside-its-one-schema-warns",
+    "suite": "resolution",
+    "operation": "validate",
+    "requirements": [
+      "BP-PARAM-017"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v2\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"secret\":{\"generator\":{\"byteLength\":32}}},\"nodes\":{\"app\":{\"componentRef\":\"./components/app.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"secret\":{\"parameter\":\"secret\"}}},\"store\":{\"componentRef\":\"./components/store.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"secret\":{\"parameter\":\"secret\"}}}}}}",
+      "app/components/app.yaml": "{\"specVersion\":\"v2\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/service:1\"},\"endpoints\":{\"primary\":{\"targetPort\":8080,\"protocol\":\"TCP\"}}},\"contract\":{\"inputs\":{\"secret\":{\"schema\":{\"type\":\"string\",\"maxLength\":40},\"description\":\"Synthetic input.\",\"target\":{\"envVar\":\"APP_SECRET\"},\"sensitive\":true}},\"outputs\":{}}}}",
+      "app/components/store.yaml": "{\"specVersion\":\"v2\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/service:1\"},\"endpoints\":{\"primary\":{\"targetPort\":8080,\"protocol\":\"TCP\"}}},\"contract\":{\"inputs\":{\"secret\":{\"schema\":{\"type\":\"string\",\"maxLength\":40},\"description\":\"Synthetic input.\",\"target\":{\"envVar\":\"STORE_SECRET\"},\"sensitive\":true}},\"outputs\":{}}}}"
+    },
+    "document": "app/blueprint.yaml",
+    "expect": {
+      "/status": "VALID",
+      "/diagnostics": []
+    },
+    "diagnostics": [
+      {
+        "code": "WARN_GENERATOR_OUTSIDE_SCHEMA",
+        "path": "/spec/parameters/secret/generator",
+        "severity": "WARNING",
+        "phase": "semantic"
+      }
+    ]
   }
 ]

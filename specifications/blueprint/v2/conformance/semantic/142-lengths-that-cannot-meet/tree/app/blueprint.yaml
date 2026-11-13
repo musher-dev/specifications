@@ -1,0 +1,26 @@
+specVersion: v2
+kind: BLUEPRINT
+metadata:
+  slug: app
+  revision: 1
+  description: Synthetic conformance fixture blueprint.
+spec:
+  parameters:
+    secret:
+      ui:
+        label: Secret
+  nodes:
+    app:
+      componentRef: ./components/app.yaml
+      compute:
+        profile: general.standard.small
+      bindings:
+        secret:
+          parameter: secret
+    store:
+      componentRef: ./components/store.yaml
+      compute:
+        profile: general.standard.small
+      bindings:
+        secret:
+          parameter: secret
