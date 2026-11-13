@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.2](https://github.com/musher-dev/specifications/compare/listing/v2.1.1...listing/v2.1.2) (2026-11-13)
+
+
+### Specification prose
+
+* **listing:** state the remaining length bounds in the schema ([#238](https://github.com/musher-dev/specifications/issues/238)) ([b2a8fc4](https://github.com/musher-dev/specifications/commit/b2a8fc4e0d910bb0a07ae5cebd54069091dd50ce))
+
 ## [2.1.1](https://github.com/musher-dev/specifications/compare/listing/v2.1.0...listing/v2.1.1) (2026-11-13)
 
 
