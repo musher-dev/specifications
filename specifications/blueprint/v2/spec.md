@@ -1844,6 +1844,7 @@ evidence.
 | Not supported | How it would close |
 |---|---|
 | Component instances shared across deployments | A new origin kind for a binding |
+| Reaching another deployment's `PRIVATE` endpoint, in the same organization | An export and an import, [draft](#draft-exports) below |
 | Conditional node sets, including swapping a self-hosted `SERVICE` for a connection at deployment ([ADR 0019](../../../docs/adr/0019-external-component-node.md)) | A new optional field on a node |
 | Outputs produced by a job at run time | A new output origin, in component |
 | Recursive templates, and provider-specific maps | A new optional field |
@@ -1860,6 +1861,30 @@ evidence.
 | Choosing a plan or size for a provisioned connection | A new optional field on the connection parameter |
 | `capabilities` for a protocol other than a language model's | Permit `capabilities` on that protocol, in component |
 | Registering an endpoint's URL with a messaging service, such as a Telegram webhook or a Slack request URL | A new optional member of the exposure object |
+
+### <a id="draft-exports"></a>9.1 Draft: exported endpoints
+
+> **Draft, not normative.** This subsection records the shape
+> [ADR 0052](../../../docs/adr/0052-a-deployment-exports-a-private-endpoint-to-a-named-consumer.md)
+> decides, so that implementations can plan for it. It declares no requirement
+> ID, and no validator applies it: a document using any of it is rejected
+> today, as [`BP-ACCESS-011`](#BP-ACCESS-011) and the schema require.
+
+A deployment would reach another deployment's `PRIVATE` endpoint only through
+both sides declaring it. The exporting blueprint names the endpoint it exports
+and the consumers it admits, each by a stable identity the organization assigns.
+The consuming blueprint declares a parameter whose `from` names the export, and
+binds the private host, port and address it yields to its nodes like any other
+parameter. Acquiring an import would be authorized, persisted and recorded as a
+connection selection is ([§5.3](#connections)): a deployment that is not a named
+consumer is denied, and revoking an export denies new connections at once. Both
+deployments belong to one organization. Isolation would still hold at the
+network level, for the exported endpoint alone.
+
+Open before this becomes normative: whether an import is a connection protocol
+whose provider is a deployment, or a parameter kind of its own; how a consumer
+identity is named; and what a consumer sees when the exporting deployment is
+redeployed or deleted.
 
 ## <a id="security"></a>10. Security considerations
 

@@ -104,5 +104,6 @@ that is a review obligation.
 | [0049](0049-a-node-starts-after-the-nodes-it-names.md) | A node starts after the nodes it names | Proposed | 2026-11-13 | Relies on [0038](0038-v2-one-vocabulary-and-v1-retires.md) §3 | — |
 | [0050](0050-a-binding-composes-a-string-and-encodes-what-it-interpolates.md) | A binding composes a string, and encodes what it interpolates | Proposed | 2026-11-13 | Extends [0027](0027-a-reference-names-a-fact-the-document-cannot-contain.md) §3; Relies on [0027](0027-a-reference-names-a-fact-the-document-cannot-contain.md) §4; Relies on [0031](0031-one-grammar-for-the-authored-documents.md) §4 | — |
 | [0051](0051-a-deployment-has-many-public-hosts-and-one-sign-in.md) | A deployment has many public hosts and one sign-in | Proposed | 2026-11-13 | Extends [0034](0034-access-and-viewer-identity-are-part-of-exposure.md) §1; Relies on [0034](0034-access-and-viewer-identity-are-part-of-exposure.md) §5 | — |
+| [0052](0052-a-deployment-exports-a-private-endpoint-to-a-named-consumer.md) | A deployment exports a private endpoint to a named consumer | Proposed | 2026-11-13 | Extends [0034](0034-access-and-viewer-identity-are-part-of-exposure.md) §1 | — |
 
 <!-- adr-index:end -->
