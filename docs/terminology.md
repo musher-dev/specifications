@@ -2145,7 +2145,7 @@ job, a JOB without a schedule that carries startAfter, has succeeded.
 - **Source:** [blueprint v2 §1.1](../specifications/blueprint/v2/spec.md#terms),
   [blueprint v2 §4.6](../specifications/blueprint/v2/spec.md#start-order), [ADR
   0055](adr/0055-a-node-starts-after-the-nodes-it-names.md)
-- **Status:** approved, stable. Tags: lifecycle.
+- **Status:** approved, provisional. Tags: lifecycle.
 
 #### <a id="blueprint-binding"></a>binding
 
@@ -2582,7 +2582,7 @@ than on a host of its own, with the path forwarded unchanged.
 - **Source:** [blueprint v2
   §4.7](../specifications/blueprint/v2/spec.md#public-hosts), [ADR
   0057](adr/0057-a-deployment-has-many-public-hosts-and-one-sign-in.md)
-- **Status:** approved, stable. Tags: networking, access.
+- **Status:** approved, provisional. Tags: networking, access.
 
 #### <a id="blueprint-node"></a>node
 
@@ -2836,7 +2836,7 @@ without a schedule, which together MUST form no cycle.
 - **Source:** [blueprint v2
   §4.6](../specifications/blueprint/v2/spec.md#start-order), [ADR
   0055](adr/0055-a-node-starts-after-the-nodes-it-names.md)
-- **Status:** approved, stable. Tags: composition, lifecycle.
+- **Status:** approved, provisional. Tags: composition, lifecycle.
 
 #### <a id="blueprint-storage-class"></a>storage class
 
@@ -2877,7 +2877,7 @@ format says.
 - **Source:** [blueprint v2
   §4.2](../specifications/blueprint/v2/spec.md#bindings), [ADR
   0056](adr/0056-a-binding-composes-a-string-and-encodes-what-it-interpolates.md)
-- **Status:** approved, stable. Tags: values.
+- **Status:** approved, provisional. Tags: values.
 
 #### <a id="blueprint-user-selection"></a>USER selection
 
@@ -2962,6 +2962,7 @@ they created the deployment, travels only in a token.
   released.
 - **Source:** [blueprint v2
   §4.5](../specifications/blueprint/v2/spec.md#access), [ADR
+  0035](adr/0035-how-identity-and-credentials-reach-a-workload.md), [ADR
   0060](adr/0060-role-claims-and-client-secret-rotation-for-oidc-apps.md)
 - **Status:** approved, stable. Tags: viewer.
 
