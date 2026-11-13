@@ -1251,15 +1251,22 @@ outputs hand the members to the nodes that use them.
 
 <a id="COMP-JOB-001"></a>**`COMP-JOB-001`**: A `JOB` without `schedule` MUST run
 to completion once per rollout of the deployment that runs it, at creation, at
-each update and at each redeploy, ordered against no other node, and its
-outcome MUST be recorded for the deployment. Platform obligation; no document
-breaks it.
+each update and at each redeploy, ordered against no other node unless the
+blueprint orders it, and its outcome MUST be recorded for the deployment.
+Platform obligation; no document breaks it.
 
-It may run before, after or beside any other node's rollout, so a job that
-needs another node ready waits for it itself. v2 defines no automatic retry: a
-failed run is not started again until the next rollout. A failed run neither
-blocks nor fails the rollout of any other node, which is what ordering against
-nothing means.
+The one exception is a blueprint's `startAfter`
+([blueprint §4.6](../../blueprint/v2/spec.md#start-order)): a job that carries
+it starts only once the nodes it names are ready or have succeeded, a node that
+names the job starts only once it has succeeded, and a job that carries it holds
+the rollout's activation until it succeeds
+([blueprint `BP-ORDER-004`](../../blueprint/v2/spec.md#BP-ORDER-004),
+[`BP-ORDER-005`](../../blueprint/v2/spec.md#BP-ORDER-005)). Otherwise it may run
+before, after or beside any other node's rollout, so a job that needs another
+node ready waits for it itself, or is ordered by the blueprint. v2 defines no
+automatic retry: a failed run is not started again until the next rollout. A
+failed run that no `startAfter` names neither blocks nor fails the rollout of
+any other node, which is what ordering against nothing means.
 
 ```yaml
 spec:

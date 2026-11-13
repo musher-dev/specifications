@@ -621,7 +621,7 @@ visibility, whichever form states it, and the component constrains the choice:
 |---|---|
 | The key names no endpoint of the component | `ERR_UNKNOWN_ENDPOINT` |
 | A `WORKER` endpoint is `PUBLIC`: a worker is not request-driven, and its endpoints serve the platform and sibling nodes ([component `COMP-TYPE-003`](../../component/v2/spec.md#COMP-TYPE-003)) | `ERR_ENDPOINT_NOT_EXPOSABLE` |
-| A `PUBLIC` URL-addressed endpoint (`HTTP`, `HTTPS`, `WS`, `GRPC`) of a `SERVICE` has no readiness probe ([component `COMP-EP-003`](../../component/v2/spec.md#COMP-EP-003)) | `ERR_READINESS_REQUIRED` |
+| A `PUBLIC` URL-addressed endpoint (`HTTP`, `HTTPS`, `WS`, `GRPC`) of a `SERVICE` has no readiness probe, of any mechanism ([component `COMP-EP-003`](../../component/v2/spec.md#COMP-EP-003)) | `ERR_READINESS_REQUIRED` |
 | An output the component derives from a public property of an endpoint (`publicHostname`, `publicPort`, `publicAddress` or `publicURL`, [component §5.2](../../component/v2/spec.md#endpoints)) reads an endpoint that is not `PUBLIC` | `ERR_ENDPOINT_NOT_PUBLIC` |
 
 Semantic. Each diagnostic anchors at `exposure/<endpoint>`, except that
@@ -997,7 +997,11 @@ request's path, normalised as [`BP-ACCESS-009`](#BP-ACCESS-009) says, equals
 it; one given as `{ prefix: <path> }`, or as the bare path, covers a request
 as [`BP-ACCESS-009`](#BP-ACCESS-009) says, so `/status` covers `/status` and
 `/status/x` and never `/status-page`. The platform MUST match case-sensitively,
-and the query takes no part in matching.
+and the query takes no part in matching. Every other rule of
+[`BP-ACCESS-009`](#BP-ACCESS-009) holds for both forms: a path it refuses to
+exempt is not exempt, whichever form names it, and no exempt path reaches
+`/.musher`. Either form takes effect only once
+[`BP-ACCESS-012`](#BP-ACCESS-012) lets it.
 
 <a id="BP-ACCESS-018"></a>**`BP-ACCESS-018`**: Under `apiKey`, the platform MUST
 forward a request that carries no valid viewer session and an `Authorization`
@@ -1077,9 +1081,11 @@ or degraded. A condition that can no longer hold, because the `JOB` it names
 failed, leaves the node not started and the rollout failed, as the platform API
 reports; v2 defines no retry. Ordering governs only when a node starts: a node
 that later stops being ready neither stops nor restarts the nodes that waited
-for it. A `JOB` without `schedule` and without `startAfter` keeps
+for it. A `JOB` without `schedule` that neither carries `startAfter` nor is
+named by one keeps
 [component `COMP-JOB-001`](../../component/v2/spec.md#COMP-JOB-001)'s meaning,
-ordered against no other node; `startAfter` is how a blueprint orders one.
+ordered against no other node; `startAfter` is the exception that rule names,
+and how a blueprint orders one.
 Platform obligation; no document breaks it.
 
 <a id="BP-ORDER-005"></a>**`BP-ORDER-005`**: A rollout is **active** once every

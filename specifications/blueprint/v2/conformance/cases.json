@@ -1038,6 +1038,11 @@
       "path": "semantic/175-overlapping-mounts"
     },
     {
+      "id": "semantic-176-public-service-with-an-exec-readiness-probe",
+      "phase": "semantic",
+      "path": "semantic/176-public-service-with-an-exec-readiness-probe"
+    },
+    {
       "id": "semantic-301-node-provided-embeddings-connection",
       "phase": "semantic",
       "path": "semantic/301-node-provided-embeddings-connection"
