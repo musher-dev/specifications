@@ -5588,7 +5588,7 @@
           "BlueprintMount"
         ],
         "codes": [
-          "ERR_INVALID_MOUNT"
+          "ERR_INVALID_HOST_MOUNT"
         ],
         "requirement_prefixes": [
           "BP-HOST"

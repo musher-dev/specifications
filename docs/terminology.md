@@ -2578,7 +2578,8 @@ than on a host of its own, with the path forwarded unchanged.
 
 - **Part of:** [exposure](#blueprint-exposure)
 - **Identifiers:** fields: `mount`, `node`, `endpoint`, `path`; codes:
-  `ERR_INVALID_MOUNT`; requirement prefixes: `BP-HOST`; defs: `BlueprintMount`
+  `ERR_INVALID_HOST_MOUNT`; requirement prefixes: `BP-HOST`; defs:
+  `BlueprintMount`
 - **Not to be confused with:** A custom domain, which v2 does not support.
 - **Source:** [blueprint v2
   §4.7](../specifications/blueprint/v2/spec.md#public-hosts), [ADR

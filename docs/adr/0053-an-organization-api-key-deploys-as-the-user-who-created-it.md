@@ -39,9 +39,18 @@ A deployment created with an organization API key has a creator: the user who
 created the key. `deployment.creator.identity`, `.email` and `.name` resolve
 to that user's facts, captured when the deployment is created, as for any
 creator. Revoking or deleting the key afterwards changes nothing: the facts are
-the deployment's. A key whose creator the platform no longer knows, such as a
-user removed from the organization, supplies none of the facts, and each one a
-blueprint reads is `ERR_DEPLOYMENT_FACT_UNAVAILABLE`.
+the deployment's. The platform records the key's own identity beside the
+creator's, so an audit can tell a deploy made with the key from one the person
+made.
+
+The key acts with its creator's standing as it is when each deploy or update
+is made, not as it was when the key was created: a creator demoted since then
+deploys, through the key, only what they could deploy themselves. A key whose
+creator has been deactivated, has been removed from the organization or holds
+no role in it deploys nothing. The platform refuses every deploy, update and
+`deployment`-scope validation made with it, as it refuses an unauthorized
+caller, before resolution reads any fact. A key nobody is accountable for
+must not keep deploying as a person who has left.
 
 The rule is `BP-PARAM-015`. It is a platform obligation: no document breaks
 it, and the conformance runner lists it with that reason.
@@ -56,6 +65,8 @@ blueprint reads from that caller, in the `resolution` phase at stage
 `ERR_DEPLOYMENT_FACT_UNAVAILABLE`, never a deferred obligation, so a
 validation that the deploy call would refuse for that reason is `INVALID`,
 never `INCOMPLETE` with no diagnostic. The rest of resolution stays deferred.
+A validation of a change to an existing deployment reads the creator facts
+that deployment captured, not the caller's, because the update itself does.
 
 The rule is `BP-PARAM-016`, pinned by behavioural `validate` cases: the
 fixture's `deployment` context stands for the caller.
@@ -84,4 +95,9 @@ context.
   lacks.
 - `BP-PARAM-011`'s example of a missing fact no longer names a service
   principal.
-- No document's validity changes, and every released case replays unchanged.
+- No document's structural or semantic validity changes, and every released
+  case replays unchanged. A `deployment`-scope validation result can change: a
+  document whose blueprint reads a fact the caller lacks, reported `INCOMPLETE`
+  before, is now `INVALID` with `ERR_DEPLOYMENT_FACT_UNAVAILABLE`. That is the
+  verdict the deploy call already gave, reported earlier, not a stricter rule
+  for the document.

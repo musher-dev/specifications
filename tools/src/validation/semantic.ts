@@ -1472,12 +1472,16 @@ export function semanticReport(
   // BP-HOST-003: a mounted endpoint is served under a path of another node's
   // public, HTTP-routed endpoint, which has a host of its own, and no two mounts
   // on one host overlap. Each reads the components, so it is decided only for
-  // those that are available.
+  // those that are available. Nodes, then endpoints, are walked by name in UTF-8
+  // order, never in authored key order, so an overlap is reported at the mount
+  // that comes second by name, wherever the document lists it.
   const mounts = new Map<string, { path: string; where: string }[]>()
   const protocolOf = (node: string, endpoint: string) =>
     String(at(resolved.get(node), 'spec', 'workload', 'endpoints', endpoint, 'protocol'))
-  for (const [name, node] of Object.entries(nodes))
-    for (const [endpoint, exposure] of Object.entries(record(at(node, 'exposure')))) {
+  const byName = ([a]: [string, unknown], [b]: [string, unknown]) =>
+    Buffer.compare(Buffer.from(a), Buffer.from(b))
+  for (const [name, node] of Object.entries(nodes).sort(byName))
+    for (const [endpoint, exposure] of Object.entries(record(at(node, 'exposure'))).sort(byName)) {
       const mount = at(exposure, 'mount')
       if (!isObject(mount)) continue
       const where = `/spec/nodes/${token(name)}/exposure/${token(endpoint)}/mount`
@@ -1504,14 +1508,14 @@ export function semanticReport(
         (resolved.get(name) && !HTTP_ROUTED.includes(protocolOf(name, endpoint))) ||
         (hostComponent && !HTTP_ROUTED.includes(protocolOf(host, hostEndpoint)))
       ) {
-        issue(out, 'ERR_INVALID_MOUNT', where)
+        issue(out, 'ERR_INVALID_HOST_MOUNT', where)
         continue
       }
       const key = `${host}\u0000${hostEndpoint}`,
         siblings = mounts.get(key) ?? []
       const under = (a: string, b: string) => a === b || a.startsWith(`${b}/`)
       if (siblings.some((other) => under(path, other.path) || under(other.path, path)))
-        issue(out, 'ERR_INVALID_MOUNT', where)
+        issue(out, 'ERR_INVALID_HOST_MOUNT', where)
       siblings.push({ path, where })
       mounts.set(key, siblings)
     }

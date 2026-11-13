@@ -61,8 +61,11 @@ A viewer who signs in on any public host of a deployment is signed in on every
 `RESTRICTED` endpoint of that deployment, on every host it has, and on no other
 deployment's. A browser-facing second host can then be `RESTRICTED` without a
 second sign-in, and a cross-origin request or WebSocket upgrade to it carries
-the session. `BP-HOST-005` states it; the mechanism, a deployment-scoped session
-the edge establishes on each host, is the platform's.
+the session, but only when its `Origin` is one of the deployment's own public
+hosts. A request from any other origin is handled as one without a session, so
+the shared sign-in gives another site nothing to forge a request with.
+`BP-HOST-005` states it; the mechanism, a deployment-scoped session the edge
+establishes on each host, is the platform's.
 
 ### 4. Routing is a platform obligation
 

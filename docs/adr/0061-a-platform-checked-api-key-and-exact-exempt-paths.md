@@ -44,11 +44,19 @@ nodes:
 The platform forwards a request that carries no valid viewer session and an
 `Authorization` header of the `Bearer` scheme whose token equals the
 parameter's current value, compared in constant time. It forwards it without
-an identity, claim or assertion header, as an exempt request, and removes the
-`Authorization` header it consumed, so the key never reaches the workload's
-logs. Any other request without a session, a request with a wrong key
-included, is refused unless an exemption covers it. A request with a valid
-session is handled as any other.
+an identity, claim or assertion header, as an exempt request. Any other
+request without a session, a request with a wrong key included, is refused
+unless an exemption covers it. A request with a valid session is handled as
+any other. Whatever else a request carries, a session included, the platform
+removes an `Authorization` header whose token matches the key before it
+forwards the request, so the key never reaches the workload's logs.
+
+After the parameter rotates, the platform also accepts the previous
+generation until the rollout that applies the rotation has completed, as it
+accepts a rotated OIDC client secret
+([ADR 0060](0060-role-claims-and-client-secret-rotation-for-oidc-apps.md) §2),
+and never afterwards. A client then has a bounded window to take the new key,
+and a leaked key stops working once that rollout completes.
 
 The key is a generated parameter, so it is created once, persisted, rotated
 by generation and disclosed to the people who manage the deployment, exactly
@@ -64,7 +72,11 @@ An entry of `exemptibleRequests.paths` may be `{ prefix: <path> }` or
 segment-bounded, as a bare entry always has: `/status` covers `/status` and
 `/status/x`, never `/status-page`. `exact` covers the path alone. Both compare
 case-sensitively after the normalization `BP-ACCESS-009` already states, and
-the query string takes no part.
+the query string takes no part. That normalization decodes once, and a
+request whose path holds an encoded `%` (`%25`) is never exempt, because a
+workload that decodes again would see another path. No document holds one: an
+endpoint path admits no `%`, so this is a platform obligation, not a
+validation rule. Mount routing uses the same normalization.
 
 ### 3. The bare string stays, as the `prefix` form
 
@@ -86,7 +98,8 @@ meaning, so component and blueprint release this in a minor version.
 - Component gains `COMP-EP-021`. Blueprint gains `BP-ACCESS-016` to
   `BP-ACCESS-018`, of which `BP-ACCESS-016` is structural and semantic, with
   cases, and the other two are edge obligations listed with their reasons
-  among the runner's coverage exceptions.
+  among the runner's coverage exceptions. `BP-ACCESS-002` cites
+  `BP-ACCESS-018` beside the exemptions.
 - The record's `credentials` map includes a generated parameter an `apiKey`
   names, as it includes one a binding names.
 - platform-api's edge checks the key and matches exact paths, with one matcher
