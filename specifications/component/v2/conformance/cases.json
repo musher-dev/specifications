@@ -1686,6 +1686,36 @@
       "id": "semantic-147-time-limit-on-a-schedule-that-never-falls-due",
       "phase": "semantic",
       "path": "semantic/147-time-limit-on-a-schedule-that-never-falls-due"
+    },
+    {
+      "id": "structural-460-file-under-proc",
+      "phase": "structural",
+      "path": "structural/460-file-under-proc"
+    },
+    {
+      "id": "structural-461-file-at-resolv-conf",
+      "phase": "structural",
+      "path": "structural/461-file-at-resolv-conf"
+    },
+    {
+      "id": "structural-462-file-at-dev",
+      "phase": "structural",
+      "path": "structural/462-file-at-dev"
+    },
+    {
+      "id": "structural-463-file-beside-a-reserved-path",
+      "phase": "structural",
+      "path": "structural/463-file-beside-a-reserved-path"
+    },
+    {
+      "id": "structural-464-probe-header-proxy-authorization",
+      "phase": "structural",
+      "path": "structural/464-probe-header-proxy-authorization"
+    },
+    {
+      "id": "structural-465-probe-header-trailer",
+      "phase": "structural",
+      "path": "structural/465-probe-header-trailer"
     }
   ]
 }

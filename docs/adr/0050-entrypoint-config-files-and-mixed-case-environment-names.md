@@ -4,6 +4,7 @@
 - **Date:** 2026-11-13
 - **Relies on:** [ADR 0033](0033-inputs-are-the-only-way-into-a-component.md) §1, inputs are the only way in
 - **Relies on:** [ADR 0032](0032-correcting-a-released-family-within-its-major.md) §3, a relaxation is declared
+- **Refines:** [ADR 0007](0007-naming-conventions.md) §4, environment-variable names may be lower case
 - **Closes:** [platform-api#1447](https://github.com/musher-dev/platform-api/issues/1447)
 
 ## Context
@@ -65,8 +66,13 @@ files:
   uses. A file under a volume's mount is permitted.
 - `COMP-FILE-004`, platform obligation: the file holds exactly the UTF-8
   bytes of its content, with no newline added; its permission bits are `mode`;
-  its owner is the user the process runs as; it is written afresh at every
-  start; and content from a sensitive input is sensitive wherever it travels.
+  its owner is the user the process runs as; it is placed afresh at every
+  start, overlaid at its path and never written into a volume's data; a
+  missing parent directory is created owned by `root` with mode `0755`; and
+  content from a sensitive input is sensitive wherever it travels.
+- `COMP-FILE-005`, structural: `path` is not `/proc`, `/sys` or `/dev` or
+  below them, nor `/etc/hosts`, `/etc/hostname` or `/etc/resolv.conf`, which
+  the runtime mounts itself. `ERR_INVALID_VALUE` at `path`.
 
 Content comes from one input, not a template over several. Composition
 belongs upstream, in a blueprint binding's template, and a component template

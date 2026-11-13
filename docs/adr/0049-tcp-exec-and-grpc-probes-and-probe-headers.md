@@ -50,11 +50,14 @@ and apply to every mechanism.
 `COMP-PROBE-004`: `http.headers` maps a lowercase header name to exactly one
 origin, a literal `value` or an `input`, as a probe credential does. At most 16.
 A name matches `^[a-z][a-z0-9-]{0,63}$`, and is none the platform or `auth`
-controls: `host`, `authorization`, `forwarded`, `x-forwarded-for`,
-`content-length`, `transfer-encoding`, `connection`, `te`, `upgrade` and
-`cookie`. Lowercase, because header names compare case-insensitively, so a
-mapping key is unique exactly when the header is. A literal is visible ASCII,
-spaces and tabs, 1 to 1024 characters. All structural, `ERR_INVALID_VALUE`.
+controls or a proxy reads: `host`, `authorization`, `proxy-authorization`,
+`forwarded`, `x-forwarded-for`, `content-length`, `transfer-encoding`,
+`connection`, `keep-alive`, `te`, `trailer`, `upgrade` and `cookie`. Viewer
+identity header names are the platform's choice, so the platform refuses a
+probe header named as one (`COMP-PROBE-006`). Lowercase, because header names
+compare case-insensitively, so a mapping key is unique exactly when the header
+is. A literal is visible ASCII, spaces and tabs, 1 to 1024 characters. All
+structural, `ERR_INVALID_VALUE`.
 
 `COMP-PROBE-005`: a header `input` names one of the component's own string
 inputs that is always supplied, as a credential `input` does, with
@@ -65,11 +68,13 @@ reads counts as read for `COMP-INPUT-001`.
 
 ### 3. Platform obligations
 
-`COMP-PROBE-006`: the platform runs each mechanism as the table says, sends
-headers on the probe request only, never on forwarded traffic, treats a value
-from a sensitive input as sensitive, and refuses to send a header whose
-resolved value holds CR, LF or NUL, which is a configuration error and never a
-failed probe. Recorded in `UNPINNED`: no document operation sends a request.
+`COMP-PROBE-006`: the platform runs each mechanism as the table says; ends
+every process of an exec probe that outlives its timeout, never starts a probe
+while its previous run executes, and treats exec output as sensitive; sends
+headers on the probe request only, never on forwarded traffic; treats a value
+from a sensitive input as sensitive; and refuses to send a header whose
+resolved value holds CR, LF or NUL, or whose name is a viewer identity header,
+which is a configuration error and never a failed probe. Recorded in `UNPINNED`: no document operation sends a request.
 
 ### 4. Relaxation, not narrowing
 

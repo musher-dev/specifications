@@ -1,0 +1,10 @@
+{
+  "id": "structural-462-file-at-dev",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#files",
+  "requirements": [
+    "COMP-FILE-005"
+  ],
+  "summary": "A file at /dev itself is rejected, as one below it is."
+}

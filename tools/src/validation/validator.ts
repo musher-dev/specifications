@@ -67,6 +67,8 @@ export type ValidationContext = Omit<SemanticContext, 'validationScope'> & {
   readonly validationScope?: ValidationScope
   /** The platform's catalog and runtime, for the admission rules that read them. */
   readonly platform?: Json
+  /** The policy of the organization the admission is decided for (component COMP-SECURITY-003). */
+  readonly organization?: Json
   /**
    * Blueprint BP-PARAM-016: at the `deployment` scope, the caller's facts as the
    * prospective creator, in the shape of the resolution context's `deployment`.
@@ -117,7 +119,12 @@ function hostMeets(host: Json, placement: Json | undefined): boolean {
   return true
 }
 
-function admission(family: Family, document: Json, platform: Json | undefined): Admission {
+function admission(
+  family: Family,
+  document: Json,
+  platform: Json | undefined,
+  organization: Json | undefined,
+): Admission {
   const diagnostics: Diagnostic[] = []
   const deferred: DeferredObligation[] = []
   const reject = (code: string, path: string) =>
@@ -148,10 +155,22 @@ function admission(family: Family, document: Json, platform: Json | undefined): 
       })
     if (field(security, 'seccompProfile') === 'UNCONFINED') {
       const path = `${base}/seccompProfile`
-      const unconfined = field(platform, 'unconfinedSeccomp')
-      if (typeof unconfined !== 'boolean')
-        deferred.push({ rule: 'COMP-SECURITY-003', path, missing: 'platform.unconfinedSeccomp' })
-      else if (!unconfined) reject('ERR_SECCOMP_NOT_GRANTED', path)
+      // Rejected when either the runtime cannot isolate the workload by other
+      // means or the organization's policy refuses it; deferred while neither
+      // refuses and one is unknown.
+      const isolated = field(platform, 'unconfinedSeccomp')
+      const allowed = field(organization, 'unconfinedSeccomp')
+      if (isolated === false || allowed === false) reject('ERR_SECCOMP_NOT_GRANTED', path)
+      else {
+        if (typeof isolated !== 'boolean')
+          deferred.push({ rule: 'COMP-SECURITY-003', path, missing: 'platform.unconfinedSeccomp' })
+        if (typeof allowed !== 'boolean')
+          deferred.push({
+            rule: 'COMP-SECURITY-003',
+            path,
+            missing: 'organization.unconfinedSeccomp',
+          })
+      }
     }
     for (const [name] of entries(field(security, 'sysctls'))) {
       const path = `${base}/sysctls/${pointer(name)}`
@@ -375,7 +394,7 @@ export function validateDocument(
     if (!diagnostics.some(isError) && (scope === 'publication' || scope === 'deployment')) {
       reached = 'admission'
       diagnostics.push(...publicationDiagnostics(family, parsed.value))
-      const decided = admission(family, parsed.value, context.platform)
+      const decided = admission(family, parsed.value, context.platform, context.organization)
       diagnostics.push(...decided.diagnostics)
       report.deferred.push(...decided.deferred)
       // Listing §4 and §5: media dimensions and SPDX membership, each deferred
