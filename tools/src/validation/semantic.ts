@@ -1179,6 +1179,52 @@ export function semanticReport(
       }
     }
   }
+  // BP-HOST-003: a mounted endpoint is served under a path of another node's
+  // public, HTTP-routed endpoint, which has a host of its own, and no two mounts
+  // on one host overlap. Each reads the components, so it is decided only for
+  // those that are available.
+  const mounts = new Map<string, { path: string; where: string }[]>()
+  const protocolOf = (node: string, endpoint: string) =>
+    String(at(resolved.get(node), 'spec', 'workload', 'endpoints', endpoint, 'protocol'))
+  for (const [name, node] of Object.entries(nodes))
+    for (const [endpoint, exposure] of Object.entries(record(at(node, 'exposure')))) {
+      const mount = at(exposure, 'mount')
+      if (!isObject(mount)) continue
+      const where = `/spec/nodes/${token(name)}/exposure/${token(endpoint)}/mount`
+      const host = asString(mount.node) ?? '',
+        hostEndpoint = asString(mount.endpoint) ?? '',
+        path = asString(mount.path) ?? ''
+      if (!Object.hasOwn(nodes, host)) {
+        issue(out, 'ERR_UNKNOWN_NODE', `${where}/node`)
+        continue
+      }
+      const target = record(at(nodes[host], 'exposure'))[hostEndpoint]
+      const hostComponent = resolved.get(host)
+      if (hostComponent && !at(hostComponent, 'spec', 'workload', 'endpoints', hostEndpoint)) {
+        issue(out, 'ERR_UNKNOWN_ENDPOINT', `${where}/endpoint`)
+        continue
+      }
+      const segments = path.split('/').slice(1)
+      if (
+        (host === name && hostEndpoint === endpoint) ||
+        effectiveExposure(at(nodes[host], 'exposure'), hostEndpoint).visibility !== 'PUBLIC' ||
+        at(target, 'mount') !== undefined ||
+        segments.some((segment) => segment === '.' || segment === '..') ||
+        segments[0] === '.musher' ||
+        (resolved.get(name) && !HTTP_ROUTED.includes(protocolOf(name, endpoint))) ||
+        (hostComponent && !HTTP_ROUTED.includes(protocolOf(host, hostEndpoint)))
+      ) {
+        issue(out, 'ERR_INVALID_MOUNT', where)
+        continue
+      }
+      const key = `${host}\u0000${hostEndpoint}`,
+        siblings = mounts.get(key) ?? []
+      const under = (a: string, b: string) => a === b || a.startsWith(`${b}/`)
+      if (siblings.some((other) => under(path, other.path) || under(other.path, path)))
+        issue(out, 'ERR_INVALID_MOUNT', where)
+      siblings.push({ path, where })
+      mounts.set(key, siblings)
+    }
   // BP-ORDER-002: a start condition fits the node it names, and only a node a
   // rollout starts waits. Each reads a component, so it is decided only for one
   // that is available.

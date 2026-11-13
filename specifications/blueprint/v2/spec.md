@@ -690,6 +690,7 @@ exposure:
 | `viewerIdentity` | `NONE`: nothing is forwarded about the viewer. `HEADER`: the viewer's identity, in a request header. `ASSERTION`: a signed token naming the viewer, in a request header. `OIDC`: the workload signs viewers in itself, as an OpenID Connect client of the platform | `NONE` |
 | `viewerClaims` | A unique, non-empty list of `EMAIL`, the viewer's verified email address, and `NAME`, their display name | Only the identity |
 | `accessExemptions` | A unique, non-empty list of `PATHS` and `BEARER`: the requests, among those the component's `exemptibleRequests` offers, that pass without a viewer ([`BP-NODE-008`](#BP-NODE-008)) | None |
+| `mount` | The public endpoint whose host serves this one, and the path it is served under ([§4.7](#public-hosts)) | A host of its own |
 
 Bare `PUBLIC` is `{ visibility: PUBLIC }`, and so
 `{ visibility: PUBLIC, access: OPEN, viewerIdentity: NONE }`; bare `PRIVATE` is
@@ -705,7 +706,7 @@ requires `visibility`. Structural:
 |---|---|
 | `visibility` is absent | `ERR_MISSING_FIELD` at the endpoint's exposure |
 | An unknown member | `ERR_UNKNOWN_FIELD` at the endpoint's exposure |
-| `access`, `viewerIdentity`, `viewerClaims` or `accessExemptions` under `PRIVATE`: every member but `visibility` applies only to `PUBLIC` | `ERR_INVALID_VALUE` at that member |
+| `access`, `viewerIdentity`, `viewerClaims`, `accessExemptions` or `mount` under `PRIVATE`: every member but `visibility` applies only to `PUBLIC` | `ERR_INVALID_VALUE` at that member |
 | A `viewerIdentity` other than `NONE` without `access: RESTRICTED` | `ERR_INVALID_VALUE` at `viewerIdentity` |
 | `accessExemptions` without `access: RESTRICTED` | `ERR_INVALID_VALUE` at `accessExemptions` |
 | `viewerClaims` without a `viewerIdentity` other than `NONE`: a claim needs a mode to travel in | `ERR_INVALID_VALUE` at `viewerClaims` |
@@ -987,6 +988,73 @@ Platform obligation; no document breaks it.
 platform MUST NOT report a deployment active before its rollout is. A `JOB`
 without `startAfter` does not hold activation: its outcome is recorded, and
 blocks nothing. Platform obligation; no document breaks it.
+
+### <a id="public-hosts"></a>4.7 Public hosts
+
+Each `PUBLIC` endpoint is reached at a public host, and a deployment may have
+more than one: a node may expose more than one endpoint, and more than one node may
+expose one
+([ADR 0051](../../../docs/adr/0051-a-deployment-has-many-public-hosts-and-one-sign-in.md)).
+An HTTP-routed endpoint may instead be served under a path of another
+endpoint's host, by `mount`:
+
+```yaml
+nodes:
+  app:
+    exposure:
+      web: { visibility: PUBLIC, access: RESTRICTED }
+  realtime:
+    exposure:
+      socket:
+        visibility: PUBLIC
+        access: RESTRICTED
+        mount: { node: app, endpoint: web, path: /socket.io }
+```
+
+<a id="BP-HOST-001"></a>**`BP-HOST-001`**: The platform MUST allocate each
+`PUBLIC` endpoint that carries no `mount` a public hostname of its own, distinct
+from that of every other endpoint of every deployment, however many such
+endpoints a node or a deployment has. Platform obligation; no document breaks
+it.
+
+<a id="BP-HOST-002"></a>**`BP-HOST-002`**: `mount` is closed, and requires
+`node`, `endpoint` and `path`. `path` is an absolute path of one or more
+segments of unreserved characters (RFC 3986 §2.3), without a trailing `/`, of at
+most 256 characters. Structural: `ERR_MISSING_FIELD` at a `mount` without one of
+them, `ERR_UNKNOWN_FIELD` at one with another member, and `ERR_INVALID_VALUE` at
+a `path` outside the grammar and at a `mount` under `PRIVATE`.
+
+<a id="BP-HOST-003"></a>**`BP-HOST-003`**: A mount MUST name a host that can
+serve it, and no two mounts on one host may claim the same request. Semantic:
+
+| Condition | Diagnostic |
+|---|---|
+| `mount.node` names no node | `ERR_UNKNOWN_NODE` at `mount/node` |
+| `mount.endpoint` names no endpoint of that node's component | `ERR_UNKNOWN_ENDPOINT` at `mount/endpoint` |
+| The mounted endpoint or the host endpoint is not HTTP-routed (`HTTP`, `HTTPS`, `WS`); the host endpoint is not `PUBLIC`, is itself mounted, or is the mounted endpoint | `ERR_INVALID_MOUNT` at `mount` |
+| `path` holds a `.` or `..` segment, or lies under `/.musher`, where the platform serves its own sign-in ([`BP-ACCESS-009`](#BP-ACCESS-009)) | `ERR_INVALID_MOUNT` at `mount` |
+| Two mounts on one host whose paths are equal, or one lies under the other as [`BP-ACCESS-009`](#BP-ACCESS-009) defines it | `ERR_INVALID_MOUNT` at the `mount` read second, in node then endpoint order |
+
+The checks that read a component are deferred while it is unavailable
+([`BP-REF-002`](#BP-REF-002)).
+
+<a id="BP-HOST-004"></a>**`BP-HOST-004`**: The platform MUST forward a request
+to a host whose path lies under a mount's `path` to the mounted endpoint, with
+the path unchanged, and every other request to the host endpoint. A mounted
+endpoint's `publicHostname` and `publicPort` are its host endpoint's, and its
+`publicURL` is the host endpoint's followed by `path`. Its own `access`,
+`viewerIdentity`, `viewerClaims` and `accessExemptions` apply to the requests it
+receives, and an exempt path is matched against the whole request path.
+Platform obligation; no document breaks it.
+
+<a id="BP-HOST-005"></a>**`BP-HOST-005`**: A viewer signed in on any public
+host of a deployment MUST be signed in on every `RESTRICTED` endpoint of that
+deployment, whatever its host, without signing in again, and on no endpoint of
+another deployment. A request or WebSocket upgrade from one of the
+deployment's hosts to another carries that sign-in. Signing out on one host
+signs the viewer out on all of them, within the bound
+[`BP-ACCESS-005`](#BP-ACCESS-005) documents. Platform obligation; no document
+breaks it.
 
 ## <a id="parameters"></a><a id="deployment-parameters"></a>5. Deployment parameters
 
@@ -1727,6 +1795,7 @@ Core and component diagnostics apply, with these additions:
 | `ERR_UNSATISFIED_REQUIRED_INPUT` | `semantic` | A required input has no binding or default. |
 | `ERR_ENDPOINT_NOT_PUBLIC` | `semantic` | An output reads a public property of an endpoint the blueprint does not expose. |
 | `ERR_VIEWER_IDENTITY_NOT_FORWARDED` | `semantic` | An output reads a viewer identity property of an endpoint whose exposure does not forward that property's mode or claim. |
+| `ERR_INVALID_MOUNT` | `semantic` | A mount names a host that cannot serve it, or overlaps another mount on its host. |
 | `ERR_EXEMPTION_NOT_DECLARED` | `semantic` | An exposure lets through requests without a viewer that the component does not offer in `exemptibleRequests`. |
 | `ERR_UNKNOWN_ENUM_MEMBER` | `semantic` | A UI label names no enum member. |
 | `ERR_PARAMETER_NOT_OFFERED` | `semantic` | A submitted parameter with neither `ui` nor `default` binds a required input, so no form can supply it. |

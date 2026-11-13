@@ -1,0 +1,11 @@
+{
+  "id": "semantic-173-mount-of-a-tcp-endpoint",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#public-hosts",
+  "requirements": [
+    "BP-HOST-003"
+  ],
+  "summary": "Only an HTTP-routed endpoint can be served under a path.",
+  "document": "app/blueprint.yaml"
+}

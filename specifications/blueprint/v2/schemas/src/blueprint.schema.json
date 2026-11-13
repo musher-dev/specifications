@@ -166,6 +166,7 @@
             "properties": {
               "access": false,
               "accessExemptions": false,
+              "mount": false,
               "viewerClaims": false,
               "viewerIdentity": false
             }
@@ -240,6 +241,10 @@
           "type": "array",
           "uniqueItems": true
         },
+        "mount": {
+          "$ref": "#/$defs/BlueprintMount",
+          "description": "Serve this endpoint under a path of another endpoint's public host, rather than on a host of its own. PUBLIC and HTTP-routed only."
+        },
         "viewerClaims": {
           "description": "Facts about the viewer released to the workload beside the subject: EMAIL, the viewer's verified email address, and NAME, their display name. Requires a viewerIdentity other than NONE.",
           "items": {
@@ -304,6 +309,35 @@
       "required": [
         "slug",
         "revision"
+      ],
+      "type": "object"
+    },
+    "BlueprintMount": {
+      "$comment": "spec.md §4.7 BP-HOST-002 / ADR 0051. Whether the node and endpoint exist, are public and HTTP-routed, and whether two mounts overlap are semantic checks (BP-HOST-003).",
+      "additionalProperties": false,
+      "description": "The public endpoint whose host serves this endpoint, and the path prefix it is served under.",
+      "properties": {
+        "endpoint": {
+          "description": "Endpoint of that node whose public host serves this one.",
+          "pattern": "^[a-z][a-z0-9]{0,19}$",
+          "type": "string"
+        },
+        "node": {
+          "description": "Node whose public endpoint hosts this one.",
+          "type": "string",
+          "x-musher-grammar": "dns-label"
+        },
+        "path": {
+          "description": "Absolute path prefix, without a trailing slash, under which the host forwards requests to this endpoint, unchanged.",
+          "maxLength": 256,
+          "pattern": "^(/[A-Za-z0-9._~-]+)+$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "node",
+        "endpoint",
+        "path"
       ],
       "type": "object"
     },

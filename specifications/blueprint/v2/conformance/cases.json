@@ -986,6 +986,56 @@
       "id": "semantic-167-literal-template-into-a-sensitive-input",
       "phase": "semantic",
       "path": "semantic/167-literal-template-into-a-sensitive-input"
+    },
+    {
+      "id": "structural-109-mounted-endpoint",
+      "phase": "structural",
+      "path": "structural/109-mounted-endpoint"
+    },
+    {
+      "id": "structural-110-mount-under-private",
+      "phase": "structural",
+      "path": "structural/110-mount-under-private"
+    },
+    {
+      "id": "structural-111-mount-path-with-a-trailing-slash",
+      "phase": "structural",
+      "path": "structural/111-mount-path-with-a-trailing-slash"
+    },
+    {
+      "id": "structural-112-mount-without-a-path",
+      "phase": "structural",
+      "path": "structural/112-mount-without-a-path"
+    },
+    {
+      "id": "semantic-170-mounted-endpoint",
+      "phase": "semantic",
+      "path": "semantic/170-mounted-endpoint"
+    },
+    {
+      "id": "semantic-171-mount-under-a-private-host",
+      "phase": "semantic",
+      "path": "semantic/171-mount-under-a-private-host"
+    },
+    {
+      "id": "semantic-172-mount-under-the-platform-sign-in",
+      "phase": "semantic",
+      "path": "semantic/172-mount-under-the-platform-sign-in"
+    },
+    {
+      "id": "semantic-173-mount-of-a-tcp-endpoint",
+      "phase": "semantic",
+      "path": "semantic/173-mount-of-a-tcp-endpoint"
+    },
+    {
+      "id": "semantic-174-mount-names-an-unknown-node",
+      "phase": "semantic",
+      "path": "semantic/174-mount-names-an-unknown-node"
+    },
+    {
+      "id": "semantic-175-overlapping-mounts",
+      "phase": "semantic",
+      "path": "semantic/175-overlapping-mounts"
     }
   ]
 }

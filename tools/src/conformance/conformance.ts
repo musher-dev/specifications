@@ -1302,6 +1302,24 @@ const UNPINNED: ReadonlyMap<string, string> = new Map([
       'edge; no document phase or behavioural operation observes a request or a rollout',
   ],
   [
+    'BP-HOST-001',
+    'That every unmounted PUBLIC endpoint is allocated a hostname of its own is a fact of ' +
+      'the platform edge; resolution reads the allocations it is given but no operation ' +
+      'allocates one',
+  ],
+  [
+    'BP-HOST-004',
+    "Forwarding a request under a mount's path to the mounted endpoint, path unchanged, is a " +
+      'runtime obligation of the platform edge; the semantic phase pins what a mount may name ' +
+      '(BP-HOST-003), but no operation observes a request',
+  ],
+  [
+    'BP-HOST-005',
+    "That one sign-in holds across a deployment's public hosts, and no other deployment's, is " +
+      'a runtime obligation of the platform edge; no document phase or behavioural operation ' +
+      'observes a session',
+  ],
+  [
     'BP-ORDER-004',
     'Holding a node until the conditions its startAfter names hold, reporting it as waiting ' +
       'and failing a rollout whose condition cannot hold are runtime obligations of the ' +

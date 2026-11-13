@@ -218,6 +218,31 @@
       "section": "start-order"
     },
     {
+      "id": "BP-HOST-001",
+      "anchor": "BP-HOST-001",
+      "section": "public-hosts"
+    },
+    {
+      "id": "BP-HOST-002",
+      "anchor": "BP-HOST-002",
+      "section": "public-hosts"
+    },
+    {
+      "id": "BP-HOST-003",
+      "anchor": "BP-HOST-003",
+      "section": "public-hosts"
+    },
+    {
+      "id": "BP-HOST-004",
+      "anchor": "BP-HOST-004",
+      "section": "public-hosts"
+    },
+    {
+      "id": "BP-HOST-005",
+      "anchor": "BP-HOST-005",
+      "section": "public-hosts"
+    },
+    {
       "id": "BP-PARAM-010",
       "anchor": "BP-PARAM-010",
       "section": "parameters"

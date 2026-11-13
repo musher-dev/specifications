@@ -1,0 +1,10 @@
+{
+  "id": "structural-111-mount-path-with-a-trailing-slash",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#public-hosts",
+  "requirements": [
+    "BP-HOST-002"
+  ],
+  "summary": "A mount path ending in a slash is outside the grammar."
+}

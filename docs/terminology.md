@@ -10,7 +10,7 @@ it. `task check:terms` holds the records, the schemas and the prose together,
 and the words to avoid are enforced in prose by the generated
 `MusherSpecifications` Vale style.
 
-222 record(s). A record marked *proposed* is an open item, not yet a decision.
+223 record(s). A record marked *proposed* is an open item, not yet a decision.
 
 ## Index
 
@@ -123,6 +123,7 @@ and the words to avoid are enforced in prose by the generated
 | [media path](#listing-media-path) | listing | A path to an image under media/. |
 | [member role](#component-member-role) | component | credential, secret, locator, parameter or derived. |
 | [metadata](#core-metadata) | core | Identity and description. |
+| [mount](#blueprint-mount) | blueprint | An endpoint served under another's host and path. |
 | [Musher document](#core-musher-document) | core | A document of one family, in the shared envelope. |
 | [Musher YAML profile](#core-yaml-profile) | core | The restricted YAML 1.2.2 every document is written in. |
 | [namespace](#core-placeholder-namespace) | core | The closed set of first segments of `${{ }}`. |
@@ -262,6 +263,7 @@ blueprint [blueprint.blueprint] (a kind of core.musher-document)
     - exposure [blueprint.exposure]
       - access [blueprint.access]
       - access exemption [blueprint.access-exemption]
+      - mount [blueprint.mount]
       - viewer claim [blueprint.viewer-claim]
       - viewer identity mode [blueprint.viewer-identity-mode]
       - visibility [blueprint.visibility]
@@ -2318,6 +2320,20 @@ decides whether the connection is granted or provisioned.
   §5.3](../specifications/blueprint/v2/spec.md#connections), [ADR
   0039](adr/0039-provenance-is-chosen-at-deployment.md)
 - **Status:** approved, stable. Tags: connections.
+
+#### <a id="blueprint-mount"></a>mount
+
+A public endpoint served under a path of another public endpoint's host rather
+than on a host of its own, with the path forwarded unchanged.
+
+- **Part of:** [exposure](#blueprint-exposure)
+- **Identifiers:** fields: `mount`, `node`, `endpoint`, `path`; codes:
+  `ERR_INVALID_MOUNT`; requirement prefixes: `BP-HOST`; defs: `BlueprintMount`
+- **Not to be confused with:** A custom domain, which v2 does not support.
+- **Source:** [blueprint v2
+  §4.7](../specifications/blueprint/v2/spec.md#public-hosts), [ADR
+  0051](adr/0051-a-deployment-has-many-public-hosts-and-one-sign-in.md)
+- **Status:** approved, stable. Tags: networking, access.
 
 #### <a id="blueprint-node"></a>node
 

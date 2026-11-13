@@ -1,0 +1,10 @@
+{
+  "id": "structural-112-mount-without-a-path",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#public-hosts",
+  "requirements": [
+    "BP-HOST-002"
+  ],
+  "summary": "A mount names the path it is served under."
+}
