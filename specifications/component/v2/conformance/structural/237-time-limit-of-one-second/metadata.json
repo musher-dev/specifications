@@ -1,0 +1,10 @@
+{
+  "id": "structural-237-time-limit-of-one-second",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#jobs",
+  "requirements": [
+    "COMP-JOB-005"
+  ],
+  "summary": "A time limit of one second, the shortest, validates."
+}

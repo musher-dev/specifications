@@ -1,0 +1,10 @@
+{
+  "id": "structural-234-time-limit-as-a-fraction",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#jobs",
+  "requirements": [
+    "COMP-JOB-005"
+  ],
+  "summary": "A time limit of 90.5 seconds is rejected; it is a whole number of seconds."
+}

@@ -1,0 +1,10 @@
+{
+  "id": "semantic-142-seven-day-limit-under-a-fortnightly-period",
+  "phase": "semantic",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#jobs",
+  "requirements": [
+    "COMP-JOB-006"
+  ],
+  "summary": "A seven-day time limit validates under 0 3 1,15 * *, which falls due 14 to 17 days apart, so its period is 14 days."
+}

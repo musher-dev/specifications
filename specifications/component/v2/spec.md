@@ -57,8 +57,8 @@ relative, such as `from/input`, is relative to the object the rule is about.
 - A **component** is a reusable, versioned definition that a blueprint node
   deploys ([§4](#metadata), [§5](#workload)).
 - A **workload** is what the platform runs for a `SERVICE`, `WORKER` or `JOB`:
-  its source, build recipe, command, endpoints, probes, volumes and schedule
-  ([§5](#workload)).
+  its source, build recipe, command, endpoints, probes, volumes, schedule and
+  time limit ([§5](#workload)).
 - A **source** is where a workload's content comes from: an image, a Git
   commit or an uploaded archive ([§5.1](#source)).
 - A **build recipe** is how the platform builds an image from a Git or upload
@@ -69,6 +69,10 @@ relative, such as `from/input`, is relative to the object the rule is about.
 - A **probe** is an HTTP request the platform sends to a named endpoint to
   decide whether a workload has started, is ready or is alive
   ([§5.4](#health)).
+- A **time limit** is the longest one run of a `JOB` executes before the
+  platform stops it and records it as failed ([§5.7](#time-limit)).
+- A schedule's **period** is the shortest interval between two consecutive
+  times it falls due ([§5.7](#period)).
 - The **component contract** is the inputs a component consumes and the
   outputs it produces ([§6](#contract)).
 - An **input** is a value input, which declares a value schema, or a
@@ -305,6 +309,7 @@ The type decides which workload fields apply:
 | `endpoints` | At least one to publish | Optional | Forbidden |
 | `health` | Optional | Optional | Forbidden |
 | `schedule` | Forbidden | Forbidden | Optional |
+| `timeLimitSeconds` | Forbidden | Forbidden | Optional |
 | `volumes` | Optional | Optional | Optional |
 
 Forbidden means absent. Empty mappings and null are not alternative spellings.
@@ -355,6 +360,11 @@ Structural: `ERR_INVALID_VALUE` at the field.
 <a id="COMP-TYPE-005"></a>**`COMP-TYPE-005`**: Only a `JOB` MAY declare
 `schedule`; a schedule is a property of a job, not a type of its own.
 Structural: `ERR_INVALID_VALUE` at `/spec/workload/schedule`.
+
+<a id="COMP-TYPE-008"></a>**`COMP-TYPE-008`**: Only a `JOB` MAY declare
+`timeLimitSeconds`, because a time limit bounds a run, and only a job has runs
+([§5.7](#time-limit)). Structural: `ERR_INVALID_VALUE` at
+`/spec/workload/timeLimitSeconds`.
 
 <a id="command"></a>**Command.** <a id="COMP-CMD-001"></a>**`COMP-CMD-001`**:
 `command` is a non-empty list of strings in exec form, each item one argument
@@ -1084,10 +1094,12 @@ outcome MUST be recorded for the deployment. Platform obligation; no document
 breaks it.
 
 It may run before, after or beside any other node's rollout, so a job that
-needs another node ready waits for it itself. v2 defines no automatic retry: a
-failed run is not started again until the next rollout. A failed run neither
-blocks nor fails the rollout of any other node, which is what ordering against
-nothing means.
+needs another node ready waits for it itself. A run that has not completed
+when its time limit passes is stopped, and has failed
+([`COMP-JOB-008`](#COMP-JOB-008)). v2 defines no automatic retry: a failed run
+is not started again until the next rollout. A failed run neither blocks nor
+fails the rollout of any other node, which is what ordering against nothing
+means.
 
 ```yaml
 spec:
@@ -1139,6 +1151,113 @@ at the schedule's next time. Platform obligation; no document breaks it.
 
 A scheduled `JOB` runs only when its schedule falls due; a rollout does not
 start one.
+
+<a id="time-limit"></a>**Time limits.** Every run of a `JOB`, scheduled or
+not, has a time limit, so that every run ends. `timeLimitSeconds` declares it,
+and a job that declares none has the default
+([`COMP-JOB-007`](#COMP-JOB-007)):
+
+```yaml
+spec:
+  type: JOB
+  workload:
+    source:
+      image: ghcr.io/musher-dev/search-indexer:2.3.0
+    command: [/bin/reindex, --changed-since-last-run]
+    schedule:
+      cron: "*/15 * * * *"
+    timeLimitSeconds: 600
+```
+
+<a id="COMP-JOB-005"></a>**`COMP-JOB-005`**: `timeLimitSeconds`, when
+present, is an integer number of seconds from 1 to 604800, which is seven
+days. Structural: `ERR_INVALID_TYPE` at `/spec/workload/timeLimitSeconds` for
+a value that is not an integer, and `ERR_INVALID_VALUE` there for one outside
+the range.
+
+Seven days covers the longest batch work a job does, such as a large backfill,
+and still ends every run within a week. A later minor release can raise the
+maximum, which is a relaxation; no release inside v2 could lower it.
+
+<a id="period"></a>**The period.** A schedule's period is the shortest interval
+between two consecutive times it falls due under
+[`COMP-JOB-002`](#COMP-JOB-002) and [`COMP-JOB-003`](#COMP-JOB-003). It is a
+whole number of minutes, compared with a time limit at 60 seconds to the
+minute. It is the shortest interval, not a typical one, and it is counted
+across the end of an hour, a day, a month and a year. The last column is the
+time limit a run gets when its job declares none
+([`COMP-JOB-007`](#COMP-JOB-007)):
+
+| Schedule | Falls due | Period | Default time limit |
+|---|---|---|---|
+| `*/15 * * * *` | Every 15 minutes | 900 seconds | 899 seconds |
+| `*/7 * * * *` | At minutes 0, 7, …, 56 of every hour, so 4 minutes apart from :56 to the next hour's :00 | 240 seconds | 239 seconds |
+| `0,50 0,23 * * *` | At 00:00, 00:50, 23:00 and 23:50, so 10 minutes apart from 23:50 to the next day's 00:00 | 600 seconds | 599 seconds |
+| `0 3 1,15 * *` | At 03:00 on the 1st and the 15th of every month, 14 to 17 days apart | 14 days, 1209600 seconds | 900 seconds |
+| `0 0 1 * 1` | At 00:00 on the 1st of every month and on every Monday, because both day fields are restricted | One day, 86400 seconds | 900 seconds |
+| `0 0 28,29 2 *` | At 00:00 on 28 February every year, and on 29 February in a leap year | One day, 86400 seconds | 900 seconds |
+| `0 0 30 2 *` | Never | None | None: no run falls due |
+
+<a id="COMP-JOB-006"></a>**`COMP-JOB-006`**: The `timeLimitSeconds` of a
+scheduled `JOB` MUST be shorter than its schedule's period. Semantic:
+`ERR_TIME_LIMIT_NOT_UNDER_SCHEDULE` at `/spec/workload/timeLimitSeconds`. A
+schedule with no period, because it never falls due or because its `cron`
+breaks [`COMP-JOB-002`](#COMP-JOB-002), constrains no limit.
+
+A run that starts when it falls due then reaches its limit before the next run
+falls due. A limit as long as the period would let one run outlast the shortest
+wait for the next, which [`COMP-JOB-004`](#COMP-JOB-004) then skips.
+
+<a id="computing-the-period"></a>**Computing the period.** Whether a minute is
+due depends only on its minute, hour, day of month, month and day of week. Four
+hundred Gregorian years are 146097 days, exactly 20871 weeks, so 400 years later
+every date falls on the same day of the week and every leap day recurs, and the
+times a schedule falls due repeat every 146097 days. Its period is therefore the
+shortest interval between consecutive due times that start within any 146097
+consecutive days, the last of them counted to the first due time after them.
+Every day on which a schedule falls due holds the same due times, the minutes
+its minute and hour fields allow, so an implementation can find the period
+exactly in one pass over 400 years of days:
+
+1. Take the due times of a day, in minutes after midnight, the earliest
+   `first` and the latest `last`.
+2. List the days of any 400 consecutive years on which the schedule falls due.
+   `D` is the fewest days between two consecutive ones, counting from the last
+   of them to 146097 days after the first. A schedule with no such day has no
+   period.
+3. The period is the shortest interval between consecutive due times of one
+   day, when a day holds more than one, or `1440 × D − (last − first)`
+   minutes, from the last due time of one day to the first of the next day the
+   schedule falls due, whichever is shorter.
+
+<a id="COMP-JOB-007"></a>**`COMP-JOB-007`**: A run of a `JOB` that declares no
+`timeLimitSeconds` MUST have the default time limit: 900 seconds, or, for a
+scheduled `JOB` whose period is 900 seconds or shorter, one second less than
+its period. Platform obligation; no document breaks it.
+
+The default of 15 minutes is the platform operator's decision of 2026-11-13:
+every job has a limit, so a run that hangs blocks neither its schedule nor the
+replacement of the host it runs on. Release 2.1.0 set no limit. Once the
+platform adopts this release, a job that declares none and runs for longer than
+15 minutes is stopped at 15 minutes and recorded as failed, so a job that needs
+longer declares `timeLimitSeconds`. The default belongs to the run, not to the
+document: the schema gives `timeLimitSeconds` no default, because a scheduled
+job's depends on its schedule.
+
+<a id="COMP-JOB-008"></a>**`COMP-JOB-008`**: A run still executing when its time
+limit has passed since it started MUST be stopped, and its outcome recorded for
+the deployment as failed: for a job without a schedule, that is the outcome
+[`COMP-JOB-001`](#COMP-JOB-001) records. Platform obligation; no document
+breaks it.
+
+Stopping a run ends it: no process of the run executes afterwards, so it is no
+longer still executing in the sense of [`COMP-JOB-004`](#COMP-JOB-004). How the
+platform ends a run, and whether it first lets the command exit by itself, is
+left to the platform, so a job that must not be cut off partway through its
+work declares a limit with room to spare. A run that hangs is stopped at its
+limit, so [`COMP-JOB-004`](#COMP-JOB-004) skips only the runs that fall due
+before then, never every later one, and whatever waits for a run to end, such
+as the replacement of the host it runs on, waits no longer than its limit.
 
 ## <a id="contract"></a>6. Component contract
 
@@ -1643,8 +1762,9 @@ reported.
 The platform obligations of this document, [`COMP-BUILD-005`](#COMP-BUILD-005),
 [`COMP-BUILD-006`](#COMP-BUILD-006), [`COMP-EP-007`](#COMP-EP-007),
 [`COMP-EP-011`](#COMP-EP-011), [`COMP-EP-017`](#COMP-EP-017),
-[`COMP-VOL-002`](#COMP-VOL-002), [`COMP-JOB-001`](#COMP-JOB-001) and
-[`COMP-JOB-004`](#COMP-JOB-004), bind what the platform does with a valid
+[`COMP-VOL-002`](#COMP-VOL-002), [`COMP-JOB-001`](#COMP-JOB-001),
+[`COMP-JOB-004`](#COMP-JOB-004), [`COMP-JOB-007`](#COMP-JOB-007) and
+[`COMP-JOB-008`](#COMP-JOB-008), bind what the platform does with a valid
 document, and the workload obligations, [`COMP-SEC-001`](#COMP-SEC-001) and
 [`COMP-SEC-002`](#COMP-SEC-002), bind what a workload does with what the
 platform forwards. No document breaks them, and no validation phase reports
@@ -1665,6 +1785,7 @@ Core diagnostics also apply.
 | `ERR_ENDPOINT_NOT_EXPOSABLE` | `semantic` | A `WORKER` endpoint is exposed `PUBLIC`, or a `WORKER` output reads a public or viewer identity property. |
 | `ERR_ENDPOINT_NOT_OIDC_CLIENT` | `semantic` | An OpenID Connect client property is read from, or `OIDC` selected for, an endpoint that declares no `oidc`. |
 | `ERR_INVALID_SCHEDULE` | `semantic` | A cron field is outside [§5.7](#jobs)'s grammar or range. |
+| `ERR_TIME_LIMIT_NOT_UNDER_SCHEDULE` | `semantic` | A scheduled `JOB`'s `timeLimitSeconds` is not shorter than its schedule's [period](#period). |
 | `ERR_UNKNOWN_INPUT` | `semantic` | A field names an input the component does not declare, or an output names a connection input without a `member` or a value input with one. |
 | `ERR_UNKNOWN_CONNECTION_MEMBER` | `semantic` | An output reads a member the input's protocol does not define. |
 | `ERR_INPUT_NOT_GUARANTEED` | `semantic` | An output, trust bundle, probe credential or build secret reads an input that may be absent, or an output reads a connection member that may be absent. |

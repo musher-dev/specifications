@@ -1,0 +1,10 @@
+{
+  "id": "semantic-143-time-limit-with-both-day-fields-restricted",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#jobs",
+  "requirements": [
+    "COMP-JOB-006"
+  ],
+  "summary": "A one-day time limit is rejected under 0 0 1 * 1, which falls due on the 1st and on every Monday, a day apart at the shortest."
+}

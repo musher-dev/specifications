@@ -1,0 +1,10 @@
+{
+  "id": "semantic-138-time-limit-across-the-end-of-an-hour",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#jobs",
+  "requirements": [
+    "COMP-JOB-006"
+  ],
+  "summary": "A time limit of 240 seconds is rejected under */7 * * * *, which falls due 4 minutes apart from :56 to the next hour, not 7."
+}

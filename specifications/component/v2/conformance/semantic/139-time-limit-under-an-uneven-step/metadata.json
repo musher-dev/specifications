@@ -1,0 +1,10 @@
+{
+  "id": "semantic-139-time-limit-under-an-uneven-step",
+  "phase": "semantic",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#jobs",
+  "requirements": [
+    "COMP-JOB-006"
+  ],
+  "summary": "A time limit of 239 seconds validates under */7 * * * *, whose period is 240 seconds."
+}

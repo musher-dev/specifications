@@ -10,7 +10,7 @@ it. `task check:terms` holds the records, the schemas and the prose together,
 and the words to avoid are enforced in prose by the generated
 `MusherSpecifications` Vale style.
 
-219 record(s). A record marked *proposed* is an open item, not yet a decision.
+221 record(s). A record marked *proposed* is an open item, not yet a decision.
 
 ## Index
 
@@ -146,6 +146,7 @@ and the words to avoid are enforced in prose by the generated
 | [parameter origin](#blueprint-parameter-origin) | blueprint | How a parameter's value is obtained. |
 | [parameters stage](#deployment-parameters-stage) | deployment | Obtains every parameter's value. |
 | [parser phase](#core-parser-phase) | core | Reads bytes under the YAML profile. |
+| [period](#component-period) | component | The shortest interval between two times a schedule falls due. |
 | [placeholder](#core-placeholder) | core | `${{ namespace.path }}`: a value named, not written. |
 | [placeholder grammar](#core-placeholder-grammar) | core | The syntax and escape of `${{ }}`. |
 | [placement constraint](#blueprint-placement-constraint) | blueprint | Narrows the hosts eligible for a profile. |
@@ -207,6 +208,7 @@ and the words to avoid are enforced in prose by the generated
 | [target port](#component-target-port) | component | The port the workload listens on. |
 | [template](#component-template) | component | A string with self placeholders substituted. |
 | [term record](#repository-term-record) | repository | One concept in one context, in docs/terminology.yaml. |
+| [time limit](#component-time-limit) | component | How long one run of a JOB may execute. |
 | [trust policy](#component-trust-policy) | component | How the platform verifies an HTTPS endpoint's certificate. |
 | [upload source](#component-upload-source) | component | An uploaded archive, named by its digest. |
 | [URL-addressed](#component-url-addressed) | component | HTTP, HTTPS, WS, GRPC. |
@@ -309,9 +311,11 @@ component [component.component] (a kind of core.musher-document)
     - probe [component.probe]
       - probe credential [component.probe-credential]
     - schedule [component.schedule]
+      - period [component.period]
     - source [component.source]
       - source content key [component.source-content-key]
       - source root [component.source-root]
+    - time limit [component.time-limit]
     - volume [component.volume]
 
 conformance corpus [repository.conformance-corpus]
@@ -1458,6 +1462,21 @@ with an optional member, endpoint with property, or template.
   §6.2](../specifications/component/v2/spec.md#outputs)
 - **Status:** approved, stable. Tags: values.
 
+#### <a id="component-period"></a>period
+
+The shortest interval between two consecutive times a schedule falls due,
+counted across the end of an hour, a day, a month and a year, which a scheduled
+JOB's time limit stays shorter than.
+
+- **Part of:** [schedule](#component-schedule)
+- **Example:** `*/7 * * * *` falls due 4 minutes apart from :56 to the next
+  hour's :00, so its period is 240 seconds, not 420.
+- **Not to be confused with:** A probe's `periodSeconds`, the interval between
+  two of its attempts.
+- **Source:** [component v2 §1.1](../specifications/component/v2/spec.md#terms),
+  [component v2 §5.7](../specifications/component/v2/spec.md#jobs)
+- **Status:** approved, provisional. Tags: workload.
+
 #### <a id="component-port-addressed"></a>port-addressed
 
 Said of an endpoint protocol reached at a host and port with no URL: TCP or UDP,
@@ -1733,6 +1752,23 @@ pass, and so always produces a string.
 - **Source:** [component v2
   §6.2](../specifications/component/v2/spec.md#outputs)
 - **Status:** approved, stable. Tags: values, placeholder.
+
+#### <a id="component-time-limit"></a>time limit
+
+The duration one run of a JOB may execute for before the platform stops it and
+records it as failed: the seconds its workload declares, or the platform's
+default, and for a scheduled JOB always shorter than the schedule's period.
+
+- **Part of:** [workload](#component-workload)
+- **Identifiers:** fields: `timeLimitSeconds`; codes:
+  `ERR_TIME_LIMIT_NOT_UNDER_SCHEDULE`
+- **Not to be confused with:** A probe's `timeoutSeconds`, how long one probe
+  waits for an answer.
+- **Not to be confused with:** Kubernetes `activeDeadlineSeconds`, which bounds
+  a whole Job, its retries included.
+- **Source:** [component v2 §1.1](../specifications/component/v2/spec.md#terms),
+  [component v2 §5.7](../specifications/component/v2/spec.md#jobs)
+- **Status:** approved, provisional. Tags: workload.
 
 #### <a id="component-trust-policy"></a>trust policy
 
