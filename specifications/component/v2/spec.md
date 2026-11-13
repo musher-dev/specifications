@@ -1184,17 +1184,19 @@ between two consecutive times it falls due under
 [`COMP-JOB-002`](#COMP-JOB-002) and [`COMP-JOB-003`](#COMP-JOB-003). It is a
 whole number of minutes, compared with a time limit at 60 seconds to the
 minute. It is the shortest interval, not a typical one, and it is counted
-across the end of an hour, a day, a month and a year:
+across the end of an hour, a day, a month and a year. The last column is the
+time limit a run gets when its job declares none
+([`COMP-JOB-007`](#COMP-JOB-007)):
 
-| Schedule | Falls due | Period |
-|---|---|---|
-| `*/15 * * * *` | Every 15 minutes | 900 seconds |
-| `*/7 * * * *` | At minutes 0, 7, …, 56 of every hour, so 4 minutes apart from :56 to the next hour's :00 | 240 seconds |
-| `0,50 0,23 * * *` | At 00:00, 00:50, 23:00 and 23:50, so 10 minutes apart from 23:50 to the next day's 00:00 | 600 seconds |
-| `0 3 1,15 * *` | At 03:00 on the 1st and the 15th of every month, 14 to 17 days apart | 14 days, 1209600 seconds |
-| `0 0 1 * 1` | At 00:00 on the 1st of every month and on every Monday, because both day fields are restricted | One day, 86400 seconds |
-| `0 0 28,29 2 *` | At 00:00 on 28 February every year, and on 29 February in a leap year | One day, 86400 seconds |
-| `0 0 30 2 *` | Never | None |
+| Schedule | Falls due | Period | Default time limit |
+|---|---|---|---|
+| `*/15 * * * *` | Every 15 minutes | 900 seconds | 899 seconds |
+| `*/7 * * * *` | At minutes 0, 7, …, 56 of every hour, so 4 minutes apart from :56 to the next hour's :00 | 240 seconds | 239 seconds |
+| `0,50 0,23 * * *` | At 00:00, 00:50, 23:00 and 23:50, so 10 minutes apart from 23:50 to the next day's 00:00 | 600 seconds | 599 seconds |
+| `0 3 1,15 * *` | At 03:00 on the 1st and the 15th of every month, 14 to 17 days apart | 14 days, 1209600 seconds | 900 seconds |
+| `0 0 1 * 1` | At 00:00 on the 1st of every month and on every Monday, because both day fields are restricted | One day, 86400 seconds | 900 seconds |
+| `0 0 28,29 2 *` | At 00:00 on 28 February every year, and on 29 February in a leap year | One day, 86400 seconds | 900 seconds |
+| `0 0 30 2 *` | Never | None | None: no run falls due |
 
 <a id="COMP-JOB-006"></a>**`COMP-JOB-006`**: The `timeLimitSeconds` of a
 scheduled `JOB` MUST be shorter than its schedule's period. Semantic:
@@ -1229,15 +1231,18 @@ exactly in one pass over 400 years of days:
    schedule falls due, whichever is shorter.
 
 <a id="COMP-JOB-007"></a>**`COMP-JOB-007`**: A run of a `JOB` that declares no
-`timeLimitSeconds` MUST have the default time limit: 3600 seconds, or, for a
-scheduled `JOB` whose period is 3600 seconds or shorter, one second less than
+`timeLimitSeconds` MUST have the default time limit: 900 seconds, or, for a
+scheduled `JOB` whose period is 900 seconds or shorter, one second less than
 its period. Platform obligation; no document breaks it.
 
-An hour is enough for the migrations and backups a job typically runs, and it
-stops a run that hangs within the hour; a job that needs longer declares its
-limit. The default belongs to the run, not to the document: the schema gives
-`timeLimitSeconds` no default, because a scheduled job's depends on its
-schedule.
+The default of 15 minutes is the platform operator's decision of 2026-11-13:
+every job has a limit, so a run that hangs blocks neither its schedule nor the
+replacement of the host it runs on. Release 2.1.0 set no limit. Once the
+platform adopts this release, a job that declares none and runs for longer than
+15 minutes is stopped at 15 minutes and recorded as failed, so a job that needs
+longer declares `timeLimitSeconds`. The default belongs to the run, not to the
+document: the schema gives `timeLimitSeconds` no default, because a scheduled
+job's depends on its schedule.
 
 <a id="COMP-JOB-008"></a>**`COMP-JOB-008`**: A run still executing when its time
 limit has passed since it started MUST be stopped, and its outcome recorded for

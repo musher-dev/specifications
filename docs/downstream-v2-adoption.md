@@ -208,16 +208,18 @@ validating. What a consumer adopts:
   ([component v2 §5.7](../specifications/component/v2/spec.md#computing-the-period)).
   Regenerate SDK types from the bundle.
 - **Stop every run at its limit** (platform-api). A run's limit is
-  `timeLimitSeconds`, or by default 3600 seconds, or one second less than the
-  schedule's period when that is shorter
+  `timeLimitSeconds`, or by default 900 seconds (15 minutes), or one second
+  less than the schedule's period when that is shorter
   ([`COMP-JOB-007`](../specifications/component/v2/spec.md#COMP-JOB-007)). A
   run still executing at its limit is stopped and recorded as failed
   ([`COMP-JOB-008`](../specifications/component/v2/spec.md#COMP-JOB-008)), so a
   hung run never blocks its schedule, and anything waiting for a run to end
   waits no longer than its limit.
-- **Declare a limit on a long job.** A job that declares none and runs longer
-  than an hour is stopped at the hour from this release. A catalog item whose
-  job needs longer declares `timeLimitSeconds`.
+- **Declare a limit on a long job.** The 15-minute default is the platform
+  operator's decision of 2026-11-13, so that every job has a limit. A job that
+  declares none and runs longer than 15 minutes is stopped at 15 minutes once
+  the platform adopts 2.2.0. A catalog item whose job needs longer declares
+  `timeLimitSeconds`.
 
 ## musher-cli
 
