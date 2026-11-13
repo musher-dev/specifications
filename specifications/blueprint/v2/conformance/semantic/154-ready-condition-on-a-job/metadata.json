@@ -1,0 +1,11 @@
+{
+  "id": "semantic-154-ready-condition-on-a-job",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#start-order",
+  "requirements": [
+    "BP-ORDER-002"
+  ],
+  "summary": "READY names a JOB, which is never ready; SUCCEEDED is its condition.",
+  "document": "app/blueprint.yaml"
+}

@@ -787,6 +787,26 @@
       "declaredBy": "blueprint"
     },
     {
+      "code": "ERR_START_CYCLE",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_INVALID_START_ORDER",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
       "code": "ERR_INVALID_CONNECTION_BINDING",
       "phases": [
         "semantic"

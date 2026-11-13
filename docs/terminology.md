@@ -10,7 +10,7 @@ it. `task check:terms` holds the records, the schemas and the prose together,
 and the words to avoid are enforced in prose by the generated
 `MusherSpecifications` Vale style.
 
-219 record(s). A record marked *proposed* is an open item, not yet a decision.
+221 record(s). A record marked *proposed* is an open item, not yet a decision.
 
 ## Index
 
@@ -21,6 +21,7 @@ and the words to avoid are enforced in prose by the generated
 | [access policy](#blueprint-access-policy) | blueprint | Which viewers a RESTRICTED endpoint admits. |
 | [acquisition](#deployment-acquisition) | deployment | Obtaining external context, with authority. |
 | [acquisition status](#blueprint-acquisition-status) | blueprint | NOT_ACQUIRED, NOT_FOUND, DENIED, INCOMPATIBLE or SELECTED. |
+| [active](#blueprint-active) | blueprint | A rollout that has finished starting. |
 | [admission phase](#core-admission-phase) | core | Publisher and platform checks that need published documents or policy. |
 | [allocation](#deployment-allocation) | deployment | A concrete resource assigned to a deployment. |
 | [allocation stage](#deployment-allocation-stage) | deployment | Selects compute and allocates addresses. |
@@ -197,6 +198,7 @@ and the words to avoid are enforced in prose by the generated
 | [specification releases](#deployment-specification-releases) | deployment | The exact family releases a resolution used. |
 | [specVersion](#core-spec-version) | core | The major version a document declares. |
 | [stage](#deployment-resolution-stage) | deployment | One ordered step of resolution. |
+| [start order](#blueprint-start-order) | blueprint | What a node waits for before it starts. |
 | [startup probe](#component-startup-probe) | component | Gates initialization. |
 | [storage class](#blueprint-storage-class) | blueprint | What kind of storage serves an allocation. |
 | [storefront](#catalog-storefront) | catalog | The UI that renders listings. |
@@ -265,6 +267,8 @@ blueprint [blueprint.blueprint] (a kind of core.musher-document)
     - volume allocation [blueprint.volume-allocation]
       - storage class [blueprint.storage-class]
   - node graph [blueprint.node-graph]
+    - active [blueprint.active]
+    - start order [blueprint.start-order]
     - value dependency [blueprint.value-dependency]
 
 catalog item [catalog.catalog-item]
@@ -1911,6 +1915,17 @@ whether resolution defers, rejects or reads a persisted selection.
   0045](adr/0045-connection-protocols-are-a-registry.md)
 - **Status:** approved, provisional. Tags: connections.
 
+#### <a id="blueprint-active"></a>active
+
+A rollout whose every SERVICE and WORKER node is ready and whose every ordered
+job, a JOB without a schedule that carries startAfter, has succeeded.
+
+- **Part of:** [node graph](#blueprint-node-graph)
+- **Source:** [blueprint v2 §1.1](../specifications/blueprint/v2/spec.md#terms),
+  [blueprint v2 §4.6](../specifications/blueprint/v2/spec.md#start-order), [ADR
+  0049](adr/0049-a-node-starts-after-the-nodes-it-names.md)
+- **Status:** approved, stable. Tags: lifecycle.
+
 #### <a id="blueprint-binding"></a>binding
 
 The authored edge that supplies one input of one node from exactly one origin: a
@@ -2523,6 +2538,23 @@ USER, a complete set the deployer supplies.
   [blueprint v2 §5.3](../specifications/blueprint/v2/spec.md#connections), [ADR
   0039](adr/0039-provenance-is-chosen-at-deployment.md)
 - **Status:** approved, stable. Tags: connections.
+
+#### <a id="blueprint-start-order"></a>start order
+
+The nodes a node waits for before it starts in a rollout, each with the
+condition it waits on, READY for a SERVICE or WORKER and SUCCEEDED for a JOB
+without a schedule, which together MUST form no cycle.
+
+- **Part of:** [node graph](#blueprint-node-graph)
+- **Identifiers:** fields: `startAfter`, `node`, `condition`; values: `READY`,
+  `SUCCEEDED`; codes: `ERR_START_CYCLE`, `ERR_INVALID_START_ORDER`; requirement
+  prefixes: `BP-ORDER`; defs: `BlueprintStartCondition`
+- **Not to be confused with:** A value dependency, which orders no start.
+- **Not to be confused with:** Compose's depends_on, which this follows.
+- **Source:** [blueprint v2
+  §4.6](../specifications/blueprint/v2/spec.md#start-order), [ADR
+  0049](adr/0049-a-node-starts-after-the-nodes-it-names.md)
+- **Status:** approved, stable. Tags: composition, lifecycle.
 
 #### <a id="blueprint-storage-class"></a>storage class
 

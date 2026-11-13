@@ -362,6 +362,16 @@
           "minimum": 1,
           "type": "integer"
         },
+        "startAfter": {
+          "$comment": "spec.md §4.6 BP-ORDER-001 / ADR 0049. Whether the condition fits the node it names, and whether the start graph is acyclic, are semantic checks against the components (BP-ORDER-002, BP-ORDER-003).",
+          "description": "The nodes this node waits for before it starts in a rollout, each with the condition it waits on.",
+          "items": {
+            "$ref": "#/$defs/BlueprintStartCondition"
+          },
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
         "volumes": {
           "additionalProperties": {
             "$ref": "#/$defs/BlueprintVolumeAllocation"
@@ -943,6 +953,30 @@
       },
       "required": [
         "nodes"
+      ],
+      "type": "object"
+    },
+    "BlueprintStartCondition": {
+      "additionalProperties": false,
+      "description": "One node this node waits for, and the condition it waits on.",
+      "properties": {
+        "condition": {
+          "description": "READY waits for a SERVICE or WORKER to have a ready replica; SUCCEEDED waits for a JOB without a schedule to complete its run successfully.",
+          "enum": [
+            "READY",
+            "SUCCEEDED"
+          ],
+          "type": "string"
+        },
+        "node": {
+          "description": "Node waited for.",
+          "type": "string",
+          "x-musher-grammar": "dns-label"
+        }
+      },
+      "required": [
+        "node",
+        "condition"
       ],
       "type": "object"
     },

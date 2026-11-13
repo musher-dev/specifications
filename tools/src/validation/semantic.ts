@@ -1109,6 +1109,56 @@ export function semanticReport(
       }
     }
   }
+  // BP-ORDER-002: a start condition fits the node it names, and only a node a
+  // rollout starts waits. Each reads a component, so it is decided only for one
+  // that is available.
+  const startEdges = new Map<string, string[]>()
+  const starts = (component: Json | undefined) => {
+    const type = at(component, 'spec', 'type')
+    return type === 'SERVICE' || type === 'WORKER'
+      ? 'READY'
+      : type === 'JOB' && at(component, 'spec', 'workload', 'schedule') === undefined
+        ? 'SUCCEEDED'
+        : undefined
+  }
+  for (const [name, node] of Object.entries(nodes)) {
+    const order = at(node, 'startAfter')
+    if (!Array.isArray(order)) continue
+    const base = `/spec/nodes/${token(name)}/startAfter`,
+      own = resolved.get(name)
+    if (own && starts(own) === undefined) issue(out, 'ERR_INVALID_START_ORDER', base)
+    const edges: string[] = []
+    order.forEach((entry, i) => {
+      const target = asString(at(entry, 'node'))
+      if (target === undefined) return
+      if (!Object.hasOwn(nodes, target)) {
+        issue(out, 'ERR_UNKNOWN_NODE', `${base}/${i}/node`)
+        return
+      }
+      edges.push(target)
+      const component = resolved.get(target)
+      if (component && starts(component) !== at(entry, 'condition'))
+        issue(out, 'ERR_INVALID_START_ORDER', `${base}/${i}/condition`)
+    })
+    startEdges.set(name, edges)
+  }
+  // BP-ORDER-003: the start graph is acyclic. Kahn's ordering terminates, and
+  // what it cannot order lies on a cycle.
+  {
+    const done = new Set<string>()
+    let progressed = true
+    while (progressed) {
+      progressed = false
+      for (const [n, edges] of startEdges) {
+        if (done.has(n)) continue
+        if (edges.every((e) => done.has(e) || !startEdges.has(e))) {
+          done.add(n)
+          progressed = true
+        }
+      }
+    }
+    if (done.size !== startEdges.size) issue(out, 'ERR_START_CYCLE', '/spec/nodes')
+  }
   for (const [name, p] of Object.entries(parameters)) {
     const receivers = consumers.get(name) ?? [],
       path = `/spec/parameters/${token(name)}`

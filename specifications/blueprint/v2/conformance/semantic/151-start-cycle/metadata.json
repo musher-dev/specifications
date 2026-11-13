@@ -1,0 +1,11 @@
+{
+  "id": "semantic-151-start-cycle",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#start-order",
+  "requirements": [
+    "BP-ORDER-003"
+  ],
+  "summary": "Two nodes that each wait for the other form a cycle.",
+  "document": "app/blueprint.yaml"
+}

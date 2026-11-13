@@ -866,6 +866,66 @@
       "id": "semantic-147-generator-longer-than-the-intersection",
       "phase": "semantic",
       "path": "semantic/147-generator-longer-than-the-intersection"
+    },
+    {
+      "id": "structural-100-start-after",
+      "phase": "structural",
+      "path": "structural/100-start-after"
+    },
+    {
+      "id": "structural-101-start-condition-outside-the-vocabulary",
+      "phase": "structural",
+      "path": "structural/101-start-condition-outside-the-vocabulary"
+    },
+    {
+      "id": "structural-102-start-condition-without-a-condition",
+      "phase": "structural",
+      "path": "structural/102-start-condition-without-a-condition"
+    },
+    {
+      "id": "structural-103-empty-start-after",
+      "phase": "structural",
+      "path": "structural/103-empty-start-after"
+    },
+    {
+      "id": "structural-104-start-condition-with-an-unknown-member",
+      "phase": "structural",
+      "path": "structural/104-start-condition-with-an-unknown-member"
+    },
+    {
+      "id": "semantic-150-start-order",
+      "phase": "semantic",
+      "path": "semantic/150-start-order"
+    },
+    {
+      "id": "semantic-151-start-cycle",
+      "phase": "semantic",
+      "path": "semantic/151-start-cycle"
+    },
+    {
+      "id": "semantic-152-start-after-itself",
+      "phase": "semantic",
+      "path": "semantic/152-start-after-itself"
+    },
+    {
+      "id": "semantic-153-start-after-an-unknown-node",
+      "phase": "semantic",
+      "path": "semantic/153-start-after-an-unknown-node"
+    },
+    {
+      "id": "semantic-154-ready-condition-on-a-job",
+      "phase": "semantic",
+      "path": "semantic/154-ready-condition-on-a-job"
+    },
+    {
+      "id": "semantic-155-succeeded-condition-on-a-scheduled-job",
+      "phase": "semantic",
+      "path": "semantic/155-succeeded-condition-on-a-scheduled-job"
+    },
+    {
+      "id": "semantic-156-start-order-on-an-external-node",
+      "phase": "semantic",
+      "path": "semantic/156-start-order-on-an-external-node"
     }
   ]
 }

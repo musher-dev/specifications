@@ -1,0 +1,10 @@
+{
+  "id": "structural-103-empty-start-after",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#start-order",
+  "requirements": [
+    "BP-ORDER-001"
+  ],
+  "summary": "An empty startAfter is rejected."
+}

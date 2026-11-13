@@ -1966,6 +1966,36 @@ terms:
     status: approved
     tags: [composition, values]
 
+  - id: blueprint.start-order
+    display_name: start order
+    context: blueprint
+    definition: >-
+      The nodes a node waits for before it starts in a rollout, each with the
+      condition it waits on, READY for a SERVICE or WORKER and SUCCEEDED for a
+      JOB without a schedule, which together MUST form no cycle.
+    shortDefinition: What a node waits for before it starts.
+    part_of: [blueprint.node-graph]
+    identifiers: { fields: [startAfter, node, condition], values: [READY, SUCCEEDED], defs: [BlueprintStartCondition], codes: [ERR_START_CYCLE, ERR_INVALID_START_ORDER], requirement_prefixes: [BP-ORDER] }
+    confusables: ["A value dependency, which orders no start.", "Compose's depends_on, which this follows."]
+    source: [blueprint v2 §4.6, ADR 0049]
+    stability: stable
+    status: approved
+    tags: [composition, lifecycle]
+
+  - id: blueprint.active
+    display_name: active
+    context: blueprint
+    definition: >-
+      A rollout whose every SERVICE and WORKER node is ready and whose every
+      ordered job, a JOB without a schedule that carries startAfter, has
+      succeeded.
+    shortDefinition: A rollout that has finished starting.
+    part_of: [blueprint.node-graph]
+    source: [blueprint v2 §1.1, blueprint v2 §4.6, ADR 0049]
+    stability: stable
+    status: approved
+    tags: [lifecycle]
+
   - id: blueprint.document-reference
     display_name: document reference
     context: blueprint

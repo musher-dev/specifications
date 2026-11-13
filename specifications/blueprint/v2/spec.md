@@ -71,7 +71,8 @@ deployment.
   Its **deployer** is the person who creates or changes it, and its **creator**
   is the person who created it.
 - A **rollout** is one applied generation of a deployment: the workloads
-  started from one resolution record.
+  started from one resolution record. A rollout is **active** once every node
+  it starts has reached the condition [§4.6](#start-order) defines.
 - A **deployment parameter** is a named value the deployment takes from outside
   the documents ([§5](#parameters)).
 - A **connection** is component's term
@@ -341,6 +342,7 @@ nodes:
 | `compute` | The compute profile and its placement constraints | [§4.3](#node-compute), [§4.4](#placement-constraints) |
 | `volumes` | The storage allocated to each volume | [§4.3](#node-compute) |
 | `exposure` | The exposure of each endpoint, and who may reach it | [§4.3](#node-compute), [§4.5](#access) |
+| `startAfter` | The nodes this node waits for before it starts | [§4.6](#start-order) |
 
 ### <a id="component-reference"></a>4.1 Component reference
 
@@ -813,6 +815,84 @@ peer that learns or guesses the endpoint's private hostname or address still
 cannot open a network connection to it. Two deployments of one blueprint in one
 organization are as separate as two organizations are: a private endpoint is
 private to its deployment, not to its blueprint or its owner.
+
+### <a id="start-order"></a>4.6 Start order
+
+A node may wait for other nodes before it starts. `startAfter` lists the nodes
+it waits for, each with the condition it waits on
+([ADR 0049](../../../docs/adr/0049-a-node-starts-after-the-nodes-it-names.md)):
+
+```yaml
+nodes:
+  db:
+    componentRef: ./components/postgres.yaml
+    compute: { profile: general.standard.small }
+  migrate:
+    componentRef: ./components/migrate.yaml
+    compute: { profile: general.economy.nano }
+    startAfter: [{ node: db, condition: READY }]
+  web:
+    componentRef: ./components/web.yaml
+    compute: { profile: general.standard.small }
+    startAfter:
+      - { node: db, condition: READY }
+      - { node: migrate, condition: SUCCEEDED }
+  claim-admin:
+    componentRef: ./components/claim-admin.yaml
+    compute: { profile: general.economy.nano }
+    startAfter: [{ node: web, condition: READY }]
+```
+
+| Condition | Holds once | Names |
+|---|---|---|
+| `READY` | The node has a ready replica in the rollout: its readiness probe passes or, without one, its startup probe has succeeded or, without either, its workload has started ([component §5.4](../../component/v2/spec.md#health)) | A `SERVICE` or a `WORKER` |
+| `SUCCEEDED` | The node's run in the rollout has completed successfully | A `JOB` without `schedule` |
+
+<a id="BP-ORDER-001"></a>**`BP-ORDER-001`**: `startAfter` is a non-empty list
+without repeats, and each entry is closed and requires `node` and `condition`.
+Structural: `ERR_MISSING_FIELD` at an entry without one of them,
+`ERR_UNKNOWN_FIELD` at one with another member, and `ERR_INVALID_VALUE` at an
+empty or repeating list and at a `condition` outside the table.
+
+<a id="BP-ORDER-002"></a>**`BP-ORDER-002`**: Each entry MUST name a node of
+the blueprint that its condition fits, and only a node a rollout starts MAY
+wait. Semantic:
+
+| Condition | Diagnostic |
+|---|---|
+| `node` names no node | `ERR_UNKNOWN_NODE` at `startAfter/<i>/node` |
+| `READY` names a node that is not a `SERVICE` or a `WORKER`, or `SUCCEEDED` one that is not a `JOB` without `schedule` | `ERR_INVALID_START_ORDER` at `startAfter/<i>/condition` |
+| `startAfter` on an `EXTERNAL` node, which runs nothing, or on a `JOB` with `schedule`, which its schedule starts and a rollout does not | `ERR_INVALID_START_ORDER` at `startAfter` |
+
+Both read the component a node deploys, and are deferred while it is
+unavailable ([`BP-REF-002`](#BP-REF-002)).
+
+<a id="BP-ORDER-003"></a>**`BP-ORDER-003`**: The **start graph**, the nodes and
+the edges their `startAfter` draws, MUST be acyclic, and a node that names
+itself is a cycle. Semantic: `ERR_START_CYCLE` at `/spec/nodes`. Traversal MUST
+terminate. The start graph is not the value-dependency graph of
+[`BP-BIND-002`](#BP-BIND-002): a value dependency is on allocated addresses and
+resolved values, which exist before any workload starts, so it orders no start,
+and a start order adds no value dependency.
+
+<a id="BP-ORDER-004"></a>**`BP-ORDER-004`**: In each rollout, the platform MUST
+NOT start a node's workload until every condition its `startAfter` names holds
+in that rollout, and MUST report a node that waits as waiting, never as failed
+or degraded. A condition that can no longer hold, because the `JOB` it names
+failed, leaves the node not started and the rollout failed, as the platform API
+reports; v2 defines no retry. Ordering governs only when a node starts: a node
+that later stops being ready neither stops nor restarts the nodes that waited
+for it. A `JOB` without `schedule` and without `startAfter` keeps
+[component `COMP-JOB-001`](../../component/v2/spec.md#COMP-JOB-001)'s meaning,
+ordered against no other node; `startAfter` is how a blueprint orders one.
+Platform obligation; no document breaks it.
+
+<a id="BP-ORDER-005"></a>**`BP-ORDER-005`**: A rollout is **active** once every
+`SERVICE` and `WORKER` node it runs is `READY` and every **ordered job**, a
+`JOB` without `schedule` that carries `startAfter`, has `SUCCEEDED` in it. The
+platform MUST NOT report a deployment active before its rollout is. A `JOB`
+without `startAfter` does not hold activation: its outcome is recorded, and
+blocks nothing. Platform obligation; no document breaks it.
 
 ## <a id="parameters"></a><a id="deployment-parameters"></a>5. Deployment parameters
 
@@ -1561,6 +1641,8 @@ Core and component diagnostics apply, with these additions:
 | `ERR_INVALID_VOLUME_ALLOCATION` | `semantic` | A volume allocation is absent, unknown or below the minimum. |
 | `ERR_READINESS_REQUIRED` | `semantic` | A public URL-addressed service endpoint has no readiness probe. |
 | `ERR_VALUE_CYCLE` | `semantic` | Value dependencies contain a cycle. |
+| `ERR_START_CYCLE` | `semantic` | The start graph contains a cycle. |
+| `ERR_INVALID_START_ORDER` | `semantic` | A start condition does not fit the node it names, or a node a rollout does not start waits for another. |
 | `ERR_INVALID_CONNECTION_BINDING` | `semantic` | A connection input is bound by something other than a connection parameter, or a connection parameter binds a value input. |
 | `ERR_PARAMETER_NOT_SUBMITTABLE` | `resolution` | A submitted value names a generated, hash, variable, deployment-fact or connection parameter. |
 | `ERR_MISSING_PARAMETER_VALUE` | `resolution` | A required submitted value is absent. |
@@ -1599,7 +1681,6 @@ evidence.
 | Component instances shared across deployments | A new origin kind for a binding |
 | Conditional node sets, including swapping a self-hosted `SERVICE` for a connection at deployment ([ADR 0019](../../../docs/adr/0019-external-component-node.md)) | A new optional field on a node |
 | Outputs produced by a job at run time | A new output origin, in component |
-| Startup ordering between nodes | A new optional field on a node |
 | Recursive templates, and provider-specific maps | A new optional field |
 | A document naming the principals, roles or policy a `RESTRICTED` endpoint admits, or a default membership; the policy is the deployment's, managed through the platform API | A new optional member of the exposure object |
 | `RESTRICTED` access to a `GRPC`, `TCP` or `UDP` endpoint | Permit `RESTRICTED` on those protocols |

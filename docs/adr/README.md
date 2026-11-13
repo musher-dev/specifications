@@ -101,5 +101,6 @@ that is a review obligation.
 | [0046](0046-the-catalog-is-curated-and-an-organization-publishes-to-its-library.md) | The catalog is curated, and an organization publishes to its library | Accepted | 2026-11-07 | Refines [0038](0038-v2-one-vocabulary-and-v1-retires.md) §9; Relies on [0038](0038-v2-one-vocabulary-and-v1-retires.md) §1; Relies on [0038](0038-v2-one-vocabulary-and-v1-retires.md) §5; Relies on [0003](0003-controlled-vocabulary-placement.md) §1 | — |
 | [0047](0047-an-organization-api-key-deploys-as-the-user-who-created-it.md) | An organization API key deploys as the user who created it | Proposed | 2026-11-13 | Extends [0035](0035-how-identity-and-credentials-reach-a-workload.md) §5; Relies on [0038](0038-v2-one-vocabulary-and-v1-retires.md) §5 | — |
 | [0048](0048-a-parameter-satisfies-every-input-it-binds.md) | A parameter satisfies every input it binds | Proposed | 2026-11-13 | Refines [0028](0028-explicit-binding-and-resolution-before-release.md) §2 | — |
+| [0049](0049-a-node-starts-after-the-nodes-it-names.md) | A node starts after the nodes it names | Proposed | 2026-11-13 | Relies on [0038](0038-v2-one-vocabulary-and-v1-retires.md) §3 | — |
 
 <!-- adr-index:end -->

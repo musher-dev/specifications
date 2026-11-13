@@ -1296,6 +1296,19 @@ const UNPINNED: ReadonlyMap<string, string> = new Map([
       'connection',
   ],
   [
+    'BP-ORDER-004',
+    'Holding a node until the conditions its startAfter names hold, reporting it as waiting ' +
+      'and failing a rollout whose condition cannot hold are runtime obligations of the ' +
+      'platform; the semantic phase pins what a document may name (BP-ORDER-002, ' +
+      'BP-ORDER-003), but no operation observes a rollout',
+  ],
+  [
+    'BP-ORDER-005',
+    'When a rollout becomes active, every SERVICE and WORKER ready and every ordered job ' +
+      'succeeded, is a runtime observation of the platform; no document phase or behavioural ' +
+      'operation observes a rollout',
+  ],
+  [
     'BP-PARAM-015',
     'That a deployment an organization API key creates takes the user who created the key ' +
       'as its creator is a fact of the platform identity service; resolution and validation ' +

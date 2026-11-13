@@ -1,0 +1,10 @@
+{
+  "id": "structural-100-start-after",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/blueprint/v2/spec.md#start-order",
+  "requirements": [
+    "BP-ORDER-001"
+  ],
+  "summary": "A node waits for another to be ready."
+}
