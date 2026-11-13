@@ -412,14 +412,15 @@ node. The map key names an input of the node's component
 |---|---|---|
 | `parameter` | `parameter` | A named deployment parameter ([§5](#parameters)) |
 | `node` | `node`, `output` | An output of another node |
+| `node` | `node`, `connection` | A connection another node provides, for a connection input ([§5.3](#provided-connections)) |
 | `value` | `value` | A logical literal value, never for a sensitive input ([`BP-BIND-008`](#BP-BIND-008)) |
 
 <a id="BP-BIND-003"></a>**`BP-BIND-003`**: A binding names exactly one origin:
-`parameter`, `node` with `output`, or `value`. Structural: a binding naming no
-origin is `ERR_MISSING_FIELD` at the binding, and one carrying members of two
-origins is `ERR_INVALID_VALUE` there. `node` and `output` go together: `node`
-without `output` and `output` without `node` are both `ERR_MISSING_FIELD` at the
-binding. Duplicate input keys fail during parsing, and there is no override
+`parameter`, `node` with `output`, `node` with `connection`, or `value`.
+Structural: a binding naming no origin is `ERR_MISSING_FIELD` at the binding,
+and one carrying members of two origins is `ERR_INVALID_VALUE` there. `node`
+and `output` go together: `node` without `output` or `connection`, and `output`
+without `node`, are both `ERR_MISSING_FIELD` at the binding. Duplicate input keys fail during parsing, and there is no override
 priority between origins.
 
 ```yaml
@@ -1238,13 +1239,16 @@ runs it. A bot that receives events at a webhook does so at that node's own
 [component v2 §6.4](../../component/v2/spec.md#event-delivery)).
 
 <a id="BP-CONNECTION-001"></a>**`BP-CONNECTION-001`**: A connection input MUST be
-bound only by a `parameter` binding naming a connection parameter, and a
-connection parameter MUST bind only connection inputs. Semantic, each
+bound only by a `parameter` binding naming a connection parameter, or by a
+`node` binding naming a provided connection
+([`BP-CONNECTION-004`](#BP-CONNECTION-004)), and a connection parameter MUST
+bind only connection inputs. Semantic, each
 `ERR_INVALID_CONNECTION_BINDING`:
 
 | Condition | At |
 |---|---|
-| A `value` or `node` binding to a connection input | The binding |
+| A `value` binding, or a `node` binding naming an `output`, to a connection input | The binding |
+| A `node` binding naming a `connection`, to a value input | The binding |
 | A `parameter` binding to a connection input naming a parameter that is not a connection parameter | The binding's `parameter` |
 | A `parameter` binding to a value input naming a connection parameter | The binding's `parameter` |
 
@@ -1304,6 +1308,7 @@ language-model view also carries its capabilities:
 | Protocol | Credential member | View members | Optional view members |
 |---|---|---|---|
 | `OPENAI_CHAT_COMPLETIONS`, `ANTHROPIC_MESSAGES` | `apiKey` | `baseURL`, `model`, `capabilities` | none |
+| `OPENAI_EMBEDDINGS` | `apiKey` | `baseURL`, `model`, `dimensions` | none |
 | `POSTGRES` | `password` | `host`, `port`, `database`, `username`, `sslMode` | none |
 | `REDIS` | `password`, when the server requires authentication | `host`, `port`, `tls` | `database`, `username` |
 | `S3` | `secretAccessKey` | `endpointURL`, `region`, `bucket`, `accessKeyID` | `pathStyle` |
@@ -1392,6 +1397,69 @@ versions, regions, quotas, spending limits, current authorization and durable
 persistence are platform responsibilities. A real client integration must
 verify client paths, authentication, streaming, tool calls and errors. Synthetic
 fixture credentials establish no production access.
+
+<a id="provided-connections"></a>**Connections a node provides.** A node
+whose component serves a connection
+([component v2 §6.5](../../component/v2/spec.md#provided-connections)) can fill
+a sibling's connection input in place of a connection parameter. The binding
+names the node and, in `connection`, the provided connection, as a binding
+naming an output names the node and the `output`
+([ADR 0047](../../../docs/adr/0047-an-embeddings-protocol-and-connections-a-node-provides.md)):
+
+```yaml
+nodes:
+  tei:
+    componentRef: ./components/tei.yaml
+    compute: { profile: gpu.standard.small }
+  embedder:
+    componentRef: ./components/embeddings.yaml
+    bindings:
+      embeddings: { node: tei, connection: embeddings }
+  app:
+    componentRef: ./components/app.yaml
+    compute: { profile: general.standard.small }
+    bindings:
+      embeddingsURL: { node: embedder, output: baseURL }
+```
+
+`embedder` is the same `EXTERNAL` node a blueprint fills with
+`${{ connections.embeddings.default }}` when the organization's connection
+answers instead.
+
+<a id="BP-CONNECTION-004"></a>**`BP-CONNECTION-004`**: A binding carries
+`connection` only beside `node`, and never beside `output`. It names a
+provided connection of the node's component whose protocol is the input's,
+and which declares every capability the input requires. The input then
+depends on each output the provided connection maps, for
+[`BP-BIND-002`](#BP-BIND-002). Structural: `ERR_INVALID_VALUE` at a binding
+with both `output` and `connection`, and `ERR_MISSING_FIELD` at one with
+`connection` and no `node`. Semantic:
+
+| Condition | Diagnostic |
+|---|---|
+| `node` names no node | `ERR_UNKNOWN_NODE` at the binding's `node` |
+| `connection` names no provided connection of that node's component | `ERR_UNKNOWN_PROVIDED_CONNECTION` at the binding's `connection` |
+| The provided connection's protocol is not the input's, or it lacks a capability the input requires | `ERR_INVALID_CONNECTION_BINDING` at the binding's `connection` |
+
+<a id="BP-CONNECTION-005"></a>**`BP-CONNECTION-005`**: In the `values` stage,
+an input bound to a provided connection receives each member the provided
+connection maps, the value of its output on the providing node; the default of
+each optional member it does not map; and, for `POSTGRES` and `REDIS`, the
+`url` composed from them
+([component v2 §6.4](../../component/v2/spec.md#derived-urls)). Every member
+MUST satisfy its protocol's value schema, except that a locator MAY be an
+absolute `http` URL as well as an `https` one, without user information,
+query or fragment. Resolution: a member that does not is `ERR_VALUE_CONSTRAINT`
+at the binding.
+
+The locator may be `http` because it reads an endpoint of the providing node
+([component `COMP-CONNECTION-005`](../../component/v2/spec.md#COMP-CONNECTION-005)),
+which only nodes of the same deployment reach
+([`BP-ACCESS-011`](#BP-ACCESS-011)). There is no acquisition: no selection, no
+scoped credential, no `permittedBaseURLs` and nothing persisted in the
+snapshot. The members are the provider's outputs, pinned by the provider node,
+and they change only when its outputs do. A member's sensitivity is its
+output's.
 
 ### <a id="deploy-form"></a><a id="install-form"></a>5.4 Deploy form
 
@@ -1487,7 +1555,8 @@ Core and component diagnostics apply, with these additions:
 | `ERR_INVALID_VOLUME_ALLOCATION` | `semantic` | A volume allocation is absent, unknown or below the minimum. |
 | `ERR_READINESS_REQUIRED` | `semantic` | A public URL-addressed service endpoint has no readiness probe. |
 | `ERR_VALUE_CYCLE` | `semantic` | Value dependencies contain a cycle. |
-| `ERR_INVALID_CONNECTION_BINDING` | `semantic` | A connection input is bound by something other than a connection parameter, or a connection parameter binds a value input. |
+| `ERR_INVALID_CONNECTION_BINDING` | `semantic` | A connection input is bound by something other than a connection parameter or a provided connection of its protocol and capabilities, or a connection parameter or provided connection binds a value input. |
+| `ERR_UNKNOWN_PROVIDED_CONNECTION` | `semantic` | A binding names no provided connection of the node's component. |
 | `ERR_PARAMETER_NOT_SUBMITTABLE` | `resolution` | A submitted value names a generated, hash, variable, deployment-fact or connection parameter. |
 | `ERR_MISSING_PARAMETER_VALUE` | `resolution` | A required submitted value is absent. |
 | `ERR_VARIABLE_NOT_AUTHORIZED` | `resolution` | The deployment cannot read the organization variable. |

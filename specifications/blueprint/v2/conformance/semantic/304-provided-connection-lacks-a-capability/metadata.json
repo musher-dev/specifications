@@ -1,0 +1,11 @@
+{
+  "id": "semantic-304-provided-connection-lacks-a-capability",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#connections",
+  "requirements": [
+    "BP-CONNECTION-004"
+  ],
+  "summary": "A provided chat connection that declares no TOOL_CALLS cannot fill an input that requires it.",
+  "document": "app/blueprint.yaml"
+}

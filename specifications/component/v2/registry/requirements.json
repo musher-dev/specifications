@@ -378,6 +378,16 @@
       "section": "connection-requirements"
     },
     {
+      "id": "COMP-CONNECTION-004",
+      "anchor": "COMP-CONNECTION-004",
+      "section": "provided-connections"
+    },
+    {
+      "id": "COMP-CONNECTION-005",
+      "anchor": "COMP-CONNECTION-005",
+      "section": "provided-connections"
+    },
+    {
       "id": "COMP-SEC-003",
       "anchor": "COMP-SEC-003",
       "section": "security"

@@ -1233,10 +1233,10 @@ terms:
       input one of the connection protocols, which fixes its members.
     shortDefinition: The vendor-neutral wire contract a client speaks.
     identifiers:
-      fields: [protocol, OPENAI_CHAT_COMPLETIONS, ANTHROPIC_MESSAGES, POSTGRES, REDIS, S3, TELEGRAM_BOT, SLACK_APP, DISCORD_BOT]
-      values: [HTTP, HTTPS, WS, GRPC, TCP, UDP, OPENAI_CHAT_COMPLETIONS, ANTHROPIC_MESSAGES, POSTGRES, REDIS, S3, TELEGRAM_BOT, SLACK_APP, DISCORD_BOT]
+      fields: [protocol, OPENAI_CHAT_COMPLETIONS, ANTHROPIC_MESSAGES, OPENAI_EMBEDDINGS, POSTGRES, REDIS, S3, TELEGRAM_BOT, SLACK_APP, DISCORD_BOT]
+      values: [HTTP, HTTPS, WS, GRPC, TCP, UDP, OPENAI_CHAT_COMPLETIONS, ANTHROPIC_MESSAGES, OPENAI_EMBEDDINGS, POSTGRES, REDIS, S3, TELEGRAM_BOT, SLACK_APP, DISCORD_BOT]
     example: "A connection input with protocol POSTGRES receives host, port, database, username, password and sslMode, and a url composed from them."
-    source: [component v2 §5.2, component v2 §6.4, ADR 0039, ADR 0045]
+    source: [component v2 §5.2, component v2 §6.4, ADR 0039, ADR 0045, ADR 0047]
     stability: stable
     status: approved
     tags: [networking, connections]
@@ -1623,6 +1623,26 @@ terms:
     status: approved
     tags: [values, connections]
 
+  - id: component.provided-connection
+    display_name: provided connection
+    context: component
+    definition: >-
+      A connection a SERVICE or WORKER serves, declared in its contract by a
+      protocol and a map from each member it supplies to one of its own
+      outputs, which a blueprint binds to a sibling's connection input.
+    shortDefinition: A connection a workload serves from its outputs.
+    associated:
+      - { relation: fills, term: component.connection-input }
+    identifiers:
+      fields: [providedConnections, members]
+      defs: [ComponentProvidedConnection]
+      codes: [ERR_INVALID_PROVIDED_CONNECTION]
+    confusables: ["A connection parameter, which the organization's connection configuration answers rather than a node."]
+    source: [component v2 §6.5, ADR 0047]
+    stability: provisional
+    status: approved
+    tags: [values, connections]
+
   - id: component.connection-capability
     display_name: connection capability
     context: component
@@ -1650,8 +1670,8 @@ terms:
     shortDefinition: One value a protocol fixes, such as host or apiKey.
     part_of: [blueprint.connection]
     identifiers:
-      fields: [member, baseURL, apiKey, model, host, port, database, username, password, sslMode, url, tls, endpointURL, region, bucket, accessKeyID, secretAccessKey, pathStyle, botToken, appToken, signingSecret, applicationID, publicKey]
-      values: [baseURL, apiKey, model, host, port, database, username, password, sslMode, url, tls, endpointURL, region, bucket, accessKeyID, secretAccessKey, pathStyle, botToken, appToken, signingSecret, applicationID, publicKey, disable, allow, prefer, require, verify-ca, verify-full]
+      fields: [member, baseURL, apiKey, model, dimensions, host, port, database, username, password, sslMode, url, tls, endpointURL, region, bucket, accessKeyID, secretAccessKey, pathStyle, botToken, appToken, signingSecret, applicationID, publicKey]
+      values: [baseURL, apiKey, model, dimensions, host, port, database, username, password, sslMode, url, tls, endpointURL, region, bucket, accessKeyID, secretAccessKey, pathStyle, botToken, appToken, signingSecret, applicationID, publicKey, disable, allow, prefer, require, verify-ca, verify-full]
       codes: [ERR_UNKNOWN_CONNECTION_MEMBER]
     confusables:
       - "endpointURL is AWS's term for an S3 API address without the bucket, not a component endpoint."
@@ -2560,7 +2580,7 @@ terms:
     kind_of: [blueprint.deployment-parameter]
     associated:
       - { relation: selects, term: blueprint.connection }
-    identifiers: { codes: [ERR_INVALID_CONNECTION_BINDING] }
+    identifiers: { codes: [ERR_INVALID_CONNECTION_BINDING, ERR_UNKNOWN_PROVIDED_CONNECTION] }
     source: [blueprint v2 §5.3, ADR 0030]
     stability: stable
     status: approved
@@ -2709,7 +2729,7 @@ terms:
     part_of: [blueprint.selection]
     identifiers:
       fields: [views]
-      defs: [OpenaiChatCompletionsView, AnthropicMessagesView, PostgresView, RedisView, S3View, TelegramBotView, SlackAppView, DiscordBotView]
+      defs: [OpenaiChatCompletionsView, AnthropicMessagesView, OpenaiEmbeddingsView, PostgresView, RedisView, S3View, TelegramBotView, SlackAppView, DiscordBotView]
     source: [blueprint v2 §5.3, ADR 0045]
     stability: stable
     status: approved

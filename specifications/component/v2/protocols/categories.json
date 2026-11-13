@@ -3,14 +3,15 @@
     {
       "id": "LANGUAGE_MODEL",
       "title": "Language model",
-      "description": "Model APIs a client sends conversations to over HTTPS.",
+      "description": "Model APIs a client sends requests to over HTTPS.",
       "conventions": {
         "locator": "baseURL",
         "credential": "apiKey"
       },
       "protocols": [
         "OPENAI_CHAT_COMPLETIONS",
-        "ANTHROPIC_MESSAGES"
+        "ANTHROPIC_MESSAGES",
+        "OPENAI_EMBEDDINGS"
       ]
     },
     {

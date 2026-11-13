@@ -15,12 +15,13 @@ import {
 import { scanReferences } from '../lib/references.ts'
 import { familyBundle } from '../schema/bundle.ts'
 import { strictAjv } from '../schema/lint.ts'
-import { connectionMemberContract, isConnectionInput } from './connections.ts'
+import { connectionMemberContract, isConnectionInput, isConnectionProtocol } from './connections.ts'
 import { type Diagnostic, type Phase, parseDocumentBytes, reported } from './document.ts'
 import {
   type ConnectionsContext,
   DEPLOYMENT_FACT_PATHS,
   parameterOrigin,
+  providedMembers,
   resolveConnections,
 } from './selections.ts'
 import {
@@ -640,7 +641,34 @@ export function resolveDeployment(
     const definition = record(at(report.components.get(node), 'spec', 'contract', 'inputs', name)),
       s = record(at(nodes[node], 'bindings', name))
     let value: ResolvedValue | undefined = connectionResult.inputs[id]
-    if (value || isConnectionInput(definition)) {
+    if (typeof s.node === 'string' && typeof s.connection === 'string') {
+      // BP-CONNECTION-005: the members are the providing node's outputs.
+      const provided = at(
+        report.components.get(s.node),
+        'spec',
+        'contract',
+        'providedConnections',
+        s.connection,
+      )
+      const protocol = at(provided, 'connection', 'protocol')
+      const supplied: Record<string, Json> = Object.create(null)
+      let complete = isConnectionProtocol(protocol),
+        sensitive = false
+      for (const [member, outputName] of Object.entries(record(at(provided, 'members')))) {
+        const v = output(s.node, String(outputName))
+        if (!v) {
+          complete = false
+          continue
+        }
+        supplied[member] = v.value
+        sensitive ||= v.sensitive
+      }
+      if (complete && isConnectionProtocol(protocol)) {
+        const members = providedMembers(protocol, supplied)
+        if (members) value = { value: members, sensitive }
+        else fail('ERR_VALUE_CONSTRAINT', path)
+      }
+    } else if (value || isConnectionInput(definition)) {
       /* A connection input takes its value only from its selection, reported above. */
     } else if (!Object.keys(s).length) {
       if (Object.hasOwn(definition, 'default') && definition.default !== undefined)

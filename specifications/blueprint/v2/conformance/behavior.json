@@ -7791,5 +7791,108 @@
       "/status": "VALID",
       "/diagnostics": []
     }
+  },
+  {
+    "id": "resolution-provided-embeddings-connection",
+    "suite": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-CONNECTION-005"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v2\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"teiKey\":{\"generator\":{\"byteLength\":32}}},\"nodes\":{\"tei\":{\"componentRef\":\"./tei.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"apiKey\":{\"parameter\":\"teiKey\"}}},\"embedder\":{\"componentRef\":\"./embeddings.yaml\",\"bindings\":{\"embeddings\":{\"node\":\"tei\",\"connection\":\"embeddings\"}}},\"app\":{\"componentRef\":\"./app.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"embeddingsURL\":{\"node\":\"embedder\",\"output\":\"baseURL\"},\"embeddingsKey\":{\"node\":\"embedder\",\"output\":\"apiKey\"}}}}}}",
+      "app/tei.yaml": "{\"specVersion\":\"v2\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/embeddings:1\"},\"endpoints\":{\"api\":{\"targetPort\":8080,\"protocol\":\"HTTP\"}}},\"contract\":{\"inputs\":{\"apiKey\":{\"description\":\"Key the API checks\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVar\":\"API_KEY\"}}},\"outputs\":{\"baseURL\":{\"description\":\"URL the API answers at inside the deployment\",\"schema\":{\"type\":\"string\"},\"from\":{\"template\":\"http://${{ self.endpoints.api.privateAddress }}/v1\"}},\"apiKey\":{\"description\":\"Key the API checks\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"from\":{\"input\":\"apiKey\"}},\"model\":{\"description\":\"Model the server loads\",\"schema\":{\"type\":\"string\"},\"from\":{\"value\":\"example/embedder\"}},\"dimensions\":{\"description\":\"Length of the vectors the model returns\",\"schema\":{\"type\":\"integer\"},\"from\":{\"value\":384}}},\"providedConnections\":{\"embeddings\":{\"description\":\"The embeddings API this server answers\",\"connection\":{\"protocol\":\"OPENAI_EMBEDDINGS\"},\"members\":{\"baseURL\":\"baseURL\",\"apiKey\":\"apiKey\",\"model\":\"model\",\"dimensions\":\"dimensions\"}}}}}}",
+      "app/embeddings.yaml": "{\"specVersion\":\"v2\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"EXTERNAL\",\"contract\":{\"inputs\":{\"embeddings\":{\"description\":\"Embeddings API this node stands for\",\"connection\":{\"protocol\":\"OPENAI_EMBEDDINGS\"}}},\"outputs\":{\"baseURL\":{\"description\":\"Forwarded baseURL\",\"schema\":{\"type\":\"string\"},\"from\":{\"input\":\"embeddings\",\"member\":\"baseURL\"}},\"apiKey\":{\"description\":\"Forwarded apiKey\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"from\":{\"input\":\"embeddings\",\"member\":\"apiKey\"}},\"dimensions\":{\"description\":\"Forwarded dimensions\",\"schema\":{\"type\":\"integer\"},\"from\":{\"input\":\"embeddings\",\"member\":\"dimensions\"}}}}}}",
+      "app/app.yaml": "{\"specVersion\":\"v2\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"embeddingsURL\":{\"description\":\"Embeddings base URL\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVar\":\"EMBEDDINGS_URL\"}},\"embeddingsKey\":{\"description\":\"Embeddings API key\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVar\":\"EMBEDDINGS_KEY\"}}},\"outputs\":{}}}}"
+    },
+    "document": "app/blueprint.yaml",
+    "context": {
+      "sources": {
+        "tei": {
+          "imageDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "app": {
+          "imageDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      },
+      "allocations": {
+        "tei": {
+          "api": {
+            "privateHostname": "tei.internal",
+            "identity": "allocation-tei-api",
+            "version": "1"
+          }
+        }
+      },
+      "credentials": {
+        "teiKey": {
+          "value": "synthetic-generated",
+          "sensitive": true
+        }
+      }
+    },
+    "expect": {
+      "/status": "VALID",
+      "/inputs/embedder:in:embeddings/value": {
+        "baseURL": "http://tei.internal:8080/v1",
+        "apiKey": "synthetic-generated",
+        "model": "example/embedder",
+        "dimensions": 384
+      },
+      "/outputs/embedder:out:apiKey/sensitive": true,
+      "/environment/app/EMBEDDINGS_URL/value": "http://tei.internal:8080/v1",
+      "/environment/app/EMBEDDINGS_KEY/sensitive": true
+    }
+  },
+  {
+    "id": "resolution-provided-connection-member-out-of-range",
+    "suite": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-CONNECTION-005"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v2\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"teiKey\":{\"generator\":{\"byteLength\":32}}},\"nodes\":{\"tei\":{\"componentRef\":\"./tei.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"apiKey\":{\"parameter\":\"teiKey\"}}},\"embedder\":{\"componentRef\":\"./embeddings.yaml\",\"bindings\":{\"embeddings\":{\"node\":\"tei\",\"connection\":\"embeddings\"}}},\"app\":{\"componentRef\":\"./app.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"embeddingsURL\":{\"node\":\"embedder\",\"output\":\"baseURL\"},\"embeddingsKey\":{\"node\":\"embedder\",\"output\":\"apiKey\"}}}}}}",
+      "app/tei.yaml": "{\"specVersion\":\"v2\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"SERVICE\",\"workload\":{\"source\":{\"image\":\"example/embeddings:1\"},\"endpoints\":{\"api\":{\"targetPort\":8080,\"protocol\":\"HTTP\"}}},\"contract\":{\"inputs\":{\"apiKey\":{\"description\":\"Key the API checks\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVar\":\"API_KEY\"}}},\"outputs\":{\"baseURL\":{\"description\":\"URL the API answers at inside the deployment\",\"schema\":{\"type\":\"string\"},\"from\":{\"template\":\"http://${{ self.endpoints.api.privateAddress }}/v1\"}},\"apiKey\":{\"description\":\"Key the API checks\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"from\":{\"input\":\"apiKey\"}},\"model\":{\"description\":\"Model the server loads\",\"schema\":{\"type\":\"string\"},\"from\":{\"value\":\"example/embedder\"}},\"dimensions\":{\"description\":\"Length of the vectors the model returns\",\"schema\":{\"type\":\"integer\"},\"from\":{\"value\":0}}},\"providedConnections\":{\"embeddings\":{\"description\":\"The embeddings API this server answers\",\"connection\":{\"protocol\":\"OPENAI_EMBEDDINGS\"},\"members\":{\"baseURL\":\"baseURL\",\"apiKey\":\"apiKey\",\"model\":\"model\",\"dimensions\":\"dimensions\"}}}}}}",
+      "app/embeddings.yaml": "{\"specVersion\":\"v2\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"EXTERNAL\",\"contract\":{\"inputs\":{\"embeddings\":{\"description\":\"Embeddings API this node stands for\",\"connection\":{\"protocol\":\"OPENAI_EMBEDDINGS\"}}},\"outputs\":{\"baseURL\":{\"description\":\"Forwarded baseURL\",\"schema\":{\"type\":\"string\"},\"from\":{\"input\":\"embeddings\",\"member\":\"baseURL\"}},\"apiKey\":{\"description\":\"Forwarded apiKey\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"from\":{\"input\":\"embeddings\",\"member\":\"apiKey\"}},\"dimensions\":{\"description\":\"Forwarded dimensions\",\"schema\":{\"type\":\"integer\"},\"from\":{\"input\":\"embeddings\",\"member\":\"dimensions\"}}}}}}",
+      "app/app.yaml": "{\"specVersion\":\"v2\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"embeddingsURL\":{\"description\":\"Embeddings base URL\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVar\":\"EMBEDDINGS_URL\"}},\"embeddingsKey\":{\"description\":\"Embeddings API key\",\"schema\":{\"type\":\"string\"},\"sensitive\":true,\"target\":{\"envVar\":\"EMBEDDINGS_KEY\"}}},\"outputs\":{}}}}"
+    },
+    "document": "app/blueprint.yaml",
+    "context": {
+      "sources": {
+        "tei": {
+          "imageDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "app": {
+          "imageDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      },
+      "allocations": {
+        "tei": {
+          "api": {
+            "privateHostname": "tei.internal",
+            "identity": "allocation-tei-api",
+            "version": "1"
+          }
+        }
+      },
+      "credentials": {
+        "teiKey": {
+          "value": "synthetic-generated",
+          "sensitive": true
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID"
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_VALUE_CONSTRAINT",
+        "path": "/spec/nodes/embedder/bindings/embeddings",
+        "stage": "values",
+        "phase": "resolution"
+      }
+    ]
   }
 ]

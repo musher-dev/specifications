@@ -206,9 +206,12 @@ export function connectionBindingDiagnostics(
         path = `/spec/nodes/${token(node)}/bindings/${token(name)}`
       // An undeclared parameter is ERR_UNKNOWN_PARAMETER, and nothing more.
       if (typeof parameter === 'string' && !Object.hasOwn(parameters, parameter)) continue
+      // BP-CONNECTION-004: a node's provided connection is the other origin a
+      // connection input takes.
       const connection =
-        typeof parameter === 'string' &&
-        parameterOrigin(parameters[parameter])?.namespace === 'connections'
+        (typeof parameter === 'string' &&
+          parameterOrigin(parameters[parameter])?.namespace === 'connections') ||
+        (typeof at(binding, 'node') === 'string' && typeof at(binding, 'connection') === 'string')
       if (isConnectionInput(inputs[name]) !== connection)
         out.push(
           diagnostic(
@@ -262,6 +265,41 @@ function memberValueValid(p: ConnectionProtocol, name: string, value: Json | und
   }
   if (!validate(value)) return false
   return name !== 'host' || validHost(String(value))
+}
+/**
+ * Blueprint BP-CONNECTION-005: the members an input bound to a provided
+ * connection receives, from the provider's resolved outputs, keyed by member.
+ * An optional member the provided connection leaves out takes its default, a
+ * derived `url` is composed, and every member must satisfy its protocol's
+ * schema, except that a locator may be an `http` URL as well as an `https`
+ * one. Undefined when a member does not.
+ */
+export function providedMembers(
+  protocol: ConnectionProtocol,
+  supplied: Readonly<Record<string, Json>>,
+): Record<string, Json> | undefined {
+  const contracts = CONNECTION_PROTOCOL_MEMBERS[protocol] ?? {}
+  const members: Record<string, Json> = Object.create(null)
+  for (const [name, contract] of Object.entries(contracts)) {
+    if (contract.derived === true) continue
+    const value = Object.hasOwn(supplied, name) ? supplied[name] : contract.default
+    if (value === undefined) {
+      if (contract.required) return
+      continue
+    }
+    const valid =
+      contract.role === 'locator'
+        ? typeof value === 'string' && absoluteURL(value, ['http:', 'https:'])
+        : memberValueValid(protocol, name, value)
+    if (!valid) return
+    members[name] = value
+  }
+  if (Object.values(contracts).some((c) => c.derived === true)) {
+    const url = composeConnectionURL(protocol, members)
+    if (url === undefined) return
+    members.url = url
+  }
+  return members
 }
 /**
  * BP-CONNECTION-002: one protocol view. It holds the protocol's members other

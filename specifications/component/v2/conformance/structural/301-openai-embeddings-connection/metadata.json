@@ -1,0 +1,11 @@
+{
+  "id": "structural-301-openai-embeddings-connection",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#contract",
+  "requirements": [
+    "COMP-CONNECTION-002",
+    "COMP-OUT-004"
+  ],
+  "summary": "An external component with an OPENAI_EMBEDDINGS connection input, forwarding baseURL and the integer dimensions, validates."
+}

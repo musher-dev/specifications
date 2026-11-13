@@ -17,9 +17,10 @@ const registry = loadProtocolRegistry()
 
 describe('the protocol registry', () => {
   test('lists every protocol in category order', () => {
-    expect(registry.protocols.map((p) => p.id).slice(0, 5)).toEqual([
+    expect(registry.protocols.map((p) => p.id).slice(0, 6)).toEqual([
       'OPENAI_CHAT_COMPLETIONS',
       'ANTHROPIC_MESSAGES',
+      'OPENAI_EMBEDDINGS',
       'POSTGRES',
       'REDIS',
       'S3',

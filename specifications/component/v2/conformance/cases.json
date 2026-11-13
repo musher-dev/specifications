@@ -1226,6 +1226,51 @@
       "id": "semantic-134-slack-member-on-a-telegram-input",
       "phase": "semantic",
       "path": "semantic/134-slack-member-on-a-telegram-input"
+    },
+    {
+      "id": "structural-301-openai-embeddings-connection",
+      "phase": "structural",
+      "path": "structural/301-openai-embeddings-connection"
+    },
+    {
+      "id": "structural-302-capabilities-on-an-embeddings-connection",
+      "phase": "structural",
+      "path": "structural/302-capabilities-on-an-embeddings-connection"
+    },
+    {
+      "id": "semantic-303-embeddings-dimensions-into-a-string",
+      "phase": "semantic",
+      "path": "semantic/303-embeddings-dimensions-into-a-string"
+    },
+    {
+      "id": "semantic-304-provided-embeddings-connection",
+      "phase": "semantic",
+      "path": "semantic/304-provided-embeddings-connection"
+    },
+    {
+      "id": "structural-305-provided-connection-on-an-external-component",
+      "phase": "structural",
+      "path": "structural/305-provided-connection-on-an-external-component"
+    },
+    {
+      "id": "structural-306-provided-connection-without-members",
+      "phase": "structural",
+      "path": "structural/306-provided-connection-without-members"
+    },
+    {
+      "id": "structural-307-provided-connection-unknown-member-name",
+      "phase": "structural",
+      "path": "structural/307-provided-connection-unknown-member-name"
+    },
+    {
+      "id": "semantic-308-provided-connection-member-mapping",
+      "phase": "semantic",
+      "path": "semantic/308-provided-connection-member-mapping"
+    },
+    {
+      "id": "semantic-309-provided-connection-output-mismatch",
+      "phase": "semantic",
+      "path": "semantic/309-provided-connection-output-mismatch"
     }
   ]
 }

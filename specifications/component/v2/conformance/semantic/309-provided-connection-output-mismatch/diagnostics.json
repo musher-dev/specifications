@@ -1,0 +1,18 @@
+[
+  {
+    "code": "ERR_INVALID_PROVIDED_CONNECTION",
+    "path": "/spec/contract/providedConnections/embeddings/members/baseURL"
+  },
+  {
+    "code": "ERR_INVALID_PROVIDED_CONNECTION",
+    "path": "/spec/contract/providedConnections/embeddings/members/apiKey"
+  },
+  {
+    "code": "ERR_INVALID_PROVIDED_CONNECTION",
+    "path": "/spec/contract/providedConnections/embeddings/members/model"
+  },
+  {
+    "code": "ERR_INVALID_PROVIDED_CONNECTION",
+    "path": "/spec/contract/providedConnections/embeddings/members/dimensions"
+  }
+]

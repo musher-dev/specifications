@@ -43,9 +43,11 @@ Authelia
 Cloudron
 flowise
 Gitea
+Graphiti
 langflow
 mlflow
 Nextcloud
+Ollama
 openclaw
 Pomerium
 Umbrel

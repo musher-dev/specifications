@@ -826,6 +826,41 @@
       "id": "structural-091-uppercase-catalog-reference",
       "phase": "structural",
       "path": "structural/091-uppercase-catalog-reference"
+    },
+    {
+      "id": "semantic-301-node-provided-embeddings-connection",
+      "phase": "semantic",
+      "path": "semantic/301-node-provided-embeddings-connection"
+    },
+    {
+      "id": "semantic-302-unknown-provided-connection",
+      "phase": "semantic",
+      "path": "semantic/302-unknown-provided-connection"
+    },
+    {
+      "id": "semantic-303-provided-connection-of-another-protocol",
+      "phase": "semantic",
+      "path": "semantic/303-provided-connection-of-another-protocol"
+    },
+    {
+      "id": "semantic-304-provided-connection-lacks-a-capability",
+      "phase": "semantic",
+      "path": "semantic/304-provided-connection-lacks-a-capability"
+    },
+    {
+      "id": "semantic-305-provided-connection-into-a-value-input",
+      "phase": "semantic",
+      "path": "semantic/305-provided-connection-into-a-value-input"
+    },
+    {
+      "id": "structural-306-binding-with-output-and-connection",
+      "phase": "structural",
+      "path": "structural/306-binding-with-output-and-connection"
+    },
+    {
+      "id": "structural-307-provided-connection-without-a-node",
+      "phase": "structural",
+      "path": "structural/307-provided-connection-without-a-node"
     }
   ]
 }

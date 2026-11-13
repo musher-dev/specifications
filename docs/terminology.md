@@ -10,7 +10,7 @@ it. `task check:terms` holds the records, the schemas and the prose together,
 and the words to avoid are enforced in prose by the generated
 `MusherSpecifications` Vale style.
 
-219 record(s). A record marked *proposed* is an open item, not yet a decision.
+220 record(s). A record marked *proposed* is an open item, not yet a decision.
 
 ## Index
 
@@ -157,6 +157,7 @@ and the words to avoid are enforced in prose by the generated
 | [protocol](#component-protocol) | component | The vendor-neutral wire contract a client speaks. |
 | [protocol category](#component-protocol-category) | component | LANGUAGE_MODEL, DATABASE, CACHE, OBJECT_STORAGE or MESSAGING. |
 | [protocol registry](#component-protocol-registry) | component | One normative JSON record per connection protocol. |
+| [provided connection](#component-provided-connection) | component | A connection a workload serves from its outputs. |
 | [provisioned](#blueprint-provisioned) | blueprint | Created on first acquisition, released at deletion. |
 | [public address](#component-public-address) | component | The allocated host:port of a TCP or UDP endpoint. |
 | [public port](#component-public-port) | component | The allocated publicPort of a TCP or UDP endpoint. |
@@ -1155,16 +1156,16 @@ optional without one, or derived, as the url resolution composes is, and
 forwarded through an output's member.
 
 - **Part of:** [connection](#blueprint-connection)
-- **Identifiers:** fields: `member`, `baseURL`, `apiKey`, `model`, `host`,
+- **Identifiers:** fields: `member`, `baseURL`, `apiKey`, `model`, `dimensions`,
+  `host`, `port`, `database`, `username`, `password`, `sslMode`, `url`, `tls`,
+  `endpointURL`, `region`, `bucket`, `accessKeyID`, `secretAccessKey`,
+  `pathStyle`, `botToken`, `appToken`, `signingSecret`, `applicationID`,
+  `publicKey`; values: `baseURL`, `apiKey`, `model`, `dimensions`, `host`,
   `port`, `database`, `username`, `password`, `sslMode`, `url`, `tls`,
   `endpointURL`, `region`, `bucket`, `accessKeyID`, `secretAccessKey`,
   `pathStyle`, `botToken`, `appToken`, `signingSecret`, `applicationID`,
-  `publicKey`; values: `baseURL`, `apiKey`, `model`, `host`, `port`, `database`,
-  `username`, `password`, `sslMode`, `url`, `tls`, `endpointURL`, `region`,
-  `bucket`, `accessKeyID`, `secretAccessKey`, `pathStyle`, `botToken`,
-  `appToken`, `signingSecret`, `applicationID`, `publicKey`, `disable`, `allow`,
-  `prefer`, `require`, `verify-ca`, `verify-full`; codes:
-  `ERR_UNKNOWN_CONNECTION_MEMBER`
+  `publicKey`, `disable`, `allow`, `prefer`, `require`, `verify-ca`,
+  `verify-full`; codes: `ERR_UNKNOWN_CONNECTION_MEMBER`
 - **Not to be confused with:** endpointURL is AWS's term for an S3 API address
   without the bucket, not a component endpoint.
 - **Not to be confused with:** A url member is never stored: resolution composes
@@ -1527,17 +1528,19 @@ HTTP, HTTPS, WS, GRPC, TCP and UDP, and for a connection input one of the
 connection protocols, which fixes its members.
 
 - **Identifiers:** fields: `protocol`, `OPENAI_CHAT_COMPLETIONS`,
-  `ANTHROPIC_MESSAGES`, `POSTGRES`, `REDIS`, `S3`, `TELEGRAM_BOT`, `SLACK_APP`,
-  `DISCORD_BOT`; values: `HTTP`, `HTTPS`, `WS`, `GRPC`, `TCP`, `UDP`,
-  `OPENAI_CHAT_COMPLETIONS`, `ANTHROPIC_MESSAGES`, `POSTGRES`, `REDIS`, `S3`,
-  `TELEGRAM_BOT`, `SLACK_APP`, `DISCORD_BOT`
+  `ANTHROPIC_MESSAGES`, `OPENAI_EMBEDDINGS`, `POSTGRES`, `REDIS`, `S3`,
+  `TELEGRAM_BOT`, `SLACK_APP`, `DISCORD_BOT`; values: `HTTP`, `HTTPS`, `WS`,
+  `GRPC`, `TCP`, `UDP`, `OPENAI_CHAT_COMPLETIONS`, `ANTHROPIC_MESSAGES`,
+  `OPENAI_EMBEDDINGS`, `POSTGRES`, `REDIS`, `S3`, `TELEGRAM_BOT`, `SLACK_APP`,
+  `DISCORD_BOT`
 - **Example:** A connection input with protocol POSTGRES receives host, port,
   database, username, password and sslMode, and a url composed from them.
 - **Source:** [component v2
   §5.2](../specifications/component/v2/spec.md#endpoints), [component v2
   §6.4](../specifications/component/v2/spec.md#connection-requirements), [ADR
   0039](adr/0039-provenance-is-chosen-at-deployment.md), [ADR
-  0045](adr/0045-connection-protocols-are-a-registry.md)
+  0045](adr/0045-connection-protocols-are-a-registry.md), [ADR
+  0047](adr/0047-an-embeddings-protocol-and-connections-a-node-provides.md)
 - **Status:** approved, stable. Tags: networking, connections.
 
 #### <a id="component-protocol-category"></a>protocol category
@@ -1568,6 +1571,22 @@ and the member and view tables are generated.
   §6.4](../specifications/component/v2/spec.md#connection-requirements), [ADR
   0045](adr/0045-connection-protocols-are-a-registry.md)
 - **Status:** approved, provisional. Tags: connections, registry.
+
+#### <a id="component-provided-connection"></a>provided connection
+
+A connection a SERVICE or WORKER serves, declared in its contract by a protocol
+and a map from each member it supplies to one of its own outputs, which a
+blueprint binds to a sibling's connection input.
+
+- **fills:** [connection input](#component-connection-input)
+- **Identifiers:** fields: `providedConnections`, `members`; codes:
+  `ERR_INVALID_PROVIDED_CONNECTION`; defs: `ComponentProvidedConnection`
+- **Not to be confused with:** A connection parameter, which the organization's
+  connection configuration answers rather than a node.
+- **Source:** [component v2
+  §6.5](../specifications/component/v2/spec.md#provided-connections), [ADR
+  0047](adr/0047-an-embeddings-protocol-and-connections-a-node-provides.md)
+- **Status:** approved, provisional. Tags: values, connections.
 
 #### <a id="component-public-address"></a>public address
 
@@ -2118,7 +2137,8 @@ connection the organization has configured, which binds only connection inputs.
 
 - **Kind of:** [deployment parameter](#blueprint-deployment-parameter)
 - **selects:** [connection](#blueprint-connection)
-- **Identifiers:** codes: `ERR_INVALID_CONNECTION_BINDING`
+- **Identifiers:** codes: `ERR_INVALID_CONNECTION_BINDING`,
+  `ERR_UNKNOWN_PROVIDED_CONNECTION`
 - **Source:** [blueprint v2
   §5.3](../specifications/blueprint/v2/spec.md#connections), [ADR
   0030](adr/0030-atomic-named-connections.md)
@@ -2602,8 +2622,8 @@ satisfy the requested protocol, capabilities and input schemas.
 
 - **Part of:** [selection](#blueprint-selection)
 - **Identifiers:** fields: `views`; defs: `OpenaiChatCompletionsView`,
-  `AnthropicMessagesView`, `PostgresView`, `RedisView`, `S3View`,
-  `TelegramBotView`, `SlackAppView`, `DiscordBotView`
+  `AnthropicMessagesView`, `OpenaiEmbeddingsView`, `PostgresView`, `RedisView`,
+  `S3View`, `TelegramBotView`, `SlackAppView`, `DiscordBotView`
 - **Source:** [blueprint v2
   §5.3](../specifications/blueprint/v2/spec.md#connections), [ADR
   0045](adr/0045-connection-protocols-are-a-registry.md)

@@ -1,0 +1,27 @@
+specVersion: v2
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: EXTERNAL
+  contract:
+    inputs:
+      embeddings:
+        description: Connection this node stands for
+        connection:
+          protocol: OPENAI_EMBEDDINGS
+    outputs:
+      baseURL:
+        description: Forwarded baseURL
+        schema:
+          type: string
+        from:
+          input: embeddings
+          member: baseURL
+    providedConnections:
+      again:
+        connection:
+          protocol: OPENAI_EMBEDDINGS
+        members:
+          baseURL: baseURL

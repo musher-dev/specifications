@@ -268,6 +268,16 @@
       "section": "connections"
     },
     {
+      "id": "BP-CONNECTION-004",
+      "anchor": "BP-CONNECTION-004",
+      "section": "connections"
+    },
+    {
+      "id": "BP-CONNECTION-005",
+      "anchor": "BP-CONNECTION-005",
+      "section": "connections"
+    },
+    {
       "id": "BP-UI-001",
       "anchor": "BP-UI-001",
       "section": "deploy-form"

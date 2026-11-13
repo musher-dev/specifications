@@ -1,0 +1,6 @@
+[
+  {
+    "code": "ERR_UNKNOWN_PROVIDED_CONNECTION",
+    "path": "/spec/nodes/embedder/bindings/embeddings/connection"
+  }
+]

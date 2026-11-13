@@ -334,6 +334,16 @@
       "declaredBy": "component"
     },
     {
+      "code": "ERR_INVALID_PROVIDED_CONNECTION",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "component"
+    },
+    {
       "code": "ERR_INPUT_NOT_GUARANTEED",
       "phases": [
         "semantic"
@@ -788,6 +798,16 @@
     },
     {
       "code": "ERR_INVALID_CONNECTION_BINDING",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_UNKNOWN_PROVIDED_CONNECTION",
       "phases": [
         "semantic"
       ],

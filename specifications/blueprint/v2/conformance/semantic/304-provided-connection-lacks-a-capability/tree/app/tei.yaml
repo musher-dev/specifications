@@ -1,0 +1,58 @@
+specVersion: v2
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: SERVICE
+  workload:
+    source:
+      image: example/embeddings:1
+    endpoints:
+      api:
+        targetPort: 8080
+        protocol: HTTP
+  contract:
+    inputs:
+      apiKey:
+        description: Key the API checks
+        schema:
+          type: string
+        sensitive: true
+        target:
+          envVar: API_KEY
+    outputs:
+      baseURL:
+        description: URL the API answers at inside the deployment
+        schema:
+          type: string
+        from:
+          template: http://${{ self.endpoints.api.privateAddress }}/v1
+      apiKey:
+        description: Key the API checks
+        schema:
+          type: string
+        sensitive: true
+        from:
+          input: apiKey
+      model:
+        description: Model the server loads
+        schema:
+          type: string
+        from:
+          value: example/embedder
+      dimensions:
+        description: Length of the vectors the model returns
+        schema:
+          type: integer
+        from:
+          value: 384
+    providedConnections:
+      embeddings:
+        description: The embeddings API this server answers
+        connection:
+          protocol: OPENAI_CHAT_COMPLETIONS
+        members:
+          baseURL: baseURL
+          apiKey: apiKey
+          model: model

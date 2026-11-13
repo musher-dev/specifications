@@ -1,0 +1,31 @@
+specVersion: v2
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: EXTERNAL
+  contract:
+    inputs:
+      embeddings:
+        description: Embeddings API this node stands for
+        connection:
+          protocol: OPENAI_CHAT_COMPLETIONS
+          capabilities:
+            - TOOL_CALLS
+    outputs:
+      baseURL:
+        description: Forwarded baseURL
+        schema:
+          type: string
+        from:
+          input: embeddings
+          member: baseURL
+      apiKey:
+        description: Forwarded apiKey
+        schema:
+          type: string
+        sensitive: true
+        from:
+          input: embeddings
+          member: apiKey

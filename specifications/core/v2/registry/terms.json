@@ -2441,6 +2441,7 @@
           "protocol",
           "OPENAI_CHAT_COMPLETIONS",
           "ANTHROPIC_MESSAGES",
+          "OPENAI_EMBEDDINGS",
           "POSTGRES",
           "REDIS",
           "S3",
@@ -2457,6 +2458,7 @@
           "UDP",
           "OPENAI_CHAT_COMPLETIONS",
           "ANTHROPIC_MESSAGES",
+          "OPENAI_EMBEDDINGS",
           "POSTGRES",
           "REDIS",
           "S3",
@@ -2470,7 +2472,8 @@
         "component v2 §5.2",
         "component v2 §6.4",
         "ADR 0039",
-        "ADR 0045"
+        "ADR 0045",
+        "ADR 0047"
       ],
       "stability": "stable",
       "status": "approved",
@@ -3335,6 +3338,44 @@
       ]
     },
     {
+      "id": "component.provided-connection",
+      "display_name": "provided connection",
+      "context": "component",
+      "definition": "A connection a SERVICE or WORKER serves, declared in its contract by a protocol and a map from each member it supplies to one of its own outputs, which a blueprint binds to a sibling's connection input.",
+      "shortDefinition": "A connection a workload serves from its outputs.",
+      "associated": [
+        {
+          "relation": "fills",
+          "term": "component.connection-input"
+        }
+      ],
+      "identifiers": {
+        "fields": [
+          "providedConnections",
+          "members"
+        ],
+        "defs": [
+          "ComponentProvidedConnection"
+        ],
+        "codes": [
+          "ERR_INVALID_PROVIDED_CONNECTION"
+        ]
+      },
+      "confusables": [
+        "A connection parameter, which the organization's connection configuration answers rather than a node."
+      ],
+      "source": [
+        "component v2 §6.5",
+        "ADR 0047"
+      ],
+      "stability": "provisional",
+      "status": "approved",
+      "tags": [
+        "values",
+        "connections"
+      ]
+    },
+    {
       "id": "component.connection-capability",
       "display_name": "connection capability",
       "context": "component",
@@ -3380,6 +3421,7 @@
           "baseURL",
           "apiKey",
           "model",
+          "dimensions",
           "host",
           "port",
           "database",
@@ -3404,6 +3446,7 @@
           "baseURL",
           "apiKey",
           "model",
+          "dimensions",
           "host",
           "port",
           "database",
@@ -5367,7 +5410,8 @@
       ],
       "identifiers": {
         "codes": [
-          "ERR_INVALID_CONNECTION_BINDING"
+          "ERR_INVALID_CONNECTION_BINDING",
+          "ERR_UNKNOWN_PROVIDED_CONNECTION"
         ]
       },
       "source": [
@@ -5655,6 +5699,7 @@
         "defs": [
           "OpenaiChatCompletionsView",
           "AnthropicMessagesView",
+          "OpenaiEmbeddingsView",
           "PostgresView",
           "RedisView",
           "S3View",

@@ -1,0 +1,10 @@
+{
+  "id": "semantic-309-provided-connection-output-mismatch",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#provided-connections",
+  "requirements": [
+    "COMP-CONNECTION-005"
+  ],
+  "summary": "A provided connection whose members name a missing output, an output of the wrong type, a non-sensitive output for the credential, and a literal locator, is rejected at each."
+}
