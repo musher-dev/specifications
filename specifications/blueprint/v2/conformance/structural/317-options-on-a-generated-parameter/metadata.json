@@ -1,0 +1,10 @@
+{
+  "id": "structural-317-options-on-a-generated-parameter",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#deploy-form",
+  "requirements": [
+    "BP-UI-006"
+  ],
+  "summary": "A generated value is never an editable field, so it offers no options."
+}

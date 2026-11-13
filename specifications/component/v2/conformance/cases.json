@@ -1511,6 +1511,71 @@
       "id": "semantic-222-worker-with-an-exec-readiness-probe",
       "phase": "semantic",
       "path": "semantic/222-worker-with-an-exec-readiness-probe"
+    },
+    {
+      "id": "structural-334-openai-embeddings-connection",
+      "phase": "structural",
+      "path": "structural/334-openai-embeddings-connection"
+    },
+    {
+      "id": "structural-335-capabilities-on-an-embeddings-connection",
+      "phase": "structural",
+      "path": "structural/335-capabilities-on-an-embeddings-connection"
+    },
+    {
+      "id": "semantic-303-embeddings-dimensions-into-a-string",
+      "phase": "semantic",
+      "path": "semantic/303-embeddings-dimensions-into-a-string"
+    },
+    {
+      "id": "semantic-304-provided-embeddings-connection",
+      "phase": "semantic",
+      "path": "semantic/304-provided-embeddings-connection"
+    },
+    {
+      "id": "structural-336-provided-connection-on-an-external-component",
+      "phase": "structural",
+      "path": "structural/336-provided-connection-on-an-external-component"
+    },
+    {
+      "id": "structural-337-provided-connection-without-members",
+      "phase": "structural",
+      "path": "structural/337-provided-connection-without-members"
+    },
+    {
+      "id": "structural-338-provided-connection-unknown-member-name",
+      "phase": "structural",
+      "path": "structural/338-provided-connection-unknown-member-name"
+    },
+    {
+      "id": "semantic-308-provided-connection-member-mapping",
+      "phase": "semantic",
+      "path": "semantic/308-provided-connection-member-mapping"
+    },
+    {
+      "id": "semantic-309-provided-connection-output-mismatch",
+      "phase": "semantic",
+      "path": "semantic/309-provided-connection-output-mismatch"
+    },
+    {
+      "id": "structural-339-exact-and-prefix-exempt-paths",
+      "phase": "structural",
+      "path": "structural/339-exact-and-prefix-exempt-paths"
+    },
+    {
+      "id": "structural-340-exempt-path-with-prefix-and-exact",
+      "phase": "structural",
+      "path": "structural/340-exempt-path-with-prefix-and-exact"
+    },
+    {
+      "id": "structural-341-exact-exempt-path-outside-the-grammar",
+      "phase": "structural",
+      "path": "structural/341-exact-exempt-path-outside-the-grammar"
+    },
+    {
+      "id": "structural-342-exempt-path-with-an-unknown-match",
+      "phase": "structural",
+      "path": "structural/342-exempt-path-with-an-unknown-match"
     }
   ]
 }

@@ -1,0 +1,10 @@
+{
+  "id": "structural-338-provided-connection-unknown-member-name",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#provided-connections",
+  "requirements": [
+    "COMP-CONNECTION-004"
+  ],
+  "summary": "A members key that no protocol defines is rejected structurally."
+}

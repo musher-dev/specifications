@@ -1,0 +1,10 @@
+{
+  "id": "structural-307-provided-connection-without-a-node",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#connections",
+  "requirements": [
+    "BP-CONNECTION-004"
+  ],
+  "summary": "A binding naming a provided connection needs the node that provides it."
+}

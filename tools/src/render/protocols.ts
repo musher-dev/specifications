@@ -3,7 +3,8 @@
  * (docs/adr/0045), so that no table restates it by hand:
  *
  * - in component's schema source, the protocol enum, the capabilities
- *   conditional and the union `ComponentOutputFrom.member` takes;
+ *   conditional and the union `ComponentOutputFrom.member` and
+ *   `ComponentProvidedConnection.members` take;
  * - in component's spec.md, the §6.4 member table and the COMP-OUT-004 type
  *   sentence, and in blueprint's, the §5.3 view table, each between a pair of
  *   `BEGIN GENERATED` and `END GENERATED` comments;
@@ -222,9 +223,17 @@ export function componentSchema(registry: ProtocolRegistry, source: string): str
     .map((p) => p.id)
   child(connection, 'properties', 'protocol').enum = registry.protocols.map((p) => p.id)
   child(connection, 'properties', 'capabilities', 'items').enum = capabilitySet(registry)
-  child(schema, '$defs', 'ComponentOutputFrom', 'properties', 'member').enum = [
-    ...new Set(registry.protocols.flatMap((p) => p.members.map((m) => m.name))),
-  ]
+  const members = [...new Set(registry.protocols.flatMap((p) => p.members.map((m) => m.name)))]
+  child(schema, '$defs', 'ComponentOutputFrom', 'properties', 'member').enum = members
+  // Component §6.5: a provided connection's members are keyed by the same union.
+  child(
+    schema,
+    '$defs',
+    'ComponentProvidedConnection',
+    'properties',
+    'members',
+    'propertyNames',
+  ).enum = members
   return `${JSON.stringify(schema, null, 2)}\n`
 }
 

@@ -1,0 +1,10 @@
+{
+  "id": "structural-320-options-beside-enum-labels",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#deploy-form",
+  "requirements": [
+    "BP-UI-006"
+  ],
+  "summary": "enumLabels labels a closed schema enum and options offer values for an open one, so a ui carries one or the other."
+}

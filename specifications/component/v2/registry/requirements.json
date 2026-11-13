@@ -178,6 +178,11 @@
       "section": "endpoints"
     },
     {
+      "id": "COMP-EP-021",
+      "anchor": "COMP-EP-021",
+      "section": "endpoints"
+    },
+    {
       "id": "COMP-EP-005",
       "anchor": "COMP-EP-005",
       "section": "endpoints"
@@ -486,6 +491,16 @@
       "id": "COMP-CONNECTION-003",
       "anchor": "COMP-CONNECTION-003",
       "section": "connection-requirements"
+    },
+    {
+      "id": "COMP-CONNECTION-004",
+      "anchor": "COMP-CONNECTION-004",
+      "section": "provided-connections"
+    },
+    {
+      "id": "COMP-CONNECTION-005",
+      "anchor": "COMP-CONNECTION-005",
+      "section": "provided-connections"
     },
     {
       "id": "COMP-SEC-003",

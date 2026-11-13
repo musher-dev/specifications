@@ -10,12 +10,14 @@ import {
   statSync,
 } from 'node:fs'
 import { basename, dirname, isAbsolute, join, posix, relative, resolve } from 'node:path'
-import { type Family, isObject, type Json } from '../lib/layout.ts'
+import { canonicalJson, type Family, isObject, type Json } from '../lib/layout.ts'
 import { scanReferences } from '../lib/references.ts'
 import {
   CONNECTION_MEMBERS,
+  CONNECTION_PROTOCOL_MEMBERS,
   guaranteedMember,
   isConnectionInput,
+  isConnectionProtocol,
   protocolMember,
 } from './connections.ts'
 import { type Diagnostic, parseDocumentBytes } from './document.ts'
@@ -286,6 +288,63 @@ export function componentObligations(document: Json, { metadata = true } = {}): 
  * reads one of the component's own inputs reads a string input that is always
  * supplied, and a secret one reads a sensitive input.
  */
+/**
+ * Component §6.5 COMP-CONNECTION-005: a provided connection maps every
+ * required member of its protocol, and only members it supplies, each to an
+ * output that can carry it; its locator reads one of the component's own
+ * endpoints. A protocol the registry does not define was rejected structurally.
+ */
+function providedConnectionDiagnostics(contract: Record<string, Json>): Diagnostic[] {
+  const out: Diagnostic[] = []
+  for (const [name, provided] of Object.entries(record(contract.providedConnections))) {
+    const base = `/spec/contract/providedConnections/${token(name)}`
+    const protocol = at(provided, 'connection', 'protocol')
+    const contracts = isConnectionProtocol(protocol)
+      ? CONNECTION_PROTOCOL_MEMBERS[protocol]
+      : undefined
+    if (!contracts) continue
+    const members = record(at(provided, 'members'))
+    if (
+      Object.entries(contracts).some(
+        ([member, c]) => c.required && c.derived !== true && !Object.hasOwn(members, member),
+      )
+    )
+      issue(out, 'ERR_INVALID_PROVIDED_CONNECTION', `${base}/members`)
+    for (const [member, outputName] of Object.entries(members)) {
+      const path = `${base}/members/${token(member)}`
+      const c = Object.hasOwn(contracts, member) ? contracts[member] : undefined
+      const output = record(at(contract, 'outputs', String(outputName)))
+      const from = record(output.from)
+      const readsEndpoint =
+        typeof from.endpoint === 'string' ||
+        (typeof from.template === 'string' &&
+          scanReferences(from.template, ['self']).references.length > 0)
+      if (
+        !c ||
+        c.derived === true ||
+        typeof outputName !== 'string' ||
+        !Object.hasOwn(record(contract.outputs), outputName) ||
+        at(output.schema, 'type') !== c.type ||
+        (c.sensitive && output.sensitive !== true) ||
+        (c.role === 'locator' && !readsEndpoint)
+      )
+        issue(out, 'ERR_INVALID_PROVIDED_CONNECTION', path)
+    }
+  }
+  return out
+}
+
+/** Blueprint BP-ACCESS-016: the parameters the exposures' `apiKey`s name. */
+export function apiKeyParameters(nodes: Readonly<Record<string, Json>>): Set<string> {
+  const names = new Set<string>()
+  for (const n of Object.values(nodes))
+    for (const exposure of Object.values(record(at(n, 'exposure')))) {
+      const key = at(exposure, 'apiKey', 'parameter')
+      if (typeof key === 'string') names.add(key)
+    }
+  return names
+}
+
 function inputReferenceDiagnostics(
   out: Diagnostic[],
   contract: Record<string, Json>,
@@ -572,6 +631,7 @@ export function componentDiagnostics(document: Json): Diagnostic[] {
       }
     }
   }
+  out.push(...providedConnectionDiagnostics(contract))
   // COMP-INPUT-001: a workload input with no target never reaches the
   // environment, so something else reads it or it is declared for nothing.
   const type = at(document, 'spec', 'type')
@@ -1076,6 +1136,14 @@ export function semanticReport(
         const e = at(workload, 'endpoints', endpoint)
         const exposure = effectiveExposure(n.exposure, endpoint)
         const where = `${base}/exposure/${token(endpoint)}`
+        // BP-ACCESS-016: the key the platform checks is a generated parameter.
+        const key = at(record(n.exposure)[endpoint], 'apiKey', 'parameter')
+        if (typeof key === 'string') {
+          if (!Object.hasOwn(parameters, key))
+            issue(out, 'ERR_UNKNOWN_PARAMETER', `${where}/apiKey/parameter`)
+          else if (at(parameters[key], 'generator') === undefined)
+            issue(out, 'ERR_INVALID_API_KEY_PARAMETER', `${where}/apiKey/parameter`)
+        }
         if (!e) issue(out, 'ERR_UNKNOWN_ENDPOINT', where)
         else if (exposure.visibility === 'PUBLIC' && category === 'WORKER')
           issue(out, 'ERR_ENDPOINT_NOT_EXPOSABLE', where)
@@ -1164,11 +1232,18 @@ export function semanticReport(
         consumer = record(inputs[input])
       if (component && !inputs[input]) issue(out, 'ERR_UNKNOWN_INPUT', path)
       // BP-BIND-002: a node binding, and each node output a template names, is a
-      // value dependency of the input.
+      // value dependency of the input. BP-CONNECTION-004: an input bound to a
+      // provided connection depends on every output the provided connection maps.
+      const provided =
+        typeof s.node === 'string' && typeof s.connection === 'string'
+          ? at(resolved.get(s.node), 'spec', 'contract', 'providedConnections', s.connection)
+          : undefined
       dependencies.set(
         `${name}:in:${input}`,
         typeof s.node === 'string'
-          ? [`${s.node}:out:${s.output}`]
+          ? typeof s.connection === 'string'
+            ? Object.values(record(at(provided, 'members'))).map((o) => `${s.node}:out:${o}`)
+            : [`${s.node}:out:${s.output}`]
           : typeof s.template === 'string'
             ? scanTemplate(s.template)
                 .references.map(templateTarget)
@@ -1208,6 +1283,28 @@ export function semanticReport(
               'ERR_SENSITIVE_LITERAL',
               `/spec/parameters/${token(String(s.parameter))}/default`,
             )
+        }
+      } else if (typeof s.node === 'string' && typeof s.connection === 'string') {
+        // BP-CONNECTION-004: a provided connection of the node's component, of the
+        // input's protocol, offering every capability the input requires. A value
+        // input bound this way is BP-CONNECTION-001's.
+        if (!nodes[s.node]) issue(out, 'ERR_UNKNOWN_NODE', `${path}/node`)
+        const producer = resolved.get(s.node)
+        if (producer && !isObject(provided))
+          issue(out, 'ERR_UNKNOWN_PROVIDED_CONNECTION', `${path}/connection`)
+        else if (isObject(provided) && isConnectionInput(consumer)) {
+          const offered = at(provided, 'connection'),
+            wanted = at(consumer, 'connection'),
+            capabilities = at(offered, 'capabilities')
+          if (
+            at(offered, 'protocol') !== at(wanted, 'protocol') ||
+            [
+              ...(Array.isArray(at(wanted, 'capabilities'))
+                ? (at(wanted, 'capabilities') as Json[])
+                : []),
+            ].some((c) => !(Array.isArray(capabilities) && capabilities.includes(c)))
+          )
+            issue(out, 'ERR_INVALID_CONNECTION_BINDING', `${path}/connection`)
         }
       } else if (typeof s.node === 'string') {
         if (!nodes[s.node]) issue(out, 'ERR_UNKNOWN_NODE', `${path}/node`)
@@ -1350,6 +1447,8 @@ export function semanticReport(
         Object.values(record(at(n, 'bindings'))).some((b) => at(b, 'parameter') === name),
       ) ||
       templated.has(name) ||
+      // BP-ACCESS-016: an exposure's apiKey uses the parameter it names.
+      apiKeyParameters(nodes).has(name) ||
       (at(p, 'generator') !== undefined &&
         at(p, 'ui') !== undefined &&
         Object.values(parameters).some((other) => at(other, 'hash', 'parameter') === name))
@@ -1437,6 +1536,25 @@ export function semanticReport(
         )
       )
         issue(out, 'ERR_UNKNOWN_ENUM_MEMBER', `${path}/ui/enumLabels/${token(member)}`)
+    // BP-UI-007: every option fits every receiver, and a closed list holds the default.
+    const options = at(p, 'ui', 'options')
+    if (Array.isArray(options)) {
+      options.forEach((option, i) => {
+        const value = at(option, 'value')
+        if (
+          value !== undefined &&
+          receivers.some((v) => v.schema !== undefined && !valueFits(v.schema, value))
+        )
+          issue(out, 'ERR_VALUE_CONSTRAINT', `${path}/ui/options/${i}/value`)
+      })
+      const fallback = at(p, 'default')
+      if (
+        fallback !== undefined &&
+        at(p, 'ui', 'editable') !== true &&
+        !options.some((o) => canonicalJson(at(o, 'value') ?? null) === canonicalJson(fallback))
+      )
+        issue(out, 'ERR_VALUE_CONSTRAINT', `${path}/default`)
+    }
     for (const supply of ['generator', 'hash'])
       if (at(p, supply) !== undefined && receivers.some((v) => at(v.schema, 'type') !== 'string'))
         issue(out, 'ERR_VALUE_CONSTRAINT', `${path}/${supply}`)
@@ -1476,6 +1594,8 @@ export function semanticReport(
     const binding =
       direction === 'in' ? record(at(nodes[node], 'bindings', name)) : record(definition.from)
     let value: Json | undefined
+    // A provided connection is several members, never one known value.
+    if (typeof binding.connection === 'string') continue
     if (Object.hasOwn(binding, 'value')) value = binding.value
     else if (typeof binding.template === 'string') value = constantTemplate(binding)
     else if (typeof binding.parameter === 'string')

@@ -1036,6 +1036,121 @@
       "id": "semantic-175-overlapping-mounts",
       "phase": "semantic",
       "path": "semantic/175-overlapping-mounts"
+    },
+    {
+      "id": "semantic-301-node-provided-embeddings-connection",
+      "phase": "semantic",
+      "path": "semantic/301-node-provided-embeddings-connection"
+    },
+    {
+      "id": "semantic-302-unknown-provided-connection",
+      "phase": "semantic",
+      "path": "semantic/302-unknown-provided-connection"
+    },
+    {
+      "id": "semantic-303-provided-connection-of-another-protocol",
+      "phase": "semantic",
+      "path": "semantic/303-provided-connection-of-another-protocol"
+    },
+    {
+      "id": "semantic-304-provided-connection-lacks-a-capability",
+      "phase": "semantic",
+      "path": "semantic/304-provided-connection-lacks-a-capability"
+    },
+    {
+      "id": "semantic-305-provided-connection-into-a-value-input",
+      "phase": "semantic",
+      "path": "semantic/305-provided-connection-into-a-value-input"
+    },
+    {
+      "id": "structural-306-binding-with-output-and-connection",
+      "phase": "structural",
+      "path": "structural/306-binding-with-output-and-connection"
+    },
+    {
+      "id": "structural-307-provided-connection-without-a-node",
+      "phase": "structural",
+      "path": "structural/307-provided-connection-without-a-node"
+    },
+    {
+      "id": "structural-308-role-claim-under-oidc-and-assertion",
+      "phase": "structural",
+      "path": "structural/308-role-claim-under-oidc-and-assertion"
+    },
+    {
+      "id": "structural-309-role-claim-under-header",
+      "phase": "structural",
+      "path": "structural/309-role-claim-under-header"
+    },
+    {
+      "id": "semantic-310-api-key-checked-by-the-platform",
+      "phase": "semantic",
+      "path": "semantic/310-api-key-checked-by-the-platform"
+    },
+    {
+      "id": "structural-311-api-key-on-an-open-endpoint",
+      "phase": "structural",
+      "path": "structural/311-api-key-on-an-open-endpoint"
+    },
+    {
+      "id": "structural-312-api-key-beside-a-bearer-exemption",
+      "phase": "structural",
+      "path": "structural/312-api-key-beside-a-bearer-exemption"
+    },
+    {
+      "id": "structural-313-api-key-without-a-parameter",
+      "phase": "structural",
+      "path": "structural/313-api-key-without-a-parameter"
+    },
+    {
+      "id": "semantic-314-api-key-naming-an-undeclared-parameter",
+      "phase": "semantic",
+      "path": "semantic/314-api-key-naming-an-undeclared-parameter"
+    },
+    {
+      "id": "semantic-315-api-key-naming-a-submitted-parameter",
+      "phase": "semantic",
+      "path": "semantic/315-api-key-naming-a-submitted-parameter"
+    },
+    {
+      "id": "structural-316-parameter-options-and-a-disclosed-key",
+      "phase": "structural",
+      "path": "structural/316-parameter-options-and-a-disclosed-key"
+    },
+    {
+      "id": "structural-317-options-on-a-generated-parameter",
+      "phase": "structural",
+      "path": "structural/317-options-on-a-generated-parameter"
+    },
+    {
+      "id": "structural-318-editable-without-options",
+      "phase": "structural",
+      "path": "structural/318-editable-without-options"
+    },
+    {
+      "id": "structural-319-option-without-a-label",
+      "phase": "structural",
+      "path": "structural/319-option-without-a-label"
+    },
+    {
+      "id": "structural-320-options-beside-enum-labels",
+      "phase": "structural",
+      "path": "structural/320-options-beside-enum-labels"
+    },
+    {
+      "id": "structural-322-disclosed-on-a-submitted-parameter",
+      "phase": "structural",
+      "path": "structural/322-disclosed-on-a-submitted-parameter"
+    },
+    {
+      "id": "semantic-323-parameter-options-fit-the-input",
+      "phase": "semantic",
+      "path": "semantic/323-parameter-options-fit-the-input"
+    },
+    {
+      "id": "semantic-324-option-outside-the-input-schema",
+      "phase": "semantic",
+      "path": "semantic/324-option-outside-the-input-schema"
     }
   ]
 }

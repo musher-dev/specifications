@@ -1,0 +1,26 @@
+specVersion: v2
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: WORKER
+  workload:
+    source:
+      image: example/worker:1
+  contract:
+    inputs:
+      embeddingsURL:
+        description: Embeddings base URL
+        schema:
+          type: string
+        target:
+          envVar: EMBEDDINGS_URL
+      embeddingsKey:
+        description: Embeddings API key
+        schema:
+          type: string
+        sensitive: true
+        target:
+          envVar: EMBEDDINGS_KEY
+    outputs: {}

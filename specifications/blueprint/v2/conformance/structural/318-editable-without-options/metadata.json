@@ -1,0 +1,10 @@
+{
+  "id": "structural-318-editable-without-options",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#deploy-form",
+  "requirements": [
+    "BP-UI-006"
+  ],
+  "summary": "editable says a value may be typed beside the options, so it needs options."
+}

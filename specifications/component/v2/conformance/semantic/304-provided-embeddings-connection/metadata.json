@@ -1,0 +1,11 @@
+{
+  "id": "semantic-304-provided-embeddings-connection",
+  "phase": "semantic",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#provided-connections",
+  "requirements": [
+    "COMP-CONNECTION-004",
+    "COMP-CONNECTION-005"
+  ],
+  "summary": "A service providing an OPENAI_EMBEDDINGS connection, its locator a template over its own endpoint, validates."
+}

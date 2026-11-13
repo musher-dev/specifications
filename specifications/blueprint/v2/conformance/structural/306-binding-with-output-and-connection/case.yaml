@@ -1,0 +1,37 @@
+specVersion: v2
+kind: BLUEPRINT
+metadata:
+  slug: app
+  revision: 1
+  description: Synthetic conformance fixture blueprint.
+spec:
+  parameters:
+    teiKey:
+      generator:
+        byteLength: 32
+  nodes:
+    tei:
+      componentRef: ./components/tei.yaml
+      compute:
+        profile: general.standard.small
+      bindings:
+        apiKey:
+          parameter: teiKey
+    embedder:
+      componentRef: ./components/embeddings.yaml
+      bindings:
+        embeddings:
+          node: tei
+          output: baseURL
+          connection: embeddings
+    app:
+      componentRef: ./components/app.yaml
+      compute:
+        profile: general.standard.small
+      bindings:
+        embeddingsURL:
+          node: embedder
+          output: baseURL
+        embeddingsKey:
+          node: embedder
+          output: apiKey

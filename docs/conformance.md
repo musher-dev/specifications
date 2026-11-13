@@ -420,7 +420,7 @@ testing sensitivity.
 | `resolution` | `resolve` | Pre-start value-resolution status, diagnostics, deferred obligations, private inputs/outputs/environment, and redacted public inspection |
 | `resolution` | `record` | `VALID` plus the generated resolution record, or `INVALID` with `ERR_INVALID_RESOLUTION_CONTEXT` at stage `record` |
 | `rendering` | `render` | `html` produced from `input.markdown` and the full-path `input.media` URL mapping under the listing rendering rules |
-| `rendering` | `form` | Ordered array of `name`, `label`, `control`, `order` (null when omitted), and effective `prominence` |
+| `rendering` | `form` | Ordered array of `name`, `label`, `control`, `order` (null when omitted), and effective `prominence`; a field whose `control` is `options` also carries `options`, as authored, and effective `editable` |
 | `lifecycle` | `revision` | `VALID` when `input.revision` exceeds `input.highestPublishedRevision`; otherwise `INVALID` with `ERR_REVISION_NOT_INCREASING` at `/metadata/revision` |
 | `lifecycle` | `credential` | Count `generated` and ordered `values` for `input.steps`, each `{deployment, parameter, rotation}` |
 | `lifecycle` | `connection` | Counts `issued` and `persisted`, and ordered `observations` (`status`, and for a selection its `identity`, `version`, `credential` and `rotation`) for `input.steps`, each `{deployment, parameter, generation?, defaultVersion?, fault?, revoked?}` |

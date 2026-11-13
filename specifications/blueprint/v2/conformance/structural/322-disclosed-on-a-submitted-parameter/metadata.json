@@ -1,0 +1,10 @@
+{
+  "id": "structural-322-disclosed-on-a-submitted-parameter",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#deploy-form",
+  "requirements": [
+    "BP-UI-009"
+  ],
+  "summary": "Only a generated value is disclosed; a submitted one is the deployer's own."
+}

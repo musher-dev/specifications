@@ -762,6 +762,26 @@ a path, because a list that covers every request is not an exemption. The
 platform serves its own sign-in under `/.musher` on an endpoint that requires
 one.
 
+<a id="COMP-EP-021"></a>**`COMP-EP-021`**: An entry of
+`exemptibleRequests.paths` is an endpoint path, or a closed object holding
+exactly one of `prefix` and `exact`, whose value is an endpoint path. A bare
+path is the `prefix` form, and means what `{ prefix: <path> }` means.
+Structural, at the entry: `ERR_INVALID_VALUE` for an object holding neither
+member or both, and at the member for a value outside
+[`COMP-EP-016`](#COMP-EP-016); `ERR_UNKNOWN_FIELD` for an object with another
+member.
+
+```yaml
+exemptibleRequests:
+  paths: [/webhook, { prefix: /api/embed/widget }, { exact: /healthz }]
+```
+
+`prefix` covers the path and every path under it, segment by segment, and
+`exact` covers the path alone
+([blueprint `BP-ACCESS-017`](../../blueprint/v2/spec.md#BP-ACCESS-017)). So
+`{ exact: /healthz }` exempts a health check without exempting what an app
+serves below it.
+
 An authoritative endpoint allocation has opaque `identity` and `version`, an
 optional `privateHostname`, and optional public routing facts: `hostname`,
 `port`, `scheme` and `path`, and, on an endpoint that tells its workload who
@@ -1596,9 +1616,9 @@ NOT carry `member`.
 
 <!-- BEGIN GENERATED member-types: `task docs` writes this sentence from the protocol registry, protocols/ -->
 
-A forwarded integer member, `port` or the `REDIS` `database`, needs an integer
-or number schema; a boolean member, `tls` or `pathStyle`, a boolean schema; and
-every other member a string schema.
+A forwarded integer member, `dimensions`, `port` or the `REDIS` `database`,
+needs an integer or number schema; a boolean member, `tls` or `pathStyle`, a
+boolean schema; and every other member a string schema.
 
 <!-- END GENERATED member-types -->
 
@@ -1782,6 +1802,10 @@ others ([derived URLs](#derived-urls)). Sensitive members are in bold.
 | `OPENAI_CHAT_COMPLETIONS`, `ANTHROPIC_MESSAGES` | `baseURL` | string | required |
 | | **`apiKey`** | string | required |
 | | `model` | string | required |
+| `OPENAI_EMBEDDINGS` | `baseURL` | string | required |
+| | **`apiKey`** | string | required |
+| | `model` | string | required |
+| | `dimensions` | integer | required |
 | `POSTGRES` | `host` | string | required |
 | | `port` | integer | required |
 | | `database` | string | required |
@@ -1818,6 +1842,10 @@ others ([derived URLs](#derived-urls)). Sensitive members are in bold.
 - `host` is a DNS name or an IPv4 address, in letters, digits, `-`, `_` and
   `.`, or an IPv6 address written without brackets. It never carries a port.
 - `port` is an integer from 1 to 65535.
+- The `OPENAI_EMBEDDINGS` `dimensions` is the length of every embedding vector
+  the client receives, an integer from 1 to 65536. A client whose model takes
+  a requested length sends it; one whose model has a single length receives
+  vectors of it.
 - The `POSTGRES` `sslMode` is one of PostgreSQL's `sslmode` values: `disable`,
   `allow`, `prefer`, `require`, `verify-ca` and `verify-full`.
 - The `REDIS` `tls` says whether the client uses TLS, and `database` is the
@@ -1922,8 +1950,8 @@ and at a `protocol` the protocol registry does not define; `ERR_MISSING_FIELD` a
 
 <a id="COMP-CONNECTION-003"></a>**`COMP-CONNECTION-003`**: `capabilities`, a
 unique list of `STREAMING` and `TOOL_CALLS`, is permitted only on a protocol
-whose record lists capabilities: the language-model protocols,
-`OPENAI_CHAT_COMPLETIONS` and `ANTHROPIC_MESSAGES`.
+whose record lists capabilities: the conversational language-model
+protocols, `OPENAI_CHAT_COMPLETIONS` and `ANTHROPIC_MESSAGES`.
 Structural: `ERR_INVALID_VALUE` at `connection/capabilities` on another
 protocol, and at an unknown or repeated capability.
 
@@ -1943,6 +1971,82 @@ ordinary values, like any other value from outside the blueprint
 Credentials are whole values, never templates or concatenated strings.
 Sensitivity propagation and the prohibitions on authored sensitive literals
 apply ([§11](#security)).
+
+### <a id="provided-connections"></a>6.5 Provided connections
+
+A workload can serve a connection: a text-embeddings server, a model server
+or an object store running as a node of the same deployment. Its component
+says so in `contract.providedConnections`, a named map whose entries each name
+a protocol in `connection`, the object a connection input carries
+([§6.4](#connection-requirements)), and map each member the workload supplies
+to one of the component's own outputs
+([ADR 0059](../../../docs/adr/0059-an-embeddings-protocol-and-connections-a-node-provides.md)):
+
+```yaml
+spec:
+  type: SERVICE
+  contract:
+    outputs:
+      baseURL:
+        description: URL the embeddings API answers at, inside the deployment.
+        schema: { type: string }
+        from: { template: "http://${{ self.endpoints.api.privateAddress }}/v1" }
+      apiKey:
+        description: Key the API checks.
+        schema: { type: string }
+        sensitive: true
+        from: { input: apiKey }
+      model:
+        description: Model the server loads.
+        schema: { type: string }
+        from: { input: model }
+      dimensions:
+        description: Length of the vectors the model returns.
+        schema: { type: integer }
+        from: { input: dimensions }
+    providedConnections:
+      embeddings:
+        description: The embeddings API this server answers.
+        connection: { protocol: OPENAI_EMBEDDINGS }
+        members: { baseURL: baseURL, apiKey: apiKey, model: model, dimensions: dimensions }
+```
+
+A blueprint binds a sibling's connection input to it
+([blueprint `BP-CONNECTION-004`](../../blueprint/v2/spec.md#BP-CONNECTION-004)),
+so the `EXTERNAL` component that stands for a connection is the same whether
+the organization's connection or a node of the deployment fills it.
+
+<a id="COMP-CONNECTION-004"></a>**`COMP-CONNECTION-004`**: A provided
+connection's name matches `^[a-z][a-zA-Z0-9]{0,63}$`. It is closed, requires
+`connection` and `members`, and takes an optional non-empty `description`;
+`connection` follows [`COMP-CONNECTION-002`](#COMP-CONNECTION-002) and
+[`COMP-CONNECTION-003`](#COMP-CONNECTION-003) for its `protocol` and
+`capabilities`; and `members` is a non-empty map whose keys are member names
+some protocol defines and whose values are output names. Only a `SERVICE` or a
+`WORKER` declares `providedConnections`. Structural: `ERR_INVALID_VALUE` at
+`/spec/contract/providedConnections` on a `JOB` or an `EXTERNAL` component,
+and at a `members` map with a key no protocol defines; `ERR_MISSING_FIELD` at
+the provided connection without `connection` or `members`.
+
+<a id="COMP-CONNECTION-005"></a>**`COMP-CONNECTION-005`**: A provided
+connection MUST map every required member of its protocol, and only members
+its protocol defines and resolution does not derive, each to an output that
+can carry it. Semantic, each `ERR_INVALID_PROVIDED_CONNECTION`:
+
+| Condition | At |
+|---|---|
+| A required member, the credential or a secret member included, is not mapped | `members` |
+| A mapped member is a member of another protocol, or a derived member such as `url` | `members/<member>` |
+| A mapped member names no output of the component | `members/<member>` |
+| The output's schema `type` is not the member's logical type | `members/<member>` |
+| A sensitive member is mapped to an output not declared `sensitive: true` | `members/<member>` |
+| The locator is mapped to an output that reads none of the component's own endpoints: neither an `endpoint` origin nor a `template` holding a placeholder | `members/<member>` |
+
+Each path is under `/spec/contract/providedConnections/<name>`. An optional
+member may be left out: a consumer then receives its default, or nothing. The
+locator rule keeps a provided connection pointing at its provider, which is
+what lets blueprint accept an `http` locator from it
+([blueprint `BP-CONNECTION-005`](../../blueprint/v2/spec.md#BP-CONNECTION-005)).
 
 ## <a id="validation-layers"></a><a id="validation-phases"></a>7. Validation phases
 
@@ -1997,6 +2101,7 @@ Core diagnostics also apply.
 | `ERR_INVALID_SCHEDULE` | `semantic` | A cron field is outside [§5.7](#jobs)'s grammar or range. |
 | `ERR_UNKNOWN_INPUT` | `semantic` | A field names an input the component does not declare, or an output names a connection input without a `member` or a value input with one. |
 | `ERR_UNKNOWN_CONNECTION_MEMBER` | `semantic` | An output reads a member the input's protocol does not define. |
+| `ERR_INVALID_PROVIDED_CONNECTION` | `semantic` | A provided connection leaves a required member unmapped, maps a member its protocol does not supply, or maps one to an output that cannot carry it ([`COMP-CONNECTION-005`](#COMP-CONNECTION-005)). |
 | `ERR_INPUT_NOT_GUARANTEED` | `semantic` | An output, trust bundle, probe credential, probe header, file or build secret reads an input that may be absent, or an output reads a connection member that may be absent. |
 | `ERR_UNUSED_INPUT` | `semantic` | A workload input has no target and nothing reads it. |
 | `ERR_INVALID_MOUNT` | `semantic` | A mount or file path is not canonical or overlaps another. |

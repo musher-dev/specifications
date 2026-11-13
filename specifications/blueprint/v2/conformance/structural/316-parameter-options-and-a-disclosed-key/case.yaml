@@ -1,0 +1,32 @@
+specVersion: v2
+kind: BLUEPRINT
+metadata:
+  slug: app
+  revision: 1
+  description: Synthetic conformance fixture blueprint.
+spec:
+  parameters:
+    model:
+      default: llama3.2:1b
+      ui:
+        label: Model
+        options:
+          - { value: llama3.2:1b, label: Llama 3.2 1B }
+          - { value: qwen2.5:0.5b, label: Qwen 2.5 0.5B }
+        editable: true
+    encryptionKey:
+      generator:
+        byteLength: 32
+      ui:
+        label: Encryption key
+        disclosed: true
+  nodes:
+    web:
+      componentRef: ./components/web.yaml
+      compute:
+        profile: general.standard.small
+      bindings:
+        model:
+          parameter: model
+        encryptionKey:
+          parameter: encryptionKey

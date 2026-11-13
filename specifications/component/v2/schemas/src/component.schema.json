@@ -276,6 +276,7 @@
           "enum": [
             "OPENAI_CHAT_COMPLETIONS",
             "ANTHROPIC_MESSAGES",
+            "OPENAI_EMBEDDINGS",
             "POSTGRES",
             "REDIS",
             "S3",
@@ -321,6 +322,17 @@
             "$ref": "#/$defs/ComponentOutput"
           },
           "description": "Typed output declarations keyed by output name.",
+          "type": "object",
+          "propertyNames": {
+            "maxLength": 64,
+            "pattern": "^[a-z][a-zA-Z0-9]{0,63}$"
+          }
+        },
+        "providedConnections": {
+          "additionalProperties": {
+            "$ref": "#/$defs/ComponentProvidedConnection"
+          },
+          "description": "Connections the workload serves, keyed by name, each assembled from the component's own outputs. A blueprint binds a sibling's connection input to one with { node, connection }. SERVICE and WORKER only.",
           "type": "object",
           "propertyNames": {
             "maxLength": 64,
@@ -429,9 +441,9 @@
           "type": "boolean"
         },
         "paths": {
-          "description": "Routes that serve machines. A request is covered by blueprint BP-ACCESS-009's rule: once normalised, its path equals an exempt path or continues it with /, so /webhook covers /webhook and /webhook/abc, never /webhooks.",
+          "description": "Routes that serve machines, each a bare endpoint path or { prefix } or { exact }. A bare path is the prefix form. prefix covers the path and every path under it, segment by segment, so /webhook covers /webhook and /webhook/abc, never /webhooks; exact covers the path alone (blueprint BP-ACCESS-017).",
           "items": {
-            "$ref": "#/$defs/ComponentEndpointPath"
+            "$ref": "#/$defs/ComponentExemptPath"
           },
           "maxItems": 32,
           "minItems": 1,
@@ -565,6 +577,32 @@
         "command"
       ],
       "type": "object"
+    },
+    "ComponentExemptPath": {
+      "$comment": "spec.md §5.2 COMP-EP-021 / ADR 0061 §2, §3. A bare path is the prefix form, so every released offer keeps its meaning. Written as if/then on the instance type rather than oneOf, so a malformed bare path reports only the path's own error.",
+      "description": "One exempt path: a bare endpoint path, which is the prefix form, or an object holding exactly one of prefix and exact.",
+      "if": {
+        "type": "string"
+      },
+      "then": {
+        "$ref": "#/$defs/ComponentEndpointPath"
+      },
+      "else": {
+        "additionalProperties": false,
+        "maxProperties": 1,
+        "minProperties": 1,
+        "properties": {
+          "exact": {
+            "$ref": "#/$defs/ComponentEndpointPath",
+            "description": "Covers a request whose normalised path equals this one, and no other."
+          },
+          "prefix": {
+            "$ref": "#/$defs/ComponentEndpointPath",
+            "description": "Covers a request whose normalised path equals this one or continues it with /."
+          }
+        },
+        "type": "object"
+      }
     },
     "ComponentFile": {
       "additionalProperties": false,
@@ -1096,6 +1134,7 @@
             "baseURL",
             "apiKey",
             "model",
+            "dimensions",
             "host",
             "port",
             "database",
@@ -1314,6 +1353,66 @@
       },
       "type": "object"
     },
+    "ComponentProvidedConnection": {
+      "$comment": "spec.md §6.5 COMP-CONNECTION-004 / COMP-CONNECTION-005 / ADR 0059 §2. connection is the object a connection input carries; members maps each member the workload supplies to one of the component's own outputs. members is keyed by the union of every protocol's members; which ones a protocol has, and that every required one is mapped, is semantic.",
+      "additionalProperties": false,
+      "description": "A connection the workload serves: a protocol, and the output each of its members is read from.",
+      "properties": {
+        "connection": {
+          "$ref": "#/$defs/ComponentConnection",
+          "description": "The protocol the workload speaks, and the capabilities it offers on a protocol that takes them."
+        },
+        "description": {
+          "description": "What the provided connection reaches.",
+          "minLength": 1,
+          "type": "string"
+        },
+        "members": {
+          "additionalProperties": {
+            "maxLength": 64,
+            "pattern": "^[a-z][a-zA-Z0-9]{0,63}$",
+            "type": "string"
+          },
+          "description": "The output each member is read from, keyed by member. Every required member is mapped, and no derived one.",
+          "minProperties": 1,
+          "propertyNames": {
+            "enum": [
+              "baseURL",
+              "apiKey",
+              "model",
+              "dimensions",
+              "host",
+              "port",
+              "database",
+              "username",
+              "password",
+              "sslMode",
+              "url",
+              "tls",
+              "endpointURL",
+              "region",
+              "bucket",
+              "accessKeyID",
+              "secretAccessKey",
+              "pathStyle",
+              "botToken",
+              "appToken",
+              "signingSecret",
+              "applicationID",
+              "publicKey"
+            ]
+          },
+          "type": "object",
+          "x-additionalPropertiesName": "memberName"
+        }
+      },
+      "required": [
+        "connection",
+        "members"
+      ],
+      "type": "object",
+      "x-additionalPropertiesName": "connectionName"
+    },
     "ComponentSchedule": {
       "additionalProperties": false,
       "properties": {
@@ -1456,7 +1555,8 @@
                         "target": false
                       }
                     }
-                  }
+                  },
+                  "providedConnections": false
                 }
               }
             }
@@ -1498,6 +1598,11 @@
                 "properties": {
                   "endpoints": false,
                   "health": false
+                }
+              },
+              "contract": {
+                "properties": {
+                  "providedConnections": false
                 }
               }
             }

@@ -414,15 +414,18 @@ node. The map key names an input of the node's component
 |---|---|---|
 | `parameter` | `parameter` | A named deployment parameter ([§5](#parameters)) |
 | `node` | `node`, `output` | An output of another node |
+| `node` | `node`, `connection` | A connection another node provides, for a connection input ([§5.3](#provided-connections)) |
 | `value` | `value` | A logical literal value, never for a sensitive input ([`BP-BIND-008`](#BP-BIND-008)) |
 | `template` | `template`, `format` | A string composed of literal text, parameters and node outputs ([§4.2.1](#templates)) |
 
 <a id="BP-BIND-003"></a>**`BP-BIND-003`**: A binding names exactly one origin:
-`parameter`, `node` with `output`, `value`, or `template` with `format`.
-Structural: a binding naming no origin is `ERR_MISSING_FIELD` at the binding,
-and one carrying members of two origins is `ERR_INVALID_VALUE` there. `node`
-and `output` go together, and so do `template` and `format`: one without the
-other is `ERR_MISSING_FIELD` at the binding. Duplicate input keys fail during
+`parameter`, `node` with `output`, `node` with `connection`, `value`, or
+`template` with `format`. Structural: a binding naming no origin is
+`ERR_MISSING_FIELD` at the binding, and one carrying members of two origins is
+`ERR_INVALID_VALUE` there. `node` goes with `output` or `connection`, and
+`template` with `format`: `node` without `output` or `connection`, `output` or
+`connection` without `node`, and `template` or `format` without the other are
+each `ERR_MISSING_FIELD` at the binding. Duplicate input keys fail during
 parsing, and there is no override priority between origins.
 
 ```yaml
@@ -910,6 +913,103 @@ peer that learns or guesses the endpoint's private hostname or address still
 cannot open a network connection to it. Two deployments of one blueprint in one
 organization are as separate as two organizations are: a private endpoint is
 private to its deployment, not to its blueprint or its owner.
+
+<a id="role-claims"></a>**Role claims.** A node may also release the
+viewer's standing, so that an app can grant its own administrator role
+without matching an email address. `viewerClaims` takes `ROLE` beside `EMAIL`
+and `NAME`
+([ADR 0060](../../../docs/adr/0060-role-claims-and-client-secret-rotation-for-oidc-apps.md)):
+
+```yaml
+exposure:
+  web: { visibility: PUBLIC, access: RESTRICTED, viewerIdentity: OIDC, viewerClaims: [EMAIL, ROLE] }
+```
+
+<a id="BP-ACCESS-013"></a>**`BP-ACCESS-013`**: `ROLE` is released only under
+`viewerIdentity: ASSERTION` or `OIDC`, whose token carries it. Structural:
+`ROLE` in the `viewerClaims` of an exposure whose `viewerIdentity` is `HEADER`
+is `ERR_INVALID_VALUE` at that list entry. Every other rule of
+[`BP-NODE-006`](#BP-NODE-006) applies to it as to any claim.
+
+<a id="BP-ACCESS-014"></a>**`BP-ACCESS-014`**: Under a released `ROLE`, the
+platform MUST set two claims in every viewer assertion
+([`BP-ACCESS-007`](#BP-ACCESS-007)), and in the ID token and user information
+it issues for the endpoint's client ([`BP-ACCESS-008`](#BP-ACCESS-008)),
+whatever scope the client asks for:
+
+| Claim | Value |
+|---|---|
+| `musher_role` | The viewer's role in the organization that owns the deployment when the token is issued: `owner`, `admin`, `member` or `viewer`. Absent for a viewer the access policy admits who holds no role in that organization |
+| `musher_deployment_creator` | The JSON boolean `true` when the viewer is the deployment's creator, whose identity is `deployment.creator.identity` ([`BP-PARAM-011`](#BP-PARAM-011)), and `false` otherwise |
+
+Each value is the fact when the token is issued. A changed role reaches an
+assertion within its lifetime and a client at the viewer's next sign-in; this
+specification does not require an app to revoke the sessions it holds.
+
+<a id="BP-ACCESS-015"></a>**`BP-ACCESS-015`**: The platform MUST apply a
+rotated client secret of an endpoint whose mode is `OIDC` as a rollout of the
+deployment, as it applies an update: every node that reads `oidcClientSecret`
+starts with the new secret, and every `JOB` without a `schedule` runs again
+([component `COMP-JOB-001`](../../component/v2/spec.md#COMP-JOB-001)). The
+issuer MUST keep accepting the previous secret until that rollout has
+completed, and MUST NOT accept it afterwards. An app that stores its client,
+rather than reading it from its environment, registers it again from such a
+`JOB`.
+
+<a id="api-keys"></a>**API keys the platform checks.** A machine client
+has no viewer session, and the `BEARER` exemption passes its token on
+unchecked, which is safe only for a workload that checks every token itself.
+An exposure whose access is `RESTRICTED` may instead name, in `apiKey`, a
+generated parameter whose value the platform checks
+([ADR 0061](../../../docs/adr/0061-a-platform-checked-api-key-and-exact-exempt-paths.md)):
+
+```yaml
+parameters:
+  apiKey: { generator: { byteLength: 32 }, ui: { label: API key } }
+nodes:
+  api:
+    componentRef: ./components/api.yaml
+    compute: { profile: general.standard.small }
+    exposure:
+      api: { visibility: PUBLIC, access: RESTRICTED, apiKey: { parameter: apiKey } }
+```
+
+<a id="BP-ACCESS-016"></a>**`BP-ACCESS-016`**: `apiKey` is closed and requires
+`parameter`, which names a generated parameter of the blueprint. It belongs
+only to an exposure whose access is `RESTRICTED`, and never beside a `BEARER`
+exemption, which answers the same bearer token another way. Structural, at
+the exposure's `apiKey`: `ERR_INVALID_VALUE` under `PRIVATE`, without
+`access: RESTRICTED` and beside `BEARER` in `accessExemptions`;
+`ERR_MISSING_FIELD` without `parameter`; `ERR_UNKNOWN_FIELD` for another
+member. Semantic, at `apiKey/parameter`: `ERR_UNKNOWN_PARAMETER` for a
+parameter the blueprint does not declare, and
+`ERR_INVALID_API_KEY_PARAMETER` for one that is not generated.
+
+A parameter an `apiKey` names is used, so it needs no binding of its own
+([`BP-PARAM-001`](#BP-PARAM-001)), and the resolution record lists it among
+its credentials as it lists a bound generated parameter
+([§5.2](#resolution-record)). A `ui` on it lets the people who manage the
+deployment read the key ([`BP-PARAM-012`](#BP-PARAM-012)).
+
+<a id="BP-ACCESS-017"></a>**`BP-ACCESS-017`**: Under `PATHS`, an exempt path
+the component gives as `{ exact: <path> }` covers a request only when the
+request's path, normalised as [`BP-ACCESS-009`](#BP-ACCESS-009) says, equals
+it; one given as `{ prefix: <path> }`, or as the bare path, covers a request
+as [`BP-ACCESS-009`](#BP-ACCESS-009) says, so `/status` covers `/status` and
+`/status/x` and never `/status-page`. The platform MUST match case-sensitively,
+and the query takes no part in matching.
+
+<a id="BP-ACCESS-018"></a>**`BP-ACCESS-018`**: Under `apiKey`, the platform MUST
+forward a request that carries no valid viewer session and an `Authorization`
+header of the `Bearer` scheme whose token equals the value of the current
+rotation generation of the named parameter, compared in constant time. It
+forwards it as an exempt request: without authenticating a viewer, with no
+identity, claim or assertion header, with inbound copies of them removed as
+[`BP-ACCESS-003`](#BP-ACCESS-003) says, and with the `Authorization` header it
+checked removed. It MUST refuse, without forwarding, any other request that
+carries no valid viewer session and that no `PATHS` exemption covers, one
+with a wrong key included. A request that carries a valid session is
+authenticated, admitted and identified as any other is.
 
 ### <a id="start-order"></a>4.6 Start order
 
@@ -1551,13 +1651,16 @@ runs it. A bot that receives events at a webhook does so at that node's own
 [component v2 §6.4](../../component/v2/spec.md#event-delivery)).
 
 <a id="BP-CONNECTION-001"></a>**`BP-CONNECTION-001`**: A connection input MUST be
-bound only by a `parameter` binding naming a connection parameter, and a
-connection parameter MUST bind only connection inputs. Semantic, each
+bound only by a `parameter` binding naming a connection parameter, or by a
+`node` binding naming a provided connection
+([`BP-CONNECTION-004`](#BP-CONNECTION-004)), and a connection parameter MUST
+bind only connection inputs. Semantic, each
 `ERR_INVALID_CONNECTION_BINDING`:
 
 | Condition | At |
 |---|---|
-| A `value`, `node` or `template` binding to a connection input | The binding |
+| A `value` or `template` binding, or a `node` binding naming an `output`, to a connection input | The binding |
+| A `node` binding naming a `connection`, to a value input | The binding |
 | A `template` naming a connection parameter | The binding's `template` |
 | A `parameter` binding to a connection input naming a parameter that is not a connection parameter | The binding's `parameter` |
 | A `parameter` binding to a value input naming a connection parameter | The binding's `parameter` |
@@ -1618,6 +1721,7 @@ language-model view also carries its capabilities:
 | Protocol | Credential member | View members | Optional view members |
 |---|---|---|---|
 | `OPENAI_CHAT_COMPLETIONS`, `ANTHROPIC_MESSAGES` | `apiKey` | `baseURL`, `model`, `capabilities` | none |
+| `OPENAI_EMBEDDINGS` | `apiKey` | `baseURL`, `model`, `dimensions` | none |
 | `POSTGRES` | `password` | `host`, `port`, `database`, `username`, `sslMode` | none |
 | `REDIS` | `password`, when the server requires authentication | `host`, `port`, `tls` | `database`, `username` |
 | `S3` | `secretAccessKey` | `endpointURL`, `region`, `bucket`, `accessKeyID` | `pathStyle` |
@@ -1707,6 +1811,69 @@ persistence are platform responsibilities. A real client integration must
 verify client paths, authentication, streaming, tool calls and errors. Synthetic
 fixture credentials establish no production access.
 
+<a id="provided-connections"></a>**Connections a node provides.** A node
+whose component serves a connection
+([component v2 §6.5](../../component/v2/spec.md#provided-connections)) can fill
+a sibling's connection input in place of a connection parameter. The binding
+names the node and, in `connection`, the provided connection, as a binding
+naming an output names the node and the `output`
+([ADR 0059](../../../docs/adr/0059-an-embeddings-protocol-and-connections-a-node-provides.md)):
+
+```yaml
+nodes:
+  tei:
+    componentRef: ./components/tei.yaml
+    compute: { profile: gpu.standard.small }
+  embedder:
+    componentRef: ./components/embeddings.yaml
+    bindings:
+      embeddings: { node: tei, connection: embeddings }
+  app:
+    componentRef: ./components/app.yaml
+    compute: { profile: general.standard.small }
+    bindings:
+      embeddingsURL: { node: embedder, output: baseURL }
+```
+
+`embedder` is the same `EXTERNAL` node a blueprint fills with
+`${{ connections.embeddings.default }}` when the organization's connection
+answers instead.
+
+<a id="BP-CONNECTION-004"></a>**`BP-CONNECTION-004`**: A binding carries
+`connection` only beside `node`, and never beside `output`. It names a
+provided connection of the node's component whose protocol is the input's,
+and which declares every capability the input requires. The input then
+depends on each output the provided connection maps, for
+[`BP-BIND-002`](#BP-BIND-002). Structural: `ERR_INVALID_VALUE` at a binding
+with both `output` and `connection`, and `ERR_MISSING_FIELD` at one with
+`connection` and no `node`. Semantic:
+
+| Condition | Diagnostic |
+|---|---|
+| `node` names no node | `ERR_UNKNOWN_NODE` at the binding's `node` |
+| `connection` names no provided connection of that node's component | `ERR_UNKNOWN_PROVIDED_CONNECTION` at the binding's `connection` |
+| The provided connection's protocol is not the input's, or it lacks a capability the input requires | `ERR_INVALID_CONNECTION_BINDING` at the binding's `connection` |
+
+<a id="BP-CONNECTION-005"></a>**`BP-CONNECTION-005`**: In the `values` stage,
+an input bound to a provided connection receives each member the provided
+connection maps, the value of its output on the providing node; the default of
+each optional member it does not map; and, for `POSTGRES` and `REDIS`, the
+`url` composed from them
+([component v2 §6.4](../../component/v2/spec.md#derived-urls)). Every member
+MUST satisfy its protocol's value schema, except that a locator MAY be an
+absolute `http` URL as well as an `https` one, without user information,
+query or fragment. Resolution: a member that does not is `ERR_VALUE_CONSTRAINT`
+at the binding.
+
+The locator may be `http` because it reads an endpoint of the providing node
+([component `COMP-CONNECTION-005`](../../component/v2/spec.md#COMP-CONNECTION-005)),
+which only nodes of the same deployment reach
+([`BP-ACCESS-011`](#BP-ACCESS-011)). There is no acquisition: no selection, no
+scoped credential, no `permittedBaseURLs` and nothing persisted in the
+snapshot. The members are the provider's outputs, pinned by the provider node,
+and they change only when its outputs do. A member's sensitivity is its
+output's.
+
 ### <a id="deploy-form"></a><a id="install-form"></a>5.4 Deploy form
 
 <a id="BP-UI-001"></a>**`BP-UI-001`**: `ui` is optional. One that is supplied
@@ -1756,6 +1923,67 @@ every receiver accepts, in the order of the first receiver that declares one.
 Clients validate logical values; server admission MUST validate them
 independently as well. Labels and descriptions do not override value schemas.
 
+<a id="options"></a>**Options.** A form can offer a submitted parameter's
+likely values without closing the value schema of the inputs it binds.
+`ui.options` lists them, each a `value` and the `label` a form shows, and
+`ui.editable: true` lets the deployer type a value that is not among them
+([ADR 0062](../../../docs/adr/0062-a-parameter-offers-options-and-a-generated-secret-can-be-disclosed.md)):
+
+```yaml
+parameters:
+  model:
+    default: "llama3.2:1b"
+    ui:
+      label: Model
+      options:
+        - { value: "llama3.2:1b", label: Llama 3.2 1B }
+        - { value: "qwen2.5:0.5b", label: Qwen 2.5 0.5B }
+      editable: true
+```
+
+<a id="BP-UI-006"></a>**`BP-UI-006`**: `options` is a non-empty list of at most
+256 closed objects, each requiring `value`, a logical value, and `label`, a
+non-empty string, with no two objects equal. `editable` is a
+boolean, and requires `options`. Neither belongs to the `ui` of a generated
+parameter or one with `from`, and `options` never sits beside `enumLabels`.
+Structural, under the parameter's `ui`: `ERR_INVALID_VALUE` at `options` or
+`editable` on a generated parameter or one with `from`, at `options` beside
+`enumLabels`, at an empty, overlong or repeating list, and at an empty
+`label`; `ERR_MISSING_FIELD` at an option without `value` or `label`, and
+at `ui` with `editable` and without `options`; `ERR_UNKNOWN_FIELD` at an
+option with another member.
+
+<a id="BP-UI-007"></a>**`BP-UI-007`**: Every option's `value` MUST satisfy the
+value schema of every input the parameter binds, and the `default` of a
+parameter whose options are not `editable` MUST be one of their values.
+Semantic: `ERR_VALUE_CONSTRAINT` at `ui/options/<index>/value`, and at the
+parameter's `default`.
+
+<a id="BP-UI-008"></a>**`BP-UI-008`**: A deploy form MUST offer a parameter
+that declares `options` as a choice among their labels, in their order, and
+when it is `editable` MUST also accept a value typed in. A value outside
+options that are not `editable` MUST NOT be submitted. Resolution, in the
+`parameters` stage: a submitted value that is not one of the values of
+options that are not `editable` is `ERR_VALUE_CONSTRAINT` at
+`/spec/parameters/<name>`.
+
+Options belong to the form, not the value schema: the receiving inputs keep
+their own schemas, and an `editable` value is held to them as any submitted
+value is. A schema `enum` is labelled with `enumLabels` instead. A form
+conceals a sensitive value first, so it never offers options for one.
+
+<a id="disclosure"></a>**Disclosure.** A generated parameter whose `ui` sets
+`disclosed: true` holds a value the deployer is expected to keep, such as a key
+that encrypts data a backup holds.
+
+<a id="BP-UI-009"></a>**`BP-UI-009`**: `disclosed` is a boolean, and belongs
+only to the `ui` of a generated parameter. Structural: `ERR_INVALID_VALUE` at
+`ui/disclosed` on any other parameter. The platform MUST disclose the value of
+a parameter whose `ui` sets `disclosed: true` to the people who manage the
+deployment, behind an explicit reveal, apart from the deploy form, and say
+that it is to be kept. The privacy rules of
+[`BP-PARAM-012`](#BP-PARAM-012)'s disclosure apply to it.
+
 ## <a id="validation-phases"></a><a id="validation-layers"></a>6. Validation phases
 
 Core's phases, validation scopes and statuses apply
@@ -1797,6 +2025,7 @@ Core and component diagnostics apply, with these additions:
 | `ERR_VIEWER_IDENTITY_NOT_FORWARDED` | `semantic` | An output reads a viewer identity property of an endpoint whose exposure does not forward that property's mode or claim. |
 | `ERR_INVALID_MOUNT` | `semantic` | A mount names a host that cannot serve it, or overlaps another mount on its host. |
 | `ERR_EXEMPTION_NOT_DECLARED` | `semantic` | An exposure lets through requests without a viewer that the component does not offer in `exemptibleRequests`. |
+| `ERR_INVALID_API_KEY_PARAMETER` | `semantic` | An exposure's `apiKey` names a parameter that is not generated. |
 | `ERR_UNKNOWN_ENUM_MEMBER` | `semantic` | A UI label names no enum member. |
 | `ERR_PARAMETER_NOT_OFFERED` | `semantic` | A submitted parameter with neither `ui` nor `default` binds a required input, so no form can supply it. |
 | `ERR_INVALID_PARAMETER_ORIGIN` | `semantic` | A parameter's `from` is not one whole placeholder. |
@@ -1807,7 +2036,8 @@ Core and component diagnostics apply, with these additions:
 | `ERR_VALUE_CYCLE` | `semantic` | Value dependencies contain a cycle. |
 | `ERR_START_CYCLE` | `semantic` | The start graph contains a cycle. |
 | `ERR_INVALID_START_ORDER` | `semantic` | A start condition does not fit the node it names, or a node a rollout does not start waits for another. |
-| `ERR_INVALID_CONNECTION_BINDING` | `semantic` | A connection input is bound by something other than a connection parameter, or a connection parameter binds a value input or is named by a template. |
+| `ERR_INVALID_CONNECTION_BINDING` | `semantic` | A connection input is bound by something other than a connection parameter or a provided connection of its protocol and capabilities, or a connection parameter or provided connection binds a value input, or a connection parameter is named by a template. |
+| `ERR_UNKNOWN_PROVIDED_CONNECTION` | `semantic` | A binding names no provided connection of the node's component. |
 | `ERR_INVALID_TEMPLATE` | `semantic` | A `URL` template is not an absolute URI with a literal scheme. |
 | `ERR_PARAMETER_NOT_SUBMITTABLE` | `resolution` | A submitted value names a generated, hash, variable, deployment-fact or connection parameter. |
 | `ERR_MISSING_PARAMETER_VALUE` | `resolution` | A required submitted value is absent. |

@@ -34,14 +34,34 @@
   "type": "object",
   "$defs": {
     "BlueprintBinding": {
-      "$comment": "spec.md §4.2 BP-BIND-003, BP-BIND-009 / ADR 0031 §1 / ADR 0056. The key that is present names the binding's origin: a deployment parameter, another node's output, a literal value, or a template composed of literal text and placeholders. Exactly one; `node` goes with `output`, and `template` with `format`. Values from outside the documents enter only through parameters.",
+      "$comment": "spec.md §4.2 BP-BIND-003, BP-BIND-009 / §5.3 BP-CONNECTION-004 / ADR 0031 §1 / ADR 0056 / ADR 0059 §3. The key that is present names the binding's origin: a deployment parameter, another node's output, another node's provided connection, a literal value, or a template composed of literal text and placeholders. Exactly one; `node` goes with `output` or with `connection`, and `template` with `format`. Values from outside the documents enter only through parameters.",
       "additionalProperties": false,
+      "allOf": [
+        {
+          "$comment": "spec.md §4.2 BP-BIND-003 / §5.3 BP-CONNECTION-004. A node binding names an output unless it names a provided connection, so node without either is a missing output.",
+          "if": {
+            "required": [
+              "node"
+            ],
+            "not": {
+              "required": [
+                "connection"
+              ]
+            }
+          },
+          "then": {
+            "required": [
+              "output"
+            ]
+          }
+        }
+      ],
       "dependentRequired": {
+        "connection": [
+          "node"
+        ],
         "format": [
           "template"
-        ],
-        "node": [
-          "output"
         ],
         "output": [
           "node"
@@ -72,6 +92,16 @@
         },
         {
           "properties": {
+            "node": true,
+            "connection": true
+          },
+          "required": [
+            "node",
+            "connection"
+          ]
+        },
+        {
+          "properties": {
             "value": true
           },
           "required": [
@@ -90,6 +120,12 @@
         }
       ],
       "properties": {
+        "connection": {
+          "type": "string",
+          "pattern": "^[a-z][a-zA-Z0-9]{0,63}$",
+          "maxLength": 64,
+          "description": "Provided connection of that node's component, which fills a connection input."
+        },
         "format": {
           "description": "How each placeholder's value is written into the template: URL percent-encodes it for the URL component it sits in, and TEXT writes its string form as it is.",
           "enum": [
@@ -166,6 +202,7 @@
             "properties": {
               "access": false,
               "accessExemptions": false,
+              "apiKey": false,
               "mount": false,
               "viewerClaims": false,
               "viewerIdentity": false
@@ -186,6 +223,7 @@
           "else": {
             "properties": {
               "accessExemptions": false,
+              "apiKey": false,
               "viewerIdentity": {
                 "const": "NONE"
               }
@@ -215,6 +253,50 @@
               "viewerClaims": false
             }
           }
+        },
+        {
+          "$comment": "spec.md §4.5 BP-ACCESS-013 / ADR 0060 §1. A role travels inside a token, so HEADER, which carries each claim in a header of its own, releases none.",
+          "if": {
+            "properties": {
+              "viewerIdentity": {
+                "const": "HEADER"
+              }
+            },
+            "required": [
+              "viewerIdentity"
+            ]
+          },
+          "then": {
+            "properties": {
+              "viewerClaims": {
+                "items": {
+                  "not": {
+                    "const": "ROLE"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "$comment": "spec.md §4.5 BP-ACCESS-016 / ADR 0061 §1. A checked key and a BEARER exemption both answer the bearer token, one by checking it and one by passing it on, so an exposure takes one.",
+          "if": {
+            "properties": {
+              "accessExemptions": {
+                "contains": {
+                  "const": "BEARER"
+                }
+              }
+            },
+            "required": [
+              "accessExemptions"
+            ]
+          },
+          "then": {
+            "properties": {
+              "apiKey": false
+            }
+          }
         }
       ],
       "description": "Exposure of one endpoint in the object form: its visibility, whether the platform authenticates viewers, how the workload learns who they are, which of their claims it receives, and which requests pass without a viewer. Bare PUBLIC or PRIVATE is the object form with only visibility.",
@@ -241,16 +323,21 @@
           "type": "array",
           "uniqueItems": true
         },
+        "apiKey": {
+          "$ref": "#/$defs/BlueprintExposureApiKey",
+          "description": "A key the platform checks before forwarding a request without a viewer session: the bearer token must equal the named generated parameter's value. RESTRICTED only, and never beside a BEARER exemption."
+        },
         "mount": {
           "$ref": "#/$defs/BlueprintMount",
           "description": "Serve this endpoint under a path of another endpoint's public host, rather than on a host of its own. PUBLIC and HTTP-routed only."
         },
         "viewerClaims": {
-          "description": "Facts about the viewer released to the workload beside the subject: EMAIL, the viewer's verified email address, and NAME, their display name. Requires a viewerIdentity other than NONE.",
+          "description": "Facts about the viewer released to the workload beside the subject: EMAIL, the viewer's verified email address; NAME, their display name; and ROLE, their role in the deployment's organization and whether they created the deployment, under ASSERTION or OIDC only. Requires a viewerIdentity other than NONE.",
           "items": {
             "enum": [
               "EMAIL",
-              "NAME"
+              "NAME",
+              "ROLE"
             ],
             "type": "string"
           },
@@ -283,6 +370,23 @@
       ],
       "type": "object",
       "$comment": "spec.md §4.5 / ADR 0034 §1-§2 / ADR 0035 §2, §4. A bare PUBLIC or PRIVATE, or the object form. Bare PUBLIC is { visibility: PUBLIC } with every default: access OPEN, viewerIdentity NONE. Every member but visibility applies only to PUBLIC; an identity mode and accessExemptions require RESTRICTED; viewerClaims requires an identity mode (BP-NODE-006)."
+    },
+    "BlueprintExposureApiKey": {
+      "$comment": "spec.md §4.5 BP-ACCESS-016 / ADR 0061 §1. The key is a generated parameter, so it is persisted, rotated and disclosed as any generated credential is; whether the parameter is generated is semantic.",
+      "additionalProperties": false,
+      "description": "The generated parameter whose value the platform accepts as a bearer token on this endpoint.",
+      "properties": {
+        "parameter": {
+          "description": "Generated parameter holding the key.",
+          "maxLength": 64,
+          "pattern": "^[a-z][a-zA-Z0-9]{0,63}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "parameter"
+      ],
+      "type": "object"
     },
     "BlueprintMetadata": {
       "additionalProperties": false,
@@ -510,6 +614,57 @@
               "ui": false
             }
           }
+        },
+        {
+          "$comment": "spec.md §5.4 BP-UI-006, BP-UI-009 / ADR 0062. A generated value is never an editable field, so it offers no options; only a generated value is disclosed.",
+          "if": {
+            "properties": {
+              "generator": true
+            },
+            "required": [
+              "generator"
+            ]
+          },
+          "then": {
+            "properties": {
+              "ui": {
+                "properties": {
+                  "editable": false,
+                  "options": false
+                }
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "ui": {
+                "properties": {
+                  "disclosed": false
+                }
+              }
+            }
+          }
+        },
+        {
+          "$comment": "spec.md §5.4 BP-UI-006 / ADR 0062 §1. A variable, deployment fact or connection is never an editable field, so it offers no options.",
+          "if": {
+            "properties": {
+              "from": true
+            },
+            "required": [
+              "from"
+            ]
+          },
+          "then": {
+            "properties": {
+              "ui": {
+                "properties": {
+                  "editable": false,
+                  "options": false
+                }
+              }
+            }
+          }
         }
       ],
       "description": "Deployment parameter: a named value the deployment takes from outside the documents, bound explicitly by the nodes that consume it.",
@@ -588,11 +743,58 @@
       ],
       "type": "object"
     },
-    "BlueprintParameterUi": {
-      "$comment": "spec.md §5.4. The control is derived from the value schema of the inputs the parameter is bound to rather than declared, so this carries only what a derivation cannot supply.",
+    "BlueprintParameterOption": {
       "additionalProperties": false,
-      "description": "Presentation metadata for a deploy-form parameter.",
+      "description": "One value a deploy form offers, and the label it shows for it.",
       "properties": {
+        "label": {
+          "description": "Human-readable label shown for the value. Never empty.",
+          "minLength": 1,
+          "type": "string"
+        },
+        "value": {
+          "description": "Logical value submitted when the option is chosen. It satisfies the value schema of every input the parameter binds (BP-UI-007)."
+        }
+      },
+      "required": [
+        "value",
+        "label"
+      ],
+      "type": "object"
+    },
+    "BlueprintParameterUi": {
+      "$comment": "spec.md §5.4. The control is derived from the value schema of the inputs the parameter is bound to rather than declared, so this carries only what a derivation cannot supply. options lists the values a form offers for an open schema, and enumLabels labels a closed one, so a ui carries one or the other (BP-UI-006); editable needs options.",
+      "additionalProperties": false,
+      "dependentRequired": {
+        "editable": [
+          "options"
+        ]
+      },
+      "description": "Presentation metadata for a deploy-form parameter.",
+      "if": {
+        "properties": {
+          "enumLabels": true
+        },
+        "required": [
+          "enumLabels"
+        ]
+      },
+      "then": {
+        "properties": {
+          "options": false
+        }
+      },
+      "properties": {
+        "disclosed": {
+          "default": false,
+          "description": "True when the generated value is one the deployer is expected to keep, such as a key that encrypts data a backup holds: the platform discloses it behind an explicit reveal, apart from the deploy form. Generated parameters only.",
+          "type": "boolean"
+        },
+        "editable": {
+          "default": false,
+          "description": "True when the form also accepts a value typed in beside the options, which the receiving inputs' schemas still constrain. Requires options.",
+          "type": "boolean"
+        },
         "enumLabels": {
           "additionalProperties": {
             "type": "string"
@@ -612,6 +814,16 @@
           "description": "Human-readable label shown on the deploy form. Never empty.",
           "minLength": 1,
           "type": "string"
+        },
+        "options": {
+          "description": "Values the form offers, in order, each with the label it shows. Every value satisfies the value schema of every input the parameter binds. Without editable the list is closed, and a submitted value outside it is rejected. Submitted parameters only.",
+          "items": {
+            "$ref": "#/$defs/BlueprintParameterOption"
+          },
+          "maxItems": 256,
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
         },
         "order": {
           "description": "Relative position of the field within the form. Lower sorts first; a parameter declaring no order sorts after every parameter that declares one.",

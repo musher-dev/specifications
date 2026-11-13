@@ -1,0 +1,11 @@
+{
+  "id": "semantic-303-provided-connection-of-another-protocol",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#connections",
+  "requirements": [
+    "BP-CONNECTION-004"
+  ],
+  "summary": "A provided OPENAI_EMBEDDINGS connection cannot fill an OPENAI_CHAT_COMPLETIONS input.",
+  "document": "app/blueprint.yaml"
+}

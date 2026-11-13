@@ -2441,6 +2441,7 @@
           "protocol",
           "OPENAI_CHAT_COMPLETIONS",
           "ANTHROPIC_MESSAGES",
+          "OPENAI_EMBEDDINGS",
           "POSTGRES",
           "REDIS",
           "S3",
@@ -2457,6 +2458,7 @@
           "UDP",
           "OPENAI_CHAT_COMPLETIONS",
           "ANTHROPIC_MESSAGES",
+          "OPENAI_EMBEDDINGS",
           "POSTGRES",
           "REDIS",
           "S3",
@@ -2470,7 +2472,8 @@
         "component v2 §5.2",
         "component v2 §6.4",
         "ADR 0039",
-        "ADR 0045"
+        "ADR 0045",
+        "ADR 0059"
       ],
       "stability": "stable",
       "status": "approved",
@@ -2797,7 +2800,7 @@
       "id": "component.exemptible-requests",
       "display_name": "exemptible requests",
       "context": "component",
-      "definition": "An endpoint's statement of which requests it can safely take without a signed-in viewer: the paths that serve machines, and whether every route checks the bearer token a request carries.",
+      "definition": "An endpoint's statement of which requests it can safely take without a signed-in viewer: the paths that serve machines, each matched as a prefix or exactly, and whether every route checks the bearer token a request carries.",
       "shortDefinition": "The requests an endpoint can take without a viewer.",
       "part_of": [
         "component.endpoint"
@@ -2812,10 +2815,13 @@
         "fields": [
           "exemptibleRequests",
           "paths",
-          "bearerToken"
+          "bearerToken",
+          "prefix",
+          "exact"
         ],
         "defs": [
-          "ComponentEndpointExemptibleRequests"
+          "ComponentEndpointExemptibleRequests",
+          "ComponentExemptPath"
         ]
       },
       "confusables": [
@@ -2843,7 +2849,8 @@
       ],
       "source": [
         "component v2 §5.2",
-        "ADR 0038"
+        "ADR 0038",
+        "ADR 0061"
       ],
       "stability": "stable",
       "status": "approved",
@@ -3675,6 +3682,44 @@
       ]
     },
     {
+      "id": "component.provided-connection",
+      "display_name": "provided connection",
+      "context": "component",
+      "definition": "A connection a SERVICE or WORKER serves, declared in its contract by a protocol and a map from each member it supplies to one of its own outputs, which a blueprint binds to a sibling's connection input.",
+      "shortDefinition": "A connection a workload serves from its outputs.",
+      "associated": [
+        {
+          "relation": "fills",
+          "term": "component.connection-input"
+        }
+      ],
+      "identifiers": {
+        "fields": [
+          "providedConnections",
+          "members"
+        ],
+        "defs": [
+          "ComponentProvidedConnection"
+        ],
+        "codes": [
+          "ERR_INVALID_PROVIDED_CONNECTION"
+        ]
+      },
+      "confusables": [
+        "A connection parameter, which the organization's connection configuration answers rather than a node."
+      ],
+      "source": [
+        "component v2 §6.5",
+        "ADR 0059"
+      ],
+      "stability": "provisional",
+      "status": "approved",
+      "tags": [
+        "values",
+        "connections"
+      ]
+    },
+    {
       "id": "component.connection-capability",
       "display_name": "connection capability",
       "context": "component",
@@ -3720,6 +3765,7 @@
           "baseURL",
           "apiKey",
           "model",
+          "dimensions",
           "host",
           "port",
           "database",
@@ -3744,6 +3790,7 @@
           "baseURL",
           "apiKey",
           "model",
+          "dimensions",
           "host",
           "port",
           "database",
@@ -5439,8 +5486,8 @@
       "id": "blueprint.viewer-claim",
       "display_name": "viewer claim",
       "context": "blueprint",
-      "definition": "A fact about the viewer released to the workload beside their identity, EMAIL or NAME, never by default.",
-      "shortDefinition": "EMAIL or NAME, released on request.",
+      "definition": "A fact about the viewer released to the workload beside their identity, EMAIL, NAME or ROLE, never by default; ROLE, the viewer's organization role and whether they created the deployment, travels only in a token.",
+      "shortDefinition": "EMAIL, NAME or ROLE, released on request.",
       "part_of": [
         "blueprint.exposure"
       ],
@@ -5450,14 +5497,16 @@
         ],
         "values": [
           "EMAIL",
-          "NAME"
+          "NAME",
+          "ROLE"
         ]
       },
       "confusables": [
-        "An OIDC claim in general; only these two are released."
+        "An OIDC claim in general; only these three are released."
       ],
       "source": [
-        "blueprint v2 §4.5"
+        "blueprint v2 §4.5",
+        "ADR 0060"
       ],
       "stability": "stable",
       "status": "approved",
@@ -5530,6 +5579,37 @@
         "blueprint v2 §4.5"
       ],
       "stability": "stable",
+      "status": "approved",
+      "tags": [
+        "access"
+      ]
+    },
+    {
+      "id": "blueprint.checked-api-key",
+      "display_name": "checked API key",
+      "context": "blueprint",
+      "definition": "A generated parameter an exposure names in apiKey, whose value the platform accepts as the bearer token of a request without a viewer session on a RESTRICTED endpoint, and checks before forwarding it.",
+      "shortDefinition": "A generated key the platform checks for machine clients.",
+      "part_of": [
+        "blueprint.exposure"
+      ],
+      "identifiers": {
+        "defs": [
+          "BlueprintExposureApiKey"
+        ],
+        "codes": [
+          "ERR_INVALID_API_KEY_PARAMETER"
+        ]
+      },
+      "confusables": [
+        "The BEARER exemption, which passes any bearer token on for the workload to check.",
+        "The apiKey member of a language-model connection."
+      ],
+      "source": [
+        "blueprint v2 §4.5",
+        "ADR 0061"
+      ],
+      "stability": "provisional",
       "status": "approved",
       "tags": [
         "access"
@@ -5850,7 +5930,8 @@
       ],
       "identifiers": {
         "codes": [
-          "ERR_INVALID_CONNECTION_BINDING"
+          "ERR_INVALID_CONNECTION_BINDING",
+          "ERR_UNKNOWN_PROVIDED_CONNECTION"
         ]
       },
       "source": [
@@ -6138,6 +6219,7 @@
         "defs": [
           "OpenaiChatCompletionsView",
           "AnthropicMessagesView",
+          "OpenaiEmbeddingsView",
           "PostgresView",
           "RedisView",
           "S3View",
@@ -6354,6 +6436,63 @@
         "ADR 0038"
       ],
       "stability": "stable",
+      "status": "approved",
+      "tags": [
+        "parameters",
+        "presentation"
+      ]
+    },
+    {
+      "id": "blueprint.parameter-option",
+      "display_name": "parameter option",
+      "context": "blueprint",
+      "definition": "A value a deploy form offers for a submitted parameter, with the label it shows, in a list that is closed unless it is editable, when the deployer may also type a value in.",
+      "shortDefinition": "A value and label a deploy form offers.",
+      "part_of": [
+        "blueprint.deploy-form"
+      ],
+      "identifiers": {
+        "fields": [
+          "options",
+          "editable"
+        ],
+        "defs": [
+          "BlueprintParameterOption"
+        ]
+      },
+      "confusables": [
+        "An enum in the receiving input's value schema, which closes the value for every blueprint and is labelled with enumLabels."
+      ],
+      "source": [
+        "blueprint v2 §5.4",
+        "ADR 0062"
+      ],
+      "stability": "provisional",
+      "status": "approved",
+      "tags": [
+        "parameters",
+        "presentation"
+      ]
+    },
+    {
+      "id": "blueprint.disclosed-value",
+      "display_name": "disclosed value",
+      "context": "blueprint",
+      "definition": "A generated parameter's value that the platform shows the people who manage the deployment, behind an explicit reveal and apart from the deploy form, as one to keep, such as a key that encrypts backed-up data.",
+      "shortDefinition": "A generated value the deployer is shown and keeps.",
+      "part_of": [
+        "blueprint.deploy-form"
+      ],
+      "identifiers": {
+        "fields": [
+          "disclosed"
+        ]
+      },
+      "source": [
+        "blueprint v2 §5.4",
+        "ADR 0062"
+      ],
+      "stability": "provisional",
       "status": "approved",
       "tags": [
         "parameters",
