@@ -1,0 +1,147 @@
+specVersion: v2
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: SERVICE
+  workload:
+    source:
+      image: example/web:1
+    endpoints:
+      web:
+        targetPort: 8080
+        protocol: HTTP
+    files:
+      f0:
+        path: /etc/app/f0
+        content:
+          value: x
+      f1:
+        path: /etc/app/f1
+        content:
+          value: x
+      f2:
+        path: /etc/app/f2
+        content:
+          value: x
+      f3:
+        path: /etc/app/f3
+        content:
+          value: x
+      f4:
+        path: /etc/app/f4
+        content:
+          value: x
+      f5:
+        path: /etc/app/f5
+        content:
+          value: x
+      f6:
+        path: /etc/app/f6
+        content:
+          value: x
+      f7:
+        path: /etc/app/f7
+        content:
+          value: x
+      f8:
+        path: /etc/app/f8
+        content:
+          value: x
+      f9:
+        path: /etc/app/f9
+        content:
+          value: x
+      f10:
+        path: /etc/app/f10
+        content:
+          value: x
+      f11:
+        path: /etc/app/f11
+        content:
+          value: x
+      f12:
+        path: /etc/app/f12
+        content:
+          value: x
+      f13:
+        path: /etc/app/f13
+        content:
+          value: x
+      f14:
+        path: /etc/app/f14
+        content:
+          value: x
+      f15:
+        path: /etc/app/f15
+        content:
+          value: x
+      f16:
+        path: /etc/app/f16
+        content:
+          value: x
+      f17:
+        path: /etc/app/f17
+        content:
+          value: x
+      f18:
+        path: /etc/app/f18
+        content:
+          value: x
+      f19:
+        path: /etc/app/f19
+        content:
+          value: x
+      f20:
+        path: /etc/app/f20
+        content:
+          value: x
+      f21:
+        path: /etc/app/f21
+        content:
+          value: x
+      f22:
+        path: /etc/app/f22
+        content:
+          value: x
+      f23:
+        path: /etc/app/f23
+        content:
+          value: x
+      f24:
+        path: /etc/app/f24
+        content:
+          value: x
+      f25:
+        path: /etc/app/f25
+        content:
+          value: x
+      f26:
+        path: /etc/app/f26
+        content:
+          value: x
+      f27:
+        path: /etc/app/f27
+        content:
+          value: x
+      f28:
+        path: /etc/app/f28
+        content:
+          value: x
+      f29:
+        path: /etc/app/f29
+        content:
+          value: x
+      f30:
+        path: /etc/app/f30
+        content:
+          value: x
+      f31:
+        path: /etc/app/f31
+        content:
+          value: x
+      f32:
+        path: /etc/app/f32
+        content:
+          value: x

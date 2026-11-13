@@ -60,15 +60,20 @@ authoritative list is the "Normative dependencies" table in
 | `COMP-BUILD` | Build recipe, build context and build secrets | [§5.1](v2/spec.md#build) |
 | `COMP-EP` | Endpoints, probes, and the fields naming them | [§5.2](v2/spec.md#endpoints), [§5.4](v2/spec.md#health) |
 | `COMP-ENVVAR` | Environment variables | [§5.3](v2/spec.md#env-vars) |
+| `COMP-HEALTH` | When a replica has started and is ready | [§5.4](v2/spec.md#health) |
+| `COMP-PROBE` | TCP, gRPC and exec probes, and HTTP probe headers | [§5.4](v2/spec.md#health) |
 | `COMP-VOL` | Volume mount paths, and whether replicas share a volume | [§5.5](v2/spec.md#volumes) |
 | `COMP-JOB` | When a job runs, its schedule, and the time limit that stops a run | [§5.7](v2/spec.md#jobs) |
+| `COMP-FILE` | Files the platform writes into the container before the process starts | [§5.8](v2/spec.md#files) |
+| `COMP-COMPUTE` | The compute a component needs | [§5.9](v2/spec.md#compute) |
+| `COMP-SECURITY` | Workload security settings | [§5.10](v2/spec.md#workload-security) |
 | `COMP-CONTRACT` | Input and output names | [§6](v2/spec.md#contract) |
 | `COMP-DESC` | Component, input and output descriptions | [§4](v2/spec.md#metadata), [§6](v2/spec.md#contract) |
 | `COMP-INPUT` | Inputs with no environment target | [§6.1](v2/spec.md#inputs) |
 | `COMP-OUT` | Outputs | [§6.2](v2/spec.md#outputs) |
 | `COMP-PLACEHOLDER` | Placeholders in output templates | [§6.2](v2/spec.md#outputs) |
 | `COMP-VAL` | Value schemas | [§6.3](v2/spec.md#value-schema) |
-| `COMP-CONNECTION` | Connection inputs and their protocols | [§6.4](v2/spec.md#connection-requirements) |
+| `COMP-CONNECTION` | Connection inputs, their protocols, and the connections a component provides | [§6.4](v2/spec.md#connection-requirements), [§6.5](v2/spec.md#provided-connections) |
 | `COMP-SEC` | Keeping sensitive values out of public output, and trusting a viewer's identity | [§11](v2/spec.md#security) |
 
 Every ID, the clause stating it, and the cases pinning it:

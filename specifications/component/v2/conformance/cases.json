@@ -1686,6 +1686,31 @@
       "id": "semantic-147-time-limit-on-a-schedule-that-never-falls-due",
       "phase": "semantic",
       "path": "semantic/147-time-limit-on-a-schedule-that-never-falls-due"
+    },
+    {
+      "id": "structural-500-grpc-probe-without-an-endpoint",
+      "phase": "structural",
+      "path": "structural/500-grpc-probe-without-an-endpoint"
+    },
+    {
+      "id": "structural-501-exec-probe-without-a-command",
+      "phase": "structural",
+      "path": "structural/501-exec-probe-without-a-command"
+    },
+    {
+      "id": "structural-502-thirty-three-files",
+      "phase": "structural",
+      "path": "structural/502-thirty-three-files"
+    },
+    {
+      "id": "structural-503-provided-connection-on-a-job",
+      "phase": "structural",
+      "path": "structural/503-provided-connection-on-a-job"
+    },
+    {
+      "id": "structural-504-provided-connection-with-empty-members",
+      "phase": "structural",
+      "path": "structural/504-provided-connection-with-empty-members"
     }
   ]
 }

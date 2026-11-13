@@ -1,0 +1,10 @@
+{
+  "id": "structural-502-thirty-three-files",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#files",
+  "requirements": [
+    "COMP-FILE-001"
+  ],
+  "summary": "A workload holds at most 32 files."
+}
