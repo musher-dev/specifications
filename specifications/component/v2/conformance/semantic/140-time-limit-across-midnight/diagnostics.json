@@ -1,0 +1,6 @@
+[
+  {
+    "code": "ERR_TIME_LIMIT_NOT_UNDER_SCHEDULE",
+    "path": "/spec/workload/timeLimitSeconds"
+  }
+]

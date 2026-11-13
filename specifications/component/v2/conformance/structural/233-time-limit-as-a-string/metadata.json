@@ -1,0 +1,10 @@
+{
+  "id": "structural-233-time-limit-as-a-string",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#jobs",
+  "requirements": [
+    "COMP-JOB-005"
+  ],
+  "summary": "A time limit written as a string is rejected; it is an integer number of seconds."
+}

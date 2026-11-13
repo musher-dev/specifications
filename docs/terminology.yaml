@@ -1537,6 +1537,39 @@ terms:
     status: approved
     tags: [workload]
 
+  - id: component.period
+    display_name: period
+    context: component
+    definition: >-
+      The shortest interval between two consecutive times a schedule falls due,
+      counted across the end of an hour, a day, a month and a year, which a
+      scheduled JOB's time limit stays shorter than.
+    shortDefinition: The shortest interval between two times a schedule falls due.
+    part_of: [component.schedule]
+    example: "`*/7 * * * *` falls due 4 minutes apart from :56 to the next hour's :00, so its period is 240 seconds, not 420."
+    confusables: ["A probe's `periodSeconds`, the interval between two of its attempts."]
+    source: [component v2 §1.1, component v2 §5.7]
+    stability: provisional
+    status: approved
+    tags: [workload]
+
+  - id: component.time-limit
+    display_name: time limit
+    context: component
+    definition: >-
+      The duration one run of a JOB may execute for before the platform stops
+      it and records it as failed: the seconds its workload declares, or the
+      platform's default, and for a scheduled JOB always shorter than the
+      schedule's period.
+    shortDefinition: How long one run of a JOB may execute.
+    part_of: [component.workload]
+    identifiers: { fields: [timeLimitSeconds], codes: [ERR_TIME_LIMIT_NOT_UNDER_SCHEDULE] }
+    confusables: ["A probe's `timeoutSeconds`, how long one probe waits for an answer.", "Kubernetes `activeDeadlineSeconds`, which bounds a whole Job, its retries included."]
+    source: [component v2 §1.1, component v2 §5.7]
+    stability: provisional
+    status: approved
+    tags: [workload]
+
   - id: component.component-contract
     display_name: component contract
     context: component

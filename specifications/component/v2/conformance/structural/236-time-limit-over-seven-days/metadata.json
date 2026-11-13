@@ -1,0 +1,10 @@
+{
+  "id": "structural-236-time-limit-over-seven-days",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#jobs",
+  "requirements": [
+    "COMP-JOB-005"
+  ],
+  "summary": "A time limit one second over seven days is rejected; the longest is 604800 seconds."
+}

@@ -1,0 +1,10 @@
+{
+  "id": "semantic-147-time-limit-on-a-schedule-that-never-falls-due",
+  "phase": "semantic",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#jobs",
+  "requirements": [
+    "COMP-JOB-006"
+  ],
+  "summary": "Any time limit validates under 0 0 30 2 *, which never falls due and so has no period."
+}

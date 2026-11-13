@@ -1,0 +1,10 @@
+{
+  "id": "semantic-141-time-limit-across-the-end-of-a-year",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#jobs",
+  "requirements": [
+    "COMP-JOB-006"
+  ],
+  "summary": "A one-day time limit is rejected under 0 0 1,31 1,12 *, which falls due a day apart from 31 December to 1 January."
+}

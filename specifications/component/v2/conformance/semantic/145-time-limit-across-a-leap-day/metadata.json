@@ -1,0 +1,10 @@
+{
+  "id": "semantic-145-time-limit-across-a-leap-day",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#jobs",
+  "requirements": [
+    "COMP-JOB-006"
+  ],
+  "summary": "A one-day time limit is rejected under 0 0 28,29 2 *, which falls due a day apart on 28 and 29 February of a leap year."
+}

@@ -1,0 +1,10 @@
+{
+  "id": "semantic-137-time-limit-just-over-the-period",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/component/v2/spec.md#jobs",
+  "requirements": [
+    "COMP-JOB-006"
+  ],
+  "summary": "A time limit of 901 seconds is rejected under */15 * * * *, whose period is 900 seconds."
+}

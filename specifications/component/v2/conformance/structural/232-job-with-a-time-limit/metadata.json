@@ -1,0 +1,11 @@
+{
+  "id": "structural-232-job-with-a-time-limit",
+  "phase": "structural",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#workload",
+  "requirements": [
+    "COMP-TYPE-008",
+    "COMP-JOB-005"
+  ],
+  "summary": "A JOB that declares a two-hour time limit validates."
+}

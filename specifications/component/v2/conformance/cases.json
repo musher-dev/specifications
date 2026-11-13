@@ -1226,6 +1226,116 @@
       "id": "semantic-134-slack-member-on-a-telegram-input",
       "phase": "semantic",
       "path": "semantic/134-slack-member-on-a-telegram-input"
+    },
+    {
+      "id": "structural-232-job-with-a-time-limit",
+      "phase": "structural",
+      "path": "structural/232-job-with-a-time-limit"
+    },
+    {
+      "id": "structural-233-time-limit-as-a-string",
+      "phase": "structural",
+      "path": "structural/233-time-limit-as-a-string"
+    },
+    {
+      "id": "structural-234-time-limit-as-a-fraction",
+      "phase": "structural",
+      "path": "structural/234-time-limit-as-a-fraction"
+    },
+    {
+      "id": "structural-235-time-limit-of-zero",
+      "phase": "structural",
+      "path": "structural/235-time-limit-of-zero"
+    },
+    {
+      "id": "structural-236-time-limit-over-seven-days",
+      "phase": "structural",
+      "path": "structural/236-time-limit-over-seven-days"
+    },
+    {
+      "id": "structural-237-time-limit-of-one-second",
+      "phase": "structural",
+      "path": "structural/237-time-limit-of-one-second"
+    },
+    {
+      "id": "structural-238-time-limit-of-seven-days",
+      "phase": "structural",
+      "path": "structural/238-time-limit-of-seven-days"
+    },
+    {
+      "id": "structural-239-time-limit-on-a-service",
+      "phase": "structural",
+      "path": "structural/239-time-limit-on-a-service"
+    },
+    {
+      "id": "structural-240-time-limit-on-a-worker",
+      "phase": "structural",
+      "path": "structural/240-time-limit-on-a-worker"
+    },
+    {
+      "id": "semantic-135-time-limit-just-under-the-period",
+      "phase": "semantic",
+      "path": "semantic/135-time-limit-just-under-the-period"
+    },
+    {
+      "id": "semantic-136-time-limit-equal-to-the-period",
+      "phase": "semantic",
+      "path": "semantic/136-time-limit-equal-to-the-period"
+    },
+    {
+      "id": "semantic-137-time-limit-just-over-the-period",
+      "phase": "semantic",
+      "path": "semantic/137-time-limit-just-over-the-period"
+    },
+    {
+      "id": "semantic-138-time-limit-across-the-end-of-an-hour",
+      "phase": "semantic",
+      "path": "semantic/138-time-limit-across-the-end-of-an-hour"
+    },
+    {
+      "id": "semantic-139-time-limit-under-an-uneven-step",
+      "phase": "semantic",
+      "path": "semantic/139-time-limit-under-an-uneven-step"
+    },
+    {
+      "id": "semantic-140-time-limit-across-midnight",
+      "phase": "semantic",
+      "path": "semantic/140-time-limit-across-midnight"
+    },
+    {
+      "id": "semantic-141-time-limit-across-the-end-of-a-year",
+      "phase": "semantic",
+      "path": "semantic/141-time-limit-across-the-end-of-a-year"
+    },
+    {
+      "id": "semantic-142-seven-day-limit-under-a-fortnightly-period",
+      "phase": "semantic",
+      "path": "semantic/142-seven-day-limit-under-a-fortnightly-period"
+    },
+    {
+      "id": "semantic-143-time-limit-with-both-day-fields-restricted",
+      "phase": "semantic",
+      "path": "semantic/143-time-limit-with-both-day-fields-restricted"
+    },
+    {
+      "id": "semantic-144-time-limit-under-both-day-fields-restricted",
+      "phase": "semantic",
+      "path": "semantic/144-time-limit-under-both-day-fields-restricted"
+    },
+    {
+      "id": "semantic-145-time-limit-across-a-leap-day",
+      "phase": "semantic",
+      "path": "semantic/145-time-limit-across-a-leap-day"
+    },
+    {
+      "id": "semantic-146-scheduled-job-without-a-time-limit",
+      "phase": "semantic",
+      "path": "semantic/146-scheduled-job-without-a-time-limit"
+    },
+    {
+      "id": "semantic-147-time-limit-on-a-schedule-that-never-falls-due",
+      "phase": "semantic",
+      "path": "semantic/147-time-limit-on-a-schedule-that-never-falls-due"
     }
   ]
 }

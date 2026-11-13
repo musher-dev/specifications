@@ -1,0 +1,10 @@
+{
+  "id": "semantic-135-time-limit-just-under-the-period",
+  "phase": "semantic",
+  "expected": "pass",
+  "clause": "specifications/component/v2/spec.md#jobs",
+  "requirements": [
+    "COMP-JOB-006"
+  ],
+  "summary": "A time limit of 899 seconds validates under */15 * * * *, whose period is 900 seconds."
+}
