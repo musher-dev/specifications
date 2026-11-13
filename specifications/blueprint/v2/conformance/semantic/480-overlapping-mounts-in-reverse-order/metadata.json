@@ -1,0 +1,11 @@
+{
+  "id": "semantic-480-overlapping-mounts-in-reverse-order",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#public-hosts",
+  "requirements": [
+    "BP-HOST-003"
+  ],
+  "summary": "Two overlapping mounts are reported at the one second by node name, though the document lists the nodes in reverse.",
+  "document": "app/blueprint.yaml"
+}

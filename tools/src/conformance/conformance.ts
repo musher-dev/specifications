@@ -1285,9 +1285,10 @@ const UNPINNED: ReadonlyMap<string, string> = new Map([
   ],
   [
     'BP-ACCESS-009',
-    'Matching a request path against exempt paths, and refusing to exempt one it could ' +
-      'read two ways, is a runtime obligation of the platform edge; the path grammar is ' +
-      'pinned by component cases (COMP-EP-016), but no operation observes a request',
+    'Matching a request path against exempt paths, decoded once, and refusing to exempt one it ' +
+      'could read two ways, an encoded % included, is a runtime obligation of the platform ' +
+      'edge; the path grammar is pinned by component cases (COMP-EP-016), but no operation ' +
+      'observes a request',
   ],
   [
     'BP-ACCESS-010',
@@ -1329,9 +1330,10 @@ const UNPINNED: ReadonlyMap<string, string> = new Map([
   ],
   [
     'BP-ACCESS-018',
-    'Checking a bearer token against the API key in constant time, forwarding a match without ' +
-      'identity headers and with the Authorization header removed, and refusing any other ' +
-      'request without a session, are runtime obligations of the platform edge; the apiKey ' +
+    'Checking a bearer token against the API key and its previous generation in constant time, ' +
+      'forwarding a match without identity headers, removing a matching Authorization header ' +
+      'from every request and refusing any other request without a session, are runtime ' +
+      'obligations of the platform edge; the apiKey ' +
       'declaration is pinned by blueprint cases (BP-ACCESS-016), but no operation observes a request',
   ],
   [
@@ -1342,13 +1344,15 @@ const UNPINNED: ReadonlyMap<string, string> = new Map([
   ],
   [
     'BP-HOST-004',
-    "Forwarding a request under a mount's path to the mounted endpoint, path unchanged, is a " +
+    "Forwarding a request under a mount's normalised path to the mounted endpoint, path " +
+      'unchanged, is a ' +
       'runtime obligation of the platform edge; the semantic phase pins what a mount may name ' +
       '(BP-HOST-003), but no operation observes a request',
   ],
   [
     'BP-HOST-005',
-    "That one sign-in holds across a deployment's public hosts, and no other deployment's, is " +
+    "That one sign-in holds across a deployment's public hosts, and no other deployment's, and " +
+      "reaches a cross-origin request only from the deployment's own origins, is " +
       'a runtime obligation of the platform edge; no document phase or behavioural operation ' +
       'observes a session',
   ],
@@ -1368,7 +1372,8 @@ const UNPINNED: ReadonlyMap<string, string> = new Map([
   [
     'BP-PARAM-015',
     'That a deployment an organization API key creates takes the user who created the key ' +
-      'as its creator is a fact of the platform identity service; resolution and validation ' +
+      'as its creator, records the key, and refuses a key whose creator holds no role, is a fact ' +
+      'of the platform identity service; resolution and validation ' +
       'read the creator facts they are given (BP-PARAM-011, BP-PARAM-016) but no operation ' +
       'observes a key',
   ],

@@ -36,7 +36,7 @@ an OpenID Connect client:
 | Claim | Value |
 |---|---|
 | `musher_role` | The viewer's role in the organization that owns the deployment when the token is issued: `owner`, `admin`, `member` or `viewer`. Absent for a viewer the access policy admits who holds no role in it |
-| `musher_deployment_creator` | `true` when the viewer is the deployment's creator, the person `deployment.creator.identity` names, else `false` |
+| `musher_deployment_creator` | `true` when the viewer is the deployment's creator, the person `deployment.creator.identity` names, and holds a role in the organization when the token is issued; else `false`, for a creator who has left the organization included |
 
 The names carry a `musher_` prefix because neither is a registered claim
 ([RFC 7519](https://www.rfc-editor.org/rfc/rfc7519) §4.2 asks a private claim

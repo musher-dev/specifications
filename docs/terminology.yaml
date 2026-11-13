@@ -2647,7 +2647,7 @@ terms:
       rather than on a host of its own, with the path forwarded unchanged.
     shortDefinition: An endpoint served under another's host and path.
     part_of: [blueprint.exposure]
-    identifiers: { fields: [mount, node, endpoint, path], defs: [BlueprintMount], codes: [ERR_INVALID_MOUNT], requirement_prefixes: [BP-HOST] }
+    identifiers: { fields: [mount, node, endpoint, path], defs: [BlueprintMount], codes: [ERR_INVALID_HOST_MOUNT], requirement_prefixes: [BP-HOST] }
     confusables: ["A custom domain, which v2 does not support."]
     source: [blueprint v2 §4.7, ADR 0057]
     stability: stable

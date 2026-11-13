@@ -793,8 +793,9 @@ coverage exceptions ([conformance](../../../docs/conformance.md#requirements)).
 
 <a id="BP-ACCESS-002"></a>**`BP-ACCESS-002`**: The platform MUST authenticate
 the viewer, and admit them under the deployment's access policy, before it
-forwards any request an exemption does not cover
-([`BP-ACCESS-009`](#BP-ACCESS-009), [`BP-ACCESS-010`](#BP-ACCESS-010)), on HTTP
+forwards any request an exemption or a checked API key does not cover
+([`BP-ACCESS-009`](#BP-ACCESS-009), [`BP-ACCESS-010`](#BP-ACCESS-010),
+[`BP-ACCESS-018`](#BP-ACCESS-018)), on HTTP
 requests and WebSocket upgrades alike. The access policy belongs to the
 deployment and is managed through the platform API: a v2 document names no
 principal, role or policy, and v2 defines no default membership
@@ -876,10 +877,15 @@ assertion header, and with inbound copies of them removed as
 equals it, or begins with it followed by `/`, so `/webhook` covers
 `/webhook/abc` and never `/webhooks`. The query takes no part in matching. The
 platform matches the path after decoding percent-encoded unreserved characters
-and removing dot segments (RFC 3986 §6.2.2), forwards the path it matched, and
-MUST NOT exempt a request whose path holds `;`, an encoded `/` or `\`, a `\`, a
-NUL or an empty segment. The platform serves its own sign-in under `/.musher`
-on an endpoint whose access is `RESTRICTED`, and no exemption reaches it. An
+and removing dot segments (RFC 3986 §6.2.2), decoding once and never again,
+forwards the path it matched, and MUST NOT exempt a request whose path holds
+`;`, an encoded `/`, `\` or `%` (`%2F`, `%5C` or `%25`, in either letter case),
+a `\`, a NUL or an empty segment. An encoded `%` is refused because a workload
+that decodes again would see another path than the one the platform matched.
+No document breaks this: an endpoint path holds no `%`
+([component `COMP-EP-016`](../../component/v2/spec.md#COMP-EP-016)). The
+platform serves its own sign-in under `/.musher` on an endpoint whose access is
+`RESTRICTED`, and no exemption reaches it. An
 exempt path is exempt only once [`BP-ACCESS-012`](#BP-ACCESS-012) lets it be.
 
 <a id="BP-ACCESS-010"></a>**`BP-ACCESS-010`**: Under `BEARER`, the platform MUST
@@ -940,7 +946,7 @@ whatever scope the client asks for:
 | Claim | Value |
 |---|---|
 | `musher_role` | The viewer's role in the organization that owns the deployment when the token is issued: `owner`, `admin`, `member` or `viewer`. Absent for a viewer the access policy admits who holds no role in that organization |
-| `musher_deployment_creator` | The JSON boolean `true` when the viewer is the deployment's creator, whose identity is `deployment.creator.identity` ([`BP-PARAM-011`](#BP-PARAM-011)), and `false` otherwise |
+| `musher_deployment_creator` | The JSON boolean `true` when the viewer is the deployment's creator, whose identity is `deployment.creator.identity` ([`BP-PARAM-011`](#BP-PARAM-011)), and holds a role in the organization that owns the deployment when the token is issued; `false` otherwise, for a creator who no longer holds one included |
 
 Each value is the fact when the token is issued. A changed role reaches an
 assertion within its lifetime and a client at the viewer's next sign-in; this
@@ -999,21 +1005,29 @@ as [`BP-ACCESS-009`](#BP-ACCESS-009) says, so `/status` covers `/status` and
 `/status/x` and never `/status-page`. The platform MUST match case-sensitively,
 and the query takes no part in matching. Every other rule of
 [`BP-ACCESS-009`](#BP-ACCESS-009) holds for both forms: a path it refuses to
-exempt is not exempt, whichever form names it, and no exempt path reaches
+exempt, one holding an encoded `%` among them, is not exempt, whichever form
+names it, and no exempt path reaches
 `/.musher`. Either form takes effect only once
 [`BP-ACCESS-012`](#BP-ACCESS-012) lets it.
 
 <a id="BP-ACCESS-018"></a>**`BP-ACCESS-018`**: Under `apiKey`, the platform MUST
 forward a request that carries no valid viewer session and an `Authorization`
 header of the `Bearer` scheme whose token equals the value of the current
-rotation generation of the named parameter, compared in constant time. It
-forwards it as an exempt request: without authenticating a viewer, with no
-identity, claim or assertion header, with inbound copies of them removed as
-[`BP-ACCESS-003`](#BP-ACCESS-003) says, and with the `Authorization` header it
-checked removed. It MUST refuse, without forwarding, any other request that
-carries no valid viewer session and that no `PATHS` exemption covers, one
-with a wrong key included. A request that carries a valid session is
-authenticated, admitted and identified as any other is.
+rotation generation of the named parameter, compared in constant time. After
+the parameter rotates, the platform MUST also accept the previous generation
+until the rollout that applies the rotation has completed, as
+[`BP-ACCESS-015`](#BP-ACCESS-015) says of a client secret, and MUST NOT accept
+it afterwards, so a client has that long to take the new key. It forwards the
+request as an exempt request: without authenticating a viewer, with no
+identity, claim or assertion header, and with inbound copies of them removed as
+[`BP-ACCESS-003`](#BP-ACCESS-003) says. It MUST refuse, without forwarding, any
+other request that carries no valid viewer session and that no `PATHS`
+exemption covers, one with a wrong key included. A request that carries a
+valid session is authenticated, admitted and identified as any other is.
+Whatever else the request carries, a session or an exempt path included, the
+platform MUST remove an `Authorization` header whose `Bearer` token equals a
+generation it accepts before it forwards the request, so the key never reaches
+the workload or its logs.
 
 ### <a id="start-order"></a>4.6 Start order
 
@@ -1137,16 +1151,20 @@ serve it, and no two mounts on one host may claim the same request. Semantic:
 |---|---|
 | `mount.node` names no node | `ERR_UNKNOWN_NODE` at `mount/node` |
 | `mount.endpoint` names no endpoint of that node's component | `ERR_UNKNOWN_ENDPOINT` at `mount/endpoint` |
-| The mounted endpoint or the host endpoint is not HTTP-routed (`HTTP`, `HTTPS`, `WS`); the host endpoint is not `PUBLIC`, is itself mounted, or is the mounted endpoint | `ERR_INVALID_MOUNT` at `mount` |
-| `path` holds a `.` or `..` segment, or lies under `/.musher`, where the platform serves its own sign-in ([`BP-ACCESS-009`](#BP-ACCESS-009)) | `ERR_INVALID_MOUNT` at `mount` |
-| Two mounts on one host whose paths are equal, or one lies under the other as [`BP-ACCESS-009`](#BP-ACCESS-009) defines it | `ERR_INVALID_MOUNT` at the `mount` read second, in node then endpoint order |
+| The mounted endpoint or the host endpoint is not HTTP-routed (`HTTP`, `HTTPS`, `WS`); the host endpoint is not `PUBLIC`, is itself mounted, or is the mounted endpoint | `ERR_INVALID_HOST_MOUNT` at `mount` |
+| `path` holds a `.` or `..` segment, or lies under `/.musher`, where the platform serves its own sign-in ([`BP-ACCESS-009`](#BP-ACCESS-009)) | `ERR_INVALID_HOST_MOUNT` at `mount` |
+| Two mounts on one host whose paths are equal, or one lies under the other as [`BP-ACCESS-009`](#BP-ACCESS-009) defines it | `ERR_INVALID_HOST_MOUNT` at the `mount` that comes second by node name, then endpoint name, each in UTF-8 order |
 
 The checks that read a component are deferred while it is unavailable
 ([`BP-REF-002`](#BP-REF-002)).
 
 <a id="BP-HOST-004"></a>**`BP-HOST-004`**: The platform MUST forward a request
 to a host whose path lies under a mount's `path` to the mounted endpoint, with
-the path unchanged, and every other request to the host endpoint. A mounted
+the path unchanged, and every other request to the host endpoint. It decides
+whether a path lies under a mount's `path` as
+[`BP-ACCESS-009`](#BP-ACCESS-009) decides it for an exempt path, after the same
+normalisation, decoded once, and forwards the path it matched, so the edge and
+the workload never disagree about which endpoint a request reached. A mounted
 endpoint's `publicHostname` and `publicPort` are its host endpoint's, and its
 `publicURL` is the host endpoint's followed by `path`. Its own `access`,
 `viewerIdentity`, `viewerClaims` and `accessExemptions` apply to the requests it
@@ -1156,8 +1174,11 @@ Platform obligation; no document breaks it.
 <a id="BP-HOST-005"></a>**`BP-HOST-005`**: A viewer signed in on any public
 host of a deployment MUST be signed in on every `RESTRICTED` endpoint of that
 deployment, whatever its host, without signing in again, and on no endpoint of
-another deployment. A request or WebSocket upgrade from one of the
-deployment's hosts to another carries that sign-in. Signing out on one host
+another deployment. A cross-origin request or WebSocket upgrade, one whose
+`Origin` is not the host it is sent to, carries that sign-in only when its
+`Origin` is one of the deployment's own public hosts, with its scheme and port.
+One whose `Origin` is any other origin is handled as a request without a
+session, so another site cannot act as the viewer. Signing out on one host
 signs the viewer out on all of them, within the bound
 [`BP-ACCESS-005`](#BP-ACCESS-005) documents. Platform obligation; no document
 breaks it.
@@ -1436,9 +1457,15 @@ public inspection, previews and diagnostics all the same. Resolution, in the
 organization API key has a creator: the user who created the key.
 `deployment.creator.*` resolves to that user's facts, captured when the
 deployment is created as any creator's are, and revoking or deleting the key
-later changes none of them. A key whose creator the platform no longer knows,
-such as a user removed from the organization, supplies no fact, and each fact a
-blueprint reads is then `ERR_DEPLOYMENT_FACT_UNAVAILABLE`
+later changes none of them. The platform MUST record the key's own identity
+beside the creator's, so an audit can tell a deploy made with the key from one
+the person made. A key acts with its creator's standing as it is when each
+deploy or update is made, never as it was when the key was created. A key
+whose creator has been deactivated, has been removed from the organization or
+holds no role in it deploys nothing: the platform MUST refuse every deploy and
+update made with it, as it refuses an unauthorized caller, before resolution
+reads any fact, and a `deployment`-scope validation made with it is refused the
+same way
 ([ADR 0053](../../../docs/adr/0053-an-organization-api-key-deploys-as-the-user-who-created-it.md)).
 Platform obligation; no document breaks it.
 
@@ -1450,9 +1477,11 @@ resolves every deployment fact the blueprint reads from that caller, in the
 under the table above. A fact the caller lacks is
 `ERR_DEPLOYMENT_FACT_UNAVAILABLE`, not a deferred obligation, so a validation
 the deploy call would refuse for that reason is never INCOMPLETE without a
-diagnostic. The rest of resolution stays deferred under
-[`BP-RESOLVE-001`](#BP-RESOLVE-001). A validation at any narrower scope has no
-caller to read, and reports no deployment fact.
+diagnostic. A validation of a change to an existing deployment reads the
+creator facts that deployment captured ([`BP-PARAM-011`](#BP-PARAM-011)), not
+the caller's, as the update itself does. The rest of resolution stays deferred
+under [`BP-RESOLVE-001`](#BP-RESOLVE-001). A validation at any narrower scope
+has no caller to read, and reports no deployment fact.
 
 <a id="BP-RESOLVE-001"></a>**`BP-RESOLVE-001`**: Resolution MUST complete these
 stages, in this order ([core v2 §6.4](../../core/v2/spec.md#resolution-stages)),
@@ -1988,7 +2017,17 @@ only to the `ui` of a generated parameter. Structural: `ERR_INVALID_VALUE` at
 a parameter whose `ui` sets `disclosed: true` to the people who manage the
 deployment, behind an explicit reveal, apart from the deploy form, and say
 that it is to be kept. The privacy rules of
-[`BP-PARAM-012`](#BP-PARAM-012)'s disclosure apply to it.
+[`BP-PARAM-012`](#BP-PARAM-012)'s disclosure apply to it. The people who
+manage the deployment are those the platform API lets change it; a person whose
+only role in the organization is `viewer`
+([`BP-ACCESS-014`](#BP-ACCESS-014)), and a viewer the access policy merely
+admits, never reveal a value. The platform MUST record every reveal for audit:
+who revealed which parameter's value, of which rotation generation, and when,
+and never the value. A reveal names the generation it shows. After the
+parameter rotates, the platform MUST keep the previous generation disclosable
+for as long as it still accepts that generation anywhere, such as an API key's
+overlap ([`BP-ACCESS-018`](#BP-ACCESS-018)), and afterwards MUST say that the
+earlier value is gone and when it was rotated, rather than show nothing.
 
 ## <a id="validation-phases"></a><a id="validation-layers"></a>6. Validation phases
 
@@ -2029,7 +2068,7 @@ Core and component diagnostics apply, with these additions:
 | `ERR_UNSATISFIED_REQUIRED_INPUT` | `semantic` | A required input has no binding or default. |
 | `ERR_ENDPOINT_NOT_PUBLIC` | `semantic` | An output reads a public property of an endpoint the blueprint does not expose. |
 | `ERR_VIEWER_IDENTITY_NOT_FORWARDED` | `semantic` | An output reads a viewer identity property of an endpoint whose exposure does not forward that property's mode or claim. |
-| `ERR_INVALID_MOUNT` | `semantic` | A mount names a host that cannot serve it, or overlaps another mount on its host. |
+| `ERR_INVALID_HOST_MOUNT` | `semantic` | A mount names a host that cannot serve it, or overlaps another mount on its host. |
 | `ERR_EXEMPTION_NOT_DECLARED` | `semantic` | An exposure lets through requests without a viewer that the component does not offer in `exemptibleRequests`. |
 | `ERR_INVALID_API_KEY_PARAMETER` | `semantic` | An exposure's `apiKey` names a parameter that is not generated. |
 | `ERR_UNKNOWN_ENUM_MEMBER` | `semantic` | A UI label names no enum member. |
