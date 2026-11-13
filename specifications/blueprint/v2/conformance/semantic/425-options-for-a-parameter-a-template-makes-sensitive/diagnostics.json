@@ -1,0 +1,6 @@
+[
+  {
+    "code": "ERR_SENSITIVE_LITERAL",
+    "path": "/spec/parameters/password/ui/options/0/value"
+  }
+]

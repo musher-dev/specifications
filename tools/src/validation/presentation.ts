@@ -4,6 +4,7 @@ import type { Json } from '../lib/layout.ts'
 import { MEDIA_PATH, schemeIsPermitted } from './listing-policy.ts'
 import { parameterOrigin } from './selections.ts'
 import { at, record } from './semantic.ts'
+import { isSensitive, parameterReceivers } from './templates.ts'
 export function renderListing(
   markdown: string,
   media: Readonly<Record<string, string>> = {},
@@ -30,6 +31,11 @@ export function renderListing(
 }
 export function formControls(blueprint: Json, components: ReadonlyMap<string, Json>): Json {
   const fields: Record<string, Json>[] = []
+  // BP-UI-004: a parameter is concealed when any input it reaches, through a
+  // `parameter` binding or a template, is sensitive (BP-BIND-011).
+  const reaches = parameterReceivers(record(at(blueprint, 'spec', 'nodes')), (node, input) =>
+    at(components.get(node), 'spec', 'contract', 'inputs', input),
+  )
   for (const [name, parameter] of Object.entries(record(at(blueprint, 'spec', 'parameters')))) {
     const p = record(parameter),
       ui = record(p.ui)
@@ -45,11 +51,8 @@ export function formControls(blueprint: Json, components: ReadonlyMap<string, Js
       origin?.namespace === 'deployment'
     )
       continue
-    const receivers: Record<string, Json>[] = []
-    for (const [node, n] of Object.entries(record(at(blueprint, 'spec', 'nodes'))).sort())
-      for (const [key, b] of Object.entries(record(at(n, 'bindings'))).sort())
-        if (at(b, 'parameter') === name)
-          receivers.push(record(at(components.get(node), 'spec', 'contract', 'inputs', key)))
+    const reached = reaches.get(name) ?? [],
+      receivers = reached.filter((r) => r.via === 'parameter').map((r) => record(r.declaration))
     // Blueprint BP-PARAM-002: the form's schema is the intersection of the
     // receivers', so a choice any receiver restricts to an enum is offered as one.
     const schema = record(
@@ -59,7 +62,7 @@ export function formControls(blueprint: Json, components: ReadonlyMap<string, Js
     const control =
       origin?.namespace === 'connections'
         ? 'connection'
-        : receivers.some((v) => v.sensitive === true)
+        : reached.some((r) => isSensitive(r.declaration))
           ? 'secret'
           : Array.isArray(ui.options)
             ? 'options'

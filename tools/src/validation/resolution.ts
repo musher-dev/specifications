@@ -38,7 +38,10 @@ import {
 import {
   ESCAPED,
   HOST_VALUE,
+  isSensitive,
   OPENER,
+  parameterReceivers,
+  parametersReadBy,
   percentEncode,
   scanTemplate,
   stringForm,
@@ -334,21 +337,13 @@ export function resolveDeployment(
   diagnostics.push(...sourceResult.diagnostics)
   deferred.push(...sourceResult.deferred)
   if (diagnostics.length) return result()
-  // The parameters a binding reads: the one it names, or each its template names
-  // (BP-BIND-009).
-  const readBy = (b: Json): string[] =>
-    typeof at(b, 'parameter') === 'string'
-      ? [String(at(b, 'parameter'))]
-      : typeof at(b, 'template') === 'string'
-        ? scanTemplate(String(at(b, 'template')))
-            .references.map(templateTarget)
-            .flatMap((t) => (t.kind === 'parameter' ? [t.parameter] : []))
-        : []
+  // A parameter is sensitive when an input it reaches, through a `parameter`
+  // binding or a template, is (BP-BIND-011).
+  const inputOf = (node: string, input: string) =>
+    at(report.components.get(node), 'spec', 'contract', 'inputs', input)
   const parameterSensitivity = new Set<string>()
-  for (const [node, n] of Object.entries(nodes))
-    for (const [name, b] of Object.entries(record(at(n, 'bindings'))))
-      if (at(report.components.get(node), 'spec', 'contract', 'inputs', name, 'sensitive') === true)
-        for (const key of readBy(b)) parameterSensitivity.add(key)
+  for (const [key, receivers] of parameterReceivers(nodes, inputOf))
+    if (receivers.some((r) => isSensitive(r.declaration))) parameterSensitivity.add(key)
   const connectionResult = resolveConnections(document, report.components, context.connections)
   diagnostics.push(...connectionResult.diagnostics)
   deferred.push(...connectionResult.deferred)
@@ -379,7 +374,7 @@ export function resolveDeployment(
       if (
         at(report.components.get(node), 'spec', 'contract', 'inputs', input, 'required') !== false
       )
-        for (const key of readBy(b)) bound.add(key)
+        for (const key of parametersReadBy(b)) bound.add(key)
   for (const [name, p] of Object.entries(parameters))
     if (
       bound.has(name) &&

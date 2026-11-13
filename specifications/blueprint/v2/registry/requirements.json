@@ -73,6 +73,11 @@
       "section": "bindings"
     },
     {
+      "id": "BP-BIND-012",
+      "anchor": "BP-BIND-012",
+      "section": "bindings"
+    },
+    {
       "id": "BP-NODE-001",
       "anchor": "BP-NODE-001",
       "section": "node-compute"
