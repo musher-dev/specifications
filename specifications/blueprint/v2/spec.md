@@ -490,7 +490,10 @@ namespaces. `${{ parameters.<parameter> }}` names a deployment parameter, and
 them names neither explicitly. A placeholder yields the string form of a scalar
 value: a string as it is, a number as its shortest round-trip JSON text, and a
 boolean as `true` or `false`. Substitution is single-pass, as core says. A
-template produces a string. Semantic, each at the binding's `template`:
+`template` is a composition position under
+[core's placeholder rule](../../core/v2/spec.md#placeholder-yield): it
+produces a string, even when it is one whole placeholder. Semantic, each at the
+binding's `template`:
 
 | Condition | Diagnostic |
 |---|---|
@@ -500,15 +503,15 @@ template produces a string. Semantic, each at the binding's `template`:
 | A `nodes` path that is not `<node>.outputs.<output>`, or names no output of the node's component | `ERR_UNKNOWN_OUTPUT` |
 | A connection parameter, which is not a value ([§5.3](#connections)) | `ERR_INVALID_CONNECTION_BINDING` |
 | An output whose value schema is not a scalar's, or an input whose value schema is not a string's | `ERR_INCOMPATIBLE_TYPE` |
-| A template without a placeholder supplying a sensitive input, which makes it a literal ([`BP-BIND-008`](#BP-BIND-008)) | `ERR_SENSITIVE_LITERAL` |
 
 A template is a binding of each parameter it names: it counts for
 [`BP-PARAM-001`](#BP-PARAM-001), and the input it supplies counts for whether a
 parameter is optional ([`BP-PARAM-005`](#BP-PARAM-005),
-[`BP-UI-005`](#BP-UI-005)) and for its sensitivity. It adds no value schema to
-the parameter: [`BP-PARAM-002`](#BP-PARAM-002) intersects only the inputs a
-`parameter` binding names, and a parameter only templates name is offered as
-text. Each node output a template names is a value dependency of the input
+[`BP-UI-005`](#BP-UI-005)) and for its sensitivity
+([`BP-BIND-012`](#BP-BIND-012), [`BP-UI-004`](#BP-UI-004)). It adds no value
+schema to the parameter: [`BP-PARAM-002`](#BP-PARAM-002) intersects only the
+inputs a `parameter` binding names, and a parameter only templates name is
+offered as text, or concealed when a sensitive input is among them. Each node output a template names is a value dependency of the input
 ([`BP-BIND-002`](#BP-BIND-002)). A template without a placeholder is a
 statically known string, and is checked against the input as a literal is
 ([`BP-PARAM-008`](#BP-PARAM-008)).
@@ -540,6 +543,25 @@ wherever a sensitive value is ([§10](#security)). A diagnostic about a template
 quotes its placeholders, never a value. When a value a template names is absent,
 an optional parameter without a default, the input the template supplies is
 absent too, as an unbound optional input is.
+
+<a id="BP-BIND-012"></a>**`BP-BIND-012`**: An authored literal MUST NOT reach
+a sensitive input, because the document publishes it. A parameter reaches every
+input a `parameter` binding or a template names it into.
+[`BP-BIND-008`](#BP-BIND-008) refuses a `value` binding and
+[`BP-PARAM-014`](#BP-PARAM-014) a parameter's `default`. A template supplying a
+sensitive input MUST interpolate a parameter or a sensitive node output, and a
+parameter that reaches a sensitive input MUST NOT offer `options`. Semantic:
+`ERR_SENSITIVE_LITERAL` at:
+
+| Literal | Path |
+|---|---|
+| A template supplying a sensitive input that interpolates no parameter and no sensitive output, so all it holds is its text and public values | The binding's `template` |
+| The `default` of a parameter a template names, once for each sensitive input such a template supplies | `/spec/parameters/<name>/default` |
+| Each option of a parameter that reaches a sensitive input | `/spec/parameters/<name>/ui/options/<index>/value` |
+
+A template's own text beside such a value is not refused: a scheme, a host or a
+user name around a password is not the secret. A default beside it is, because
+the template makes the parameter sensitive ([`BP-BIND-011`](#BP-BIND-011)).
 
 ### <a id="node-compute"></a>4.3 Compute, storage and exposure
 
@@ -1274,8 +1296,12 @@ different schemas MAY share a parameter, a consumer stricter than its producer
 among them, as long as some value satisfies them all
 ([ADR 0054](../../../docs/adr/0054-a-parameter-satisfies-every-input-it-binds.md)).
 Semantic: `ERR_CONFLICTING_INPUT_SCHEMA` at `/spec/parameters/<name>` when the
-intersection is empty by one of these conditions, each decided keyword by
-keyword and through `items` and `properties`:
+inputs it binds declare different schemas and the intersection is empty by one
+of these conditions, each decided keyword by keyword and through `items` and
+`properties`. Inputs that all declare one schema are not compared, even when
+that schema admits no value: a resolved value it rejects is
+`ERR_VALUE_CONSTRAINT` ([`BP-PARAM-008`](#BP-PARAM-008)), as it was before
+inputs could differ.
 
 | Condition | Keywords it names |
 |---|---|
@@ -1396,10 +1422,11 @@ parameter that a binding reads, with no submitted value and no default, is
 [optional parameter](#terms), whose receiving inputs are then absent.
 
 <a id="BP-PARAM-014"></a>**`BP-PARAM-014`**: A parameter `default` MUST NOT
-reach a sensitive input, because a default is an authored literal published with
-the document. Semantic: `ERR_SENSITIVE_LITERAL` at
+reach a sensitive input, through a `parameter` binding or a template that names
+it, because a default is an authored literal published with the document
+([`BP-BIND-012`](#BP-BIND-012)). Semantic: `ERR_SENSITIVE_LITERAL` at
 `/spec/parameters/<name>/default`, once for each sensitive input the parameter
-binds.
+reaches.
 
 <a id="BP-PARAM-008"></a>**`BP-PARAM-008`**: Every statically known value MUST
 satisfy the inputs that receive it, and dynamic values are checked after
@@ -1952,7 +1979,9 @@ offered: the deployment acquires its default selection without a form field.
 
 For any other parameter, a form conceals sensitive values first; then offers
 enum choices, string-array item choices, boolean controls, structured JSON
-editing, or scalar text entry, in that order. UI examples are never submitted.
+editing, or scalar text entry, in that order. A parameter is sensitive when an
+input it reaches, through a `parameter` binding or a template, is
+([`BP-BIND-011`](#BP-BIND-011)). UI examples are never submitted.
 
 <a id="BP-UI-005"></a>**`BP-UI-005`**: A submitted parameter that declares
 neither `ui` nor `default` MUST NOT bind a required input. The form never offers
@@ -2020,8 +2049,9 @@ options that are not `editable` is `ERR_VALUE_CONSTRAINT` at
 
 Options belong to the form, not the value schema: the receiving inputs keep
 their own schemas, and an `editable` value is held to them as any submitted
-value is. A schema `enum` is labelled with `enumLabels` instead. A form
-conceals a sensitive value first, so it never offers options for one.
+value is. A schema `enum` is labelled with `enumLabels` instead. A sensitive
+parameter offers no options ([`BP-BIND-012`](#BP-BIND-012)), and a form
+conceals it.
 
 <a id="disclosure"></a>**Disclosure.** A generated parameter whose `ui` sets
 `disclosed: true` holds a value the deployer is expected to keep, such as a key

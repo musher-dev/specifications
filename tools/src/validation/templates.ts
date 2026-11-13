@@ -3,6 +3,7 @@
  * text and placeholders naming deployment parameters and node outputs.
  * NON-NORMATIVE: blueprint BP-BIND-009 to BP-BIND-011 are the rule.
  */
+import { isObject, type Json } from '../lib/layout.ts'
 import { type Reference, scanReferences } from '../lib/references.ts'
 
 /** BP-BIND-009: the namespaces a binding's `template` permits. */
@@ -120,3 +121,56 @@ export const scanTemplate = (text: string) => scanReferences(text, TEMPLATE_NAME
 /** Core v2 §5.2: the escape, and the opener it renders. */
 export const ESCAPED = '$${{'
 export const OPENER = '${{'
+
+/**
+ * The parameters a binding reads: the one a `parameter` binding names, or each
+ * one its template names (BP-BIND-009).
+ */
+export function parametersReadBy(binding: Json | undefined): string[] {
+  if (!isObject(binding)) return []
+  if (typeof binding.parameter === 'string') return [binding.parameter]
+  if (typeof binding.template !== 'string') return []
+  return scanTemplate(binding.template)
+    .references.map(templateTarget)
+    .flatMap((t) => (t.kind === 'parameter' ? [t.parameter] : []))
+}
+
+/** An input a parameter reaches, and the binding that carries it there. */
+export interface ParameterReceiver {
+  readonly node: string
+  readonly input: string
+  readonly via: 'parameter' | 'template'
+  /** The input's declaration, when the node's component is available. */
+  readonly declaration: Json | undefined
+}
+
+/**
+ * Every input each parameter reaches, through a `parameter` binding or a
+ * template that names it (BP-BIND-009, BP-BIND-011, BP-BIND-012), with nodes
+ * and inputs in UTF-16 order. A template is a binding of each parameter it names.
+ */
+export function parameterReceivers(
+  nodes: Readonly<Record<string, Json>>,
+  inputOf: (node: string, input: string) => Json | undefined,
+): Map<string, ParameterReceiver[]> {
+  const out = new Map<string, ParameterReceiver[]>()
+  for (const node of Object.keys(nodes).sort()) {
+    const entry = nodes[node],
+      bindings = isObject(entry) ? entry.bindings : undefined
+    if (!isObject(bindings)) continue
+    for (const input of Object.keys(bindings).sort()) {
+      const binding = bindings[input],
+        via = isObject(binding) && typeof binding.parameter === 'string' ? 'parameter' : 'template'
+      for (const name of new Set(parametersReadBy(binding))) {
+        const list = out.get(name) ?? []
+        list.push({ node, input, via, declaration: inputOf(node, input) })
+        out.set(name, list)
+      }
+    }
+  }
+  return out
+}
+
+/** Whether an input declaration is sensitive. */
+export const isSensitive = (declaration: Json | undefined): boolean =>
+  isObject(declaration) && declaration.sensitive === true

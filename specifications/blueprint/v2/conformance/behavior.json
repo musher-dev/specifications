@@ -594,6 +594,25 @@
     }
   },
   {
+    "id": "rendering-template-sensitive-form",
+    "suite": "rendering",
+    "operation": "form",
+    "requirements": [
+      "BP-UI-004",
+      "BP-BIND-011"
+    ],
+    "tree": {
+      "app/blueprint.yaml": "{\"specVersion\":\"v2\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"app\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"password\":{\"ui\":{\"label\":\"Database password\"}}},\"nodes\":{\"web\":{\"componentRef\":\"./web.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"url\":{\"template\":\"postgres://app:${{ parameters.password }}@db.internal/app\",\"format\":\"URL\"}}}}}}",
+      "app/web.yaml": "{\"specVersion\":\"v2\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/worker:1\"}},\"contract\":{\"inputs\":{\"url\":{\"description\":\"Synthetic fixture input\",\"schema\":{\"type\":\"string\"},\"target\":{\"envVar\":\"VALUE\"},\"sensitive\":true}},\"outputs\":{}}}}"
+    },
+    "document": "app/blueprint.yaml",
+    "context": {},
+    "expect": {
+      "/0/control": "secret",
+      "/0/label": "Database password"
+    }
+  },
+  {
     "id": "rendering-connection-and-variable-form",
     "suite": "rendering",
     "operation": "form",

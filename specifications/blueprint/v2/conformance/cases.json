@@ -1156,6 +1156,36 @@
       "id": "semantic-324-option-outside-the-input-schema",
       "phase": "semantic",
       "path": "semantic/324-option-outside-the-input-schema"
+    },
+    {
+      "id": "semantic-420-one-schema-admitting-no-value",
+      "phase": "semantic",
+      "path": "semantic/420-one-schema-admitting-no-value"
+    },
+    {
+      "id": "semantic-421-template-of-public-values-into-a-sensitive-input",
+      "phase": "semantic",
+      "path": "semantic/421-template-of-public-values-into-a-sensitive-input"
+    },
+    {
+      "id": "semantic-422-template-of-a-parameter-into-a-sensitive-input",
+      "phase": "semantic",
+      "path": "semantic/422-template-of-a-parameter-into-a-sensitive-input"
+    },
+    {
+      "id": "semantic-423-template-named-default-into-a-sensitive-input",
+      "phase": "semantic",
+      "path": "semantic/423-template-named-default-into-a-sensitive-input"
+    },
+    {
+      "id": "semantic-424-options-for-a-sensitive-parameter",
+      "phase": "semantic",
+      "path": "semantic/424-options-for-a-sensitive-parameter"
+    },
+    {
+      "id": "semantic-425-options-for-a-parameter-a-template-makes-sensitive",
+      "phase": "semantic",
+      "path": "semantic/425-options-for-a-parameter-a-template-makes-sensitive"
     }
   ]
 }

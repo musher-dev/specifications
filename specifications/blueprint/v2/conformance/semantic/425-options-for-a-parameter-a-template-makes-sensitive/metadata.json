@@ -1,0 +1,11 @@
+{
+  "id": "semantic-425-options-for-a-parameter-a-template-makes-sensitive",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#bindings",
+  "requirements": [
+    "BP-BIND-012"
+  ],
+  "summary": "An option of a parameter a template carries into a sensitive input is an authored literal, and is rejected.",
+  "document": "app/blueprint.yaml"
+}

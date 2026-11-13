@@ -28,7 +28,13 @@ import {
   parameterOrigin,
   parameterOriginDiagnostics,
 } from './selections.ts'
-import { scanTemplate, templateTarget, urlComponents } from './templates.ts'
+import {
+  isSensitive,
+  parameterReceivers,
+  scanTemplate,
+  templateTarget,
+  urlComponents,
+} from './templates.ts'
 import {
   compatible,
   generatorConflicts,
@@ -1166,8 +1172,19 @@ export function semanticReport(
     }
     if (binding.format === 'URL' && !urlComponents(text, scan.references))
       issue(out, 'ERR_INVALID_TEMPLATE', where)
-    // A template without placeholders is a literal (BP-BIND-008, BP-BIND-009).
-    if (!scan.references.length && declared && consumer.sensitive === true)
+    // BP-BIND-012: a template supplying a sensitive input interpolates a parameter
+    // or a sensitive output; otherwise all it holds is authored text and public
+    // values. A placeholder already refused, or whose producer is unavailable, is
+    // not judged.
+    if (
+      declared &&
+      consumer.sensitive === true &&
+      scan.references.map(templateTarget).every((target) => {
+        if (target.kind !== 'output') return false
+        const output = at(resolved.get(target.node), 'spec', 'contract', 'outputs', target.output)
+        return output !== undefined && at(output, 'sensitive') !== true
+      })
+    )
       issue(out, 'ERR_SENSITIVE_LITERAL', where)
   }
   /** Each parameter's receiving inputs, with where each is declared (BP-PARAM-002). */
@@ -1503,9 +1520,23 @@ export function semanticReport(
     }
     if (done.size !== startEdges.size) issue(out, 'ERR_START_CYCLE', '/spec/nodes')
   }
+  // BP-BIND-012: every input each parameter reaches, through either binding.
+  const reaches = parameterReceivers(nodes, (node, input) =>
+    at(resolved.get(node), 'spec', 'contract', 'inputs', input),
+  )
   for (const [name, p] of Object.entries(parameters)) {
     const receivers = consumers.get(name) ?? [],
       path = `/spec/parameters/${token(name)}`
+    // BP-BIND-012 and BP-PARAM-014: no authored literal of the parameter reaches a
+    // sensitive input. A `parameter` binding's default is reported where it binds.
+    const sensitive = (reaches.get(name) ?? []).filter((r) => isSensitive(r.declaration))
+    if (at(p, 'default') !== undefined)
+      for (const r of sensitive)
+        if (r.via === 'template') issue(out, 'ERR_SENSITIVE_LITERAL', `${path}/default`)
+    const offered = at(p, 'ui', 'options')
+    if (sensitive.length && Array.isArray(offered))
+      for (const i of offered.keys())
+        issue(out, 'ERR_SENSITIVE_LITERAL', `${path}/ui/options/${i}/value`)
     // BP-PARAM-001: a generated value a hash names, and that carries `ui`, reaches
     // the deployer through disclosure without a binding of its own.
     const used =

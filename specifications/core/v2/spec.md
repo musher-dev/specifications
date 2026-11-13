@@ -438,11 +438,14 @@ examples write one space inside each brace pair.
 sequence rendering a literal `${{`, and not per-`$` doubling. A `$` that begins neither
 `${{` nor `$${{` is literal and needs no escape.
 
-**What a placeholder yields.** A placeholder occupying a whole value yields the
-value it names. A placeholder with text around it yields that value's string
-form, joined with the surrounding text. A whole placeholder preserves the
-logical type of the value it names. Families define where string composition is
-permitted and the encoding used there.
+<a id="placeholder-yield"></a>**What a placeholder yields.** A placeholder
+occupying a whole value yields the value it names. A placeholder with text
+around it yields that value's string form, joined with the surrounding text. A
+whole placeholder preserves the logical type of the value it names, except in a
+composition position. Families define where string composition is permitted
+and the encoding used there. A family MAY define a position as a composition
+position, whose value is always a string: there a whole placeholder yields the
+string form of the value it names, as one with text around it does.
 
 **A resolved value is never scanned again.** The text a placeholder yields is
 substituted, and a `${{` within it is literal. Substitution is non-recursive.

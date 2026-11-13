@@ -4,6 +4,7 @@
   "expected": "fail",
   "clause": "specifications/blueprint/v2/spec.md#bindings",
   "requirements": [
+    "BP-BIND-012",
     "BP-BIND-009",
     "BP-BIND-008"
   ],
