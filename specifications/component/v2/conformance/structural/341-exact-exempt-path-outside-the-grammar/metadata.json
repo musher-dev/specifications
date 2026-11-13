@@ -1,5 +1,5 @@
 {
-  "id": "structural-312-exact-exempt-path-outside-the-grammar",
+  "id": "structural-341-exact-exempt-path-outside-the-grammar",
   "phase": "structural",
   "expected": "fail",
   "clause": "specifications/component/v2/spec.md#endpoints",

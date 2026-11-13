@@ -4,7 +4,7 @@
   "expected": "fail",
   "clause": "specifications/blueprint/v2/spec.md#access",
   "requirements": [
-    "BP-ACCESS-015"
+    "BP-ACCESS-016"
   ],
   "summary": "An API key naming a parameter the blueprint does not declare is rejected.",
   "document": "app/blueprint.yaml"

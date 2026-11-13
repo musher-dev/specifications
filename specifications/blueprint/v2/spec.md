@@ -819,20 +819,20 @@ private to its deployment, not to its blueprint or its owner.
 viewer's standing, so that an app can grant its own administrator role
 without matching an email address. `viewerClaims` takes `ROLE` beside `EMAIL`
 and `NAME`
-([ADR 0048](../../../docs/adr/0048-role-claims-and-client-secret-rotation-for-oidc-apps.md)):
+([ADR 0060](../../../docs/adr/0060-role-claims-and-client-secret-rotation-for-oidc-apps.md)):
 
 ```yaml
 exposure:
   web: { visibility: PUBLIC, access: RESTRICTED, viewerIdentity: OIDC, viewerClaims: [EMAIL, ROLE] }
 ```
 
-<a id="BP-ACCESS-012"></a>**`BP-ACCESS-012`**: `ROLE` is released only under
+<a id="BP-ACCESS-013"></a>**`BP-ACCESS-013`**: `ROLE` is released only under
 `viewerIdentity: ASSERTION` or `OIDC`, whose token carries it. Structural:
 `ROLE` in the `viewerClaims` of an exposure whose `viewerIdentity` is `HEADER`
 is `ERR_INVALID_VALUE` at that list entry. Every other rule of
 [`BP-NODE-006`](#BP-NODE-006) applies to it as to any claim.
 
-<a id="BP-ACCESS-013"></a>**`BP-ACCESS-013`**: Under a released `ROLE`, the
+<a id="BP-ACCESS-014"></a>**`BP-ACCESS-014`**: Under a released `ROLE`, the
 platform MUST set two claims in every viewer assertion
 ([`BP-ACCESS-007`](#BP-ACCESS-007)), and in the ID token and user information
 it issues for the endpoint's client ([`BP-ACCESS-008`](#BP-ACCESS-008)),
@@ -847,7 +847,7 @@ Each value is the fact when the token is issued. A changed role reaches an
 assertion within its lifetime and a client at the viewer's next sign-in; this
 specification does not require an app to revoke the sessions it holds.
 
-<a id="BP-ACCESS-014"></a>**`BP-ACCESS-014`**: The platform MUST apply a
+<a id="BP-ACCESS-015"></a>**`BP-ACCESS-015`**: The platform MUST apply a
 rotated client secret of an endpoint whose mode is `OIDC` as a rollout of the
 deployment, as it applies an update: every node that reads `oidcClientSecret`
 starts with the new secret, and every `JOB` without a `schedule` runs again
@@ -862,7 +862,7 @@ has no viewer session, and the `BEARER` exemption passes its token on
 unchecked, which is safe only for a workload that checks every token itself.
 An exposure whose access is `RESTRICTED` may instead name, in `apiKey`, a
 generated parameter whose value the platform checks
-([ADR 0049](../../../docs/adr/0049-a-platform-checked-api-key-and-exact-exempt-paths.md)):
+([ADR 0061](../../../docs/adr/0061-a-platform-checked-api-key-and-exact-exempt-paths.md)):
 
 ```yaml
 parameters:
@@ -875,7 +875,7 @@ nodes:
       api: { visibility: PUBLIC, access: RESTRICTED, apiKey: { parameter: apiKey } }
 ```
 
-<a id="BP-ACCESS-015"></a>**`BP-ACCESS-015`**: `apiKey` is closed and requires
+<a id="BP-ACCESS-016"></a>**`BP-ACCESS-016`**: `apiKey` is closed and requires
 `parameter`, which names a generated parameter of the blueprint. It belongs
 only to an exposure whose access is `RESTRICTED`, and never beside a `BEARER`
 exemption, which answers the same bearer token another way. Structural, at
@@ -892,7 +892,7 @@ its credentials as it lists a bound generated parameter
 ([§5.2](#resolution-record)). A `ui` on it lets the people who manage the
 deployment read the key ([`BP-PARAM-012`](#BP-PARAM-012)).
 
-<a id="BP-ACCESS-016"></a>**`BP-ACCESS-016`**: Under `PATHS`, an exempt path
+<a id="BP-ACCESS-017"></a>**`BP-ACCESS-017`**: Under `PATHS`, an exempt path
 the component gives as `{ exact: <path> }` covers a request only when the
 request's path, normalised as [`BP-ACCESS-009`](#BP-ACCESS-009) says, equals
 it; one given as `{ prefix: <path> }`, or as the bare path, covers a request
@@ -900,7 +900,7 @@ as [`BP-ACCESS-009`](#BP-ACCESS-009) says, so `/status` covers `/status` and
 `/status/x` and never `/status-page`. The platform MUST match case-sensitively,
 and the query takes no part in matching.
 
-<a id="BP-ACCESS-017"></a>**`BP-ACCESS-017`**: Under `apiKey`, the platform MUST
+<a id="BP-ACCESS-018"></a>**`BP-ACCESS-018`**: Under `apiKey`, the platform MUST
 forward a request that carries no valid viewer session and an `Authorization`
 header of the `Bearer` scheme whose token equals the value of the current
 rotation generation of the named parameter, compared in constant time. It
@@ -1501,7 +1501,7 @@ whose component serves a connection
 a sibling's connection input in place of a connection parameter. The binding
 names the node and, in `connection`, the provided connection, as a binding
 naming an output names the node and the `output`
-([ADR 0047](../../../docs/adr/0047-an-embeddings-protocol-and-connections-a-node-provides.md)):
+([ADR 0059](../../../docs/adr/0059-an-embeddings-protocol-and-connections-a-node-provides.md)):
 
 ```yaml
 nodes:
@@ -1608,7 +1608,7 @@ descriptions do not override value schemas.
 likely values without closing the value schema of the inputs it binds.
 `ui.options` lists them, each a `value` and the `label` a form shows, and
 `ui.editable: true` lets the deployer type a value that is not among them
-([ADR 0050](../../../docs/adr/0050-a-parameter-offers-options-and-a-generated-secret-can-be-disclosed.md)):
+([ADR 0062](../../../docs/adr/0062-a-parameter-offers-options-and-a-generated-secret-can-be-disclosed.md)):
 
 ```yaml
 parameters:

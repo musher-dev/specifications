@@ -4,7 +4,7 @@
   "expected": "fail",
   "clause": "specifications/blueprint/v2/spec.md#access",
   "requirements": [
-    "BP-ACCESS-012"
+    "BP-ACCESS-013"
   ],
   "summary": "ROLE travels only inside a token, so a HEADER exposure cannot release it."
 }

@@ -1,5 +1,5 @@
 {
-  "id": "structural-302-capabilities-on-an-embeddings-connection",
+  "id": "structural-335-capabilities-on-an-embeddings-connection",
   "phase": "structural",
   "expected": "fail",
   "clause": "specifications/component/v2/spec.md#connection-requirements",

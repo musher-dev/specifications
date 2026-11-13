@@ -1,4 +1,4 @@
-# ADR 0048: Role claims, and client-secret rotation, for the apps a viewer signs in to
+# ADR 0060: Role claims, and client-secret rotation, for the apps a viewer signs in to
 
 - **Status:** Proposed
 - **Date:** 2026-11-13
@@ -61,8 +61,8 @@ already uses, and no new endpoint property is needed.
 
 ## Consequences
 
-- Blueprint gains `BP-ACCESS-012`, a structural rule with cases, and
-  `BP-ACCESS-013` and `BP-ACCESS-014`, platform obligations listed with their
+- Blueprint gains `BP-ACCESS-013`, a structural rule with cases, and
+  `BP-ACCESS-014` and `BP-ACCESS-015`, platform obligations listed with their
   reasons among the runner's coverage exceptions.
 - platform-api issues the two claims and rolls a deployment out on rotation.
   LibreChat maps its admin role from `musher_deployment_creator` or

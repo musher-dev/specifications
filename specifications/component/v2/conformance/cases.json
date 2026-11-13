@@ -1228,14 +1228,14 @@
       "path": "semantic/134-slack-member-on-a-telegram-input"
     },
     {
-      "id": "structural-301-openai-embeddings-connection",
+      "id": "structural-334-openai-embeddings-connection",
       "phase": "structural",
-      "path": "structural/301-openai-embeddings-connection"
+      "path": "structural/334-openai-embeddings-connection"
     },
     {
-      "id": "structural-302-capabilities-on-an-embeddings-connection",
+      "id": "structural-335-capabilities-on-an-embeddings-connection",
       "phase": "structural",
-      "path": "structural/302-capabilities-on-an-embeddings-connection"
+      "path": "structural/335-capabilities-on-an-embeddings-connection"
     },
     {
       "id": "semantic-303-embeddings-dimensions-into-a-string",
@@ -1248,19 +1248,19 @@
       "path": "semantic/304-provided-embeddings-connection"
     },
     {
-      "id": "structural-305-provided-connection-on-an-external-component",
+      "id": "structural-336-provided-connection-on-an-external-component",
       "phase": "structural",
-      "path": "structural/305-provided-connection-on-an-external-component"
+      "path": "structural/336-provided-connection-on-an-external-component"
     },
     {
-      "id": "structural-306-provided-connection-without-members",
+      "id": "structural-337-provided-connection-without-members",
       "phase": "structural",
-      "path": "structural/306-provided-connection-without-members"
+      "path": "structural/337-provided-connection-without-members"
     },
     {
-      "id": "structural-307-provided-connection-unknown-member-name",
+      "id": "structural-338-provided-connection-unknown-member-name",
       "phase": "structural",
-      "path": "structural/307-provided-connection-unknown-member-name"
+      "path": "structural/338-provided-connection-unknown-member-name"
     },
     {
       "id": "semantic-308-provided-connection-member-mapping",
@@ -1273,24 +1273,24 @@
       "path": "semantic/309-provided-connection-output-mismatch"
     },
     {
-      "id": "structural-310-exact-and-prefix-exempt-paths",
+      "id": "structural-339-exact-and-prefix-exempt-paths",
       "phase": "structural",
-      "path": "structural/310-exact-and-prefix-exempt-paths"
+      "path": "structural/339-exact-and-prefix-exempt-paths"
     },
     {
-      "id": "structural-311-exempt-path-with-prefix-and-exact",
+      "id": "structural-340-exempt-path-with-prefix-and-exact",
       "phase": "structural",
-      "path": "structural/311-exempt-path-with-prefix-and-exact"
+      "path": "structural/340-exempt-path-with-prefix-and-exact"
     },
     {
-      "id": "structural-312-exact-exempt-path-outside-the-grammar",
+      "id": "structural-341-exact-exempt-path-outside-the-grammar",
       "phase": "structural",
-      "path": "structural/312-exact-exempt-path-outside-the-grammar"
+      "path": "structural/341-exact-exempt-path-outside-the-grammar"
     },
     {
-      "id": "structural-313-exempt-path-with-an-unknown-match",
+      "id": "structural-342-exempt-path-with-an-unknown-match",
       "phase": "structural",
-      "path": "structural/313-exempt-path-with-an-unknown-match"
+      "path": "structural/342-exempt-path-with-an-unknown-match"
     }
   ]
 }

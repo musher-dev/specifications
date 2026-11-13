@@ -1,4 +1,4 @@
-# ADR 0050: A parameter offers options, and a generated secret can be disclosed
+# ADR 0062: A parameter offers options, and a generated secret can be disclosed
 
 - **Status:** Proposed
 - **Date:** 2026-11-13

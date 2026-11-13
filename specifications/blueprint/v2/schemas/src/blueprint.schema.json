@@ -34,7 +34,7 @@
   "type": "object",
   "$defs": {
     "BlueprintBinding": {
-      "$comment": "spec.md §4.2 BP-BIND-003 / §5.3 BP-CONNECTION-004 / ADR 0031 §1 / ADR 0047 §3. The key that is present names the binding's origin: a deployment parameter, another node's output, another node's provided connection, or a literal value. Exactly one; `node` goes with `output` or with `connection`. Values from outside the documents enter only through parameters.",
+      "$comment": "spec.md §4.2 BP-BIND-003 / §5.3 BP-CONNECTION-004 / ADR 0031 §1 / ADR 0059 §3. The key that is present names the binding's origin: a deployment parameter, another node's output, another node's provided connection, or a literal value. Exactly one; `node` goes with `output` or with `connection`. Values from outside the documents enter only through parameters.",
       "additionalProperties": false,
       "allOf": [
         {
@@ -225,7 +225,7 @@
           }
         },
         {
-          "$comment": "spec.md §4.5 BP-ACCESS-012 / ADR 0048 §1. A role travels inside a token, so HEADER, which carries each claim in a header of its own, releases none.",
+          "$comment": "spec.md §4.5 BP-ACCESS-013 / ADR 0060 §1. A role travels inside a token, so HEADER, which carries each claim in a header of its own, releases none.",
           "if": {
             "properties": {
               "viewerIdentity": {
@@ -249,7 +249,7 @@
           }
         },
         {
-          "$comment": "spec.md §4.5 BP-ACCESS-015 / ADR 0049 §1. A checked key and a BEARER exemption both answer the bearer token, one by checking it and one by passing it on, so an exposure takes one.",
+          "$comment": "spec.md §4.5 BP-ACCESS-016 / ADR 0061 §1. A checked key and a BEARER exemption both answer the bearer token, one by checking it and one by passing it on, so an exposure takes one.",
           "if": {
             "properties": {
               "accessExemptions": {
@@ -338,7 +338,7 @@
       "$comment": "spec.md §4.5 / ADR 0034 §1-§2 / ADR 0035 §2, §4. A bare PUBLIC or PRIVATE, or the object form. Bare PUBLIC is { visibility: PUBLIC } with every default: access OPEN, viewerIdentity NONE. Every member but visibility applies only to PUBLIC; an identity mode and accessExemptions require RESTRICTED; viewerClaims requires an identity mode (BP-NODE-006)."
     },
     "BlueprintExposureApiKey": {
-      "$comment": "spec.md §4.5 BP-ACCESS-015 / ADR 0049 §1. The key is a generated parameter, so it is persisted, rotated and disclosed as any generated credential is; whether the parameter is generated is semantic.",
+      "$comment": "spec.md §4.5 BP-ACCESS-016 / ADR 0061 §1. The key is a generated parameter, so it is persisted, rotated and disclosed as any generated credential is; whether the parameter is generated is semantic.",
       "additionalProperties": false,
       "description": "The generated parameter whose value the platform accepts as a bearer token on this endpoint.",
       "properties": {
@@ -543,7 +543,7 @@
           }
         },
         {
-          "$comment": "spec.md §5.4 BP-UI-006, BP-UI-009 / ADR 0050. A generated value is never an editable field, so it offers no options; only a generated value is disclosed.",
+          "$comment": "spec.md §5.4 BP-UI-006, BP-UI-009 / ADR 0062. A generated value is never an editable field, so it offers no options; only a generated value is disclosed.",
           "if": {
             "properties": {
               "generator": true
@@ -573,7 +573,7 @@
           }
         },
         {
-          "$comment": "spec.md §5.4 BP-UI-006 / ADR 0050 §1. A variable, deployment fact or connection is never an editable field, so it offers no options.",
+          "$comment": "spec.md §5.4 BP-UI-006 / ADR 0062 §1. A variable, deployment fact or connection is never an editable field, so it offers no options.",
           "if": {
             "properties": {
               "from": true

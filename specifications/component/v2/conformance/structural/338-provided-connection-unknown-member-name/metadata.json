@@ -1,10 +1,10 @@
 {
-  "id": "structural-306-provided-connection-without-members",
+  "id": "structural-338-provided-connection-unknown-member-name",
   "phase": "structural",
   "expected": "fail",
   "clause": "specifications/component/v2/spec.md#provided-connections",
   "requirements": [
     "COMP-CONNECTION-004"
   ],
-  "summary": "A provided connection requires the map from its members to outputs."
+  "summary": "A members key that no protocol defines is rejected structurally."
 }

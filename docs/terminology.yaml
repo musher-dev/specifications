@@ -1236,7 +1236,7 @@ terms:
       fields: [protocol, OPENAI_CHAT_COMPLETIONS, ANTHROPIC_MESSAGES, OPENAI_EMBEDDINGS, POSTGRES, REDIS, S3, TELEGRAM_BOT, SLACK_APP, DISCORD_BOT]
       values: [HTTP, HTTPS, WS, GRPC, TCP, UDP, OPENAI_CHAT_COMPLETIONS, ANTHROPIC_MESSAGES, OPENAI_EMBEDDINGS, POSTGRES, REDIS, S3, TELEGRAM_BOT, SLACK_APP, DISCORD_BOT]
     example: "A connection input with protocol POSTGRES receives host, port, database, username, password and sslMode, and a url composed from them."
-    source: [component v2 §5.2, component v2 §6.4, ADR 0039, ADR 0045, ADR 0047]
+    source: [component v2 §5.2, component v2 §6.4, ADR 0039, ADR 0045, ADR 0059]
     stability: stable
     status: approved
     tags: [networking, connections]
@@ -1407,7 +1407,7 @@ terms:
     aliases:
       - { text: accessExemptions, status: banned, scope: [identifier], suggest: exemptibleRequests, note: "Blueprint keeps accessExemptions for the grant." }
       - { text: ComponentEndpointAccessExemptions, status: banned, scope: [identifier], suggest: ComponentEndpointExemptibleRequests }
-    source: [component v2 §5.2, ADR 0038, ADR 0049]
+    source: [component v2 §5.2, ADR 0038, ADR 0061]
     stability: stable
     status: approved
     tags: [viewer, access]
@@ -1639,7 +1639,7 @@ terms:
       defs: [ComponentProvidedConnection]
       codes: [ERR_INVALID_PROVIDED_CONNECTION]
     confusables: ["A connection parameter, which the organization's connection configuration answers rather than a node."]
-    source: [component v2 §6.5, ADR 0047]
+    source: [component v2 §6.5, ADR 0059]
     stability: provisional
     status: approved
     tags: [values, connections]
@@ -2405,7 +2405,7 @@ terms:
     part_of: [blueprint.exposure]
     identifiers: { fields: [viewerClaims], values: [EMAIL, NAME, ROLE] }
     confusables: ["An OIDC claim in general; only these three are released."]
-    source: [blueprint v2 §4.5, ADR 0048]
+    source: [blueprint v2 §4.5, ADR 0060]
     stability: stable
     status: approved
     tags: [viewer]
@@ -2435,7 +2435,7 @@ terms:
     part_of: [blueprint.exposure]
     identifiers: { defs: [BlueprintExposureApiKey], codes: [ERR_INVALID_API_KEY_PARAMETER] }
     confusables: ["The BEARER exemption, which passes any bearer token on for the workload to check.", "The apiKey member of a language-model connection."]
-    source: [blueprint v2 §4.5, ADR 0049]
+    source: [blueprint v2 §4.5, ADR 0061]
     stability: provisional
     status: approved
     tags: [access]
@@ -2862,7 +2862,7 @@ terms:
       fields: [options, editable]
       defs: [BlueprintParameterOption]
     confusables: ["An enum in the receiving input's value schema, which closes the value for every blueprint and is labelled with enumLabels."]
-    source: [blueprint v2 §5.4, ADR 0050]
+    source: [blueprint v2 §5.4, ADR 0062]
     stability: provisional
     status: approved
     tags: [parameters, presentation]
@@ -2877,7 +2877,7 @@ terms:
     shortDefinition: A generated value the deployer is shown and keeps.
     part_of: [blueprint.deploy-form]
     identifiers: { fields: [disclosed] }
-    source: [blueprint v2 §5.4, ADR 0050]
+    source: [blueprint v2 §5.4, ADR 0062]
     stability: provisional
     status: approved
     tags: [parameters, presentation]

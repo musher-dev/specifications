@@ -345,7 +345,7 @@
           "type": "boolean"
         },
         "paths": {
-          "description": "Routes that serve machines, each a bare endpoint path or { prefix } or { exact }. A bare path is the prefix form. prefix covers the path and every path under it, segment by segment, so /webhook covers /webhook and /webhook/abc, never /webhooks; exact covers the path alone (blueprint BP-ACCESS-016).",
+          "description": "Routes that serve machines, each a bare endpoint path or { prefix } or { exact }. A bare path is the prefix form. prefix covers the path and every path under it, segment by segment, so /webhook covers /webhook and /webhook/abc, never /webhooks; exact covers the path alone (blueprint BP-ACCESS-017).",
           "items": {
             "$ref": "#/$defs/ComponentExemptPath"
           },
@@ -465,7 +465,7 @@
       "type": "object"
     },
     "ComponentExemptPath": {
-      "$comment": "spec.md §5.2 COMP-EP-021 / ADR 0049 §2, §3. A bare path is the prefix form, so every released offer keeps its meaning. Written as if/then on the instance type rather than oneOf, so a malformed bare path reports only the path's own error.",
+      "$comment": "spec.md §5.2 COMP-EP-021 / ADR 0061 §2, §3. A bare path is the prefix form, so every released offer keeps its meaning. Written as if/then on the instance type rather than oneOf, so a malformed bare path reports only the path's own error.",
       "description": "One exempt path: a bare endpoint path, which is the prefix form, or an object holding exactly one of prefix and exact.",
       "if": {
         "type": "string"
@@ -1047,7 +1047,7 @@
       "type": "object"
     },
     "ComponentProvidedConnection": {
-      "$comment": "spec.md §6.5 COMP-CONNECTION-004 / COMP-CONNECTION-005 / ADR 0047 §2. connection is the object a connection input carries; members maps each member the workload supplies to one of the component's own outputs. members is keyed by the union of every protocol's members; which ones a protocol has, and that every required one is mapped, is semantic.",
+      "$comment": "spec.md §6.5 COMP-CONNECTION-004 / COMP-CONNECTION-005 / ADR 0059 §2. connection is the object a connection input carries; members maps each member the workload supplies to one of the component's own outputs. members is keyed by the union of every protocol's members; which ones a protocol has, and that every required one is mapped, is semantic.",
       "additionalProperties": false,
       "description": "A connection the workload serves: a protocol, and the output each of its members is read from.",
       "properties": {

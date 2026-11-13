@@ -1,4 +1,4 @@
-# ADR 0049: A platform-checked API key, and exact exempt paths
+# ADR 0061: A platform-checked API key, and exact exempt paths
 
 - **Status:** Proposed
 - **Date:** 2026-11-13
@@ -83,8 +83,8 @@ meaning, so component and blueprint release this in a minor version.
 
 ## Consequences
 
-- Component gains `COMP-EP-021`. Blueprint gains `BP-ACCESS-015` to
-  `BP-ACCESS-017`, of which `BP-ACCESS-015` is structural and semantic, with
+- Component gains `COMP-EP-021`. Blueprint gains `BP-ACCESS-016` to
+  `BP-ACCESS-018`, of which `BP-ACCESS-016` is structural and semantic, with
   cases, and the other two are edge obligations listed with their reasons
   among the runner's coverage exceptions.
 - The record's `credentials` map includes a generated parameter an `apiKey`

@@ -1,5 +1,5 @@
 {
-  "id": "structural-311-exempt-path-with-prefix-and-exact",
+  "id": "structural-340-exempt-path-with-prefix-and-exact",
   "phase": "structural",
   "expected": "fail",
   "clause": "specifications/component/v2/spec.md#endpoints",

@@ -2473,7 +2473,7 @@
         "component v2 §6.4",
         "ADR 0039",
         "ADR 0045",
-        "ADR 0047"
+        "ADR 0059"
       ],
       "stability": "stable",
       "status": "approved",
@@ -2850,7 +2850,7 @@
       "source": [
         "component v2 §5.2",
         "ADR 0038",
-        "ADR 0049"
+        "ADR 0061"
       ],
       "stability": "stable",
       "status": "approved",
@@ -3370,7 +3370,7 @@
       ],
       "source": [
         "component v2 §6.5",
-        "ADR 0047"
+        "ADR 0059"
       ],
       "stability": "provisional",
       "status": "approved",
@@ -5066,7 +5066,7 @@
       ],
       "source": [
         "blueprint v2 §4.5",
-        "ADR 0048"
+        "ADR 0060"
       ],
       "stability": "stable",
       "status": "approved",
@@ -5127,7 +5127,7 @@
       ],
       "source": [
         "blueprint v2 §4.5",
-        "ADR 0049"
+        "ADR 0061"
       ],
       "stability": "provisional",
       "status": "approved",
@@ -5982,7 +5982,7 @@
       ],
       "source": [
         "blueprint v2 §5.4",
-        "ADR 0050"
+        "ADR 0062"
       ],
       "stability": "provisional",
       "status": "approved",
@@ -6007,7 +6007,7 @@
       },
       "source": [
         "blueprint v2 §5.4",
-        "ADR 0050"
+        "ADR 0062"
       ],
       "stability": "provisional",
       "status": "approved",

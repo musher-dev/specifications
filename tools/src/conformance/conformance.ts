@@ -1296,30 +1296,30 @@ const UNPINNED: ReadonlyMap<string, string> = new Map([
       'connection',
   ],
   [
-    'BP-ACCESS-013',
+    'BP-ACCESS-014',
     'Issuing musher_role and musher_deployment_creator in a viewer assertion, an ID token and ' +
       'user information is a runtime obligation of the platform edge and its OpenID Connect ' +
       'issuer; no document phase or behavioural operation observes a token',
   ],
   [
-    'BP-ACCESS-014',
+    'BP-ACCESS-015',
     'Applying a rotated OIDC client secret as a rollout, and accepting the previous secret until ' +
       'it completes, are runtime obligations of the platform; no document phase or behavioural ' +
       'operation observes a rollout or the issuer',
   ],
   [
-    'BP-ACCESS-016',
+    'BP-ACCESS-017',
     'Matching a normalised request path exactly or by segment-bounded prefix, ' +
       'case-sensitively and without the query, is a runtime obligation of the platform edge; ' +
       'the exempt path forms are pinned by component cases (COMP-EP-021), but no operation ' +
       'observes a request',
   ],
   [
-    'BP-ACCESS-017',
+    'BP-ACCESS-018',
     'Checking a bearer token against the API key in constant time, forwarding a match without ' +
       'identity headers and with the Authorization header removed, and refusing any other ' +
       'request without a session, are runtime obligations of the platform edge; the apiKey ' +
-      'declaration is pinned by blueprint cases (BP-ACCESS-015), but no operation observes a request',
+      'declaration is pinned by blueprint cases (BP-ACCESS-016), but no operation observes a request',
   ],
   [
     'COMP-VOL-002',

@@ -4,7 +4,7 @@
   "expected": "fail",
   "clause": "specifications/blueprint/v2/spec.md#access",
   "requirements": [
-    "BP-ACCESS-015"
+    "BP-ACCESS-016"
   ],
   "summary": "An API key is a generated parameter: a submitted value would be a key the deployer chose and the record could not rotate.",
   "document": "app/blueprint.yaml"

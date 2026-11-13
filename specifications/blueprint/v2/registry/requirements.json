@@ -173,11 +173,6 @@
       "section": "access"
     },
     {
-      "id": "BP-ACCESS-012",
-      "anchor": "BP-ACCESS-012",
-      "section": "access"
-    },
-    {
       "id": "BP-ACCESS-013",
       "anchor": "BP-ACCESS-013",
       "section": "access"
@@ -200,6 +195,11 @@
     {
       "id": "BP-ACCESS-017",
       "anchor": "BP-ACCESS-017",
+      "section": "access"
+    },
+    {
+      "id": "BP-ACCESS-018",
+      "anchor": "BP-ACCESS-018",
       "section": "access"
     },
     {

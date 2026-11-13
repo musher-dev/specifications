@@ -4,7 +4,7 @@
   "expected": "pass",
   "clause": "specifications/blueprint/v2/spec.md#access",
   "requirements": [
-    "BP-ACCESS-012"
+    "BP-ACCESS-013"
   ],
   "summary": "ROLE is released beside EMAIL under OIDC, and alone under ASSERTION."
 }

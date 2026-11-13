@@ -754,7 +754,7 @@ exemptibleRequests:
 
 `prefix` covers the path and every path under it, segment by segment, and
 `exact` covers the path alone
-([blueprint `BP-ACCESS-016`](../../blueprint/v2/spec.md#BP-ACCESS-016)). So
+([blueprint `BP-ACCESS-017`](../../blueprint/v2/spec.md#BP-ACCESS-017)). So
 `{ exact: /healthz }` exempts a health check without exempting what an app
 serves below it.
 
@@ -1659,7 +1659,7 @@ says so in `contract.providedConnections`, a named map whose entries each name
 a protocol in `connection`, the object a connection input carries
 ([§6.4](#connection-requirements)), and map each member the workload supplies
 to one of the component's own outputs
-([ADR 0047](../../../docs/adr/0047-an-embeddings-protocol-and-connections-a-node-provides.md)):
+([ADR 0059](../../../docs/adr/0059-an-embeddings-protocol-and-connections-a-node-provides.md)):
 
 ```yaml
 spec:

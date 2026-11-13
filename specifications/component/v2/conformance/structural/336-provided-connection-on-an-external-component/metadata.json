@@ -1,5 +1,5 @@
 {
-  "id": "structural-305-provided-connection-on-an-external-component",
+  "id": "structural-336-provided-connection-on-an-external-component",
   "phase": "structural",
   "expected": "fail",
   "clause": "specifications/component/v2/spec.md#provided-connections",

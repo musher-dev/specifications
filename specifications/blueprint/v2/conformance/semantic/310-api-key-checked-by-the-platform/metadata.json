@@ -4,7 +4,7 @@
   "expected": "pass",
   "clause": "specifications/blueprint/v2/spec.md#access",
   "requirements": [
-    "BP-ACCESS-015"
+    "BP-ACCESS-016"
   ],
   "summary": "A RESTRICTED exposure names a generated parameter as its API key; naming it uses the parameter, so it needs no binding.",
   "document": "app/blueprint.yaml"

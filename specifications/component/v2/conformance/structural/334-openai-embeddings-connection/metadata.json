@@ -1,5 +1,5 @@
 {
-  "id": "structural-301-openai-embeddings-connection",
+  "id": "structural-334-openai-embeddings-connection",
   "phase": "structural",
   "expected": "pass",
   "clause": "specifications/component/v2/spec.md#contract",

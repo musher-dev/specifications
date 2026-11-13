@@ -4,7 +4,7 @@
   "expected": "fail",
   "clause": "specifications/blueprint/v2/spec.md#access",
   "requirements": [
-    "BP-ACCESS-015"
+    "BP-ACCESS-016"
   ],
   "summary": "A checked key and a BEARER exemption both answer the bearer token, so an exposure takes one."
 }

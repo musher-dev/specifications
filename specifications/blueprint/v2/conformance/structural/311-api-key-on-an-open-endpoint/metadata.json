@@ -4,7 +4,7 @@
   "expected": "fail",
   "clause": "specifications/blueprint/v2/spec.md#access",
   "requirements": [
-    "BP-ACCESS-015"
+    "BP-ACCESS-016"
   ],
   "summary": "A key the platform checks belongs only to a RESTRICTED exposure."
 }

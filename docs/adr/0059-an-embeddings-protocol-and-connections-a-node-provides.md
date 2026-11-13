@@ -1,4 +1,4 @@
-# ADR 0047: An embeddings protocol, and connections a node provides
+# ADR 0059: An embeddings protocol, and connections a node provides
 
 - **Status:** Proposed
 - **Date:** 2026-11-13

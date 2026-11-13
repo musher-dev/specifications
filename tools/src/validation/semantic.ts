@@ -323,7 +323,7 @@ function providedConnectionDiagnostics(contract: Record<string, Json>): Diagnost
   return out
 }
 
-/** Blueprint BP-ACCESS-015: the parameters the exposures' `apiKey`s name. */
+/** Blueprint BP-ACCESS-016: the parameters the exposures' `apiKey`s name. */
 export function apiKeyParameters(nodes: Readonly<Record<string, Json>>): Set<string> {
   const names = new Set<string>()
   for (const n of Object.values(nodes))
@@ -1003,7 +1003,7 @@ export function semanticReport(
         const e = at(workload, 'endpoints', endpoint)
         const exposure = effectiveExposure(n.exposure, endpoint)
         const where = `${base}/exposure/${token(endpoint)}`
-        // BP-ACCESS-015: the key the platform checks is a generated parameter.
+        // BP-ACCESS-016: the key the platform checks is a generated parameter.
         const key = at(record(n.exposure)[endpoint], 'apiKey', 'parameter')
         if (typeof key === 'string') {
           if (!Object.hasOwn(parameters, key))
@@ -1206,7 +1206,7 @@ export function semanticReport(
       Object.values(nodes).some((n) =>
         Object.values(record(at(n, 'bindings'))).some((b) => at(b, 'parameter') === name),
       ) ||
-      // BP-ACCESS-015: an exposure's apiKey uses the parameter it names.
+      // BP-ACCESS-016: an exposure's apiKey uses the parameter it names.
       apiKeyParameters(nodes).has(name) ||
       (at(p, 'generator') !== undefined &&
         at(p, 'ui') !== undefined &&
