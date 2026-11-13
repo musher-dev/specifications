@@ -225,7 +225,7 @@ and the words to avoid are enforced in prose by the generated
 | [versioned identity](#deployment-versioned-identity) | deployment | An opaque identity and an immutable version. |
 | [view](#blueprint-view) | blueprint | One protocol's members of a selection, for one consumer. |
 | [viewer](#blueprint-viewer) | blueprint | A person reaching a public endpoint. |
-| [viewer claim](#blueprint-viewer-claim) | blueprint | EMAIL or NAME, released on request. |
+| [viewer claim](#blueprint-viewer-claim) | blueprint | EMAIL, NAME or ROLE, released on request. |
 | [viewer identity mode](#blueprint-viewer-identity-mode) | blueprint | NONE, HEADER, ASSERTION or OIDC. |
 | [viewer identity property](#component-viewer-identity-property) | component | An endpoint property for a viewer identity mode. |
 | [visibility](#blueprint-visibility) | blueprint | PUBLIC or PRIVATE. |
@@ -2641,14 +2641,17 @@ platform may sign in and identify to the workload.
 
 #### <a id="blueprint-viewer-claim"></a>viewer claim
 
-A fact about the viewer released to the workload beside their identity, EMAIL or
-NAME, never by default.
+A fact about the viewer released to the workload beside their identity, EMAIL,
+NAME or ROLE, never by default; ROLE, the viewer's organization role and whether
+they created the deployment, travels only in a token.
 
 - **Part of:** [exposure](#blueprint-exposure)
-- **Identifiers:** fields: `viewerClaims`; values: `EMAIL`, `NAME`
-- **Not to be confused with:** An OIDC claim in general; only these two are
+- **Identifiers:** fields: `viewerClaims`; values: `EMAIL`, `NAME`, `ROLE`
+- **Not to be confused with:** An OIDC claim in general; only these three are
   released.
-- **Source:** [blueprint v2 §4.5](../specifications/blueprint/v2/spec.md#access)
+- **Source:** [blueprint v2
+  §4.5](../specifications/blueprint/v2/spec.md#access), [ADR
+  0048](adr/0048-role-claims-and-client-secret-rotation-for-oidc-apps.md)
 - **Status:** approved, stable. Tags: viewer.
 
 #### <a id="blueprint-viewer-identity-mode"></a>viewer identity mode

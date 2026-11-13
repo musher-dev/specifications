@@ -861,6 +861,16 @@
       "id": "structural-307-provided-connection-without-a-node",
       "phase": "structural",
       "path": "structural/307-provided-connection-without-a-node"
+    },
+    {
+      "id": "structural-308-role-claim-under-oidc-and-assertion",
+      "phase": "structural",
+      "path": "structural/308-role-claim-under-oidc-and-assertion"
+    },
+    {
+      "id": "structural-309-role-claim-under-header",
+      "phase": "structural",
+      "path": "structural/309-role-claim-under-header"
     }
   ]
 }

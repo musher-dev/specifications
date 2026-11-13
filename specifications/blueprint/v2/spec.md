@@ -815,6 +815,48 @@ cannot open a network connection to it. Two deployments of one blueprint in one
 organization are as separate as two organizations are: a private endpoint is
 private to its deployment, not to its blueprint or its owner.
 
+<a id="role-claims"></a>**Role claims.** A node may also release the
+viewer's standing, so that an app can grant its own administrator role
+without matching an email address. `viewerClaims` takes `ROLE` beside `EMAIL`
+and `NAME`
+([ADR 0048](../../../docs/adr/0048-role-claims-and-client-secret-rotation-for-oidc-apps.md)):
+
+```yaml
+exposure:
+  web: { visibility: PUBLIC, access: RESTRICTED, viewerIdentity: OIDC, viewerClaims: [EMAIL, ROLE] }
+```
+
+<a id="BP-ACCESS-012"></a>**`BP-ACCESS-012`**: `ROLE` is released only under
+`viewerIdentity: ASSERTION` or `OIDC`, whose token carries it. Structural:
+`ROLE` in the `viewerClaims` of an exposure whose `viewerIdentity` is `HEADER`
+is `ERR_INVALID_VALUE` at that list entry. Every other rule of
+[`BP-NODE-006`](#BP-NODE-006) applies to it as to any claim.
+
+<a id="BP-ACCESS-013"></a>**`BP-ACCESS-013`**: Under a released `ROLE`, the
+platform MUST set two claims in every viewer assertion
+([`BP-ACCESS-007`](#BP-ACCESS-007)), and in the ID token and user information
+it issues for the endpoint's client ([`BP-ACCESS-008`](#BP-ACCESS-008)),
+whatever scope the client asks for:
+
+| Claim | Value |
+|---|---|
+| `musher_role` | The viewer's role in the organization that owns the deployment when the token is issued: `owner`, `admin`, `member` or `viewer`. Absent for a viewer the access policy admits who holds no role in that organization |
+| `musher_deployment_creator` | The JSON boolean `true` when the viewer is the deployment's creator, whose identity is `deployment.creator.identity` ([`BP-PARAM-011`](#BP-PARAM-011)), and `false` otherwise |
+
+Each value is the fact when the token is issued. A changed role reaches an
+assertion within its lifetime and a client at the viewer's next sign-in; this
+specification does not require an app to revoke the sessions it holds.
+
+<a id="BP-ACCESS-014"></a>**`BP-ACCESS-014`**: The platform MUST apply a
+rotated client secret of an endpoint whose mode is `OIDC` as a rollout of the
+deployment, as it applies an update: every node that reads `oidcClientSecret`
+starts with the new secret, and every `JOB` without a `schedule` runs again
+([component `COMP-JOB-001`](../../component/v2/spec.md#COMP-JOB-001)). The
+issuer MUST keep accepting the previous secret until that rollout has
+completed, and MUST NOT accept it afterwards. An app that stores its client,
+rather than reading it from its environment, registers it again from such a
+`JOB`.
+
 ## <a id="parameters"></a><a id="deployment-parameters"></a>5. Deployment parameters
 
 `spec.parameters` lists every value a deployment takes from outside the

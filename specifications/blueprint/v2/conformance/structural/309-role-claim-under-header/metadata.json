@@ -1,0 +1,10 @@
+{
+  "id": "structural-309-role-claim-under-header",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#access",
+  "requirements": [
+    "BP-ACCESS-012"
+  ],
+  "summary": "ROLE travels only inside a token, so a HEADER exposure cannot release it."
+}

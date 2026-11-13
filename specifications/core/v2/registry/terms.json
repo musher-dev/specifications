@@ -5042,8 +5042,8 @@
       "id": "blueprint.viewer-claim",
       "display_name": "viewer claim",
       "context": "blueprint",
-      "definition": "A fact about the viewer released to the workload beside their identity, EMAIL or NAME, never by default.",
-      "shortDefinition": "EMAIL or NAME, released on request.",
+      "definition": "A fact about the viewer released to the workload beside their identity, EMAIL, NAME or ROLE, never by default; ROLE, the viewer's organization role and whether they created the deployment, travels only in a token.",
+      "shortDefinition": "EMAIL, NAME or ROLE, released on request.",
       "part_of": [
         "blueprint.exposure"
       ],
@@ -5053,14 +5053,16 @@
         ],
         "values": [
           "EMAIL",
-          "NAME"
+          "NAME",
+          "ROLE"
         ]
       },
       "confusables": [
-        "An OIDC claim in general; only these two are released."
+        "An OIDC claim in general; only these three are released."
       ],
       "source": [
-        "blueprint v2 §4.5"
+        "blueprint v2 §4.5",
+        "ADR 0048"
       ],
       "stability": "stable",
       "status": "approved",

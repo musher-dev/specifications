@@ -2398,12 +2398,13 @@ terms:
     context: blueprint
     definition: >-
       A fact about the viewer released to the workload beside their identity,
-      EMAIL or NAME, never by default.
-    shortDefinition: EMAIL or NAME, released on request.
+      EMAIL, NAME or ROLE, never by default; ROLE, the viewer's organization
+      role and whether they created the deployment, travels only in a token.
+    shortDefinition: EMAIL, NAME or ROLE, released on request.
     part_of: [blueprint.exposure]
-    identifiers: { fields: [viewerClaims], values: [EMAIL, NAME] }
-    confusables: ["An OIDC claim in general; only these two are released."]
-    source: [blueprint v2 §4.5]
+    identifiers: { fields: [viewerClaims], values: [EMAIL, NAME, ROLE] }
+    confusables: ["An OIDC claim in general; only these three are released."]
+    source: [blueprint v2 §4.5, ADR 0048]
     stability: stable
     status: approved
     tags: [viewer]

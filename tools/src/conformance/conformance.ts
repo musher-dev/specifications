@@ -1296,6 +1296,18 @@ const UNPINNED: ReadonlyMap<string, string> = new Map([
       'connection',
   ],
   [
+    'BP-ACCESS-013',
+    'Issuing musher_role and musher_deployment_creator in a viewer assertion, an ID token and ' +
+      'user information is a runtime obligation of the platform edge and its OpenID Connect ' +
+      'issuer; no document phase or behavioural operation observes a token',
+  ],
+  [
+    'BP-ACCESS-014',
+    'Applying a rotated OIDC client secret as a rollout, and accepting the previous secret until ' +
+      'it completes, are runtime obligations of the platform; no document phase or behavioural ' +
+      'operation observes a rollout or the issuer',
+  ],
+  [
     'COMP-VOL-002',
     'That a non-shared volume is mounted into at most one replica at a time is a runtime ' +
       'obligation of the platform; no document phase or behavioural operation observes a mount',

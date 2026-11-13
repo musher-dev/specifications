@@ -221,6 +221,30 @@
               "viewerClaims": false
             }
           }
+        },
+        {
+          "$comment": "spec.md §4.5 BP-ACCESS-012 / ADR 0048 §1. A role travels inside a token, so HEADER, which carries each claim in a header of its own, releases none.",
+          "if": {
+            "properties": {
+              "viewerIdentity": {
+                "const": "HEADER"
+              }
+            },
+            "required": [
+              "viewerIdentity"
+            ]
+          },
+          "then": {
+            "properties": {
+              "viewerClaims": {
+                "items": {
+                  "not": {
+                    "const": "ROLE"
+                  }
+                }
+              }
+            }
+          }
         }
       ],
       "description": "Exposure of one endpoint in the object form: its visibility, whether the platform authenticates viewers, how the workload learns who they are, which of their claims it receives, and which requests pass without a viewer. Bare PUBLIC or PRIVATE is the object form with only visibility.",
@@ -248,11 +272,12 @@
           "uniqueItems": true
         },
         "viewerClaims": {
-          "description": "Facts about the viewer released to the workload beside the subject: EMAIL, the viewer's verified email address, and NAME, their display name. Requires a viewerIdentity other than NONE.",
+          "description": "Facts about the viewer released to the workload beside the subject: EMAIL, the viewer's verified email address; NAME, their display name; and ROLE, their role in the deployment's organization and whether they created the deployment, under ASSERTION or OIDC only. Requires a viewerIdentity other than NONE.",
           "items": {
             "enum": [
               "EMAIL",
-              "NAME"
+              "NAME",
+              "ROLE"
             ],
             "type": "string"
           },
