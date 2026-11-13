@@ -53,7 +53,7 @@
       "description": "One screenshot in the storefront gallery, declared as a media path.",
       "properties": {
         "caption": {
-          "description": "Accessible caption shown beneath the screenshot. Omitted when none.",
+          "description": "Accessible caption shown beneath the screenshot, plain text of at most 280 characters (spec.md §5). Omitted when none.",
           "maxLength": 280,
           "type": "string"
         },
@@ -103,12 +103,12 @@
         },
         "gettingStarted": {
           "$comment": "spec.md §4 and §4.1. The overview Markdown profile, its link and image rules and the media bounds are semantic rules, so the schema bounds only the length.",
-          "description": "What a person does right after a deployment of the item is running, as Markdown in the overview Markdown profile. May name a parameter by its ui.label; should never hold a parameter value or a credential. Omitted when none.",
+          "description": "What a person does right after a deployment of the item is running, as Markdown of at most 5000 characters in the overview Markdown profile (spec.md §4.1). May name a parameter by its ui.label; should never hold a parameter value or a credential. Omitted when none.",
           "maxLength": 5000,
           "type": "string"
         },
         "homepageURL": {
-          "description": "Project homepage URL. Omitted when none. Must use the https, http, or mailto scheme, in any case.",
+          "description": "Project homepage URL, at most 2048 characters (spec.md §4). Omitted when none. Must use the https, http, or mailto scheme, in any case.",
           "$comment": "Anchored and lookahead-free, so it compiles under RE2 as well as ECMA-262 and cannot be driven to backtrack. The scheme set is spec.md §4.1's (LIST-URL-001), applied to a field that carries a URL directly rather than inside Markdown. The scheme alternation is spelled in character classes because a JSON Schema pattern carries no case-insensitive flag, and RFC 3986 §3.1 makes the scheme case-insensitive, the same reason the media path alternation is spelled that way. Without it this pattern would reject an upper-case scheme the overview half of the same rule accepts.",
           "maxLength": 2048,
           "pattern": "^(?:[Hh][Tt][Tt][Pp][Ss]?://|[Mm][Aa][Ii][Ll][Tt][Oo]:)[!-~]+$",
@@ -132,7 +132,7 @@
         },
         "license": {
           "$comment": "spec.md §4 (LIST-LICENSE-001) and ADR 0003 §2. The shape is this specification's and the membership is SPDX's, published at https://spdx.org/licenses/ and deliberately not restated; membership is the admission rule LIST-LICENSE-002. A group of parentheses does not nest, which spec.md §9 records. Anchored and lookahead-free, so it compiles under RE2 as well as ECMA-262.",
-          "description": "SPDX licence expression for the listed software, such as MIT, Apache-2.0 WITH LLVM-exception, or (MIT OR Apache-2.0) AND Unicode-3.0. Omitted when unspecified.",
+          "description": "SPDX licence expression for the listed software, such as MIT, Apache-2.0 WITH LLVM-exception, or (MIT OR Apache-2.0) AND Unicode-3.0, at most 256 characters (spec.md §4). Omitted when unspecified.",
           "maxLength": 256,
           "pattern": "^(?:[A-Za-z0-9.+-]{1,64}|\\([A-Za-z0-9.+-]{1,64}(?: (?:WITH|AND|OR) [A-Za-z0-9.+-]{1,64}){1,8}\\))(?: (?:WITH|AND|OR) (?:[A-Za-z0-9.+-]{1,64}|\\([A-Za-z0-9.+-]{1,64}(?: (?:WITH|AND|OR) [A-Za-z0-9.+-]{1,64}){1,8}\\))){0,8}$",
           "type": "string"
@@ -149,7 +149,7 @@
         },
         "overview": {
           "$comment": "spec.md §4 and §4.1. The overview Markdown profile, its link and image rules and the media bounds are semantic rules, so the schema bounds only the length.",
-          "description": "What the item is and when to choose it, as Markdown in the overview Markdown profile: CommonMark 0.31.2 with no raw HTML, links on https, http or mailto, and images that are media paths. Omitted when none.",
+          "description": "What the item is and when to choose it, as Markdown of at most 20000 characters in the overview Markdown profile (spec.md §4.1): CommonMark 0.31.2 with no raw HTML, links on https, http or mailto, and images that are media paths. Omitted when none.",
           "maxLength": 20000,
           "type": "string"
         },
@@ -162,7 +162,7 @@
           "type": "array"
         },
         "sourceRepositoryURL": {
-          "description": "URL of the source repository. Omitted when none. Must use the https, http, or mailto scheme, in any case.",
+          "description": "URL of the source repository, at most 2048 characters (spec.md §4). Omitted when none. Must use the https, http, or mailto scheme, in any case.",
           "$comment": "The same grammar homepageURL carries; see the note there.",
           "maxLength": 2048,
           "pattern": "^(?:[Hh][Tt][Tt][Pp][Ss]?://|[Mm][Aa][Ii][Ll][Tt][Oo]:)[!-~]+$",
@@ -175,7 +175,7 @@
           "type": "string"
         },
         "supportURL": {
-          "description": "Support or documentation URL. Omitted when none. Must use the https, http, or mailto scheme, in any case.",
+          "description": "Support or documentation URL, at most 2048 characters (spec.md §4). Omitted when none. Must use the https, http, or mailto scheme, in any case.",
           "$comment": "The same grammar homepageURL carries; see the note there. mailto: is in the set for this field in particular: a support address is a plausible value.",
           "maxLength": 2048,
           "pattern": "^(?:[Hh][Tt][Tt][Pp][Ss]?://|[Mm][Aa][Ii][Ll][Tt][Oo]:)[!-~]+$",
