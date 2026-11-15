@@ -7,6 +7,8 @@ conformance corpora. The platform API and Musher's internal data models are
 specified elsewhere. An implementation that disagrees with what is published
 here is defective.
 
+Dependencies: [![engineering-conventions](https://github.com/musher-dev/specifications/raw/badges/engineering-conventions.svg)](https://github.com/musher-dev/specifications/tree/badges)
+
 **Status:** v2 is the current major of every family, first released as `2.0.0`
 on 2026-10-24. v1 is retired: its directories are gone from `main`, and every v1
 release keeps serving at its pinned URL

@@ -16,13 +16,26 @@
 # `build`, `ci` and `chore` are all hidden in .github/release-please/config.json,
 # so no dependency bump can cut a specification release.
 #
+# Every version update runs monthly, waits a week after a release (cooldown)
+# and groups every dependency, so each entry opens at most one pull request a
+# month (engineering-conventions DEPS-17); security updates ignore the schedule
+# and arrive in a group of their own as soon as an advisory does.
+#
 # See docs/adr/0016-dependency-update-policy.md.
 version: 2
 updates:
   - package-ecosystem: 'devcontainers'
     directory: '/'
     schedule:
-      interval: 'weekly'
+      interval: 'monthly'
+    cooldown:
+      default-days: 7
+    groups:
+      devcontainers-all:
+        patterns: ['*']
+      devcontainers-security:
+        applies-to: security-updates
+        patterns: ['*']
     commit-message:
       prefix: 'build'
       include: 'scope' # -> build(deps): bump ...
@@ -34,7 +47,15 @@ updates:
       - '/'
       - '/.github/actions/*'
     schedule:
-      interval: 'weekly'
+      interval: 'monthly'
+    cooldown:
+      default-days: 7
+    groups:
+      github-actions-all:
+        patterns: ['*']
+      github-actions-security:
+        applies-to: security-updates
+        patterns: ['*']
     commit-message:
       prefix: 'ci'
       include: 'scope' # -> ci(deps): bump ...
@@ -42,7 +63,9 @@ updates:
   - package-ecosystem: 'bun'
     directory: '/tools'
     schedule:
-      interval: 'weekly'
+      interval: 'monthly'
+    cooldown:
+      default-days: 7
     commit-message:
       prefix: 'build'
       prefix-development: 'build'
@@ -58,5 +81,13 @@ updates:
         # else's lockfile churn, so it is kept out and reviewed on its own. A
         # maintainer may still bump it in a larger pull request that names the
         # bump in its description (docs/governance.md).
+        exclude-patterns:
+          - 'wrangler'
+      # wrangler's security fixes stay out for the same reason, and arrive in
+      # a pull request of their own.
+      tooling-security:
+        applies-to: security-updates
+        patterns:
+          - '*'
         exclude-patterns:
           - 'wrangler'

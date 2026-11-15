@@ -2,12 +2,13 @@ name: Notify Release
 
 # Tells the repositories that vendor these specifications that a release
 # exists, with the `dependency-released` repository dispatch every consumer's
-# maintain-dependencies.yml answers (engineering-conventions EC-0033). Each
-# consumer then syncs the family's release archive, with the release.json it
-# carries, and opens a pull request. Consumers also sync on a schedule, so a
-# dispatch lost here delays the pin rather than losing it, and this repository
-# never has to be the only thing that remembers who reads it
-# (docs/adr/0043 §8).
+# maintain-dependency-badges.yml answers (engineering-conventions EC-0033).
+# Each consumer then re-renders its currency badges, so the family's badge
+# turns yellow or orange at once, and a person there syncs the release archive
+# in a pull request (engineering-conventions decision 0042). Consumers also
+# refresh on a schedule, so a dispatch lost here delays the badge rather than
+# losing it, and this repository never has to be the only thing that remembers
+# who reads it (docs/adr/0043 §8).
 #
 # release.yml publishes each release as the release GitHub App, so
 # `release: published` starts this workflow: a release published with

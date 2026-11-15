@@ -46,7 +46,7 @@ node = "24.18.0"
 "aqua:vale-cli/vale" = "3.22.0"
 
 # --- The conventions release this repository is checked against (ADR 0036) --
-"github:musher-dev/engineering-conventions" = "0.9.3"
+"github:musher-dev/engineering-conventions" = "0.9.5"
 
 # --- Opt-in -----------------------------------------------------------------
 # @openai/codex is pinned here but NOT installed by default: it is opt-in via
