@@ -1,0 +1,37 @@
+name: Maintain Dependency Badges
+
+# Keeps the README's currency badge fresh (engineering-conventions EC-0033,
+# DEPS-16): it shows whether the engineering-conventions pin in
+# .config/mise/config.toml is that release line's newest. The reusable workflow
+# renders it and force-pushes it to the orphan `badges` branch, only when it
+# changed. Nothing opens a pull request: a person reads a yellow or orange
+# badge and moves the pin in a pull request of their own
+# (engineering-conventions decisions 0042 and 0043). A `dependency-released` dispatch turns the badge sooner than the
+# schedule; a pin change merging turns it at once.
+#
+# engineering-conventions is public, so the job's own token reads its releases
+# and no App secret is passed. It runs on main and on a schedule, never on a
+# pull request, so it is not a merge gate.
+
+on:
+  schedule:
+    - cron: '23 5 * * *'
+  repository_dispatch:
+    types: [dependency-released]
+  push:
+    branches: [main]
+    paths: [.config/mise/config.toml]
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  badges:
+    name: Badges
+    permissions:
+      contents: write  # push the badges branch
+    uses: musher-dev/engineering-conventions/.github/workflows/reusable-maintain-dependency-badges.yml@12ad09f75e79cec94bfefe944ff414d8ae824a42  # v0.9.5
