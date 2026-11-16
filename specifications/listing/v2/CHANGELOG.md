@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.3](https://github.com/musher-dev/specifications/compare/listing/v2.1.2...listing/v2.1.3) (2026-11-16)
+
+
+### Specification prose
+
+* **listing:** state a tag's length bounds in the schema ([#249](https://github.com/musher-dev/specifications/issues/249)) ([9b51312](https://github.com/musher-dev/specifications/commit/9b51312fe9c06078295669c32781bc7ea7c0a790))
+
 ## [2.1.2](https://github.com/musher-dev/specifications/compare/listing/v2.1.1...listing/v2.1.2) (2026-11-13)
 
 
