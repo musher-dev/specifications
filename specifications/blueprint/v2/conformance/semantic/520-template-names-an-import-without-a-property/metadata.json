@@ -1,0 +1,11 @@
+{
+  "id": "semantic-520-template-names-an-import-without-a-property",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#exports",
+  "requirements": [
+    "BP-EXPORT-004"
+  ],
+  "summary": "A template naming an import parameter without one of its facts is rejected.",
+  "document": "app/blueprint.yaml"
+}

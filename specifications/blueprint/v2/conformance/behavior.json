@@ -8255,5 +8255,308 @@
       "/status": "VALID",
       "/environment/web/MODEL/value": "mistral:7b"
     }
+  },
+  {
+    "id": "resolution-import-granted-yields-its-facts",
+    "suite": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-EXPORT-004",
+      "BP-EXPORT-005"
+    ],
+    "tree": {
+      "importer/blueprint.yaml": "{\"specVersion\":\"v2\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"importer\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"temporal\":{\"from\":\"${{ exports.temporal-frontend }}\",\"ui\":{\"label\":\"Workflow server\"}}},\"nodes\":{\"worker\":{\"componentRef\":\"./components/worker.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"temporalAddress\":{\"parameter\":\"temporal\",\"property\":\"privateAddress\"},\"temporalHost\":{\"parameter\":\"temporal\",\"property\":\"privateHostname\"},\"temporalPort\":{\"parameter\":\"temporal\",\"property\":\"privatePort\"},\"temporalURL\":{\"template\":\"http://${{ parameters.temporal.privateHostname }}:${{ parameters.temporal.privatePort }}/\",\"format\":\"URL\"}}}}}}",
+      "importer/components/worker.yaml": "{\"specVersion\":\"v2\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/service:1\"}},\"contract\":{\"inputs\":{\"temporalAddress\":{\"schema\":{\"type\":\"string\"},\"description\":\"Synthetic input.\",\"target\":{\"envVar\":\"TEMPORAL_ADDRESS\"},\"required\":false},\"temporalHost\":{\"schema\":{\"type\":\"string\"},\"description\":\"Synthetic input.\",\"target\":{\"envVar\":\"TEMPORAL_HOST\"},\"required\":false},\"temporalPort\":{\"schema\":{\"type\":\"integer\"},\"description\":\"Synthetic input.\",\"target\":{\"envVar\":\"TEMPORAL_PORT\"},\"required\":false},\"temporalURL\":{\"schema\":{\"type\":\"string\"},\"description\":\"Synthetic input.\",\"target\":{\"envVar\":\"TEMPORAL_URL\"},\"required\":false}},\"outputs\":{}}}}"
+    },
+    "document": "importer/blueprint.yaml",
+    "context": {
+      "sources": {
+        "worker": {
+          "imageDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      },
+      "imports": {
+        "deployment": "deploy-1",
+        "parameters": {
+          "temporal": {
+            "status": "GRANTED",
+            "persisted": true,
+            "import": {
+              "identity": "import-1",
+              "version": "1",
+              "deployment": "deploy-1",
+              "parameter": "temporal",
+              "request": {
+                "from": "${{ exports.temporal-frontend }}"
+              },
+              "export": {
+                "identity": "export-1",
+                "version": "1"
+              },
+              "grant": {
+                "identity": "grant-1",
+                "version": "1"
+              },
+              "privateHostname": "server-grpc.exporter.internal",
+              "privatePort": 7233
+            }
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "VALID",
+      "/inputs/worker:in:temporalHost/value": "server-grpc.exporter.internal",
+      "/inputs/worker:in:temporalPort/value": 7233,
+      "/inputs/worker:in:temporalAddress/value": "server-grpc.exporter.internal:7233",
+      "/inputs/worker:in:temporalURL/value": "http://server-grpc.exporter.internal:7233/",
+      "/inspection/worker:in:temporalAddress": {
+        "sensitive": false,
+        "value": "server-grpc.exporter.internal:7233"
+      }
+    }
+  },
+  {
+    "id": "resolution-import-of-an-unknown-export",
+    "suite": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-EXPORT-005"
+    ],
+    "tree": {
+      "importer/blueprint.yaml": "{\"specVersion\":\"v2\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"importer\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"temporal\":{\"from\":\"${{ exports.temporal-frontend }}\",\"ui\":{\"label\":\"Workflow server\"}}},\"nodes\":{\"worker\":{\"componentRef\":\"./components/worker.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"temporalAddress\":{\"parameter\":\"temporal\",\"property\":\"privateAddress\"},\"temporalHost\":{\"parameter\":\"temporal\",\"property\":\"privateHostname\"},\"temporalPort\":{\"parameter\":\"temporal\",\"property\":\"privatePort\"},\"temporalURL\":{\"template\":\"http://${{ parameters.temporal.privateHostname }}:${{ parameters.temporal.privatePort }}/\",\"format\":\"URL\"}}}}}}",
+      "importer/components/worker.yaml": "{\"specVersion\":\"v2\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/service:1\"}},\"contract\":{\"inputs\":{\"temporalAddress\":{\"schema\":{\"type\":\"string\"},\"description\":\"Synthetic input.\",\"target\":{\"envVar\":\"TEMPORAL_ADDRESS\"},\"required\":false},\"temporalHost\":{\"schema\":{\"type\":\"string\"},\"description\":\"Synthetic input.\",\"target\":{\"envVar\":\"TEMPORAL_HOST\"},\"required\":false},\"temporalPort\":{\"schema\":{\"type\":\"integer\"},\"description\":\"Synthetic input.\",\"target\":{\"envVar\":\"TEMPORAL_PORT\"},\"required\":false},\"temporalURL\":{\"schema\":{\"type\":\"string\"},\"description\":\"Synthetic input.\",\"target\":{\"envVar\":\"TEMPORAL_URL\"},\"required\":false}},\"outputs\":{}}}}"
+    },
+    "document": "importer/blueprint.yaml",
+    "context": {
+      "sources": {
+        "worker": {
+          "imageDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      },
+      "imports": {
+        "deployment": "deploy-1",
+        "parameters": {
+          "temporal": {
+            "status": "UNKNOWN"
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID",
+      "/inputs": {}
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_EXPORT_UNAVAILABLE",
+        "path": "/spec/parameters/temporal",
+        "phase": "resolution",
+        "stage": "connections"
+      }
+    ]
+  },
+  {
+    "id": "resolution-import-not-granted",
+    "suite": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-EXPORT-005"
+    ],
+    "tree": {
+      "importer/blueprint.yaml": "{\"specVersion\":\"v2\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"importer\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"temporal\":{\"from\":\"${{ exports.temporal-frontend }}\",\"ui\":{\"label\":\"Workflow server\"}}},\"nodes\":{\"worker\":{\"componentRef\":\"./components/worker.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"temporalAddress\":{\"parameter\":\"temporal\",\"property\":\"privateAddress\"},\"temporalHost\":{\"parameter\":\"temporal\",\"property\":\"privateHostname\"},\"temporalPort\":{\"parameter\":\"temporal\",\"property\":\"privatePort\"},\"temporalURL\":{\"template\":\"http://${{ parameters.temporal.privateHostname }}:${{ parameters.temporal.privatePort }}/\",\"format\":\"URL\"}}}}}}",
+      "importer/components/worker.yaml": "{\"specVersion\":\"v2\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/service:1\"}},\"contract\":{\"inputs\":{\"temporalAddress\":{\"schema\":{\"type\":\"string\"},\"description\":\"Synthetic input.\",\"target\":{\"envVar\":\"TEMPORAL_ADDRESS\"},\"required\":false},\"temporalHost\":{\"schema\":{\"type\":\"string\"},\"description\":\"Synthetic input.\",\"target\":{\"envVar\":\"TEMPORAL_HOST\"},\"required\":false},\"temporalPort\":{\"schema\":{\"type\":\"integer\"},\"description\":\"Synthetic input.\",\"target\":{\"envVar\":\"TEMPORAL_PORT\"},\"required\":false},\"temporalURL\":{\"schema\":{\"type\":\"string\"},\"description\":\"Synthetic input.\",\"target\":{\"envVar\":\"TEMPORAL_URL\"},\"required\":false}},\"outputs\":{}}}}"
+    },
+    "document": "importer/blueprint.yaml",
+    "context": {
+      "sources": {
+        "worker": {
+          "imageDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      },
+      "imports": {
+        "deployment": "deploy-1",
+        "parameters": {
+          "temporal": {
+            "status": "DENIED"
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID",
+      "/inputs": {}
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_EXPORT_UNAVAILABLE",
+        "path": "/spec/parameters/temporal",
+        "phase": "resolution",
+        "stage": "connections"
+      }
+    ]
+  },
+  {
+    "id": "resolution-import-of-a-withdrawn-export",
+    "suite": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-EXPORT-005"
+    ],
+    "tree": {
+      "importer/blueprint.yaml": "{\"specVersion\":\"v2\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"importer\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"temporal\":{\"from\":\"${{ exports.temporal-frontend }}\",\"ui\":{\"label\":\"Workflow server\"}}},\"nodes\":{\"worker\":{\"componentRef\":\"./components/worker.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"temporalAddress\":{\"parameter\":\"temporal\",\"property\":\"privateAddress\"},\"temporalHost\":{\"parameter\":\"temporal\",\"property\":\"privateHostname\"},\"temporalPort\":{\"parameter\":\"temporal\",\"property\":\"privatePort\"},\"temporalURL\":{\"template\":\"http://${{ parameters.temporal.privateHostname }}:${{ parameters.temporal.privatePort }}/\",\"format\":\"URL\"}}}}}}",
+      "importer/components/worker.yaml": "{\"specVersion\":\"v2\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/service:1\"}},\"contract\":{\"inputs\":{\"temporalAddress\":{\"schema\":{\"type\":\"string\"},\"description\":\"Synthetic input.\",\"target\":{\"envVar\":\"TEMPORAL_ADDRESS\"},\"required\":false},\"temporalHost\":{\"schema\":{\"type\":\"string\"},\"description\":\"Synthetic input.\",\"target\":{\"envVar\":\"TEMPORAL_HOST\"},\"required\":false},\"temporalPort\":{\"schema\":{\"type\":\"integer\"},\"description\":\"Synthetic input.\",\"target\":{\"envVar\":\"TEMPORAL_PORT\"},\"required\":false},\"temporalURL\":{\"schema\":{\"type\":\"string\"},\"description\":\"Synthetic input.\",\"target\":{\"envVar\":\"TEMPORAL_URL\"},\"required\":false}},\"outputs\":{}}}}"
+    },
+    "document": "importer/blueprint.yaml",
+    "context": {
+      "sources": {
+        "worker": {
+          "imageDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      },
+      "imports": {
+        "deployment": "deploy-1",
+        "parameters": {
+          "temporal": {
+            "status": "WITHDRAWN"
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID",
+      "/inputs": {}
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_EXPORT_UNAVAILABLE",
+        "path": "/spec/parameters/temporal",
+        "phase": "resolution",
+        "stage": "connections"
+      }
+    ]
+  },
+  {
+    "id": "resolution-import-not-yet-acquired",
+    "suite": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-EXPORT-005"
+    ],
+    "tree": {
+      "importer/blueprint.yaml": "{\"specVersion\":\"v2\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"importer\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"temporal\":{\"from\":\"${{ exports.temporal-frontend }}\",\"ui\":{\"label\":\"Workflow server\"}}},\"nodes\":{\"worker\":{\"componentRef\":\"./components/worker.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"temporalAddress\":{\"parameter\":\"temporal\",\"property\":\"privateAddress\"},\"temporalHost\":{\"parameter\":\"temporal\",\"property\":\"privateHostname\"},\"temporalPort\":{\"parameter\":\"temporal\",\"property\":\"privatePort\"},\"temporalURL\":{\"template\":\"http://${{ parameters.temporal.privateHostname }}:${{ parameters.temporal.privatePort }}/\",\"format\":\"URL\"}}}}}}",
+      "importer/components/worker.yaml": "{\"specVersion\":\"v2\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/service:1\"}},\"contract\":{\"inputs\":{\"temporalAddress\":{\"schema\":{\"type\":\"string\"},\"description\":\"Synthetic input.\",\"target\":{\"envVar\":\"TEMPORAL_ADDRESS\"},\"required\":false},\"temporalHost\":{\"schema\":{\"type\":\"string\"},\"description\":\"Synthetic input.\",\"target\":{\"envVar\":\"TEMPORAL_HOST\"},\"required\":false},\"temporalPort\":{\"schema\":{\"type\":\"integer\"},\"description\":\"Synthetic input.\",\"target\":{\"envVar\":\"TEMPORAL_PORT\"},\"required\":false},\"temporalURL\":{\"schema\":{\"type\":\"string\"},\"description\":\"Synthetic input.\",\"target\":{\"envVar\":\"TEMPORAL_URL\"},\"required\":false}},\"outputs\":{}}}}"
+    },
+    "document": "importer/blueprint.yaml",
+    "context": {
+      "sources": {
+        "worker": {
+          "imageDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      }
+    },
+    "expect": {
+      "/status": "INCOMPLETE",
+      "/diagnostics": [],
+      "/inputs": {}
+    }
+  },
+  {
+    "id": "resolution-import-granted-to-another-deployment",
+    "suite": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-EXPORT-005"
+    ],
+    "tree": {
+      "importer/blueprint.yaml": "{\"specVersion\":\"v2\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"importer\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"temporal\":{\"from\":\"${{ exports.temporal-frontend }}\",\"ui\":{\"label\":\"Workflow server\"}}},\"nodes\":{\"worker\":{\"componentRef\":\"./components/worker.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"temporalAddress\":{\"parameter\":\"temporal\",\"property\":\"privateAddress\"},\"temporalHost\":{\"parameter\":\"temporal\",\"property\":\"privateHostname\"},\"temporalPort\":{\"parameter\":\"temporal\",\"property\":\"privatePort\"},\"temporalURL\":{\"template\":\"http://${{ parameters.temporal.privateHostname }}:${{ parameters.temporal.privatePort }}/\",\"format\":\"URL\"}}}}}}",
+      "importer/components/worker.yaml": "{\"specVersion\":\"v2\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/service:1\"}},\"contract\":{\"inputs\":{\"temporalAddress\":{\"schema\":{\"type\":\"string\"},\"description\":\"Synthetic input.\",\"target\":{\"envVar\":\"TEMPORAL_ADDRESS\"},\"required\":false},\"temporalHost\":{\"schema\":{\"type\":\"string\"},\"description\":\"Synthetic input.\",\"target\":{\"envVar\":\"TEMPORAL_HOST\"},\"required\":false},\"temporalPort\":{\"schema\":{\"type\":\"integer\"},\"description\":\"Synthetic input.\",\"target\":{\"envVar\":\"TEMPORAL_PORT\"},\"required\":false},\"temporalURL\":{\"schema\":{\"type\":\"string\"},\"description\":\"Synthetic input.\",\"target\":{\"envVar\":\"TEMPORAL_URL\"},\"required\":false}},\"outputs\":{}}}}"
+    },
+    "document": "importer/blueprint.yaml",
+    "context": {
+      "sources": {
+        "worker": {
+          "imageDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      },
+      "imports": {
+        "deployment": "deploy-2",
+        "parameters": {
+          "temporal": {
+            "status": "GRANTED",
+            "persisted": true,
+            "import": {
+              "identity": "import-1",
+              "version": "1",
+              "deployment": "deploy-1",
+              "parameter": "temporal",
+              "request": {
+                "from": "${{ exports.temporal-frontend }}"
+              },
+              "export": {
+                "identity": "export-1",
+                "version": "1"
+              },
+              "grant": {
+                "identity": "grant-1",
+                "version": "1"
+              },
+              "privateHostname": "server-grpc.exporter.internal",
+              "privatePort": 7233
+            }
+          }
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID",
+      "/inputs": {}
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_INVALID_RESOLUTION_CONTEXT",
+        "path": "/spec/parameters/temporal",
+        "phase": "resolution",
+        "stage": "connections"
+      }
+    ]
+  },
+  {
+    "id": "resolution-import-is-never-submitted",
+    "suite": "resolution",
+    "operation": "resolve",
+    "requirements": [
+      "BP-PARAM-013"
+    ],
+    "tree": {
+      "importer/blueprint.yaml": "{\"specVersion\":\"v2\",\"kind\":\"BLUEPRINT\",\"metadata\":{\"slug\":\"importer\",\"revision\":1,\"description\":\"Synthetic conformance fixture blueprint.\"},\"spec\":{\"parameters\":{\"temporal\":{\"from\":\"${{ exports.temporal-frontend }}\",\"ui\":{\"label\":\"Workflow server\"}}},\"nodes\":{\"worker\":{\"componentRef\":\"./components/worker.yaml\",\"compute\":{\"profile\":\"general.standard.small\"},\"bindings\":{\"temporalAddress\":{\"parameter\":\"temporal\",\"property\":\"privateAddress\"},\"temporalHost\":{\"parameter\":\"temporal\",\"property\":\"privateHostname\"},\"temporalPort\":{\"parameter\":\"temporal\",\"property\":\"privatePort\"},\"temporalURL\":{\"template\":\"http://${{ parameters.temporal.privateHostname }}:${{ parameters.temporal.privatePort }}/\",\"format\":\"URL\"}}}}}}",
+      "importer/components/worker.yaml": "{\"specVersion\":\"v2\",\"kind\":\"COMPONENT\",\"metadata\":{\"revision\":1,\"description\":\"Synthetic conformance fixture component.\"},\"spec\":{\"type\":\"WORKER\",\"workload\":{\"source\":{\"image\":\"example/service:1\"}},\"contract\":{\"inputs\":{\"temporalAddress\":{\"schema\":{\"type\":\"string\"},\"description\":\"Synthetic input.\",\"target\":{\"envVar\":\"TEMPORAL_ADDRESS\"},\"required\":false},\"temporalHost\":{\"schema\":{\"type\":\"string\"},\"description\":\"Synthetic input.\",\"target\":{\"envVar\":\"TEMPORAL_HOST\"},\"required\":false},\"temporalPort\":{\"schema\":{\"type\":\"integer\"},\"description\":\"Synthetic input.\",\"target\":{\"envVar\":\"TEMPORAL_PORT\"},\"required\":false},\"temporalURL\":{\"schema\":{\"type\":\"string\"},\"description\":\"Synthetic input.\",\"target\":{\"envVar\":\"TEMPORAL_URL\"},\"required\":false}},\"outputs\":{}}}}"
+    },
+    "document": "importer/blueprint.yaml",
+    "context": {
+      "sources": {
+        "worker": {
+          "imageDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      },
+      "parameters": {
+        "temporal": {
+          "value": "server.internal:7233",
+          "sensitive": false
+        }
+      }
+    },
+    "expect": {
+      "/status": "INVALID",
+      "/inputs": {}
+    },
+    "diagnostics": [
+      {
+        "code": "ERR_PARAMETER_NOT_SUBMITTABLE",
+        "path": "/spec/parameters/temporal",
+        "phase": "resolution",
+        "stage": "parameters"
+      }
+    ]
   }
 ]

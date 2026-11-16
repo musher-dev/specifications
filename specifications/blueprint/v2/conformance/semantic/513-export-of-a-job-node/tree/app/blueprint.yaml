@@ -1,0 +1,20 @@
+specVersion: v2
+kind: BLUEPRINT
+metadata:
+  slug: app
+  revision: 1
+  description: Synthetic conformance fixture blueprint.
+spec:
+  exports:
+    frontend:
+      node: migrate
+      endpoint: grpc
+  nodes:
+    server:
+      componentRef: ./components/server.yaml
+      compute:
+        profile: general.standard.small
+    migrate:
+      componentRef: ./components/migrate.yaml
+      compute:
+        profile: general.standard.small

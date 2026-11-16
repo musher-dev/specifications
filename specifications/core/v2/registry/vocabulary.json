@@ -101,6 +101,10 @@
     {
       "name": "nodes",
       "assigned": true
+    },
+    {
+      "name": "exports",
+      "assigned": true
     }
   ]
 }

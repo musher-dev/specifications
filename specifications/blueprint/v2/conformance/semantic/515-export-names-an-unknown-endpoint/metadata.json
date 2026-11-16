@@ -1,0 +1,11 @@
+{
+  "id": "semantic-515-export-names-an-unknown-endpoint",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#exports",
+  "requirements": [
+    "BP-EXPORT-002"
+  ],
+  "summary": "An export naming an endpoint the node's component does not declare is rejected.",
+  "document": "app/blueprint.yaml"
+}

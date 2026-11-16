@@ -1,0 +1,11 @@
+{
+  "id": "semantic-519-import-bound-without-a-property",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#exports",
+  "requirements": [
+    "BP-EXPORT-004"
+  ],
+  "summary": "An import parameter has no single value, so a binding naming it without a property is rejected.",
+  "document": "app/blueprint.yaml"
+}

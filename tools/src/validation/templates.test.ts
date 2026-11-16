@@ -4,7 +4,13 @@
  * percent-encoding of a value, and the string form of a scalar.
  */
 import { describe, expect, test } from 'bun:test'
-import { percentEncode, scanTemplate, stringForm, urlComponents } from './templates.ts'
+import {
+  percentEncode,
+  scanTemplate,
+  stringForm,
+  templateTarget,
+  urlComponents,
+} from './templates.ts'
 
 /** The components of a `URL` template, scanned as the validator scans it. */
 function components(template: string) {
@@ -102,5 +108,26 @@ describe('stringForm', () => {
     expect(stringForm(Number.POSITIVE_INFINITY)).toBeUndefined()
     expect(stringForm({ a: 1 })).toBeUndefined()
     expect(stringForm([1])).toBeUndefined()
+  })
+})
+
+describe('templateTarget', () => {
+  const target = (template: string) => scanTemplate(template).references.map(templateTarget)[0]
+
+  test('reads a second parameters segment as a property, leaving its fit to the semantic phase', () => {
+    expect(target('${{ parameters.temporal }}')).toMatchObject({
+      kind: 'parameter',
+      parameter: 'temporal',
+    })
+    expect(target('${{ parameters.temporal }}')).not.toHaveProperty('property')
+    expect(target('${{ parameters.temporal.privateAddress }}')).toMatchObject({
+      kind: 'parameter',
+      parameter: 'temporal',
+      property: 'privateAddress',
+    })
+  })
+
+  test('names no parameter with a path of three segments', () => {
+    expect(target('${{ parameters.a.b.c }}')?.kind).toBe('unknown-parameter')
   })
 })

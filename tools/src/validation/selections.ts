@@ -138,7 +138,14 @@ const inputsOf = (component: Json | undefined) =>
   record(at(component, 'spec', 'contract', 'inputs'))
 
 /** The namespaces a parameter's `from` permits (blueprint BP-PLACEHOLDER-001). */
-export const PARAMETER_ORIGIN_NAMESPACES = ['variables', 'connections', 'deployment'] as const
+export const PARAMETER_ORIGIN_NAMESPACES = [
+  'variables',
+  'connections',
+  'deployment',
+  'exports',
+] as const
+/** Core v2 §5.1: the DNS-label grammar an export name takes (blueprint BP-EXPORT-003). */
+const DNS_LABEL = /^[a-z][a-z0-9-]{0,61}[a-z0-9]$/
 /** The paths the `deployment` namespace defines (blueprint BP-PARAM-011). */
 export const DEPLOYMENT_FACT_PATHS = ['creator.identity', 'creator.email', 'creator.name']
 export type ParameterOriginNamespace = (typeof PARAMETER_ORIGIN_NAMESPACES)[number]
@@ -228,6 +235,9 @@ export function parameterOriginDiagnostics(
   // BP-PARAM-011: `deployment` defines exactly the creator's three facts.
   if (origin.namespace === 'deployment' && !DEPLOYMENT_FACT_PATHS.includes(origin.key))
     return [diagnostic('ERR_UNKNOWN_DEPLOYMENT_FACT', path)]
+  // BP-EXPORT-003: an `exports` path is one export name, a DNS label.
+  if (origin.namespace === 'exports' && !DNS_LABEL.test(origin.key))
+    return [diagnostic('ERR_INVALID_EXPORT_PATH', path)]
   return []
 }
 /**
@@ -630,4 +640,141 @@ export function selectConnection(
   // Reuse of immutable state is never permission to bypass current revocation.
   if (!authorized(selection)) return { status: 'DENIED' }
   return { status: 'SELECTED', persisted: true, selection }
+}
+/** Blueprint BP-EXPORT-004: the facts an import parameter yields, one per binding. */
+export const IMPORT_PROPERTIES = ['privateHostname', 'privatePort', 'privateAddress'] as const
+export type ImportProperty = (typeof IMPORT_PROPERTIES)[number]
+export const isImportProperty = (value: unknown): value is ImportProperty =>
+  typeof value === 'string' && (IMPORT_PROPERTIES as readonly string[]).includes(value)
+/** Blueprint §5.5: a parameter whose `from` names an export. */
+export const isImportParameter = (parameter: Json | undefined): boolean =>
+  parameterOrigin(parameter)?.namespace === 'exports'
+/**
+ * Blueprint BP-EXPORT-005: what acquisition answered for one import parameter.
+ * `UNKNOWN`, `DENIED` and `WITHDRAWN` are what the platform knows; resolution
+ * reports all three with one code, so an import enumerates nothing.
+ */
+export type ImportAcquisition =
+  | { readonly status: 'NOT_ACQUIRED' | 'UNKNOWN' | 'DENIED' | 'WITHDRAWN' }
+  | {
+      readonly status: 'GRANTED'
+      readonly persisted: true
+      readonly import: {
+        readonly identity: string
+        readonly version: string
+        readonly deployment: string
+        readonly parameter: string
+        readonly request: { readonly from: string }
+        readonly export: { readonly identity: string; readonly version: string }
+        readonly grant: { readonly identity: string; readonly version: string }
+        readonly privateHostname: string
+        readonly privatePort: number
+      }
+    }
+export interface ImportsContext {
+  readonly imports?: {
+    readonly deployment: string
+    readonly parameters: Readonly<Record<string, ImportAcquisition>>
+  }
+}
+const IMPORT_KEYS = [
+  'identity',
+  'version',
+  'deployment',
+  'parameter',
+  'request',
+  'export',
+  'grant',
+  'privateHostname',
+  'privatePort',
+]
+const nonEmpty = (v: unknown) => typeof v === 'string' && v.length > 0
+const versioned = (v: unknown) =>
+  isObject(v as Json) &&
+  Object.keys(record(v)).every((k) => k === 'identity' || k === 'version') &&
+  nonEmpty(at(v, 'identity')) &&
+  nonEmpty(at(v, 'version'))
+/**
+ * Blueprint BP-EXPORT-005: each import parameter's acquired grant, in the
+ * `connections` stage. Returns the hostname and port of each granted export,
+ * keyed by parameter. A parameter given a submitted value is skipped:
+ * BP-PARAM-013 already rejected it.
+ */
+export function resolveImports(
+  blueprint: Json,
+  context: ImportsContext['imports'],
+  submitted: Readonly<Record<string, unknown>> = {},
+): {
+  facts: Map<string, { privateHostname: string; privatePort: number }>
+  diagnostics: Diagnostic[]
+  deferred: { rule: string; path: string; missing: string }[]
+} {
+  const facts = new Map<string, { privateHostname: string; privatePort: number }>(),
+    diagnostics: Diagnostic[] = [],
+    deferred: { rule: string; path: string; missing: string }[] = []
+  const origins = Object.fromEntries(
+    Object.entries(record(at(blueprint, 'spec', 'parameters'))).flatMap(([name, p]) => {
+      const origin = parameterOrigin(p)
+      return origin?.namespace === 'exports' ? [[name, origin.from]] : []
+    }),
+  )
+  if (
+    context !== undefined &&
+    (!isObject(context as unknown as Json) ||
+      Object.keys(context).some((k) => k !== 'deployment' && k !== 'parameters') ||
+      !nonEmpty(context.deployment) ||
+      !isObject(context.parameters as unknown as Json) ||
+      Object.keys(context.parameters).some((p) => !Object.hasOwn(origins, p)))
+  ) {
+    diagnostics.push(diagnostic('ERR_INVALID_RESOLUTION_CONTEXT', '/spec/parameters', true))
+    return { facts, diagnostics, deferred }
+  }
+  for (const [parameter, from] of Object.entries(origins)) {
+    if (Object.hasOwn(submitted, parameter)) continue
+    const path = `/spec/parameters/${token(parameter)}`
+    const acquired =
+      context && Object.hasOwn(context.parameters, parameter)
+        ? (context.parameters[parameter] as unknown as Json)
+        : undefined
+    const status = at(acquired, 'status')
+    if (acquired === undefined || status === 'NOT_ACQUIRED') {
+      deferred.push({ rule: 'BP-EXPORT-005', path, missing: `import:${parameter}` })
+      continue
+    }
+    // One code for an unknown export, one not granted and one withdrawn.
+    if (
+      (status === 'UNKNOWN' || status === 'DENIED' || status === 'WITHDRAWN') &&
+      Object.keys(record(acquired)).length === 1
+    ) {
+      diagnostics.push(diagnostic('ERR_EXPORT_UNAVAILABLE', path, true))
+      continue
+    }
+    const granted = record(at(acquired, 'import')),
+      port = granted.privatePort
+    if (
+      status !== 'GRANTED' ||
+      at(acquired, 'persisted') !== true ||
+      Object.keys(record(acquired)).some((k) => !['status', 'persisted', 'import'].includes(k)) ||
+      Object.keys(granted).some((k) => !IMPORT_KEYS.includes(k)) ||
+      !nonEmpty(granted.identity) ||
+      !nonEmpty(granted.version) ||
+      granted.deployment !== context?.deployment ||
+      granted.parameter !== parameter ||
+      Object.keys(record(granted.request)).some((k) => k !== 'from') ||
+      at(granted.request, 'from') !== from ||
+      !versioned(granted.export) ||
+      !versioned(granted.grant) ||
+      typeof granted.privateHostname !== 'string' ||
+      !validHost(granted.privateHostname) ||
+      typeof port !== 'number' ||
+      !Number.isInteger(port) ||
+      port < 1 ||
+      port > 65535
+    ) {
+      diagnostics.push(diagnostic('ERR_INVALID_RESOLUTION_CONTEXT', path, true))
+      continue
+    }
+    facts.set(parameter, { privateHostname: String(granted.privateHostname), privatePort: port })
+  }
+  return { facts, diagnostics, deferred }
 }

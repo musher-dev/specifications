@@ -11,7 +11,13 @@ export const TEMPLATE_NAMESPACES = ['parameters', 'nodes'] as const
 
 /** What one placeholder of a template names, or why it names nothing. */
 export type TemplateTarget =
-  | { readonly kind: 'parameter'; readonly parameter: string; readonly reference: Reference }
+  | {
+      readonly kind: 'parameter'
+      readonly parameter: string
+      /** A second segment, which names a fact of an import parameter (BP-EXPORT-004). */
+      readonly property?: string
+      readonly reference: Reference
+    }
   | {
       readonly kind: 'output'
       readonly node: string
@@ -22,15 +28,19 @@ export type TemplateTarget =
   | { readonly kind: 'unknown-output'; readonly reference: Reference }
 
 /**
- * BP-BIND-009: `parameters.<parameter>` names one deployment parameter, and
- * `nodes.<node>.outputs.<output>` one output of one node. Any other path names
- * neither explicitly.
+ * BP-BIND-009: `parameters.<parameter>` names one deployment parameter,
+ * `parameters.<parameter>.<property>` one fact of an import parameter
+ * (BP-EXPORT-004), and `nodes.<node>.outputs.<output>` one output of one node.
+ * Any other path names none of these explicitly. Whether a second segment fits
+ * the parameter is the semantic phase's to decide.
  */
 export function templateTarget(reference: Reference): TemplateTarget {
   const [first, second, third, ...rest] = reference.path
   if (reference.namespace === 'parameters')
-    return first !== undefined && second === undefined
-      ? { kind: 'parameter', parameter: first, reference }
+    return first !== undefined && third === undefined
+      ? second === undefined
+        ? { kind: 'parameter', parameter: first, reference }
+        : { kind: 'parameter', parameter: first, property: second, reference }
       : { kind: 'unknown-parameter', reference }
   return first !== undefined && second === 'outputs' && third !== undefined && !rest.length
     ? { kind: 'output', node: first, output: third, reference }

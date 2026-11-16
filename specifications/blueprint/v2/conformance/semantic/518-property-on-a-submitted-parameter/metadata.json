@@ -1,0 +1,11 @@
+{
+  "id": "semantic-518-property-on-a-submitted-parameter",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#exports",
+  "requirements": [
+    "BP-EXPORT-004"
+  ],
+  "summary": "A property names a fact of an import, so it is rejected beside a submitted parameter.",
+  "document": "app/blueprint.yaml"
+}

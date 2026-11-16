@@ -1299,10 +1299,31 @@ const UNPINNED: ReadonlyMap<string, string> = new Map([
   ],
   [
     'BP-ACCESS-011',
-    'That a PRIVATE endpoint is reachable only from nodes of its own deployment and the ' +
-      "platform's probing host, at the network level whatever DNS resolves, is a fact of " +
-      'the platform network; no document phase or behavioural operation opens a network ' +
-      'connection',
+    'That a PRIVATE endpoint is reachable only from nodes of its own deployment, the ' +
+      "platform's probing host and the consumers an export grant admits to it, at the " +
+      'network level whatever DNS resolves, is a fact of the platform network; no document ' +
+      'phase or behavioural operation opens a network connection',
+  ],
+  [
+    'BP-EXPORT-006',
+    "Admitting a granted consumer's traffic only to the exported endpoint, and refusing its " +
+      'new connections within 4 seconds of a revoked grant or a withdrawn export, are facts ' +
+      'of the platform network; no document phase or behavioural operation opens a network ' +
+      'connection. What a resolution shows of a grant is pinned by BP-EXPORT-005',
+  ],
+  [
+    'BP-EXPORT-007',
+    "That a consumer keeps its import's facts until its own next rollout, and that an " +
+      "exporter's rollout never changes a consumer's inputs, are runtime obligations of the " +
+      'platform across two deployments; a behavioural operation resolves one deployment and ' +
+      'observes no rollout',
+  ],
+  [
+    'BP-EXPORT-008',
+    'Refusing to delete an exporter whose export is imported unless forced, and withdrawing ' +
+      'its exports when forced, are obligations of the platform API; no document phase or ' +
+      'behavioural operation deletes a deployment. The withdrawn import a consumer then ' +
+      'resolves is pinned by BP-EXPORT-005',
   ],
   [
     'BP-ACCESS-012',

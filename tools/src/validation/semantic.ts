@@ -25,6 +25,8 @@ import { type LicenseList, MEDIA_BYTES, markdownFields, mediaReferences, walk } 
 import { MEDIA_PATH, schemeIsPermitted } from './listing-policy.ts'
 import {
   connectionBindingDiagnostics,
+  isImportParameter,
+  isImportProperty,
   parameterOrigin,
   parameterOriginDiagnostics,
 } from './selections.ts'
@@ -1155,6 +1157,25 @@ export function semanticReport(
     componentDigests.set(name, createHash('sha256').update(bytes).digest('hex'))
   }
   out.push(...connectionBindingDiagnostics(document, resolved))
+  // BP-EXPORT-002: an export names a PRIVATE endpoint of a SERVICE or WORKER node.
+  // A node whose component is unavailable was deferred under BP-REF-002.
+  for (const [key, entry] of Object.entries(record(spec.exports))) {
+    const base = `/spec/exports/${token(key)}`,
+      node = String(at(entry, 'node')),
+      endpoint = String(at(entry, 'endpoint'))
+    if (!Object.hasOwn(nodes, node)) {
+      issue(out, 'ERR_UNKNOWN_NODE', `${base}/node`)
+      continue
+    }
+    const component = resolved.get(node)
+    if (!component) continue
+    if (!['SERVICE', 'WORKER'].includes(String(at(component, 'spec', 'type'))))
+      issue(out, 'ERR_ENDPOINT_NOT_EXPORTABLE', `${base}/node`)
+    else if (at(component, 'spec', 'workload', 'endpoints', endpoint) === undefined)
+      issue(out, 'ERR_UNKNOWN_ENDPOINT', `${base}/endpoint`)
+    else if (effectiveExposure(at(nodes[node], 'exposure'), endpoint).visibility === 'PUBLIC')
+      issue(out, 'ERR_ENDPOINT_NOT_EXPORTABLE', `${base}/endpoint`)
+  }
   if (context.itemRoot)
     for (const path of yamlFiles(context.itemRoot)) {
       const target = resolveReal(path)
@@ -1195,7 +1216,15 @@ export function semanticReport(
           ? parameters[target.parameter]
           : undefined
         if (p === undefined) issue(out, 'ERR_UNKNOWN_PARAMETER', where)
-        else if (parameterOrigin(p)?.namespace === 'connections')
+        // BP-EXPORT-004: a second segment names a fact of an import parameter,
+        // and an import parameter is named only by one of its facts.
+        else if (
+          isImportParameter(p) ? !isImportProperty(target.property) : target.property !== undefined
+        ) {
+          issue(out, 'ERR_INVALID_IMPORT_BINDING', where)
+          // The template still names the parameter (BP-PARAM-001).
+          templated.set(target.parameter, templated.get(target.parameter) ?? [])
+        } else if (parameterOrigin(p)?.namespace === 'connections')
           issue(out, 'ERR_INVALID_CONNECTION_BINDING', where)
         else {
           const list = templated.get(target.parameter) ?? []
@@ -1384,9 +1413,29 @@ export function semanticReport(
           issue(out, 'ERR_UNKNOWN_PARAMETER', `${path}/parameter`)
           continue
         }
+        // BP-EXPORT-004: `property` names a fact of an import parameter, and an
+        // import parameter is bound only through one.
+        if (s.property !== undefined && !isImportParameter(p))
+          issue(out, 'ERR_INVALID_IMPORT_BINDING', `${path}/property`)
         // BP-CONNECTION-001 decides whether a connection and an input agree in kind,
         // and a connection input declares no schema, default or sensitivity to check.
         if (parameterOrigin(p)?.namespace === 'connections' || isConnectionInput(consumer)) continue
+        if (isImportParameter(p)) {
+          // Each binding takes one fact, so an import's inputs are not intersected
+          // (BP-PARAM-002); each fact is checked against its own input instead.
+          const type = at(consumer.schema, 'type')
+          if (s.property === undefined)
+            issue(out, 'ERR_INVALID_IMPORT_BINDING', `${path}/parameter`)
+          else if (
+            inputs[input] &&
+            typeof type === 'string' &&
+            (s.property === 'privatePort'
+              ? !['integer', 'number'].includes(type)
+              : type !== 'string')
+          )
+            issue(out, 'ERR_INCOMPATIBLE_TYPE', `${path}/property`)
+          continue
+        }
         if (inputs[input]) {
           const receivers = consumers.get(String(s.parameter)) ?? []
           receivers.push(consumer)

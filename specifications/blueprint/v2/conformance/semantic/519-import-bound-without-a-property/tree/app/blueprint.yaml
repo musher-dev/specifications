@@ -1,0 +1,20 @@
+specVersion: v2
+kind: BLUEPRINT
+metadata:
+  slug: app
+  revision: 1
+  description: Synthetic conformance fixture blueprint.
+spec:
+  parameters:
+    temporal:
+      from: ${{ exports.temporal-frontend }}
+      ui:
+        label: Workflow server
+  nodes:
+    worker:
+      componentRef: ./components/worker.yaml
+      compute:
+        profile: general.standard.small
+      bindings:
+        temporalAddress:
+          parameter: temporal

@@ -1,0 +1,6 @@
+[
+  {
+    "code": "ERR_ENDPOINT_NOT_EXPORTABLE",
+    "path": "/spec/exports/frontend/endpoint"
+  }
+]

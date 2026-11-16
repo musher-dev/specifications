@@ -1,0 +1,21 @@
+specVersion: v2
+kind: BLUEPRINT
+metadata:
+  slug: app
+  revision: 1
+  description: Synthetic conformance fixture blueprint.
+spec:
+  parameters:
+    host:
+      default: temporal.internal
+      ui:
+        label: Host
+  nodes:
+    worker:
+      componentRef: ./components/worker.yaml
+      compute:
+        profile: general.standard.small
+      bindings:
+        temporalURL:
+          template: http://${{ parameters.host.privateHostname }}/
+          format: URL

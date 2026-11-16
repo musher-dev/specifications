@@ -937,6 +937,36 @@
       "declaredBy": "blueprint"
     },
     {
+      "code": "ERR_ENDPOINT_NOT_EXPORTABLE",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_INVALID_EXPORT_PATH",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_INVALID_IMPORT_BINDING",
+      "phases": [
+        "semantic"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
       "code": "ERR_PARAMETER_NOT_SUBMITTABLE",
       "phases": [
         "resolution"
@@ -1008,6 +1038,16 @@
     },
     {
       "code": "ERR_CONNECTION_INCOMPATIBLE",
+      "phases": [
+        "resolution"
+      ],
+      "severities": [
+        "ERROR"
+      ],
+      "declaredBy": "blueprint"
+    },
+    {
+      "code": "ERR_EXPORT_UNAVAILABLE",
       "phases": [
         "resolution"
       ],

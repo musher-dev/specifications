@@ -1,0 +1,23 @@
+specVersion: v2
+kind: BLUEPRINT
+metadata:
+  slug: app
+  revision: 1
+  description: Synthetic conformance fixture blueprint.
+spec:
+  exports:
+    frontend:
+      node: server
+      endpoint: grpc
+    metrics:
+      node: metrics
+      endpoint: metrics
+  nodes:
+    server:
+      componentRef: ./components/server.yaml
+      compute:
+        profile: general.standard.small
+    metrics:
+      componentRef: ./components/metrics.yaml
+      compute:
+        profile: general.standard.small

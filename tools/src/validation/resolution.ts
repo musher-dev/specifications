@@ -20,9 +20,11 @@ import { type Diagnostic, isError, type Phase, parseDocumentBytes, reported } fr
 import {
   type ConnectionsContext,
   deploymentFacts,
+  type ImportsContext,
   parameterOrigin,
   providedMembers,
   resolveConnections,
+  resolveImports,
 } from './selections.ts'
 import {
   addressProperty,
@@ -252,6 +254,8 @@ export interface DeploymentFacts {
 }
 export interface ResolutionContext extends SemanticContext {
   readonly connections?: ConnectionsContext['connections']
+  /** What acquisition answered for each import parameter (BP-EXPORT-005). */
+  readonly imports?: ImportsContext['imports']
   readonly parameters?: Readonly<Record<string, ResolvedValue>>
   /**
    * Organization variables keyed by exact dotted path, as the acquisition
@@ -347,6 +351,10 @@ export function resolveDeployment(
   const connectionResult = resolveConnections(document, report.components, context.connections)
   diagnostics.push(...connectionResult.diagnostics)
   deferred.push(...connectionResult.deferred)
+  // BP-EXPORT-005: each import's grant is acquired in the same stage.
+  const importResult = resolveImports(document, context.imports, context.parameters ?? {})
+  diagnostics.push(...importResult.diagnostics)
+  deferred.push(...importResult.deferred)
   const active = new Set<string>(),
     done = new Set<string>()
   const fail = (code: string, path: string, stage: NonNullable<Diagnostic['stage']> = 'values') =>
@@ -641,8 +649,11 @@ export function resolveDeployment(
     done.add(id)
     return outputs[id]
   }
-  /** The value of one deployment parameter, as a binding at `path` reads it. */
-  function parameterValue(key: string, path: string): ResolvedValue | undefined {
+  /**
+   * The value of one deployment parameter, as a binding at `path` reads it, or
+   * the one fact of an import parameter that `property` names (BP-EXPORT-004).
+   */
+  function parameterValue(key: string, path: string, property?: string): ResolvedValue | undefined {
     let value: ResolvedValue | undefined
     const p = record(parameters[key]),
       source = parameterOrigin(p),
@@ -672,6 +683,19 @@ export function resolveDeployment(
       value = variables.get(key)
     } else if (source?.namespace === 'deployment') {
       value = facts.get(key)
+    } else if (source?.namespace === 'exports') {
+      // Reported once for the parameter above. None of the facts is sensitive.
+      const fact = importResult.facts.get(key)
+      if (fact)
+        value = {
+          value:
+            property === 'privateHostname'
+              ? fact.privateHostname
+              : property === 'privatePort'
+                ? fact.privatePort
+                : `${addressHost(fact.privateHostname)}:${fact.privatePort}`,
+          sensitive: false,
+        }
     } else {
       // A missing value was reported once for the parameter, in the parameters stage.
       value = submitted
@@ -731,7 +755,12 @@ export function resolveDeployment(
     } else if (Object.hasOwn(s, 'value') && s.value !== undefined)
       value = { value: s.value, sensitive: false }
     else if (typeof s.node === 'string') value = output(s.node, String(s.output))
-    else if (typeof s.parameter === 'string') value = parameterValue(s.parameter, path)
+    else if (typeof s.parameter === 'string')
+      value = parameterValue(
+        s.parameter,
+        path,
+        typeof s.property === 'string' ? s.property : undefined,
+      )
     else if (typeof s.template === 'string') {
       // BP-BIND-009 to BP-BIND-011: each placeholder's value, in its string form
       // and, in a URL, encoded for the component it sits in.
@@ -747,7 +776,7 @@ export function resolveDeployment(
         const target = templateTarget(reference)
         const part =
           target.kind === 'parameter'
-            ? parameterValue(target.parameter, path)
+            ? parameterValue(target.parameter, path, target.property)
             : target.kind === 'output'
               ? output(target.node, target.output)
               : undefined

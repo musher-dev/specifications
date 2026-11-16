@@ -720,7 +720,8 @@
           "deployment",
           "environment",
           "organization",
-          "nodes"
+          "nodes",
+          "exports"
         ],
         "codes": [
           "ERR_UNKNOWN_PLACEHOLDER_NAMESPACE",
@@ -843,6 +844,33 @@
       ],
       "source": [
         "core v2 §5.2"
+      ],
+      "stability": "stable",
+      "status": "approved",
+      "tags": [
+        "placeholder"
+      ]
+    },
+    {
+      "id": "core.exports-namespace",
+      "display_name": "exports namespace",
+      "context": "core",
+      "definition": "The placeholder namespace naming a private endpoint that another deployment of the same organization exports, written `exports.<export-name>` with one DNS-label segment, and defined only where a blueprint parameter's from permits it.",
+      "shortDefinition": "exports.<export-name>, in a parameter's from.",
+      "kind_of": [
+        "core.placeholder-namespace"
+      ],
+      "associated": [
+        {
+          "relation": "names",
+          "term": "blueprint.export"
+        }
+      ],
+      "source": [
+        "core v2 §5.2",
+        "core v2 §10",
+        "blueprint v2 §5.5",
+        "ADR 0058"
       ],
       "stability": "stable",
       "status": "approved",
@@ -5765,7 +5793,7 @@
       "id": "blueprint.parameter-origin",
       "display_name": "parameter origin",
       "context": "blueprint",
-      "definition": "The way one deployment parameter's value is obtained, named by the keys present: submitted, generated, hash, variable, deployment-fact or connection.",
+      "definition": "The way one deployment parameter's value is obtained, named by the keys present: submitted, generated, hash, variable, deployment-fact, connection or import.",
       "shortDefinition": "How a parameter's value is obtained.",
       "kind_of": [
         "blueprint.origin"
@@ -6025,11 +6053,110 @@
       ]
     },
     {
+      "id": "blueprint.import-parameter",
+      "display_name": "import parameter",
+      "context": "blueprint",
+      "definition": "A deployment parameter whose from is `${{ exports.<export-name> }}`, naming one export by its export name, whose private hostname, port and address a binding takes one at a time through a property.",
+      "shortDefinition": "One export, `${{ exports.x }}`, bound by property.",
+      "kind_of": [
+        "blueprint.deployment-parameter"
+      ],
+      "associated": [
+        {
+          "relation": "imports",
+          "term": "blueprint.export"
+        },
+        {
+          "relation": "names",
+          "term": "deployment.export-name"
+        }
+      ],
+      "identifiers": {
+        "fields": [
+          "property"
+        ],
+        "values": [
+          "privateHostname",
+          "privatePort",
+          "privateAddress"
+        ],
+        "codes": [
+          "ERR_INVALID_EXPORT_PATH",
+          "ERR_INVALID_IMPORT_BINDING",
+          "ERR_EXPORT_UNAVAILABLE"
+        ]
+      },
+      "confusables": [
+        "A connection parameter, which fills a connection input with a protocol's members; an import yields addresses any value input takes."
+      ],
+      "source": [
+        "blueprint v2 §1.1",
+        "blueprint v2 §5",
+        "blueprint v2 §5.5",
+        "ADR 0058"
+      ],
+      "stability": "stable",
+      "status": "approved",
+      "tags": [
+        "parameters",
+        "exports"
+      ]
+    },
+    {
+      "id": "blueprint.export",
+      "display_name": "export",
+      "context": "blueprint",
+      "definition": "A `PRIVATE` endpoint of a `SERVICE` or `WORKER` node that a blueprint offers, under a key of `spec.exports`, to other deployments of its organization, naming no consumer.",
+      "shortDefinition": "A private endpoint offered to other deployments.",
+      "part_of": [
+        "blueprint.blueprint"
+      ],
+      "associated": [
+        {
+          "relation": "admits",
+          "term": "deployment.export-grant"
+        }
+      ],
+      "identifiers": {
+        "fields": [
+          "exports"
+        ],
+        "defs": [
+          "BlueprintExport"
+        ],
+        "requirement_prefixes": [
+          "BP-EXPORT"
+        ],
+        "codes": [
+          "ERR_ENDPOINT_NOT_EXPORTABLE"
+        ]
+      },
+      "verbs": [
+        "a blueprint exports an endpoint",
+        "a grant admits a deployment",
+        "an import parameter imports it"
+      ],
+      "confusables": [
+        "A PUBLIC endpoint, which anyone with its address reaches and which needs no export.",
+        "Terraform outputs and stack exports, which publish values, not network reach."
+      ],
+      "source": [
+        "blueprint v2 §1.1",
+        "blueprint v2 §5.5",
+        "ADR 0058"
+      ],
+      "stability": "stable",
+      "status": "approved",
+      "tags": [
+        "exports"
+      ]
+    },
+    {
       "id": "blueprint.parameter-from",
       "display_name": "parameter from",
       "context": "blueprint",
-      "definition": "The member of a deployment parameter holding exactly one whole placeholder in the variables, deployment or connections namespace.",
-      "shortDefinition": "One whole placeholder in variables, deployment or connections.",
+      "definition": "The member of a deployment parameter holding exactly one whole placeholder in the variables, deployment, connections or exports namespace.",
+      "shortDefinition": "One whole placeholder in variables, deployment, connections or exports.",
       "part_of": [
         "blueprint.deployment-parameter"
       ],
@@ -7203,6 +7330,56 @@
       "status": "approved",
       "tags": [
         "resolution"
+      ]
+    },
+    {
+      "id": "deployment.export-name",
+      "display_name": "export name",
+      "context": "deployment",
+      "definition": "The DNS label the platform gives one export of one deployment, unique among its organization's live and quarantined names, by which an import parameter's from names the export.",
+      "shortDefinition": "An export's organization-scoped DNS label.",
+      "associated": [
+        {
+          "relation": "names",
+          "term": "blueprint.export"
+        }
+      ],
+      "confusables": [
+        "An export's key in spec.exports, which the blueprint chooses and the default name ends with.",
+        "The organization Handle, its global human name, which a later version may prefix to an export name."
+      ],
+      "source": [
+        "blueprint v2 §1.1",
+        "blueprint v2 §5.5",
+        "ADR 0058"
+      ],
+      "stability": "stable",
+      "status": "approved",
+      "tags": [
+        "exports"
+      ]
+    },
+    {
+      "id": "deployment.export-grant",
+      "display_name": "export grant",
+      "context": "deployment",
+      "definition": "The exporting deployment's policy admitting one consuming deployment, named by its deployment ID, to one export, managed through the platform API and named by no document.",
+      "shortDefinition": "Policy admitting one deployment to one export.",
+      "associated": [
+        {
+          "relation": "admits-to",
+          "term": "blueprint.export"
+        }
+      ],
+      "source": [
+        "blueprint v2 §1.1",
+        "blueprint v2 §5.5",
+        "ADR 0058"
+      ],
+      "stability": "stable",
+      "status": "approved",
+      "tags": [
+        "exports"
       ]
     },
     {

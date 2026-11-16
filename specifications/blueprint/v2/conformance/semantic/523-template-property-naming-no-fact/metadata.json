@@ -1,0 +1,11 @@
+{
+  "id": "semantic-523-template-property-naming-no-fact",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#exports",
+  "requirements": [
+    "BP-EXPORT-004"
+  ],
+  "summary": "A template naming a second segment of an import that is not one of its three facts is rejected.",
+  "document": "app/blueprint.yaml"
+}
