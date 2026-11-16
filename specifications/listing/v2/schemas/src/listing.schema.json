@@ -182,7 +182,7 @@
           "type": "string"
         },
         "tags": {
-          "description": "Discovery tags the storefront groups listings by, in lowercase kebab-case. At most sixteen, and a tag may not repeat.",
+          "description": "Discovery tags the storefront groups listings by, each in lowercase kebab-case of 2 to 40 characters (spec.md §4). At most sixteen, and a tag may not repeat.",
           "items": {
             "$comment": "spec.md §4 (LIST-TAG-001) and ADR 0007 §4. A tag is lowercase kebab, so the grammar is what makes two spellings of one tag impossible rather than merely discouraged.",
             "maxLength": 40,
