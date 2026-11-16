@@ -612,7 +612,12 @@ these sets:
 
 Components declare endpoints, never exposure. A blueprint node selects public
 exposure, and an endpoint it does not expose is private. A `WORKER`'s endpoints
-are never public ([`COMP-TYPE-003`](#COMP-TYPE-003)).
+are never public ([`COMP-TYPE-003`](#COMP-TYPE-003)). A blueprint may also
+export a private endpoint of a `SERVICE` or `WORKER` to other deployments of
+its organization
+([blueprint v2 §5.5](../../blueprint/v2/spec.md#exports)), and an importing
+deployment reads the endpoint's private properties below. The component
+declares nothing for it.
 
 <a id="COMP-EP-001"></a>**`COMP-EP-001`**: Every field naming an endpoint MUST
 name a declared one, including on a single-endpoint workload: no endpoint is
