@@ -221,6 +221,165 @@ validating. What a consumer adopts:
   the platform adopts 2.2.0. A catalog item whose job needs longer declares
   `timeLimitSeconds`.
 
+## <a id="adopting-230"></a>Adopting 2.3.0
+
+Core, component and blueprint release `2.3.0` (#231), and listing `2.1.2`
+records core `2.3.0` (#238). Every change is an optional field, a new value or
+a relaxation, so no document that validated at `2.2.0` stops validating. ADRs
+0047 to 0063 record the decisions. What a consumer adopts:
+
+- **Workloads** (component). A workload without an endpoint starts when its
+  process runs (`COMP-HEALTH-001`, ADR 0047). Its environment is the image's,
+  overlaid by its inputs (`COMP-ENVVAR-005`, `COMP-ENVVAR-006`, ADR 0048). TCP,
+  gRPC and exec probes and HTTP probe headers (`COMP-PROBE-001` to `006`, ADR
+  0049). An `entrypoint`, configuration `files` and mixed-case environment
+  names (`COMP-CMD-002`, `COMP-FILE-001` to `005`, `COMP-ENVVAR-004`, ADR
+  0050). A compute floor and recommendation (`COMP-COMPUTE-001` to `003`, ADR
+  0051). Shared memory, capabilities, seccomp and sysctls from an allowlist
+  (`COMP-SECURITY-001` to `005`, ADR 0052). New codes: `ERR_ENDPOINT_NOT_TCP`,
+  `ERR_ENDPOINT_NOT_GRPC`, `ERR_INVALID_COMPUTE`,
+  `ERR_CAPABILITY_NOT_GRANTED`, `ERR_SECCOMP_NOT_GRANTED` and
+  `ERR_SYSCTL_NOT_GRANTED`.
+- **Connections** (component and blueprint). The `OPENAI_EMBEDDINGS`
+  protocol, and connections a node provides, bound with `{node, connection}`
+  (`COMP-CONNECTION-004`, `005`, `BP-CONNECTION-004`, `005`, ADR 0059). New
+  codes: `ERR_INVALID_PROVIDED_CONNECTION` and
+  `ERR_UNKNOWN_PROVIDED_CONNECTION`.
+- **Parameters** (blueprint). An organization API key deploys as the user who
+  created it (`BP-PARAM-015`, `016`, ADR 0053). A parameter's value schema is
+  the intersection of its inputs' (`BP-PARAM-002`, `004`, `017`, ADR 0054),
+  with `WARN_GENERATOR_OUTSIDE_SCHEMA`. `ui.options`, `ui.editable` and a
+  disclosed generated value (`BP-UI-006` to `009`, ADR 0062).
+- **Start order** (blueprint). `startAfter` (`BP-ORDER-001` to `005`, ADR
+  0055), with `ERR_INVALID_START_ORDER` and `ERR_START_CYCLE`. A job run's time
+  limit counts from its start and ends with a graceful stop (`COMP-JOB-008`,
+  ADR 0063).
+- **Bindings and access** (blueprint). String templates encoded by `format`
+  (`BP-BIND-009` to `012`, ADR 0056), with `ERR_INVALID_TEMPLATE`. Many public
+  hosts and mounts with one sign-in (`BP-HOST-001` to `005`, ADR 0057), with
+  `ERR_INVALID_HOST_MOUNT`. A `ROLE` claim and OIDC client-secret rotation
+  (`BP-ACCESS-013` to `015`, ADR 0060). A platform-checked API key and exact,
+  segment-bounded exempt paths (`COMP-EP-021`, `BP-ACCESS-016` to `018`, ADR
+  0061), with `ERR_INVALID_API_KEY_PARAMETER`.
+
+Some released documents change in **defined meaning**, which no replay can
+see. The platform adopts each of these, and each spec states it as an adoption
+note:
+
+- **[`BP-ACCESS-012`](../specifications/blueprint/v2/spec.md#BP-ACCESS-012).**
+  An exemption opens path by path, once a rollout that exempts it is active.
+  A released document carries no `startAfter`, so its exempt path opens once
+  the node that exposes it is ready in that rollout, no longer as soon as the
+  node serves; another node of the deployment does not hold it closed.
+- **[`BP-ACCESS-009`](../specifications/blueprint/v2/spec.md#BP-ACCESS-009).**
+  An exempt path matches exactly or by `/`-bounded prefix, so `/webhook` no
+  longer covers `/webhooks`. The path is matched once decoded and with dot
+  segments removed, and a path holding `;`, `\`, a NUL, an empty segment or an
+  encoded `/`, `\` or `%` is never exempt.
+- **[`BP-PARAM-016`](../specifications/blueprint/v2/spec.md#BP-PARAM-016).** A
+  `deployment`-scope validation treats its caller as the creator, and reports a
+  deployment fact the caller lacks as `ERR_DEPLOYMENT_FACT_UNAVAILABLE` rather
+  than deferring it.
+- **[`COMP-ENVVAR-005`](../specifications/component/v2/spec.md#COMP-ENVVAR-005).**
+  An image that sets `HOSTNAME` keeps its value; the platform no longer writes
+  the replica's name over it.
+- **[`COMP-SECURITY-005`](../specifications/component/v2/spec.md#COMP-SECURITY-005).**
+  Every workload runs with no-new-privileges and its runtime's default seccomp
+  profile, so one that gains privilege through a setuid binary, or makes a
+  call that profile blocks, fails until its component is revised.
+- **[`COMP-JOB-008`](../specifications/component/v2/spec.md#COMP-JOB-008).** A
+  run's limit counts from its command's start, after its `startAfter`
+  conditions hold. At its limit a run gets its image's stop signal, `SIGTERM`
+  by default, and at least 10 seconds before a forced end, and it has failed
+  even if it then exits 0.
+- **[`COMP-HEALTH-001`](../specifications/component/v2/spec.md#COMP-HEALTH-001).**
+  A replica without a probe is started once its process runs, and ready once
+  started. No platform requires a port other than a declared endpoint's, and a
+  port-bind check is never stricter than a declared probe.
+
+**Runtime obligations no case catches.** These requirements are platform
+obligations: no document breaks them, and the conformance corpus records why
+none pins them (`UNPINNED` in `tools/src/conformance/conformance.ts`).
+platform-api and the host agent own their tests:
+
+- the edge: exempt-path matching and when it takes effect (`BP-ACCESS-009`,
+  `BP-ACCESS-012`, `BP-ACCESS-017`), the role claims it issues
+  (`BP-ACCESS-014`), the rotated OIDC client secret applied as a rollout
+  (`BP-ACCESS-015`), the API key checked in constant time with its previous
+  generation (`BP-ACCESS-018`), and hosts and the one sign-in (`BP-HOST-001`,
+  `BP-HOST-004`, `BP-HOST-005`);
+- rollouts: holding a node until its `startAfter` conditions hold and when a
+  rollout is active (`BP-ORDER-004`, `BP-ORDER-005`), and a job run's time
+  limit and stop (`COMP-JOB-008`);
+- the creator of an API-key deployment (`BP-PARAM-015`);
+- workloads: start and readiness (`COMP-HEALTH-001`), the environment
+  (`COMP-ENVVAR-005`), how the prober runs each mechanism (`COMP-PROBE-006`),
+  configuration files (`COMP-FILE-004`), the compute floor
+  (`COMP-COMPUTE-003`) and the security settings (`COMP-SECURITY-005`).
+
+## <a id="adopting-240"></a>Adopting 2.4.0
+
+Core, component and blueprint release `2.4.0`, in that order, and listing
+releases `2.1.3` recorded against core `2.4.0`. A deployment can reach another
+deployment's `PRIVATE` endpoint, in the same organization, through an export
+and an import
+([ADR 0058](adr/0058-a-deployment-exports-a-private-endpoint-to-a-named-consumer.md);
+[blueprint v2 §5.5](../specifications/blueprint/v2/spec.md#exports)). Documents
+carry roles; the platform's policy carries parties. What a consumer adopts:
+
+- **The `exports` namespace** (core). Core reserves `exports`, defined only in
+  a blueprint parameter's `from`. `${{ exports.x }}` written where no family
+  permits it now reports `ERR_NAMESPACE_NOT_PERMITTED` instead of
+  `ERR_UNKNOWN_PLACEHOLDER_NAMESPACE`. Both reject, so no verdict changes.
+  Regenerate from core's vocabulary registry.
+- **Validate the exporter** (blueprint). `spec.exports.<key>` is
+  `{node, endpoint}`, closed, keyed by a DNS label, and names a `PRIVATE`
+  endpoint of a `SERVICE` or `WORKER` node (`BP-EXPORT-001`, `002`). A document
+  names no consumer.
+- **Validate the importer** (blueprint). An import parameter, the seventh
+  parameter origin, has `from: "${{ exports.<export-name> }}"`, exactly one
+  DNS-label segment (`BP-EXPORT-003`), and is never submitted
+  (`BP-PARAM-013`). A node binds it with `{parameter, property}`, `property`
+  one of `privateHostname`, `privatePort` and `privateAddress`, or in a
+  template as `${{ parameters.<import>.<property> }}`; `property` belongs to
+  an import parameter alone, and an import is bound only with one
+  (`BP-EXPORT-004`). New codes: `ERR_ENDPOINT_NOT_EXPORTABLE`,
+  `ERR_INVALID_EXPORT_PATH` and `ERR_INVALID_IMPORT_BINDING`, all semantic.
+  Regenerate SDK types from the bundle.
+- **Resolve an import** (platform-api). Acquisition is authorized, persisted
+  and recorded once per deployment and parameter, and reused by every retry,
+  redeploy and update (`BP-EXPORT-005`). An unknown, withdrawn or not granted
+  export is one code, `ERR_EXPORT_UNAVAILABLE`, at stage `connections`, so no
+  caller can enumerate exports. A granted import yields the endpoint's three
+  facts.
+- **Own the policy** (platform-api). An export has an organization-scoped
+  export name: a DNS label, unique among the organization's live and
+  quarantined names, `<deployment-name>-<key>` by default. A rename
+  quarantines the old name for 90 days with no redirect; existing selections,
+  bound by ID, survive, and a fresh resolution of the old name is
+  `ERR_EXPORT_UNAVAILABLE`. The consumers an export admits are bound by
+  deployment ID through the platform API, never by a document. Same
+  organization only.
+- **Widen private reach** (the platform network).
+  [`BP-ACCESS-011`](../specifications/blueprint/v2/spec.md#BP-ACCESS-011)
+  admits, beside the deployment's own nodes and the probing host, the
+  consumers an export grant admits, to that endpoint alone.
+- **Run the new cases** (every adapter). A resolution fixture's context gains
+  an `imports` key, which the
+  [fixture format](conformance.md#resolution-context) defines beside
+  `connections`.
+
+**Runtime obligations no case catches**, each recorded in `UNPINNED`:
+
+- `BP-EXPORT-006`: network admission covers only the exported endpoint, from
+  a granted consumer. A revoke denies new connections within 4 seconds;
+  established connections may survive it.
+- `BP-EXPORT-007`: an importer keeps the exporter's facts until its own next
+  rollout, and follows an exporter's redeploy on that rollout.
+- `BP-EXPORT-008`: deleting an exporter whose export is imported is refused
+  unless forced. A forced delete withdraws the export, ends the imports and
+  degrades the consumers.
+
 ## musher-cli
 
 - Write and validate v2 documents only, with the v2 bundles, and report the v2
