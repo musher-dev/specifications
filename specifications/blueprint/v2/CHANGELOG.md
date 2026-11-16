@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.4.0](https://github.com/musher-dev/specifications/compare/blueprint/v2.3.0...blueprint/v2.4.0) (2026-11-16)
+
+
+### Additions
+
+* **core:** export a private endpoint to another deployment, and import it as a parameter ([#245](https://github.com/musher-dev/specifications/issues/245)) ([c3e6a64](https://github.com/musher-dev/specifications/commit/c3e6a646e99f17e16b5fe55931a1b5627ae4149e))
+
 ## [2.3.0](https://github.com/musher-dev/specifications/compare/blueprint/v2.2.0...blueprint/v2.3.0) (2026-11-13)
 
 
