@@ -1,0 +1,10 @@
+{
+  "id": "structural-506-export-key-outside-the-dns-label-grammar",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#exports",
+  "requirements": [
+    "BP-EXPORT-001"
+  ],
+  "summary": "An export key is a DNS label."
+}

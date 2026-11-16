@@ -1,0 +1,41 @@
+specVersion: v2
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: WORKER
+  workload:
+    source:
+      image: example/service:1
+  contract:
+    inputs:
+      temporalAddress:
+        schema:
+          type: string
+        description: Synthetic input.
+        target:
+          envVar: TEMPORAL_ADDRESS
+        required: false
+      temporalHost:
+        schema:
+          type: string
+        description: Synthetic input.
+        target:
+          envVar: TEMPORAL_HOST
+        required: false
+      temporalPort:
+        schema:
+          type: integer
+        description: Synthetic input.
+        target:
+          envVar: TEMPORAL_PORT
+        required: false
+      temporalURL:
+        schema:
+          type: string
+        description: Synthetic input.
+        target:
+          envVar: TEMPORAL_URL
+        required: false
+    outputs: {}

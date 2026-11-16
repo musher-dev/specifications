@@ -1,0 +1,11 @@
+{
+  "id": "semantic-513-export-of-a-job-node",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#exports",
+  "requirements": [
+    "BP-EXPORT-002"
+  ],
+  "summary": "A job has no endpoint to export, so an export naming one is rejected at its node.",
+  "document": "app/blueprint.yaml"
+}

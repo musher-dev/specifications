@@ -1,0 +1,20 @@
+specVersion: v2
+kind: COMPONENT
+metadata:
+  revision: 1
+  description: Synthetic conformance fixture component.
+spec:
+  type: SERVICE
+  workload:
+    source:
+      image: example/service:1
+    endpoints:
+      grpc:
+        targetPort: 7233
+        protocol: GRPC
+      peer:
+        targetPort: 7234
+        protocol: TCP
+  contract:
+    inputs: {}
+    outputs: {}

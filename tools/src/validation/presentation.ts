@@ -48,7 +48,9 @@ export function formControls(blueprint: Json, components: ReadonlyMap<string, Js
       p.generator ||
       p.hash ||
       origin?.namespace === 'variables' ||
-      origin?.namespace === 'deployment'
+      origin?.namespace === 'deployment' ||
+      // Blueprint BP-UI-004: an import is answered by an export grant, never a form.
+      origin?.namespace === 'exports'
     )
       continue
     const reached = reaches.get(name) ?? [],

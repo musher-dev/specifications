@@ -1271,6 +1271,106 @@
       "id": "structural-505-api-key-with-an-unknown-member",
       "phase": "structural",
       "path": "structural/505-api-key-with-an-unknown-member"
+    },
+    {
+      "id": "semantic-510-valid-exporter",
+      "phase": "semantic",
+      "path": "semantic/510-valid-exporter"
+    },
+    {
+      "id": "semantic-511-valid-importer",
+      "phase": "semantic",
+      "path": "semantic/511-valid-importer"
+    },
+    {
+      "id": "semantic-512-export-of-a-public-endpoint",
+      "phase": "semantic",
+      "path": "semantic/512-export-of-a-public-endpoint"
+    },
+    {
+      "id": "semantic-513-export-of-a-job-node",
+      "phase": "semantic",
+      "path": "semantic/513-export-of-a-job-node"
+    },
+    {
+      "id": "semantic-514-export-names-an-unknown-node",
+      "phase": "semantic",
+      "path": "semantic/514-export-names-an-unknown-node"
+    },
+    {
+      "id": "semantic-515-export-names-an-unknown-endpoint",
+      "phase": "semantic",
+      "path": "semantic/515-export-names-an-unknown-endpoint"
+    },
+    {
+      "id": "semantic-516-export-path-of-two-segments",
+      "phase": "semantic",
+      "path": "semantic/516-export-path-of-two-segments"
+    },
+    {
+      "id": "semantic-517-export-path-in-lower-camel-case",
+      "phase": "semantic",
+      "path": "semantic/517-export-path-in-lower-camel-case"
+    },
+    {
+      "id": "semantic-518-property-on-a-submitted-parameter",
+      "phase": "semantic",
+      "path": "semantic/518-property-on-a-submitted-parameter"
+    },
+    {
+      "id": "semantic-519-import-bound-without-a-property",
+      "phase": "semantic",
+      "path": "semantic/519-import-bound-without-a-property"
+    },
+    {
+      "id": "semantic-520-template-names-an-import-without-a-property",
+      "phase": "semantic",
+      "path": "semantic/520-template-names-an-import-without-a-property"
+    },
+    {
+      "id": "semantic-521-template-names-a-property-of-a-submitted-parameter",
+      "phase": "semantic",
+      "path": "semantic/521-template-names-a-property-of-a-submitted-parameter"
+    },
+    {
+      "id": "semantic-522-import-port-into-a-string-input",
+      "phase": "semantic",
+      "path": "semantic/522-import-port-into-a-string-input"
+    },
+    {
+      "id": "semantic-523-template-property-naming-no-fact",
+      "phase": "semantic",
+      "path": "semantic/523-template-property-naming-no-fact"
+    },
+    {
+      "id": "semantic-524-exports-namespace-in-a-template",
+      "phase": "semantic",
+      "path": "semantic/524-exports-namespace-in-a-template"
+    },
+    {
+      "id": "structural-506-export-key-outside-the-dns-label-grammar",
+      "phase": "structural",
+      "path": "structural/506-export-key-outside-the-dns-label-grammar"
+    },
+    {
+      "id": "structural-507-export-without-an-endpoint",
+      "phase": "structural",
+      "path": "structural/507-export-without-an-endpoint"
+    },
+    {
+      "id": "structural-508-export-naming-its-consumers",
+      "phase": "structural",
+      "path": "structural/508-export-naming-its-consumers"
+    },
+    {
+      "id": "structural-509-binding-property-outside-the-three",
+      "phase": "structural",
+      "path": "structural/509-binding-property-outside-the-three"
+    },
+    {
+      "id": "structural-510-binding-property-without-a-parameter",
+      "phase": "structural",
+      "path": "structural/510-binding-property-without-a-parameter"
     }
   ]
 }

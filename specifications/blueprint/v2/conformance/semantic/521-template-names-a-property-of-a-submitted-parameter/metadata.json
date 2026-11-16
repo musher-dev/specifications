@@ -1,0 +1,11 @@
+{
+  "id": "semantic-521-template-names-a-property-of-a-submitted-parameter",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#exports",
+  "requirements": [
+    "BP-EXPORT-004"
+  ],
+  "summary": "A template naming a property of a parameter that is not an import is rejected.",
+  "document": "app/blueprint.yaml"
+}

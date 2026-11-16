@@ -9,6 +9,7 @@ import {
   parameterOrigin,
   parameterOriginDiagnostics,
   resolveConnections,
+  resolveImports,
   selectConnection,
   selectionProblem,
 } from './selections.ts'
@@ -650,5 +651,59 @@ describe('credential secrets and defaulted locators (docs/adr/0045)', () => {
         'slack',
       ),
     ).toBe('invalid')
+  })
+})
+
+describe('imports of an export (blueprint BP-EXPORT-005)', () => {
+  const blueprint = {
+    spec: { parameters: { temporal: { from: '${{ exports.temporal-frontend }}' } }, nodes: {} },
+  } as unknown as Json
+  const granted = {
+    status: 'GRANTED',
+    persisted: true,
+    import: {
+      identity: 'import-1',
+      version: '1',
+      deployment: 'deploy-1',
+      parameter: 'temporal',
+      request: { from: '${{ exports.temporal-frontend }}' },
+      export: { identity: 'export-1', version: '1' },
+      grant: { identity: 'grant-1', version: '1' },
+      privateHostname: 'server.internal',
+      privatePort: 7233,
+    },
+  }
+  const resolve = (acquisition: unknown) =>
+    resolveImports(blueprint, {
+      deployment: 'deploy-1',
+      parameters: { temporal: acquisition },
+    } as unknown as Parameters<typeof resolveImports>[1])
+
+  test('a granted import yields its hostname and port', () => {
+    const result = resolve(granted)
+    expect(result.diagnostics).toEqual([])
+    expect(result.facts.get('temporal')).toEqual({
+      privateHostname: 'server.internal',
+      privatePort: 7233,
+    })
+  })
+
+  test('unknown, denied and withdrawn exports report one code', () => {
+    for (const status of ['UNKNOWN', 'DENIED', 'WITHDRAWN'])
+      expect(resolve({ status }).diagnostics.map((d) => d.code)).toEqual(['ERR_EXPORT_UNAVAILABLE'])
+  })
+
+  test('a grant answering another request is malformed', () => {
+    const other = {
+      ...granted,
+      import: { ...granted.import, request: { from: '${{ exports.x-y }}' } },
+    }
+    expect(resolve(other).diagnostics.map((d) => d.code)).toEqual([
+      'ERR_INVALID_RESOLUTION_CONTEXT',
+    ])
+  })
+
+  test('an import not yet acquired is deferred', () => {
+    expect(resolveImports(blueprint, undefined).deferred).toHaveLength(1)
   })
 })

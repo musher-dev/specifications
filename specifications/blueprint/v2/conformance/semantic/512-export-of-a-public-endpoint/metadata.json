@@ -1,0 +1,11 @@
+{
+  "id": "semantic-512-export-of-a-public-endpoint",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#exports",
+  "requirements": [
+    "BP-EXPORT-002"
+  ],
+  "summary": "An endpoint the node exposes publicly is not exported.",
+  "document": "app/blueprint.yaml"
+}

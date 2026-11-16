@@ -1,0 +1,11 @@
+{
+  "id": "semantic-522-import-port-into-a-string-input",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#exports",
+  "requirements": [
+    "BP-EXPORT-004"
+  ],
+  "summary": "An import's port is an integer, so it cannot supply an input that takes a string.",
+  "document": "app/blueprint.yaml"
+}

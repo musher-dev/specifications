@@ -1,0 +1,11 @@
+{
+  "id": "semantic-516-export-path-of-two-segments",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#exports",
+  "requirements": [
+    "BP-EXPORT-003"
+  ],
+  "summary": "An exports path of two segments names no export.",
+  "document": "app/blueprint.yaml"
+}

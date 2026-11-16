@@ -66,7 +66,7 @@ deployment.
   ([§4.2](#bindings)).
 - An **origin** is where a value comes from. A binding's origin is a deployment
   parameter, an output of a node, or a literal value; a deployment parameter's
-  origin is one of the six parameter kinds of [§5](#parameters).
+  origin is one of the seven parameter kinds of [§5](#parameters).
 - A **deployment** is one blueprint revision instantiated for an organization.
   Its **deployer** is the person who creates or changes it, and its **creator**
   is the person who created it.
@@ -102,6 +102,11 @@ deployment.
   and the private **deployment snapshot** ([§5.2](#resolution-record)).
 - The **deploy form** is the form a deployer fills to create a deployment
   ([§5.4](#deploy-form)).
+- An **export** is a `PRIVATE` endpoint of a `SERVICE` or `WORKER` node that a
+  blueprint offers to other deployments of its organization. An
+  **import parameter** is a deployment parameter naming one export by its
+  **export name**, and an **export grant** is the exporting deployment's policy
+  admitting one consuming deployment to one export ([§5.5](#exports)).
 
 ### <a id="migration"></a>1.2 Migration from v1
 
@@ -163,7 +168,7 @@ section that was renamed keeps its v1 anchor beside its new one.
 specVersion: v2
 kind: BLUEPRINT
 metadata: { slug: …, revision: …, description: … }
-spec: { parameters: {…}, nodes: {…} }
+spec: { parameters: {…}, nodes: {…}, exports: {…} }
 ```
 
 A blueprint is a Musher document as the
@@ -414,7 +419,7 @@ node. The map key names an input of the node's component
 
 | Key | Members | Origin |
 |---|---|---|
-| `parameter` | `parameter` | A named deployment parameter ([§5](#parameters)) |
+| `parameter` | `parameter`, and `property` for an import parameter | A named deployment parameter ([§5](#parameters)), or one fact of an import ([§5.5](#exports)) |
 | `node` | `node`, `output` | An output of another node |
 | `node` | `node`, `connection` | A connection another node provides, for a connection input ([§5.3](#provided-connections)) |
 | `value` | `value` | A logical literal value, never for a sensitive input ([`BP-BIND-008`](#BP-BIND-008)) |
@@ -422,7 +427,8 @@ node. The map key names an input of the node's component
 
 <a id="BP-BIND-003"></a>**`BP-BIND-003`**: A binding names exactly one origin:
 `parameter`, `node` with `output`, `node` with `connection`, `value`, or
-`template` with `format`. Structural: a binding naming no origin is
+`template` with `format`. `property` goes only with `parameter`
+([`BP-EXPORT-001`](#BP-EXPORT-001)). Structural: a binding naming no origin is
 `ERR_MISSING_FIELD` at the binding, and one carrying members of two origins is
 `ERR_INVALID_VALUE` there. `node` goes with `output` or `connection`, and
 `template` with `format`: `node` without `output` or `connection`, `output` or
@@ -485,9 +491,10 @@ bindings:
 ```
 
 <a id="BP-BIND-009"></a>**`BP-BIND-009`**: A binding's `template` permits two
-namespaces. `${{ parameters.<parameter> }}` names a deployment parameter, and
-`${{ nodes.<node>.outputs.<output> }}` an output of a node; any other path in
-them names neither explicitly. A placeholder yields the string form of a scalar
+namespaces. `${{ parameters.<parameter> }}` names a deployment parameter,
+`${{ parameters.<parameter>.<property> }}` one fact of an import parameter
+([§5.5](#exports)), and `${{ nodes.<node>.outputs.<output> }}` an output of a
+node; any other path in them names none of these explicitly. A placeholder yields the string form of a scalar
 value: a string as it is, a number as its shortest round-trip JSON text, and a
 boolean as `true` or `false`. Substitution is single-pass, as core says. A
 `template` is a composition position under
@@ -498,7 +505,8 @@ binding's `template`:
 | Condition | Diagnostic |
 |---|---|
 | A placeholder outside core's grammar, or naming a namespace other than these two | Core's code ([`CORE-PLACEHOLDER-001`](../../core/v2/spec.md#CORE-PLACEHOLDER-001) to [`CORE-PLACEHOLDER-003`](../../core/v2/spec.md#CORE-PLACEHOLDER-003)) |
-| A `parameters` path that is not one declared parameter | `ERR_UNKNOWN_PARAMETER` |
+| A `parameters` path whose first segment is not a declared parameter, or of more than two segments | `ERR_UNKNOWN_PARAMETER` |
+| An import parameter without a property, or a second segment on any other parameter or naming no property ([`BP-EXPORT-004`](#BP-EXPORT-004)) | `ERR_INVALID_IMPORT_BINDING` |
 | A `nodes` path whose node does not exist | `ERR_UNKNOWN_NODE` |
 | A `nodes` path that is not `<node>.outputs.<output>`, or names no output of the node's component | `ERR_UNKNOWN_OUTPUT` |
 | A connection parameter, which is not a value ([§5.3](#connections)) | `ERR_INVALID_CONNECTION_BINDING` |
@@ -950,13 +958,17 @@ closed. A blueprint that adds `startAfter` gains the whole gate.
 
 <a id="private-endpoints"></a><a id="BP-ACCESS-011"></a>**`BP-ACCESS-011`**: The
 platform MUST make a `PRIVATE` endpoint reachable only from the nodes of the
-same deployment and from the platform's own probing host, and from nothing
-else: not from another deployment, another organization or the public.
-Isolation holds at the network level, whatever a name resolves to in DNS: a
-peer that learns or guesses the endpoint's private hostname or address still
-cannot open a network connection to it. Two deployments of one blueprint in one
-organization are as separate as two organizations are: a private endpoint is
-private to its deployment, not to its blueprint or its owner.
+same deployment, from the platform's own probing host and, for an exported
+endpoint, from the nodes of each deployment an export grant admits to it
+([§5.5](#exports)), and from nothing else: not from another deployment, another
+organization or the public. A grant opens the one endpoint it exports, never
+another endpoint of the exporting deployment. Isolation holds at the network
+level, whatever a name resolves to in DNS: a peer that learns or guesses the
+endpoint's private hostname or address still cannot open a network connection
+to it. Two deployments of one blueprint in one organization are as separate as
+two organizations are, unless an export grant joins them, and then only at the
+exported endpoint: a private endpoint is private to its deployment, not to its
+blueprint or its owner.
 
 <a id="role-claims"></a>**Role claims.** A node may also release the
 viewer's standing, so that an app can grant its own administrator role
@@ -1261,9 +1273,9 @@ outside enters as a deployment parameter, and a node reaches it by naming the
 parameter. A parameter is a named deployment value, independent of how a form
 presents it.
 
-A parameter has exactly one origin, and the keys present say which. The six
-kinds are the submitted, generated, hash, variable, deployment-fact and
-connection parameter:
+A parameter has exactly one origin, and the keys present say which. The seven
+kinds are the submitted, generated, hash, variable, deployment-fact, connection
+and import parameter:
 
 | Parameter | Declared by | Value |
 |---|---|---|
@@ -1273,6 +1285,7 @@ connection parameter:
 | Variable parameter | `from: "${{ variables.<path> }}"` | One organization variable ([§5.2](#origins)) |
 | Deployment-fact parameter | `from: "${{ deployment.<path> }}"` | One fact about the deployment, captured when it is created ([§5.2](#origins)) |
 | Connection parameter | `from: "${{ connections.<path> }}"` | One connection ([§5.3](#connections)) |
+| Import parameter | `from: "${{ exports.<export-name> }}"` | The private address of one export another deployment grants this one ([§5.5](#exports)) |
 
 ```yaml
 parameters:
@@ -1282,12 +1295,13 @@ parameters:
   region: { from: "${{ variables.cloud.region }}" }
   adminEmail: { from: "${{ deployment.creator.email }}" }
   llm: { from: "${{ connections.llm.default }}", ui: { label: Language model } }
+  temporal: { from: "${{ exports.temporal-frontend }}", ui: { label: Workflow server } }
 ```
 
 The node in [§4](#node-graph)'s example reaches `siteTitle` through its
 `bindings`, and [§5.3](#connections) shows a connection reaching a node the
-same way. A node never names a variable, a deployment fact or a connection
-directly.
+same way, and [§5.5](#exports) an import. A node never names a variable, a
+deployment fact, a connection or an export directly.
 
 <a id="BP-PARAM-010"></a>**`BP-PARAM-010`**: A parameter carries at most one of
 `default`, `generator`, `hash` and `from`. `hash` requires `parameter` and
@@ -1349,7 +1363,9 @@ Two value schemas are the same schema when they differ only in mapping order or
 in the order of a set: `required` and `enum` are sets. Descriptions, targets and
 input defaults are not part of a value schema, and do not make inputs
 different. Sensitivity is the union of the receiving inputs and the value
-supplied.
+supplied. An import parameter has no single value: each binding names one of
+its facts, so its inputs are not intersected, and
+[`BP-EXPORT-004`](#BP-EXPORT-004) checks each fact against its input instead.
 
 <a id="BP-PARAM-003"></a>**`BP-PARAM-003`**: An input without a binding uses its
 component default, remains absent if optional, or is unsatisfied. Semantic: a
@@ -1464,9 +1480,10 @@ conservative type compatibility, not proof of schema containment.
 <a id="BP-PLACEHOLDER-001"></a>**`BP-PLACEHOLDER-001`**: `from` is exactly one
 whole placeholder under
 [core's placeholder grammar](../../core/v2/spec.md#placeholder-grammar), in a
-namespace this position permits: `variables`, `deployment` or `connections`.
-The namespace says what the placeholder names: `variables` one value,
-`deployment` one fact about the deployment, `connections` one connection. A
+namespace this position permits: `variables`, `deployment`, `connections` or
+`exports`. The namespace says what the placeholder names: `variables` one
+value, `deployment` one fact about the deployment, `connections` one
+connection, `exports` one export ([§5.5](#exports)). A
 `from` cannot concatenate, interpolate other text, hold two placeholders, select
 a component or fall back. Semantic, each at the parameter's `from`:
 
@@ -1475,7 +1492,7 @@ a component or fall back. Semantic, each at the parameter's `from`:
 | A `${{` that does not begin a well-formed placeholder ([`CORE-PLACEHOLDER-001`](../../core/v2/spec.md#CORE-PLACEHOLDER-001)) | `ERR_MALFORMED_PLACEHOLDER` |
 | Well-formed placeholders, but not exactly one whole placeholder | `ERR_INVALID_PARAMETER_ORIGIN` |
 | A namespace core does not reserve, such as `config` | `ERR_UNKNOWN_PLACEHOLDER_NAMESPACE` |
-| A reserved namespace other than `variables`, `deployment` and `connections` ([core v2 §5.2](../../core/v2/spec.md#placeholder-grammar)) | `ERR_NAMESPACE_NOT_PERMITTED` |
+| A reserved namespace other than `variables`, `deployment`, `connections` and `exports` ([core v2 §5.2](../../core/v2/spec.md#placeholder-grammar)) | `ERR_NAMESPACE_NOT_PERMITTED` |
 
 A blueprint never names a component's endpoints: component defines them, and a
 node consumes them only through the outputs a component names explicitly.
@@ -1498,10 +1515,12 @@ it:
 No network lookup occurs during the semantic phase.
 
 <a id="BP-PARAM-013"></a>**`BP-PARAM-013`**: A generated, hash, variable,
-deployment-fact or connection parameter MUST NOT be given a submitted value.
+deployment-fact, connection or import parameter MUST NOT be given a submitted
+value.
 Resolution, in the `parameters` stage: a submitted value for any of them is
 `ERR_PARAMETER_NOT_SUBMITTABLE` at `/spec/parameters/<name>`. A connection is
-replaced whole through acquisition instead ([§5.3](#connections)).
+replaced whole through acquisition instead ([§5.3](#connections)), and an
+import is answered by an export grant ([§5.5](#exports)).
 
 <a id="BP-PARAM-011"></a>**`BP-PARAM-011`**: A deployment-fact parameter takes
 one fact about the creator of the deployment. The `deployment` namespace
@@ -1565,7 +1584,7 @@ before any workload starts:
 | `sources` | Pins the content each running node is made from, and builds nothing. An `image` source with only a tag resolves its reference to an image digest. A `git` source resolves its `ref` to a full commit: the head of the branch, the commit the tag names, the head of the default branch when `ref` is omitted, or the named commit, which must exist. An `upload` source requires the platform to hold an archive whose SHA-256 is `upload.digest` and that extracts under [`COMP-SRC-007`](../../component/v2/spec.md#COMP-SRC-007). A buildpacks `builderImage` resolves to an image digest |
 | `parameters` | Reads every parameter's origin: submitted values, generated credentials and hashes, variables and deployment facts |
 | `allocation` | Selects compute, storage and exposure, and allocates endpoint addresses and identity facts |
-| `connections` | Acquires each connection parameter's selection ([§5.3](#connections)) |
+| `connections` | Acquires each connection parameter's selection ([§5.3](#connections)) and each import parameter's grant ([§5.5](#exports)) |
 | `values` | Evaluates value dependencies, and validates every input and output against its value schema |
 | `build` | Builds each `git` or `upload` source, from exactly the content the `sources` stage pinned, with its build recipe and the pinned builder, into one image digest. Its build secrets are read from the values the `values` stage resolved |
 | `environment` | Encodes each node's environment variables |
@@ -1671,8 +1690,9 @@ That private snapshot uses format version 1. It persists submitted parameter
 values, selected variable values and their identity and version pairs, captured
 deployment facts, credential references and rotation generations for generated
 credentials and their hashes, endpoint allocations with any OpenID Connect
-client registration, and any connection selections, including the revision of
-the organization configuration that answered each one. Its physical storage
+client registration, any connection selections, including the revision of
+the organization configuration that answered each one, and any acquired
+imports ([`BP-EXPORT-005`](#BP-EXPORT-005)). Its physical storage
 format is implementation-defined. Its sensitive values are private and never
 hashed into the public record, and no public secret-derived hash stands in for
 its identity. Reusing an identity and version for changed state is forbidden:
@@ -2003,9 +2023,10 @@ key naming no member is `ERR_UNKNOWN_ENUM_MEMBER` at
 `/spec/parameters/<name>/ui/enumLabels/<key>`.
 
 <a id="BP-UI-004"></a>**`BP-UI-004`**: A deploy form offers each parameter that
-declares `ui`, except a generated, variable or deployment-fact parameter: none
-is ever an editable field. A form MAY show a deployment fact, read-only, to the
-person it describes. A hash parameter declares no `ui` and is never offered. A
+declares `ui`, except a generated, variable, deployment-fact or import
+parameter: none is ever an editable field. A form MAY show a deployment fact,
+read-only, to the person it describes, and an import parameter's label and
+export name, read-only. A hash parameter declares no `ui` and is never offered. A
 connection parameter with `ui` is offered as one control choosing a whole
 selection, never as its members. A connection parameter without `ui` is not
 offered: the deployment acquires its default selection without a form field.
@@ -2110,6 +2131,183 @@ for as long as it still accepts that generation anywhere, such as an API key's
 overlap ([`BP-ACCESS-018`](#BP-ACCESS-018)), and afterwards MUST say that the
 earlier value is gone and when it was rotated, rather than show nothing.
 
+### <a id="exports"></a><a id="draft-exports"></a>5.5 Exports and imports
+
+A deployment reaches another deployment's `PRIVATE` endpoint only when both
+blueprints say so
+([ADR 0058](../../../docs/adr/0058-a-deployment-exports-a-private-endpoint-to-a-named-consumer.md)).
+The exporting blueprint offers an endpoint under a key of `spec.exports`, and
+the importing blueprint declares an import parameter whose `from` names the
+export:
+
+```yaml
+# The exporting blueprint
+spec:
+  exports:
+    frontend: { node: server, endpoint: grpc }
+  nodes:
+    server:
+      componentRef: ./components/temporal.yaml
+      compute: { profile: general.standard.small }
+---
+# The importing blueprint
+spec:
+  parameters:
+    temporal: { from: "${{ exports.temporal-frontend }}", ui: { label: Workflow server } }
+  nodes:
+    worker:
+      componentRef: ./components/worker.yaml
+      compute: { profile: general.standard.small }
+      bindings:
+        temporalAddress: { parameter: temporal, property: privateAddress }
+        temporalHostPort: { template: "${{ parameters.temporal.privateHostname }}:${{ parameters.temporal.privatePort }}", format: TEXT }
+```
+
+**Documents carry roles; policy carries parties.** The exporting blueprint
+names the endpoint it offers and no consumer, and the importing blueprint names
+the export it needs and no deployment. Which deployment exports under which
+name, and which deployments it admits, is the organization's policy, managed
+through the platform API, as a `RESTRICTED` endpoint's access policy is
+([§4.5](#access)). A blueprint that exports is as portable as one that does
+not.
+
+**The export name.** The platform gives each export of a deployment an
+**export name**: a DNS label, unique among the organization's live and
+quarantined export names, `<deployment-name>-<key>` unless a member who may
+manage the exporting deployment renames it. An import parameter's `from` names
+it. A renamed export's old name is quarantined for 90 days, during which no
+export takes it, and it never redirects. An import acquired before the rename
+is bound to the export by identity, and keeps working. A fresh resolution of
+the old name fails with `ERR_EXPORT_UNAVAILABLE`
+([`BP-EXPORT-005`](#BP-EXPORT-005)), and the platform MAY name the successor
+only to a caller who could already see it.
+
+**The export grant.** An **export grant** is the exporting deployment's policy
+admitting one consuming deployment to one export. It names the consumer by its
+deployment ID, never by its name, hostname or blueprint, so a redeploy keeps
+its standing and a new deployment, even under a recycled name, gains none. A
+deployment has its ID once it is created, so a grant can name it only then:
+until one admits it, its resolution fails with `ERR_EXPORT_UNAVAILABLE`, and a
+retry after the grant acquires the import. Export names and grants belong to
+the platform API. This section defines what a document and a resolution show of
+them.
+
+**Within one organization.** An export admits deployments of its own
+organization only. A later version MAY name an export of another organization,
+qualified by that organization's Handle as `<org-handle>/<export-name>`, by
+addition: no such path is one DNS label, so today each is rejected
+([`BP-EXPORT-003`](#BP-EXPORT-003)).
+
+<a id="BP-EXPORT-001"></a>**`BP-EXPORT-001`**: `spec.exports` is optional. Each
+key is in the [DNS-label grammar](../../core/v2/spec.md#dns-label-grammar), and
+each entry is a closed object requiring `node`, a node name, and `endpoint`, an
+endpoint name. A binding's `property` is one of `privateHostname`,
+`privatePort` and `privateAddress`, and goes only beside `parameter`.
+Structural: a key outside the grammar is `ERR_INVALID_VALUE` at
+`/spec/exports`; an entry that is not an object, a `node` or `endpoint` outside
+its grammar, and a `property` outside the three are `ERR_INVALID_VALUE` at that
+member; an entry without `node` or `endpoint` is
+`ERR_MISSING_FIELD` at the entry, and one with another member is
+`ERR_UNKNOWN_FIELD`; a binding with `property` and no `parameter` is
+`ERR_MISSING_FIELD` at the binding.
+
+<a id="BP-EXPORT-002"></a>**`BP-EXPORT-002`**: An export MUST name a node of the
+blueprint whose component is a `SERVICE` or a `WORKER`, and an endpoint that
+component declares, exposed `PRIVATE` ([`BP-NODE-005`](#BP-NODE-005)). A
+`PUBLIC` endpoint needs no export, and a `JOB` or an `EXTERNAL` node has none
+to offer. Semantic, decided in this order, each for an export at
+`/spec/exports/<key>`:
+
+| Condition | Diagnostic |
+|---|---|
+| `node` names no node of the blueprint | `ERR_UNKNOWN_NODE` at `node` |
+| The node's component is not a `SERVICE` or a `WORKER` | `ERR_ENDPOINT_NOT_EXPORTABLE` at `node` |
+| `endpoint` names no endpoint of the node's component | `ERR_UNKNOWN_ENDPOINT` at `endpoint` |
+| The node exposes the endpoint `PUBLIC` | `ERR_ENDPOINT_NOT_EXPORTABLE` at `endpoint` |
+
+The last three read the component, so they are deferred while it is
+unavailable ([`BP-REF-002`](#BP-REF-002)).
+
+<a id="BP-EXPORT-003"></a>**`BP-EXPORT-003`**: The path of an `exports`
+placeholder is exactly one segment in the
+[DNS-label grammar](../../core/v2/spec.md#dns-label-grammar): the export name.
+Semantic: any other path, such as two segments or a lowerCamelCase name, is
+`ERR_INVALID_EXPORT_PATH` at the parameter's `from`.
+
+<a id="BP-EXPORT-004"></a>**`BP-EXPORT-004`**: An import parameter has no
+single value. A binding takes one of its facts, named by a `property`, or a
+template names one as `${{ parameters.<parameter>.<property> }}`, and nothing
+else names a fact:
+
+| Property | Type | The exported endpoint's |
+|---|---|---|
+| `privateHostname` | string | Allocated private hostname |
+| `privatePort` | integer | Target port |
+| `privateAddress` | string | Private hostname, a colon and the decimal target port |
+
+These are the private endpoint properties of
+[component v2 §5.2](../../component/v2/spec.md#endpoint-properties), read from the
+exporting deployment. None is sensitive. Semantic:
+
+| Condition | Diagnostic |
+|---|---|
+| A `parameter` binding naming an import parameter without `property` | `ERR_INVALID_IMPORT_BINDING` at the binding's `parameter` |
+| A `property` beside a `parameter` that is not an import parameter | `ERR_INVALID_IMPORT_BINDING` at the binding's `property` |
+| A template naming an import parameter without a property, a property of any other parameter, or a second segment that is not one of the three properties | `ERR_INVALID_IMPORT_BINDING` at the binding's `template` |
+| `privatePort` bound to an input whose value schema is not an integer's or a number's, or `privateHostname` or `privateAddress` to one whose value schema is not a string's | `ERR_INCOMPATIBLE_TYPE` at the binding's `property` |
+
+An import parameter bound to a connection input is
+[`BP-CONNECTION-001`](#BP-CONNECTION-001)'s `ERR_INVALID_CONNECTION_BINDING`,
+and nothing more. A resolved fact that does not satisfy the input receiving it
+is `ERR_VALUE_CONSTRAINT` in the `values` stage
+([`BP-PARAM-008`](#BP-PARAM-008)).
+
+<a id="BP-EXPORT-005"></a>**`BP-EXPORT-005`**: A deployment acquires an import
+once per deployment identity and import parameter. Acquisition resolves the
+export name in the deployment's own organization and admits the import only
+under an export grant naming that deployment. The acquired import is
+authorized, persisted in the deployment snapshot before materialization and
+recorded for audit, with its own identity and version and those of the export
+and the grant it answers. Every retry, redeploy and update reuses it, as a
+connection selection is reused ([`BP-CONNECTION-003`](#BP-CONNECTION-003)); an
+update that changes the parameter's `from` acquires afresh. Resolution, in the
+`connections` stage, at `/spec/parameters/<name>`:
+
+| Acquisition outcome | Result |
+|---|---|
+| Not acquired | INCOMPLETE |
+| No live export has the name in the organization, the export has been withdrawn, or no grant admits the deployment | `ERR_EXPORT_UNAVAILABLE` |
+| Malformed evidence: a grant answering another deployment, parameter or `from`, or facts that are not a hostname and a port | `ERR_INVALID_RESOLUTION_CONTEXT` |
+
+The three unavailable outcomes share one code so that an import enumerates
+nothing: a diagnostic MUST NOT say which of them held, and MUST NOT name the
+exporting deployment, its endpoint or its address. A deployer learns of another
+deployment's exports only through the platform API, under their own
+permissions. An acquired import supplies the three facts of
+[`BP-EXPORT-004`](#BP-EXPORT-004) to the bindings that name them, in the
+`values` stage.
+
+<a id="BP-EXPORT-006"></a>**`BP-EXPORT-006`**: The platform MUST admit a granted
+consumer's traffic at the network level, from the consumer's nodes and only to
+the exported endpoint, as [`BP-ACCESS-011`](#BP-ACCESS-011) states. When a
+grant is revoked or an export is withdrawn, the platform MUST refuse every new
+connection from that consumer to the endpoint within 4 seconds. A connection
+already established MAY survive a revocation until either end closes it.
+Platform obligation; no document breaks it.
+
+<a id="BP-EXPORT-007"></a>**`BP-EXPORT-007`**: An importing deployment keeps the
+facts its import resolved until its own next rollout. A rollout of the
+exporting deployment never changes a consumer's inputs or environment, and a
+consumer follows an exporter's redeploy on its next rollout. Platform
+obligation; no document breaks it.
+
+<a id="BP-EXPORT-008"></a>**`BP-EXPORT-008`**: The platform MUST refuse to delete
+a deployment whose export another deployment has acquired, unless the deleter
+forces it. A forced delete withdraws each of its exports and ends every import
+of them: the consumers are degraded, their new connections to the endpoint are
+refused ([`BP-EXPORT-006`](#BP-EXPORT-006)), and their next resolution fails
+with `ERR_EXPORT_UNAVAILABLE`. Platform obligation; no document breaks it.
+
 ## <a id="validation-phases"></a><a id="validation-layers"></a>6. Validation phases
 
 Core's phases, validation scopes and statuses apply
@@ -2134,7 +2332,7 @@ Core and component diagnostics apply, with these additions:
 | `ERR_INVALID_DEPENDENCY` | `semantic` | A supplied component document is invalid, fails identity or digest verification, or misses a component publication obligation. |
 | `ERR_COMPUTE_REQUIRED` | `semantic` | A node whose component runs carries no compute. |
 | `ERR_COMPUTE_FORBIDDEN` | `semantic` | A node whose component is `EXTERNAL` carries compute. |
-| `ERR_UNKNOWN_NODE` | `semantic` | A binding names no node. |
+| `ERR_UNKNOWN_NODE` | `semantic` | A binding or an export names no node. |
 | `ERR_NODE_REQUIRED` | `admission` | Publication requires a node this blueprint does not declare. |
 | `ERR_COMPUTE_PROFILE_UNAVAILABLE` | `admission` | A node's compute profile is not in the platform's compute catalog, or not available in the region. |
 | `ERR_PLACEMENT_UNSATISFIABLE` | `admission` | No host of the node's compute profile meets its placement constraints together. |
@@ -2165,7 +2363,10 @@ Core and component diagnostics apply, with these additions:
 | `ERR_INVALID_CONNECTION_BINDING` | `semantic` | A connection input is bound by something other than a connection parameter or a provided connection of its protocol and capabilities, or a connection parameter or provided connection binds a value input, or a connection parameter is named by a template. |
 | `ERR_UNKNOWN_PROVIDED_CONNECTION` | `semantic` | A binding names no provided connection of the node's component. |
 | `ERR_INVALID_TEMPLATE` | `semantic` | A `URL` template is not an absolute URI with a literal scheme. |
-| `ERR_PARAMETER_NOT_SUBMITTABLE` | `resolution` | A submitted value names a generated, hash, variable, deployment-fact or connection parameter. |
+| `ERR_ENDPOINT_NOT_EXPORTABLE` | `semantic` | An export names a node that is not a `SERVICE` or `WORKER`, or an endpoint it exposes `PUBLIC`. |
+| `ERR_INVALID_EXPORT_PATH` | `semantic` | An `exports` placeholder's path is not one DNS-label segment. |
+| `ERR_INVALID_IMPORT_BINDING` | `semantic` | An import parameter is bound without a property, or a property is named for a parameter that is not an import. |
+| `ERR_PARAMETER_NOT_SUBMITTABLE` | `resolution` | A submitted value names a generated, hash, variable, deployment-fact, connection or import parameter. |
 | `ERR_MISSING_PARAMETER_VALUE` | `resolution` | A required submitted value is absent. |
 | `ERR_VARIABLE_NOT_AUTHORIZED` | `resolution` | The deployment cannot read the organization variable. |
 | `ERR_DEPLOYMENT_FACT_UNAVAILABLE` | `resolution` | The platform knows it has no value for a deployment fact the deployment reads. |
@@ -2173,6 +2374,7 @@ Core and component diagnostics apply, with these additions:
 | `ERR_CONNECTION_NOT_FOUND` | `resolution` | Authorized acquisition confirms no selected default exists. |
 | `ERR_CONNECTION_DENIED` | `resolution` | Acquisition denies permission to use the connection. |
 | `ERR_CONNECTION_INCOMPATIBLE` | `resolution` | The selection cannot satisfy the required protocol, capabilities or members. |
+| `ERR_EXPORT_UNAVAILABLE` | `resolution` | No export the deployment may import has the name an import parameter names. |
 
 ### <a id="warnings"></a>7.1 Warnings
 
@@ -2200,7 +2402,8 @@ evidence.
 | Not supported | How it would close |
 |---|---|
 | Component instances shared across deployments | A new origin kind for a binding |
-| Reaching another deployment's `PRIVATE` endpoint, in the same organization | An export and an import, [draft](#draft-exports) below |
+| A document naming the consumers an export admits; grants are the exporting deployment's policy, managed through the platform API ([§5.5](#exports)) | A new optional member of an export |
+| Importing an export of another organization | An org-qualified path, `<org-handle>/<export-name>`, in the `exports` namespace |
 | Conditional node sets, including swapping a self-hosted `SERVICE` for a connection at deployment ([ADR 0019](../../../docs/adr/0019-external-component-node.md)) | A new optional field on a node |
 | Outputs produced by a job at run time | A new output origin, in component |
 | Recursive templates, and provider-specific maps | A new optional field |
@@ -2218,36 +2421,12 @@ evidence.
 | `capabilities` for a protocol other than a language model's | Permit `capabilities` on that protocol, in component |
 | Registering an endpoint's URL with a messaging service, such as a Telegram webhook or a Slack request URL | A new optional member of the exposure object |
 
-### <a id="draft-exports"></a>9.1 Draft: exported endpoints
-
-> **Draft, not normative.** This subsection records the shape
-> [ADR 0058](../../../docs/adr/0058-a-deployment-exports-a-private-endpoint-to-a-named-consumer.md)
-> decides, so that implementations can plan for it. It declares no requirement
-> ID, and no validator applies it: a document using any of it is rejected
-> today, as [`BP-ACCESS-011`](#BP-ACCESS-011) and the schema require.
-
-A deployment would reach another deployment's `PRIVATE` endpoint only through
-both sides declaring it. The exporting blueprint names the endpoint it exports
-and the consumers it admits, each by a stable identity the organization assigns.
-The consuming blueprint declares a parameter whose `from` names the export, and
-binds the private host, port and address it yields to its nodes like any other
-parameter. Acquiring an import would be authorized, persisted and recorded as a
-connection selection is ([§5.3](#connections)): a deployment that is not a named
-consumer is denied, and revoking an export denies new connections at once. Both
-deployments belong to one organization. Isolation would still hold at the
-network level, for the exported endpoint alone.
-
-Open before this becomes normative: whether an import is a connection protocol
-whose provider is a deployment, or a parameter kind of its own; how a consumer
-identity is named; and what a consumer sees when the exporting deployment is
-redeployed or deleted.
-
 ## <a id="security"></a>10. Security considerations
 
 Treat documents and dependency artifacts as untrusted. Verify containment,
-digests, parser bounds and component contracts before resolution. Variable and
-connection placeholders select organization data the deployment is authorized
-to read; they never grant access by themselves. No validation phase fetches a
+digests, parser bounds and component contracts before resolution. Variable,
+connection and export placeholders select organization data the deployment is
+authorized to read; they never grant access by themselves. No validation phase fetches a
 document-chosen URL, and the `sources` stage acquires a repository or an image
 only under the platform policy of [core v2 §6](../../core/v2/spec.md#validation-phases).
 Resolved secrets remain in private materialization channels
@@ -2260,7 +2439,12 @@ without the `viewerIdentity` mode those properties belong to
 ([`BP-NODE-007`](#BP-NODE-007)), and why the platform refuses, rather than
 forwards, a request it cannot authorize ([`BP-ACCESS-002`](#BP-ACCESS-002)). A
 `PRIVATE` endpoint carries no sign-in at all, which is safe only because nothing
-outside its deployment can reach it ([`BP-ACCESS-011`](#BP-ACCESS-011)).
+outside its deployment can reach it but the consumers an export grant admits
+([`BP-ACCESS-011`](#BP-ACCESS-011)). Exporting an endpoint extends its trust to
+those consumers' workloads, so an exported endpoint that holds data SHOULD
+check its own credentials. An import reports one code for every unavailable
+export ([`BP-EXPORT-005`](#BP-EXPORT-005)), so an importing blueprint cannot
+probe which names exist.
 
 A released claim is personal data that the workload stores and may send on, and
 the platform cannot take it back. That is why a blueprint names each one in

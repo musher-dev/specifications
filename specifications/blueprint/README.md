@@ -61,6 +61,7 @@ dependencies" table in [§2](v2/spec.md#envelope).
 | `BP-RESOLVE` | Resolution, its stages and the resolution record | [§5.2](v2/spec.md#value-sources) |
 | `BP-CONNECTION` | Connections | [§5.3](v2/spec.md#connections) |
 | `BP-UI` | The deploy form | [§5.4](v2/spec.md#deploy-form) |
+| `BP-EXPORT` | Exports, import parameters and what the platform does for a grant | [§5.5](v2/spec.md#exports) |
 
 Every ID, the clause stating it, and the cases pinning it:
 [blueprint/v2 in docs/traceability.md](../../docs/traceability.md#blueprintv2).

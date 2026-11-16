@@ -1,0 +1,10 @@
+{
+  "id": "structural-508-export-naming-its-consumers",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#exports",
+  "requirements": [
+    "BP-EXPORT-001"
+  ],
+  "summary": "An export is closed, so a document cannot name the consumers it admits."
+}

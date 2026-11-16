@@ -34,7 +34,7 @@
   "type": "object",
   "$defs": {
     "BlueprintBinding": {
-      "$comment": "spec.md §4.2 BP-BIND-003, BP-BIND-009 / §5.3 BP-CONNECTION-004 / ADR 0031 §1 / ADR 0056 / ADR 0059 §3. The key that is present names the binding's origin: a deployment parameter, another node's output, another node's provided connection, a literal value, or a template composed of literal text and placeholders. Exactly one; `node` goes with `output` or with `connection`, and `template` with `format`. Values from outside the documents enter only through parameters.",
+      "$comment": "spec.md §4.2 BP-BIND-003, BP-BIND-009 / §5.3 BP-CONNECTION-004 / ADR 0031 §1 / ADR 0056 / ADR 0059 §3. The key that is present names the binding's origin: a deployment parameter, another node's output, another node's provided connection, a literal value, or a template composed of literal text and placeholders. Exactly one; `node` goes with `output` or with `connection`, `template` with `format`, and `property` only with `parameter` (§5.5 BP-EXPORT-001). Values from outside the documents enter only through parameters.",
       "additionalProperties": false,
       "allOf": [
         {
@@ -65,6 +65,9 @@
         ],
         "output": [
           "node"
+        ],
+        "property": [
+          "parameter"
         ],
         "template": [
           "format"
@@ -151,6 +154,16 @@
           "maxLength": 64,
           "description": "Deployment parameter that is the origin of the value."
         },
+        "property": {
+          "$comment": "spec.md §5.5 BP-EXPORT-001, BP-EXPORT-004 / ADR 0058 §3. One fact of an import parameter, mirroring a component output's {endpoint, property}; that the parameter is an import is semantic.",
+          "description": "Fact of an import parameter that supplies the input: the exported endpoint's private hostname, port, or hostname and port. Only beside parameter, and only for an import parameter.",
+          "enum": [
+            "privateHostname",
+            "privatePort",
+            "privateAddress"
+          ],
+          "type": "string"
+        },
         "template": {
           "$comment": "spec.md §4.2.1. Placeholders are ${{ parameters.<parameter> }} and ${{ nodes.<node>.outputs.<output> }}; their grammar, namespaces and the URL structure are semantic checks (BP-BIND-009, BP-BIND-010).",
           "description": "A string composed of literal text and placeholders naming deployment parameters and node outputs.",
@@ -181,6 +194,28 @@
       },
       "required": [
         "profile"
+      ],
+      "type": "object"
+    },
+    "BlueprintExport": {
+      "$comment": "spec.md §5.5 BP-EXPORT-001, BP-EXPORT-002. Whether the node is a SERVICE or WORKER, the endpoint exists and it is PRIVATE are semantic, read from the component.",
+      "additionalProperties": false,
+      "description": "One exported endpoint: a PRIVATE endpoint of a SERVICE or WORKER node of this blueprint.",
+      "properties": {
+        "endpoint": {
+          "description": "Endpoint of that node's component, exposed PRIVATE.",
+          "pattern": "^[a-z][a-z0-9]{0,19}$",
+          "type": "string"
+        },
+        "node": {
+          "description": "Node whose endpoint is exported.",
+          "type": "string",
+          "x-musher-grammar": "dns-label"
+        }
+      },
+      "required": [
+        "node",
+        "endpoint"
       ],
       "type": "object"
     },
@@ -557,7 +592,7 @@
       "x-additionalPropertiesName": "nodeName"
     },
     "BlueprintParameter": {
-      "$comment": "spec.md §5 BP-PARAM-010 / ADR 0031 §4 / ADR 0035 §5, §6. A parameter has one origin: submitted (with an optional default), generated, hashed from a generated parameter, or read from outside the documents through `from` (a variable, a deployment fact or a connection). At most one of default, generator, from and hash, and a hash is never offered in a form.",
+      "$comment": "spec.md §5 BP-PARAM-010 / ADR 0031 §4 / ADR 0035 §5, §6. A parameter has one origin: submitted (with an optional default), generated, hashed from a generated parameter, or read from outside the documents through `from` (a variable, a deployment fact, a connection or an import of an export). At most one of default, generator, from and hash, and a hash is never offered in a form.",
       "additionalProperties": false,
       "allOf": [
         {
@@ -673,7 +708,7 @@
           "description": "Logical default, replaced by a submitted value. No interpolation."
         },
         "from": {
-          "description": "One whole placeholder naming a value outside the documents: ${{ variables.<path> }} for an organization variable, ${{ connections.<path> }} for a connection, or ${{ deployment.creator.<fact> }} for a fact about the person who created the deployment. Never submitted; a connection is replaced whole through acquisition instead.",
+          "description": "One whole placeholder naming a value outside the documents: ${{ variables.<path> }} for an organization variable, ${{ connections.<path> }} for a connection, ${{ deployment.creator.<fact> }} for a fact about the person who created the deployment, or ${{ exports.<export-name> }} for an export another deployment of the organization grants this one. Never submitted; a connection is replaced whole through acquisition instead.",
           "maxLength": 512,
           "minLength": 1,
           "type": "string"
@@ -1201,8 +1236,19 @@
     },
     "BlueprintSpec": {
       "additionalProperties": false,
-      "description": "The node graph and the deployment parameters.",
+      "description": "The node graph, the deployment parameters and the endpoints the blueprint exports.",
       "properties": {
+        "exports": {
+          "$comment": "spec.md §5.5 BP-EXPORT-001, BP-EXPORT-002 / ADR 0058 §1. Roles only: an export names the endpoint it offers and never a consumer. The export name and the grants are the organization's policy, managed through the platform API.",
+          "additionalProperties": {
+            "$ref": "#/$defs/BlueprintExport"
+          },
+          "description": "Private endpoints this blueprint offers to other deployments of its organization, keyed by export key. Which deployments may import each one is the exporting deployment's policy, never this document's.",
+          "propertyNames": {
+            "x-musher-grammar": "dns-label"
+          },
+          "type": "object"
+        },
         "nodes": {
           "additionalProperties": {
             "$ref": "#/$defs/BlueprintNode"

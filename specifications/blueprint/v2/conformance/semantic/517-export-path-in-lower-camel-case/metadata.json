@@ -1,0 +1,11 @@
+{
+  "id": "semantic-517-export-path-in-lower-camel-case",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#exports",
+  "requirements": [
+    "BP-EXPORT-003"
+  ],
+  "summary": "An export name is a DNS label, so a lowerCamelCase path names no export.",
+  "document": "app/blueprint.yaml"
+}

@@ -441,6 +441,7 @@ that was not acquired, which defers the obligations that need it.
 | `deployment` | `{creator: {identity?, email?, name?}}`: deployment facts | `parameters` |
 | `allocations` | node → endpoint → `{identity, version, privateHostname?, public?, oidcClient?}` | `allocation` |
 | `connections` | `{deployment, parameters: {<parameter>: <acquisition>}}` | `connections` |
+| `imports` | `{deployment, parameters: {<parameter>: <acquisition>}}` | `connections` |
 | `builds` | node → `{imageDigest?, recipeDigest?}` | `build` |
 
 **`sources`.** One entry per node whose content the `sources` stage pinned;
@@ -535,6 +536,35 @@ must also satisfy (that `request.from` equals the parameter's `from`, that
 managed credential identities are not reused across connection parameters, the
 URL rules) are blueprint's, and this section only fixes how a fixture writes
 the evidence down.
+
+**`imports`.** `deployment` is the importing deployment's identity, and each
+import parameter maps to an acquisition, `{status}`, as
+[blueprint `BP-EXPORT-005`](../specifications/blueprint/v2/spec.md#BP-EXPORT-005)
+defines it. `NOT_ACQUIRED` defers the import. `UNKNOWN`, `DENIED` and
+`WITHDRAWN` record what the platform knew, and resolution reports each as the
+one `ERR_EXPORT_UNAVAILABLE`. A `GRANTED` acquisition also carries
+`persisted: true` and the acquired `import`:
+
+```json
+{
+  "identity": "import-1",
+  "version": "1",
+  "deployment": "deploy-1",
+  "parameter": "temporal",
+  "request": { "from": "${{ exports.temporal-frontend }}" },
+  "export": { "identity": "export-1", "version": "1" },
+  "grant": { "identity": "grant-1", "version": "1" },
+  "privateHostname": "server-grpc.exporter.internal",
+  "privatePort": 7233
+}
+```
+
+`deployment` and `parameter` name the deployment and the import parameter it
+was acquired for, `request.from` is that parameter's `from`, and `export` and
+`grant` name what answered it. `privateAddress` is never carried: resolution
+composes it from the hostname and the port. An acquisition of another shape,
+or one whose `deployment`, `parameter` or `request.from` disagrees, is
+`ERR_INVALID_RESOLUTION_CONTEXT` at stage `connections`.
 
 ### <a id="admission-context"></a>Admission context
 

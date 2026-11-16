@@ -1,0 +1,10 @@
+{
+  "id": "structural-509-binding-property-outside-the-three",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#exports",
+  "requirements": [
+    "BP-EXPORT-001"
+  ],
+  "summary": "A binding's property is one of an import's three facts."
+}

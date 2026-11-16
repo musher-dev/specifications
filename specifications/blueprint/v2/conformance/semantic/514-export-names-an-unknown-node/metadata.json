@@ -1,0 +1,11 @@
+{
+  "id": "semantic-514-export-names-an-unknown-node",
+  "phase": "semantic",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#exports",
+  "requirements": [
+    "BP-EXPORT-002"
+  ],
+  "summary": "An export naming a node the blueprint does not have is rejected.",
+  "document": "app/blueprint.yaml"
+}

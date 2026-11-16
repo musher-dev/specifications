@@ -1,0 +1,10 @@
+{
+  "id": "structural-507-export-without-an-endpoint",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#exports",
+  "requirements": [
+    "BP-EXPORT-001"
+  ],
+  "summary": "An export names both a node and an endpoint."
+}

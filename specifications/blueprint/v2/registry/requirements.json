@@ -441,6 +441,46 @@
       "id": "BP-UI-009",
       "anchor": "BP-UI-009",
       "section": "deploy-form"
+    },
+    {
+      "id": "BP-EXPORT-001",
+      "anchor": "BP-EXPORT-001",
+      "section": "exports"
+    },
+    {
+      "id": "BP-EXPORT-002",
+      "anchor": "BP-EXPORT-002",
+      "section": "exports"
+    },
+    {
+      "id": "BP-EXPORT-003",
+      "anchor": "BP-EXPORT-003",
+      "section": "exports"
+    },
+    {
+      "id": "BP-EXPORT-004",
+      "anchor": "BP-EXPORT-004",
+      "section": "exports"
+    },
+    {
+      "id": "BP-EXPORT-005",
+      "anchor": "BP-EXPORT-005",
+      "section": "exports"
+    },
+    {
+      "id": "BP-EXPORT-006",
+      "anchor": "BP-EXPORT-006",
+      "section": "exports"
+    },
+    {
+      "id": "BP-EXPORT-007",
+      "anchor": "BP-EXPORT-007",
+      "section": "exports"
+    },
+    {
+      "id": "BP-EXPORT-008",
+      "anchor": "BP-EXPORT-008",
+      "section": "exports"
     }
   ]
 }

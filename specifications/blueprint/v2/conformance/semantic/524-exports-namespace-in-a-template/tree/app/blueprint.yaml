@@ -1,0 +1,17 @@
+specVersion: v2
+kind: BLUEPRINT
+metadata:
+  slug: app
+  revision: 1
+  description: Synthetic conformance fixture blueprint.
+spec:
+  parameters: {}
+  nodes:
+    worker:
+      componentRef: ./components/worker.yaml
+      compute:
+        profile: general.standard.small
+      bindings:
+        temporalURL:
+          template: http://${{ exports.temporal-frontend }}/
+          format: URL

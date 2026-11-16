@@ -1,0 +1,10 @@
+{
+  "id": "structural-510-binding-property-without-a-parameter",
+  "phase": "structural",
+  "expected": "fail",
+  "clause": "specifications/blueprint/v2/spec.md#exports",
+  "requirements": [
+    "BP-EXPORT-001"
+  ],
+  "summary": "A property goes only beside a parameter."
+}
