@@ -10,7 +10,7 @@ it. `task check:terms` holds the records, the schemas and the prose together,
 and the words to avoid are enforced in prose by the generated
 `MusherSpecifications` Vale style.
 
-239 record(s). A record marked *proposed* is an open item, not yet a decision.
+244 record(s). A record marked *proposed* is an open item, not yet a decision.
 
 ## Index
 
@@ -95,6 +95,10 @@ and the words to avoid are enforced in prose by the generated
 | [exec probe](#component-exec-probe) | component | A command run in the container as a check. |
 | [exemptible requests](#component-exemptible-requests) | component | The requests an endpoint can take without a viewer. |
 | [expected diagnostic](#repository-expected-diagnostic) | repository | A diagnostic a fixture expects. |
+| [export](#blueprint-export) | blueprint | A private endpoint offered to other deployments. |
+| [export grant](#deployment-export-grant) | deployment | Policy admitting one deployment to one export. |
+| [export name](#deployment-export-name) | deployment | An export's organization-scoped DNS label. |
+| [exports namespace](#core-exports-namespace) | core | exports.&lt;export-name>, in a parameter's from. |
 | [exposure](#blueprint-exposure) | blueprint | Who reaches an endpoint, and how. |
 | [EXTERNAL](#component-external) | component | Runs nothing; stands in for something outside the graph. |
 | [family](#core-family) | core | One specification, released under its own tag prefix. |
@@ -110,6 +114,7 @@ and the words to avoid are enforced in prose by the generated
 | [HTTP-routed](#component-http-routed) | component | HTTP, HTTPS, WS. |
 | [icon](#listing-icon) | listing | The item's square image. |
 | [image source](#component-image-source) | component | An existing OCI image. |
+| [import parameter](#blueprint-import-parameter) | blueprint | One export, `${{ exports.x }}`, bound by property. |
 | [input](#component-input) | component | A named value a component consumes. |
 | [item document](#core-item-document) | core | A document whose fixed file name marks an item root. |
 | [item revision](#blueprint-item-revision) | blueprint | Counts publications of a blueprint item. |
@@ -153,7 +158,7 @@ and the words to avoid are enforced in prose by the generated
 | [overview image](#listing-overview-image) | listing | A Markdown image in the overview. |
 | [overview Markdown profile](#listing-overview-markdown-profile) | listing | CommonMark with no raw HTML and local images only. |
 | [parameter binding](#blueprint-parameter-binding) | blueprint | Binds { parameter }. |
-| [parameter from](#blueprint-parameter-from) | blueprint | One whole placeholder in variables, deployment or connections. |
+| [parameter from](#blueprint-parameter-from) | blueprint | One whole placeholder in variables, deployment, connections or exports. |
 | [parameter option](#blueprint-parameter-option) | blueprint | A value and label a deploy form offers. |
 | [parameter origin](#blueprint-parameter-origin) | blueprint | How a parameter's value is obtained. |
 | [parameters stage](#deployment-parameters-stage) | deployment | Obtains every parameter's value. |
@@ -266,6 +271,7 @@ blueprint [blueprint.blueprint] (a kind of core.musher-document)
   - deployment parameter [blueprint.deployment-parameter]
     - parameter from [blueprint.parameter-from]
     - parameter origin [blueprint.parameter-origin] (a kind of blueprint.origin)
+  - export [blueprint.export]
   - item revision [blueprint.item-revision]
   - node [blueprint.node]
     - binding [blueprint.binding]
@@ -562,6 +568,22 @@ reads variable values from.
   §5.2](../specifications/core/v2/spec.md#reference-grammar)
 - **Status:** approved, stable. Tags: placeholder.
 
+#### <a id="core-exports-namespace"></a>exports namespace
+
+The placeholder namespace naming a private endpoint that another deployment of
+the same organization exports, written `exports.<export-name>` with one
+DNS-label segment, and defined only where a blueprint parameter's from permits
+it.
+
+- **Kind of:** [namespace](#core-placeholder-namespace)
+- **names:** [export](#blueprint-export)
+- **Source:** [core v2
+  §5.2](../specifications/core/v2/spec.md#reference-grammar), [core v2
+  §10](../specifications/core/v2/spec.md#known-debt), [blueprint v2
+  §5.5](../specifications/blueprint/v2/spec.md#exports), [ADR
+  0058](adr/0058-a-deployment-exports-a-private-endpoint-to-a-named-consumer.md)
+- **Status:** approved, stable. Tags: placeholder.
+
 #### <a id="core-family"></a>family
 
 One specification of the Musher document format, released under its own tag
@@ -697,7 +719,7 @@ expression, which a family permits at a named position or leaves unused.
 - **Part of:** [placeholder](#core-placeholder)
 - **Identifiers:** codes: `ERR_UNKNOWN_PLACEHOLDER_NAMESPACE`,
   `ERR_NAMESPACE_NOT_PERMITTED`; namespaces: `self`, `parameters`, `variables`,
-  `connections`, `deployment`, `environment`, `organization`, `nodes`
+  `connections`, `deployment`, `environment`, `organization`, `nodes`, `exports`
 - **Verbs:** a family permits a namespace at a position
 - **Avoid:** "output" (banned, identifier): write "nodes". The namespace for
   another node's value is nodes.
@@ -2491,6 +2513,27 @@ item-local path or as a catalog identity with a revision.
   §4.1](../specifications/blueprint/v2/spec.md#component-reference)
 - **Status:** approved, stable. Tags: composition.
 
+#### <a id="blueprint-export"></a>export
+
+A `PRIVATE` endpoint of a `SERVICE` or `WORKER` node that a blueprint offers,
+under a key of `spec.exports`, to other deployments of its organization, naming
+no consumer.
+
+- **Part of:** [blueprint](#blueprint-blueprint)
+- **admits:** [export grant](#deployment-export-grant)
+- **Identifiers:** fields: `exports`; codes: `ERR_ENDPOINT_NOT_EXPORTABLE`;
+  requirement prefixes: `BP-EXPORT`; defs: `BlueprintExport`
+- **Verbs:** a blueprint exports an endpoint; a grant admits a deployment; an
+  import parameter imports it
+- **Not to be confused with:** A PUBLIC endpoint, which anyone with its address
+  reaches and which needs no export.
+- **Not to be confused with:** Terraform outputs and stack exports, which
+  publish values, not network reach.
+- **Source:** [blueprint v2 §1.1](../specifications/blueprint/v2/spec.md#terms),
+  [blueprint v2 §5.5](../specifications/blueprint/v2/spec.md#exports), [ADR
+  0058](adr/0058-a-deployment-exports-a-private-endpoint-to-a-named-consumer.md)
+- **Status:** approved, stable. Tags: exports.
+
 #### <a id="blueprint-exposure"></a>exposure
 
 A node's per-endpoint choice of who may reach the endpoint and what the platform
@@ -2546,6 +2589,27 @@ hash of a generated parameter, recomputed only when its source rotates.
   §5.2](../specifications/blueprint/v2/spec.md#value-sources), [ADR
   0038](adr/0038-v2-one-vocabulary-and-v1-retires.md)
 - **Status:** approved, stable. Tags: parameters, sensitivity.
+
+#### <a id="blueprint-import-parameter"></a>import parameter
+
+A deployment parameter whose from is `${{ exports.<export-name> }}`, naming one
+export by its export name, whose private hostname, port and address a binding
+takes one at a time through a property.
+
+- **Kind of:** [deployment parameter](#blueprint-deployment-parameter)
+- **imports:** [export](#blueprint-export)
+- **names:** [export name](#deployment-export-name)
+- **Identifiers:** fields: `property`; values: `privateHostname`, `privatePort`,
+  `privateAddress`; codes: `ERR_INVALID_EXPORT_PATH`,
+  `ERR_INVALID_IMPORT_BINDING`, `ERR_EXPORT_UNAVAILABLE`
+- **Not to be confused with:** A connection parameter, which fills a connection
+  input with a protocol's members; an import yields addresses any value input
+  takes.
+- **Source:** [blueprint v2 §1.1](../specifications/blueprint/v2/spec.md#terms),
+  [blueprint v2 §5](../specifications/blueprint/v2/spec.md#parameters),
+  [blueprint v2 §5.5](../specifications/blueprint/v2/spec.md#exports), [ADR
+  0058](adr/0058-a-deployment-exports-a-private-endpoint-to-a-named-consumer.md)
+- **Status:** approved, stable. Tags: parameters, exports.
 
 #### <a id="blueprint-item-revision"></a>item revision
 
@@ -2713,7 +2777,7 @@ outside the documents reaches a node.
 #### <a id="blueprint-parameter-from"></a>parameter from
 
 The member of a deployment parameter holding exactly one whole placeholder in
-the variables, deployment or connections namespace.
+the variables, deployment, connections or exports namespace.
 
 - **Part of:** [deployment parameter](#blueprint-deployment-parameter)
 - **Source:** [blueprint v2
@@ -2739,7 +2803,7 @@ a value in.
 #### <a id="blueprint-parameter-origin"></a>parameter origin
 
 The way one deployment parameter's value is obtained, named by the keys present:
-submitted, generated, hash, variable, deployment-fact or connection.
+submitted, generated, hash, variable, deployment-fact, connection or import.
 
 - **Kind of:** [origin](#blueprint-origin)
 - **Part of:** [deployment parameter](#blueprint-deployment-parameter)
@@ -3530,6 +3594,34 @@ variables.
   §5.2](../specifications/blueprint/v2/spec.md#value-sources), [component v2
   §5.3](../specifications/component/v2/spec.md#env-vars)
 - **Status:** approved, stable. Tags: resolution.
+
+#### <a id="deployment-export-grant"></a>export grant
+
+The exporting deployment's policy admitting one consuming deployment, named by
+its deployment ID, to one export, managed through the platform API and named by
+no document.
+
+- **admits to:** [export](#blueprint-export)
+- **Source:** [blueprint v2 §1.1](../specifications/blueprint/v2/spec.md#terms),
+  [blueprint v2 §5.5](../specifications/blueprint/v2/spec.md#exports), [ADR
+  0058](adr/0058-a-deployment-exports-a-private-endpoint-to-a-named-consumer.md)
+- **Status:** approved, stable. Tags: exports.
+
+#### <a id="deployment-export-name"></a>export name
+
+The DNS label the platform gives one export of one deployment, unique among its
+organization's live and quarantined names, by which an import parameter's from
+names the export.
+
+- **names:** [export](#blueprint-export)
+- **Not to be confused with:** An export's key in spec.exports, which the
+  blueprint chooses and the default name ends with.
+- **Not to be confused with:** The organization Handle, its global human name,
+  which a later version may prefix to an export name.
+- **Source:** [blueprint v2 §1.1](../specifications/blueprint/v2/spec.md#terms),
+  [blueprint v2 §5.5](../specifications/blueprint/v2/spec.md#exports), [ADR
+  0058](adr/0058-a-deployment-exports-a-private-endpoint-to-a-named-consumer.md)
+- **Status:** approved, stable. Tags: exports.
 
 #### <a id="deployment-materialization"></a>materialization
 

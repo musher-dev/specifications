@@ -479,9 +479,9 @@ namespace MUST be one the family permits at that position. `semantic`,
 `ERR_NAMESPACE_NOT_PERMITTED`, at the position holding the placeholder.
 
 **The reserved namespaces** are `self`, `parameters`, `variables`,
-`connections`, `deployment`, `environment`, `organization` and `nodes`. The set
-is closed. An author cannot extend it, and a family permits names from it rather
-than adding to it.
+`connections`, `deployment`, `environment`, `organization`, `nodes` and
+`exports`. The set is closed. An author cannot extend it, and a family
+permits names from it rather than adding to it.
 
 | Namespace | Names | v2 |
 |---|---|---|
@@ -493,13 +493,16 @@ than adding to it.
 | `environment` | The environment a deployment reads variable values from. | Unassigned. |
 | `organization` | Facts about the owning organization. | Unassigned. |
 | `nodes` | A value another node of the same blueprint produces. | Defined by blueprint bindings' `template`. |
+| `exports` | A private endpoint another deployment of the same organization exports, as `exports.<export-name>`. | Defined by blueprint parameters' `from`. |
 
 An **unassigned** namespace is a reserved one with no meaning in any document of
 any family in this major version. No family permits one, so writing it is
 `CORE-PLACEHOLDER-003`. Reserving it is what keeps it from ever becoming a name
 an author can address with another meaning. The set may grow by addition within
 this major version; an unassigned name may be given a meaning, and no name
-leaves the set.
+leaves the set. `exports` joined it in 2.4.0: a document that wrote it before
+was rejected with `ERR_UNKNOWN_PLACEHOLDER_NAMESPACE`, and wherever no family
+permits it, it is still rejected, as `CORE-PLACEHOLDER-003`.
 
 Namespaces name a concept and never a vendor. A closed set has nothing to
 collide with, so the convention that prefixes a flat keyspace does not apply
@@ -946,6 +949,11 @@ adopts in a major version of its own.
 - **Parameters and node outputs.** The `parameters` and `nodes` namespaces are
   defined only where a blueprint binding's `template` permits them, and that
   position defines the encoding of what it interpolates.
+- **Exports.** The `exports` namespace is defined only where blueprint
+  parameters' `from` permits it, as `exports.<export-name>`: one segment in the
+  [DNS-label grammar](#dns-label-grammar), naming an export of the same
+  organization. Which deployment exports under a name, and which deployments
+  may read it, is the organization's policy, never a document's.
 
 **Not supported in v2.** Each row is something v2 does not do, and each closes,
 if it ever does, by a relaxation inside v2: a document v2 rejects today becomes
