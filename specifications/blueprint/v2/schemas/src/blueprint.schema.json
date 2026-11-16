@@ -217,7 +217,8 @@
         "node",
         "endpoint"
       ],
-      "type": "object"
+      "type": "object",
+      "x-additionalPropertiesName": "exportKey"
     },
     "BlueprintExposure": {
       "additionalProperties": false,
