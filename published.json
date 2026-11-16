@@ -222,6 +222,14 @@
       },
       "tree": "35392bc23ea4c3cbcd67940559b89e0416c9ab37"
     },
+    "component/v2.4.0": {
+      "bundleSha256": "0fc98e936f372b1e0d0d5964c68544fa8dea21fde3804f8f8814cf376f1a6b5a",
+      "path": "specifications/component/v2",
+      "requires": {
+        "core": "2.4.0"
+      },
+      "tree": "542882f917d33d1afa50e6eac57291e0fdefa495"
+    },
     "core/v1.0.0": {
       "bundleSha256": null,
       "path": "specifications/core/v1",
@@ -256,6 +264,11 @@
       "bundleSha256": null,
       "path": "specifications/core/v2",
       "tree": "115a54dad98db6fe07aa40e1ed859945558f107a"
+    },
+    "core/v2.4.0": {
+      "bundleSha256": null,
+      "path": "specifications/core/v2",
+      "tree": "d4399dad84fc859e97eeb46834e2740597a08d34"
     },
     "listing/v1.0.0": {
       "bundleSha256": "8a0ac418d4dacfc998310d11bf8003a1841e10b0869ca6b2b294caafb845305d",
