@@ -265,6 +265,15 @@ jobs:
       # Every family is enforced: the task runs --fail-on warning, so any
       # finding the declarations do not waive fails the job (docs/adr/0037).
       - name: Check the repository against the conventions
+        env:
+          # The conventions CLI installs the engines it runs (jq) through
+          # `mise exec`, at the versions its release was tested with, and
+          # mise-action keeps its token to itself since v5.1.1. Unauthenticated,
+          # that install shares the runner IP's 60 GitHub API calls an hour
+          # with every other tenant, and failed this job with a 403 seven times
+          # from 2026-11-13 to 2026-11-16. Read-only: the job's token holds
+          # contents: read and nothing else.
+          MISE_GITHUB_TOKEN: ${{ github.token }}
         run: task check:conventions
 
   # ---------------------------------------------------------------------------
